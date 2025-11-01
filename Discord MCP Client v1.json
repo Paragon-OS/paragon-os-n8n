@@ -1,10 +1,9 @@
 {
-  "name": "Discord MCP Client",
   "nodes": [
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ $input.item.json.query || 'I want to list my first 5 discord contacts' }}",
+        "text": "={{ $json.discordRelatedPrompt || 'I want to list my first 5 discord contacts' }}",
         "hasOutputParser": true,
         "options": {
           "systemMessage": "You are an expert Discord MCP assistant agent. Your role is to help users interact with Discord through MCP tools.\n\n**Capabilities:**\n- Discover available Discord MCP tools by calling `mcp_list_tools` when needed\n- Execute Discord MCP tools directly using the Discord MCP Tool Executer\n- Understand natural language requests and select appropriate tools automatically\n- Handle multi-step workflows by chaining tool calls when necessary\n- Provide clear, helpful responses based on tool execution results\n\n**Workflow:**\n1. When you need to discover available tools, call `mcp_list_tools` first\n2. Analyze the user's request and identify which tool(s) to use\n3. Execute the tool(s) with appropriate parameters\n4. Process the results and provide a helpful response to the user\n5. If a tool execution fails, analyze the error and retry or suggest alternatives\n\n**Guidelines:**\n- Always check available tools if you're unsure which one to use\n- Read tool descriptions and input schemas carefully before execution\n- Extract parameter values from the user's natural language request\n- Provide clear, conversational responses based on tool results\n- Maintain context across multiple tool calls in a conversation"
@@ -109,18 +108,25 @@
       }
     },
     {
-      "parameters": {},
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "discordRelatedPrompt"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
       "position": [
         -320,
         -400
       ],
-      "id": "1629c756-96d1-4f08-a6f6-bee606a2408c",
-      "name": "Start Workflow"
+      "id": "c8d04514-e755-452a-bcb4-ee62d2a93e4a",
+      "name": "When Executed by Another Workflow"
     }
   ],
-  "pinData": {},
   "connections": {
     "Conversation Memory": {
       "ai_memory": [
@@ -182,7 +188,7 @@
         ]
       ]
     },
-    "Start Workflow": {
+    "When Executed by Another Workflow": {
       "main": [
         [
           {
@@ -194,15 +200,15 @@
       ]
     }
   },
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "discordRelatedPrompt": "list my first 5 discord contacts"
+      }
+    ]
   },
-  "versionId": "c640f62e-3f5e-4b52-998b-7f402ae56be6",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "cd381b17813b1f32bbed6ff56a914eb5679cd0e7bd9a8ef4580ebc82f8011b84"
-  },
-  "id": "qXzz33pAVkLd4UOO",
-  "tags": []
+  }
 }
