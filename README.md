@@ -11,6 +11,7 @@
 7. [Common Configurations](#common-configurations)
 8. [Workflow-Specific Documentation](#workflow-specific-documentation)
 9. [Best Practices](#best-practices)
+10. [Troubleshooting and Common Pitfalls](#troubleshooting-and-common-pitfalls)
 
 ---
 
@@ -1212,6 +1213,166 @@ Call this tool to [action description]. [Additional context if needed].
 2. **Workflow IDs**: Document workflow IDs for inter-workflow references
 3. **Resource IDs**: Document DataTable and other resource IDs
 4. **Instance IDs**: Track `instanceId` for multi-instance deployments
+
+---
+
+## Troubleshooting and Common Pitfalls
+
+This section documents common bugs and issues encountered during workflow development, along with their solutions.
+
+### Duplicate AI Parameter Names
+
+**Error**: `Duplicate key 'parameterName' found with different description or type`
+
+**Cause**: When using `$fromAI()` to extract parameters, if the same parameter name is used multiple times in different contexts (e.g., in filter conditions and column mappings), they must have identical descriptions and types.
+
+**Example Problem**:
+```json
+{
+  "filters": {
+    "conditions": [{
+      "keyValue": "={{ $fromAI('discord_id', `Discord ID from profile`, 'string') }}"
+    }]
+  },
+  "columns": {
+    "value": {
+      "discord_id": "={{ $fromAI('discord_id', ``, 'string') }}"
+    }
+  }
+}
+```
+
+**Solution**: Use the same description for all instances of the same parameter name:
+```json
+{
+  "filters": {
+    "conditions": [{
+      "keyValue": "={{ $fromAI('discord_id', `Discord ID from fetched user profile`, 'string') }}"
+    }]
+  },
+  "columns": {
+    "value": {
+      "discord_id": "={{ $fromAI('discord_id', `Discord ID from fetched user profile`, 'string') }}"
+    }
+  }
+}
+```
+
+**Best Practice**: 
+- Always use descriptive, consistent descriptions for `$fromAI()` parameters
+- If a parameter is used multiple times, use the exact same description string
+- Consider parameter naming: use different names if they serve different purposes
+
+### Google Gemini API Schema Compatibility
+
+**Error**: `Invalid JSON payload received. Unknown name "const" at 'tools[0].function_declarations[...]'`
+
+**Cause**: Google's Gemini API function calling format doesn't support certain JSON Schema features that work in standard JSON Schema:
+- `required` arrays inside deeply nested array item objects
+- Single-value `enum` arrays (which Gemini may convert to `const`, which it doesn't support)
+
+**Example Problem**:
+```json
+{
+  "properties": {
+    "indexedContacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "discord_id": { "type": "string" }
+        },
+        "required": ["discord_id"]  // ❌ Not supported in nested array items
+      }
+    },
+    "source": {
+      "type": "string",
+      "enum": ["direct_messages"]  // ❌ Single-value enum may cause issues
+    }
+  }
+}
+```
+
+**Solution**: Simplify schemas for Gemini compatibility:
+```json
+{
+  "properties": {
+    "indexedContacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "discord_id": { 
+            "type": "string",
+            "description": "Discord user ID (required)"
+          }
+        }
+        // ✅ Remove required array from nested items
+      }
+    },
+    "source": {
+      "type": "string",
+      "description": "Source of indexed contacts (e.g. direct_messages)"
+      // ✅ Use plain string instead of single-value enum
+    }
+  }
+}
+```
+
+**Best Practices**:
+- Keep output parser schemas simple and flat where possible
+- Use `required` only at the top level of the schema
+- Avoid single-value enums; use plain types with descriptive text instead
+- Test schemas with Gemini API before deploying
+- Reference working schemas (e.g., from Discord CRUD Agent or MCP Client)
+
+### Tool Workflow Error Handling
+
+**Error**: `Cannot create property 'pairedItem' on string 'There was an error: "Failed to execute..."'`
+
+**Cause**: When tool workflows (especially those calling Discord MCP Client) return error strings instead of structured objects, n8n's internal processing tries to wrap them in objects but fails if the error is already a raw string.
+
+**Example Problem**:
+- Discord MCP Client fails with "Unknown Channel" error
+- Error returned as raw string: `"Failed to execute operation: ..."`
+- Tool workflow node cannot process string as structured output
+- Workflow execution fails
+
+**Solution**: Update agent system messages to handle errors gracefully:
+
+```
+**Error Handling Guidelines:**
+- If any tool returns an error message (e.g., "Unknown Channel", "Failed to execute"), treat it as a non-fatal error
+- Skip the failed operation and continue with the next item
+- DO NOT stop indexing/processing due to individual operation failures
+- When a tool workflow returns an error string, acknowledge it but continue processing other items
+- Track successful vs failed operations and report both in final summary
+```
+
+**Best Practices**:
+- Always include explicit error handling instructions in agent system messages
+- Design workflows to be resilient: continue processing even when some operations fail
+- Use structured output parsers with error status enums: `["success", "error", "partial"]`
+- Report both successes and failures in output summaries
+- Test workflows with invalid inputs (e.g., non-existent channel IDs)
+
+### DataTable Tool Filter Patterns
+
+**Common Mistake**: Using filters that don't match any rows can cause unexpected behavior.
+
+**Best Practice**: 
+- For "Clear All Rows" operations, use empty filter conditions: `"filters": { "conditions": [] }`
+- Always validate that required parameters (like `discord_id`) are provided before operations
+- Use `upsert` operations when you want to create-or-update, avoiding need to check existence first
+
+### Node ID Uniqueness
+
+**Common Mistake**: Copying workflow nodes without regenerating unique IDs can cause conflicts.
+
+**Best Practice**:
+- Always generate new UUIDs for all nodes when creating or copying workflows
+- Use proper UUID format: `xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx`
+- Verify node IDs are unique within the workflow before importing
 
 ---
 

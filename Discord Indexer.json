@@ -6,16 +6,16 @@
                 "text": "={{ $json.indexingPrompt }}",
                 "hasOutputParser": true,
                 "options": {
-                    "systemMessage": "You are an expert assistant for indexing Discord contacts from Direct Message conversations into a DataTable. Your role is to discover and cache Discord user profiles from DM conversations.\n\n**Primary Operation: Indexing Contacts from DMs**\nYour main task is to:\n1. Discover all Direct Message conversations/channels\n2. Extract unique user IDs from DM conversations\n3. Fetch user profiles for each discovered user\n4. Cache all contacts in the DataTable\n\n**Re-caching Behavior:**\n- When the user requests re-indexing or mentions clearing/refreshing the cache, you MUST clear ALL rows from the DataTable FIRST before indexing\n- Use the 'Clear All Rows' tool to delete all existing contacts\n- Then proceed with fresh indexing from all DM conversations\n- This ensures a clean, complete index with no stale data\n\n**Indexing Workflow:**\n1. If re-indexing requested: Clear all rows using 'Clear All Rows' tool\n2. List all DM conversations using 'List DM Conversations' tool\n3. For each DM channel:\n   - Get messages using 'Get DM Messages' to discover participants\n   - Extract unique user IDs from message authors\n4. For each unique user ID discovered:\n   - Fetch profile using 'Fetch User Profile' tool\n   - Extract discord_id, username, display_name\n5. Batch upsert all discovered contacts using 'Upsert row(s) in Data table'\n\n**DataTable Schema:**\n- discord_id (string, required, unique identifier)\n- username (string)\n- display_name (string)\n- createdAt (auto-managed timestamp)\n- updatedAt (auto-managed timestamp)\n\n**Guidelines:**\n- Always check if the user wants to re-index (clear and refresh) vs incremental indexing\n- When re-indexing is requested, clear the table first\n- Extract contacts from ALL available DM conversations\n- Deduplicate user IDs before fetching profiles (each user should only be fetched once)\n- Batch process contacts efficiently\n- Handle errors gracefully - continue indexing even if some profiles fail to fetch\n- Provide summary of indexed contacts count\n- Include status and counts in your response"
+                    "systemMessage": "You are an expert assistant for indexing Discord contacts from Direct Message conversations into a DataTable. Your role is to discover and cache Discord user profiles from DM conversations.\n\n**Primary Operation: Indexing Contacts from DMs**\nYour main task is to:\n1. Discover all Direct Message conversations/channels\n2. Extract unique user IDs from DM conversations\n3. Fetch user profiles for each discovered user\n4. Cache all contacts in the DataTable\n\n**Re-caching Behavior:**\n- When the user requests re-indexing or mentions clearing/refreshing the cache, you MUST clear ALL rows from the DataTable FIRST before indexing\n- Use the 'Clear All Rows' tool to delete all existing contacts\n- Then proceed with fresh indexing from all DM conversations\n- This ensures a clean, complete index with no stale data\n\n**Indexing Workflow:**\n1. If re-indexing requested: Clear all rows using 'Clear All Rows' tool\n2. List all DM conversations using 'List DM Conversations' tool\n3. For each DM channel:\n   - Try to get messages using 'Get DM Messages' to discover participants\n   - If a channel fails (e.g., \"Unknown Channel\" error), SKIP it and continue with the next channel\n   - Extract unique user IDs from message authors when successful\n4. For each unique user ID discovered:\n   - Fetch profile using 'Fetch User Profile' tool\n   - If profile fetch fails, skip that user and continue\n   - Extract discord_id, username, display_name from successful fetches\n5. Batch upsert all successfully discovered contacts using 'Upsert row(s) in Data table'\n\n**DataTable Schema:**\n- discord_id (string, required, unique identifier)\n- username (string)\n- display_name (string)\n- createdAt (auto-managed timestamp)\n- updatedAt (auto-managed timestamp)\n\n**Error Handling Guidelines:**\n- If any tool returns an error message (e.g., \"Unknown Channel\", \"Failed to execute\"), treat it as a non-fatal error\n- Skip the failed operation and continue with the next item\n- DO NOT stop indexing due to individual channel or user failures\n- Only stop if ALL operations fail\n- When a tool workflow returns an error string, acknowledge it in your response but continue processing other items\n- Track successful vs failed operations and report both in your final summary\n\n**Guidelines:**\n- Always check if the user wants to re-index (clear and refresh) vs incremental indexing\n- When re-indexing is requested, clear the table first\n- Extract contacts from ALL available DM conversations (skipping only those that fail)\n- Deduplicate user IDs before fetching profiles (each user should only be fetched once)\n- Batch process contacts efficiently\n- Handle errors gracefully - continue indexing even if some channels or profiles fail\n- Provide summary of indexed contacts count including any failures\n- Include status and counts in your response"
                 }
             },
             "type": "@n8n/n8n-nodes-langchain.agent",
             "typeVersion": 3,
             "position": [
-                24,
-                -192
+                40,
+                128
             ],
-            "id": "f7a8b9c1-d2e3-4f5a-6b7c-8d9e0f1a2b3c",
+            "id": "03ddeef5-9336-403a-8f09-bc2993ad3f69",
             "name": "Indexer AI Agent"
         },
         {
@@ -27,10 +27,10 @@
             "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
             "typeVersion": 1,
             "position": [
-                156,
-                240
+                172,
+                560
             ],
-            "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+            "id": "ff496e6c-6125-4c62-9285-ee080d9671fa",
             "name": "Google Gemini Chat Model",
             "credentials": {
                 "googlePalmApi": {
@@ -57,10 +57,10 @@
             "type": "n8n-nodes-base.dataTableTool",
             "typeVersion": 1,
             "position": [
-                -96,
-                32
+                48,
+                352
             ],
-            "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+            "id": "65b04f27-75ad-43a9-9b1a-abaabbe18d75",
             "name": "Clear All Rows in Data table"
         },
         {
@@ -100,97 +100,11 @@
             "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
             "typeVersion": 2.2,
             "position": [
-                32,
-                32
+                176,
+                352
             ],
-            "id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+            "id": "9bf55401-7b93-49d0-9226-e4c3857c9a0f",
             "name": "List DM Conversations"
-        },
-        {
-            "parameters": {
-                "description": "Call this tool to get messages from a specific Direct Message channel to discover participants",
-                "workflowId": {
-                    "__rl": true,
-                    "value": "qXzz33pAVkLd4UOO",
-                    "mode": "list",
-                    "cachedResultUrl": "/workflow/qXzz33pAVkLd4UOO",
-                    "cachedResultName": "Discord MCP Client"
-                },
-                "workflowInputs": {
-                    "mappingMode": "defineBelow",
-                    "value": {
-                        "discordRelatedPrompt": "={{ $fromAI('getDMMessagesPrompt', `Get messages from DM channel with ID or user ID`, 'string') }}"
-                    },
-                    "matchingColumns": [
-                        "discordRelatedPrompt"
-                    ],
-                    "schema": [
-                        {
-                            "id": "discordRelatedPrompt",
-                            "displayName": "discordRelatedPrompt",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "canBeUsedToMatch": true,
-                            "type": "string",
-                            "removed": false
-                        }
-                    ],
-                    "attemptToConvertTypes": false,
-                    "convertFieldsToString": false
-                }
-            },
-            "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
-            "typeVersion": 2.2,
-            "position": [
-                160,
-                32
-            ],
-            "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
-            "name": "Get DM Messages"
-        },
-        {
-            "parameters": {
-                "description": "Call this tool to retrieve a user profile from a discord username or user ID",
-                "workflowId": {
-                    "__rl": true,
-                    "value": "qXzz33pAVkLd4UOO",
-                    "mode": "list",
-                    "cachedResultUrl": "/workflow/qXzz33pAVkLd4UOO",
-                    "cachedResultName": "Discord MCP Client"
-                },
-                "workflowInputs": {
-                    "mappingMode": "defineBelow",
-                    "value": {
-                        "discordRelatedPrompt": "=Fetch profile of the user {{ $fromAI('userId', `Discord user ID to fetch profile for`, 'string') }}."
-                    },
-                    "matchingColumns": [
-                        "discordRelatedPrompt"
-                    ],
-                    "schema": [
-                        {
-                            "id": "discordRelatedPrompt",
-                            "displayName": "discordRelatedPrompt",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "canBeUsedToMatch": true,
-                            "type": "string",
-                            "removed": false
-                        }
-                    ],
-                    "attemptToConvertTypes": false,
-                    "convertFieldsToString": false
-                }
-            },
-            "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
-            "typeVersion": 2.2,
-            "position": [
-                288,
-                32
-            ],
-            "id": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
-            "name": "Fetch User Profile"
         },
         {
             "parameters": {
@@ -258,10 +172,10 @@
             "type": "n8n-nodes-base.dataTableTool",
             "typeVersion": 1,
             "position": [
-                416,
-                32
+                304,
+                352
             ],
-            "id": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c",
+            "id": "f1c26c19-17bc-4349-92f1-6575636b5303",
             "name": "Upsert row(s) in Data table"
         },
         {
@@ -273,10 +187,10 @@
             "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
             "typeVersion": 1.3,
             "position": [
-                -224,
-                32
+                -80,
+                352
             ],
-            "id": "a7b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d",
+            "id": "c482eee6-2c54-490b-8b57-3f7203ffcea9",
             "name": "Simple Memory"
         },
         {
@@ -292,10 +206,10 @@
             "type": "n8n-nodes-base.executeWorkflowTrigger",
             "typeVersion": 1.1,
             "position": [
-                -448,
-                -192
+                -304,
+                128
             ],
-            "id": "b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e",
+            "id": "2252b899-c170-4bcb-bfd4-30ada54dcd04",
             "name": "When Executed by Another Workflow"
         },
         {
@@ -307,10 +221,10 @@
             "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
             "typeVersion": 1.3,
             "position": [
-                544,
-                32
+                432,
+                352
             ],
-            "id": "c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f",
+            "id": "48fa97c0-e5cb-4428-86f9-aa9bd97a0f5f",
             "name": "Structured Output Parser"
         }
     ],
@@ -343,28 +257,6 @@
             ]
         },
         "List DM Conversations": {
-            "ai_tool": [
-                [
-                    {
-                        "node": "Indexer AI Agent",
-                        "type": "ai_tool",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Get DM Messages": {
-            "ai_tool": [
-                [
-                    {
-                        "node": "Indexer AI Agent",
-                        "type": "ai_tool",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Fetch User Profile": {
             "ai_tool": [
                 [
                     {
