@@ -3,10 +3,10 @@
         {
             "parameters": {
                 "promptType": "define",
-                "text": "={{ $json.discordContactsRelatedPrompt }}",
+                "text": "={{ $json.indexingPrompt }}",
                 "hasOutputParser": true,
                 "options": {
-                    "systemMessage": "You are an expert assistant for managing Discord user records in a DataTable. Your role is to help users perform CRUD (Create, Read, Update, Delete) operations on user records.\n\n**Available Operations:**\n1. **Create** - Add a new Discord user record with discord_id, username, display_name, and last_messaged\n2. **Read/Search** - Retrieve user records by searching discord_id, username, or display_name\n3. **Update** - Modify existing user records by discord_id (can update username, display_name, last_messaged)\n4. **Delete** - Remove a user record by discord_id\n\n**DataTable Schema:**\n- discord_id (string, required, unique identifier)\n- username (string)\n- display_name (string)\n- createdAt (auto-managed timestamp)\n- updatedAt (auto-managed timestamp)\n\n**Guidelines:**\n- Remember that query input user name might not be correct. \n- Check your MEMORY first for even for close matches, and if not found you must use the 'profile fetcher' and find the best match.\n- Fetching a profile must only be done if there are no matches in the db.\n- If you fetch & remember a user who is not in the DB, add the user to DB.\n- Always extract exact parameter values from user requests (discord_id, username, display_name, last_messaged)\n- For Create operations: require discord_id, optionally include username, display_name, last_messaged\n- For Read operations: use search_query parameter to search across discord_id, username, or display_name\n- For Update operations: require discord_id, include fields to update (username, display_name, last_messaged)\n- For Delete operations: require discord_id\n- Validate that discord_id is provided for Create, Update, and Delete operations\n- Provide clear, helpful responses after each operation\n- Handle errors gracefully and suggest corrections if validation fails\n- When multiple records match a search, return all matching records"
+                    "systemMessage": "You are an expert assistant for indexing Discord contacts from Direct Message conversations into a DataTable. Your role is to discover and cache Discord user profiles from DM conversations.\n\n**Primary Operation: Indexing Contacts from DMs**\nYour main task is to:\n1. Discover all Direct Message conversations/channels\n2. Extract unique user IDs from DM conversations\n3. Fetch user profiles for each discovered user\n4. Cache all contacts in the DataTable\n\n**Re-caching Behavior:**\n- When the user requests re-indexing or mentions clearing/refreshing the cache, you MUST clear ALL rows from the DataTable FIRST before indexing\n- Use the 'Clear All Rows' tool to delete all existing contacts\n- Then proceed with fresh indexing from all DM conversations\n- This ensures a clean, complete index with no stale data\n\n**Indexing Workflow:**\n1. If re-indexing requested: Clear all rows using 'Clear All Rows' tool\n2. List all DM conversations using 'List DM Conversations' tool\n3. For each DM channel:\n   - Get messages using 'Get DM Messages' to discover participants\n   - Extract unique user IDs from message authors\n4. For each unique user ID discovered:\n   - Fetch profile using 'Fetch User Profile' tool\n   - Extract discord_id, username, display_name\n5. Batch upsert all discovered contacts using 'Upsert row(s) in Data table'\n\n**DataTable Schema:**\n- discord_id (string, required, unique identifier)\n- username (string)\n- display_name (string)\n- createdAt (auto-managed timestamp)\n- updatedAt (auto-managed timestamp)\n\n**Guidelines:**\n- Always check if the user wants to re-index (clear and refresh) vs incremental indexing\n- When re-indexing is requested, clear the table first\n- Extract contacts from ALL available DM conversations\n- Deduplicate user IDs before fetching profiles (each user should only be fetched once)\n- Batch process contacts efficiently\n- Handle errors gracefully - continue indexing even if some profiles fail to fetch\n- Provide summary of indexed contacts count\n- Include status and counts in your response"
                 }
             },
             "type": "@n8n/n8n-nodes-langchain.agent",
@@ -15,8 +15,8 @@
                 24,
                 -192
             ],
-            "id": "ec6db855-e1d5-4860-9038-fedf88f36afb",
-            "name": "CRUD AI Agent"
+            "id": "f7a8b9c1-d2e3-4f5a-6b7c-8d9e0f1a2b3c",
+            "name": "Indexer AI Agent"
         },
         {
             "parameters": {
@@ -30,7 +30,7 @@
                 156,
                 240
             ],
-            "id": "4d2a297c-13f4-48c0-a882-17b0f04b8edb",
+            "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
             "name": "Google Gemini Chat Model",
             "credentials": {
                 "googlePalmApi": {
@@ -38,106 +38,6 @@
                     "name": "Google Gemini(PaLM) Api account"
                 }
             }
-        },
-        {
-            "parameters": {
-                "operation": "get",
-                "dataTableId": {
-                    "__rl": true,
-                    "value": "aqMjQOYOqhSGVImr",
-                    "mode": "list",
-                    "cachedResultName": "Paragon's Discord Contacts",
-                    "cachedResultUrl": "/projects/GEUEn6ArNROzJ5FY/datatables/aqMjQOYOqhSGVImr"
-                },
-                "filters": {
-                    "conditions": [
-                        {
-                            "keyName": "discord_id",
-                            "keyValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('conditions0_Value', `exact user discord ID`, 'string') }}"
-                        }
-                    ]
-                }
-            },
-            "type": "n8n-nodes-base.dataTableTool",
-            "typeVersion": 1,
-            "position": [
-                -96,
-                32
-            ],
-            "id": "8a56bdb2-5ebf-4197-8e95-4ad7881baa6b",
-            "name": "Get row(s) in Data table"
-        },
-        {
-            "parameters": {
-                "operation": "update",
-                "dataTableId": {
-                    "__rl": true,
-                    "value": "aqMjQOYOqhSGVImr",
-                    "mode": "list",
-                    "cachedResultName": "Paragon's Discord Contacts",
-                    "cachedResultUrl": "/projects/GEUEn6ArNROzJ5FY/datatables/aqMjQOYOqhSGVImr"
-                },
-                "filters": {
-                    "conditions": [
-                        {
-                            "keyName": "discord_id",
-                            "keyValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('conditions0_Value', `exact discord user ID`, 'string') }}"
-                        }
-                    ]
-                },
-                "columns": {
-                    "mappingMode": "defineBelow",
-                    "value": {
-                        "discord_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('discord_id', ``, 'string') }}",
-                        "username": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('username', ``, 'string') }}",
-                        "display_name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('display_name', ``, 'string') }}"
-                    },
-                    "matchingColumns": [],
-                    "schema": [
-                        {
-                            "id": "discord_id",
-                            "displayName": "discord_id",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "readOnly": false,
-                            "removed": false
-                        },
-                        {
-                            "id": "username",
-                            "displayName": "username",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "readOnly": false,
-                            "removed": false
-                        },
-                        {
-                            "id": "display_name",
-                            "displayName": "display_name",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "readOnly": false,
-                            "removed": false
-                        }
-                    ],
-                    "attemptToConvertTypes": false,
-                    "convertFieldsToString": false
-                },
-                "options": {}
-            },
-            "type": "n8n-nodes-base.dataTableTool",
-            "typeVersion": 1,
-            "position": [
-                32,
-                32
-            ],
-            "id": "58281cc9-526a-498e-9456-7859f79f0805",
-            "name": "Update row(s) in Data table"
         },
         {
             "parameters": {
@@ -150,23 +50,104 @@
                     "cachedResultUrl": "/projects/GEUEn6ArNROzJ5FY/datatables/aqMjQOYOqhSGVImr"
                 },
                 "filters": {
-                    "conditions": [
-                        {
-                            "keyName": "discord_id",
-                            "keyValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('conditions0_Value', `exact user discord ID`, 'string') }}"
-                        }
-                    ]
+                    "conditions": []
                 },
                 "options": {}
             },
             "type": "n8n-nodes-base.dataTableTool",
             "typeVersion": 1,
             "position": [
+                -96,
+                32
+            ],
+            "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+            "name": "Clear All Rows in Data table"
+        },
+        {
+            "parameters": {
+                "description": "Call this tool to list all Direct Message conversations/channels from Discord",
+                "workflowId": {
+                    "__rl": true,
+                    "value": "qXzz33pAVkLd4UOO",
+                    "mode": "list",
+                    "cachedResultUrl": "/workflow/qXzz33pAVkLd4UOO",
+                    "cachedResultName": "Discord MCP Client"
+                },
+                "workflowInputs": {
+                    "mappingMode": "defineBelow",
+                    "value": {
+                        "discordRelatedPrompt": "={{ $fromAI('listDMPrompt', `List all Direct Message conversations/channels`, 'string') }}"
+                    },
+                    "matchingColumns": [
+                        "discordRelatedPrompt"
+                    ],
+                    "schema": [
+                        {
+                            "id": "discordRelatedPrompt",
+                            "displayName": "discordRelatedPrompt",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "canBeUsedToMatch": true,
+                            "type": "string",
+                            "removed": false
+                        }
+                    ],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": false
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+            "typeVersion": 2.2,
+            "position": [
+                32,
+                32
+            ],
+            "id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+            "name": "List DM Conversations"
+        },
+        {
+            "parameters": {
+                "description": "Call this tool to get messages from a specific Direct Message channel to discover participants",
+                "workflowId": {
+                    "__rl": true,
+                    "value": "qXzz33pAVkLd4UOO",
+                    "mode": "list",
+                    "cachedResultUrl": "/workflow/qXzz33pAVkLd4UOO",
+                    "cachedResultName": "Discord MCP Client"
+                },
+                "workflowInputs": {
+                    "mappingMode": "defineBelow",
+                    "value": {
+                        "discordRelatedPrompt": "={{ $fromAI('getDMMessagesPrompt', `Get messages from DM channel with ID or user ID`, 'string') }}"
+                    },
+                    "matchingColumns": [
+                        "discordRelatedPrompt"
+                    ],
+                    "schema": [
+                        {
+                            "id": "discordRelatedPrompt",
+                            "displayName": "discordRelatedPrompt",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "canBeUsedToMatch": true,
+                            "type": "string",
+                            "removed": false
+                        }
+                    ],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": false
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+            "typeVersion": 2.2,
+            "position": [
                 160,
                 32
             ],
-            "id": "b20f606a-60e6-4009-b4c3-0fd486bcee09",
-            "name": "Delete row(s) in Data table"
+            "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+            "name": "Get DM Messages"
         },
         {
             "parameters": {
@@ -181,7 +162,7 @@
                 "workflowInputs": {
                     "mappingMode": "defineBelow",
                     "value": {
-                        "discordRelatedPrompt": "=Fetch profile of the user {{ $fromAI('userId', ``, 'string') }}."
+                        "discordRelatedPrompt": "=Fetch profile of the user {{ $fromAI('userId', `Discord user ID to fetch profile for`, 'string') }}."
                     },
                     "matchingColumns": [
                         "discordRelatedPrompt"
@@ -208,8 +189,8 @@
                 288,
                 32
             ],
-            "id": "a71b58e4-b955-4d64-b989-5ca26aed71ef",
-            "name": "Fetch a user profile"
+            "id": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+            "name": "Fetch User Profile"
         },
         {
             "parameters": {
@@ -225,7 +206,7 @@
                     "conditions": [
                         {
                             "keyName": "discord_id",
-                            "keyValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('conditions0_Value', `exact Discord ID from fetched user profile`, 'string') }}"
+                            "keyValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('discord_id', `Discord ID from fetched user profile`, 'string') }}"
                         }
                     ]
                 },
@@ -280,7 +261,7 @@
                 416,
                 32
             ],
-            "id": "21996233-aee8-44e9-9ca3-60d22e581a37",
+            "id": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c",
             "name": "Upsert row(s) in Data table"
         },
         {
@@ -295,7 +276,7 @@
                 -224,
                 32
             ],
-            "id": "aadf0be1-5309-4b69-8914-0aae2f22cd0b",
+            "id": "a7b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d",
             "name": "Simple Memory"
         },
         {
@@ -303,7 +284,7 @@
                 "workflowInputs": {
                     "values": [
                         {
-                            "name": "discordContactsRelatedPrompt"
+                            "name": "indexingPrompt"
                         }
                     ]
                 }
@@ -314,13 +295,13 @@
                 -448,
                 -192
             ],
-            "id": "accb9a21-d7ff-432f-8c77-3121f2474e1d",
+            "id": "b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e",
             "name": "When Executed by Another Workflow"
         },
         {
             "parameters": {
                 "schemaType": "manual",
-                "inputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\"success\", \"error\", \"not_found\", \"partial\"],\n      \"description\": \"Status of the operation\"\n    },\n    \"data\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"contact\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"discord_id\": {\n              \"type\": \"string\",\n              \"description\": \"Discord user ID\"\n            },\n            \"username\": {\n              \"type\": \"string\",\n              \"description\": \"Discord username\"\n            },\n            \"display_name\": {\n              \"type\": \"string\",\n              \"description\": \"Display name\"\n            }\n          },\n          \"required\": [\"discord_id\", \"username\"]\n        }\n      }\n    }\n  },\n  \"required\": [\"status\", \"data\"]\n}",
+                "inputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\"success\", \"error\", \"partial\"],\n      \"description\": \"Status of the indexing operation\"\n    },\n    \"contactsIndexed\": {\n      \"type\": \"number\",\n      \"description\": \"Total number of contacts successfully indexed\"\n    },\n    \"contactsProcessed\": {\n      \"type\": \"number\",\n      \"description\": \"Total number of contacts processed (including failures)\"\n    },\n    \"data\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"indexedContacts\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"discord_id\": {\n                \"type\": \"string\",\n                \"description\": \"Discord user ID\"\n              },\n              \"username\": {\n                \"type\": \"string\",\n                \"description\": \"Discord username\"\n              },\n              \"display_name\": {\n                \"type\": \"string\",\n                \"description\": \"Display name\"\n              }\n            },\n            \"required\": [\"discord_id\", \"username\"]\n          }\n        },\n        \"source\": {\n          \"type\": \"string\",\n          \"enum\": [\"direct_messages\"],\n          \"description\": \"Source of indexed contacts\"\n        }\n      }\n    },\n    \"message\": {\n      \"type\": \"string\",\n      \"description\": \"Summary message about the indexing operation\"\n    }\n  },\n  \"required\": [\"status\", \"contactsIndexed\", \"contactsProcessed\", \"data\", \"message\"]\n}",
                 "autoFix": true
             },
             "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
@@ -329,7 +310,7 @@
                 544,
                 32
             ],
-            "id": "1055062d-8431-4ffb-bb10-8e6b63a65d52",
+            "id": "c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f",
             "name": "Structured Output Parser"
         }
     ],
@@ -338,7 +319,7 @@
             "ai_languageModel": [
                 [
                     {
-                        "node": "CRUD AI Agent",
+                        "node": "Indexer AI Agent",
                         "type": "ai_languageModel",
                         "index": 0
                     },
@@ -350,44 +331,44 @@
                 ]
             ]
         },
-        "Get row(s) in Data table": {
+        "Clear All Rows in Data table": {
             "ai_tool": [
                 [
                     {
-                        "node": "CRUD AI Agent",
+                        "node": "Indexer AI Agent",
                         "type": "ai_tool",
                         "index": 0
                     }
                 ]
             ]
         },
-        "Update row(s) in Data table": {
+        "List DM Conversations": {
             "ai_tool": [
                 [
                     {
-                        "node": "CRUD AI Agent",
+                        "node": "Indexer AI Agent",
                         "type": "ai_tool",
                         "index": 0
                     }
                 ]
             ]
         },
-        "Delete row(s) in Data table": {
+        "Get DM Messages": {
             "ai_tool": [
                 [
                     {
-                        "node": "CRUD AI Agent",
+                        "node": "Indexer AI Agent",
                         "type": "ai_tool",
                         "index": 0
                     }
                 ]
             ]
         },
-        "Fetch a user profile": {
+        "Fetch User Profile": {
             "ai_tool": [
                 [
                     {
-                        "node": "CRUD AI Agent",
+                        "node": "Indexer AI Agent",
                         "type": "ai_tool",
                         "index": 0
                     }
@@ -398,7 +379,7 @@
             "ai_tool": [
                 [
                     {
-                        "node": "CRUD AI Agent",
+                        "node": "Indexer AI Agent",
                         "type": "ai_tool",
                         "index": 0
                     }
@@ -409,7 +390,7 @@
             "ai_memory": [
                 [
                     {
-                        "node": "CRUD AI Agent",
+                        "node": "Indexer AI Agent",
                         "type": "ai_memory",
                         "index": 0
                     }
@@ -420,7 +401,7 @@
             "main": [
                 [
                     {
-                        "node": "CRUD AI Agent",
+                        "node": "Indexer AI Agent",
                         "type": "main",
                         "index": 0
                     }
@@ -431,7 +412,7 @@
             "ai_outputParser": [
                 [
                     {
-                        "node": "CRUD AI Agent",
+                        "node": "Indexer AI Agent",
                         "type": "ai_outputParser",
                         "index": 0
                     }
@@ -442,7 +423,7 @@
     "pinData": {
         "When Executed by Another Workflow": [
             {
-                "discordContactsRelatedPrompt": "get contact metaops"
+                "indexingPrompt": "Index all contacts from Direct Messages"
             }
         ]
     },
