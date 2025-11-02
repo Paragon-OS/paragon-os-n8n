@@ -6,13 +6,13 @@
                 "text": "={{ $json.indexingPrompt }}",
                 "hasOutputParser": true,
                 "options": {
-                    "systemMessage": "You are an expert assistant for indexing Discord contacts from Direct Message conversations into a DataTable. Your role is to discover and cache Discord user profiles from DM conversations.\n\n**Primary Operation: Indexing Contacts from DMs**\nYour main task is to:\n1. Discover all Direct Message conversations/channels\n2. Extract unique user IDs from DM conversations\n3. Fetch user profiles for each discovered user\n4. Cache all contacts in the DataTable\n\n**Re-caching Behavior:**\n- When the user requests re-indexing or mentions clearing/refreshing the cache, you MUST clear ALL rows from the DataTable FIRST before indexing\n- Use the 'Clear All Rows' tool to delete all existing contacts\n- Then proceed with fresh indexing from all DM conversations\n- This ensures a clean, complete index with no stale data\n\n**Indexing Workflow:**\n1. If re-indexing requested: Clear all rows using 'Clear All Rows' tool\n2. List all DM conversations using 'List DM Conversations' tool\n3. For each DM channel:\n   - Try to get messages using 'Get DM Messages' to discover participants\n   - If a channel fails (e.g., \"Unknown Channel\" error), SKIP it and continue with the next channel\n   - Extract unique user IDs from message authors when successful\n4. For each unique user ID discovered:\n   - Fetch profile using 'Fetch User Profile' tool\n   - If profile fetch fails, skip that user and continue\n   - Extract discord_id, username, display_name from successful fetches\n5. Batch upsert all successfully discovered contacts using 'Upsert row(s) in Data table'\n\n**DataTable Schema:**\n- discord_id (string, required, unique identifier)\n- username (string)\n- display_name (string)\n- createdAt (auto-managed timestamp)\n- updatedAt (auto-managed timestamp)\n\n**Error Handling Guidelines:**\n- If any tool returns an error message (e.g., \"Unknown Channel\", \"Failed to execute\"), treat it as a non-fatal error\n- Skip the failed operation and continue with the next item\n- DO NOT stop indexing due to individual channel or user failures\n- Only stop if ALL operations fail\n- When a tool workflow returns an error string, acknowledge it in your response but continue processing other items\n- Track successful vs failed operations and report both in your final summary\n\n**Guidelines:**\n- Always check if the user wants to re-index (clear and refresh) vs incremental indexing\n- When re-indexing is requested, clear the table first\n- Extract contacts from ALL available DM conversations (skipping only those that fail)\n- Deduplicate user IDs before fetching profiles (each user should only be fetched once)\n- Batch process contacts efficiently\n- Handle errors gracefully - continue indexing even if some channels or profiles fail\n- Provide summary of indexed contacts count including any failures\n- Include status and counts in your response"
+                    "systemMessage": "You are an expert assistant for indexing Discord contacts from Direct Message conversations into a DataTable. Your role is to discover and cache Discord user profiles from DM conversations.\n\n**Primary Operation: Indexing Contacts from DMs**\nYour main task is to:\n1. Discover all Direct Message conversations/channels\n2. Extract unique user IDs from DM conversations\n3. Fetch user profiles for each discovered user\n4. Cache all contacts in the DataTable\n\n**Re-caching Behavior:**\n- When the user requests re-indexing or mentions clearing/refreshing the cache, you MUST clear ALL rows from the DataTable FIRST before indexing\n- Use the 'Clear All Rows' tool to delete all existing contacts\n- Then proceed with fresh indexing from all DM conversations\n- This ensures a clean, complete index with no stale data\n\n**Indexing Workflow:**\n1. If re-indexing requested: Clear all rows using 'Clear All Rows' tool\n2. List all DM conversations using 'discord_list_contacts' tool\n3. For each DM channel:\n   - Try to get messages using 'Get DM Messages' to discover participants\n   - If a channel fails (e.g., \"Unknown Channel\" error), SKIP it and continue with the next channel\n   - Extract unique user IDs from message authors when successful\n4. For each unique user ID discovered:\n   - Fetch profile using 'Fetch User Profile' tool\n   - If profile fetch fails, skip that user and continue\n   - Extract discord_id, username, display_name from successful fetches\n5. Batch upsert all successfully discovered contacts using 'Upsert row(s) in Data table'\n\n**DataTable Schema:**\n- discord_id (string, required, unique identifier)\n- username (string)\n- display_name (string)\n- createdAt (auto-managed timestamp)\n- updatedAt (auto-managed timestamp)\n\n**Error Handling Guidelines:**\n- If any tool returns an error message (e.g., \"Unknown Channel\", \"Failed to execute\"), treat it as a non-fatal error\n- Skip the failed operation and continue with the next item\n- DO NOT stop indexing due to individual channel or user failures\n- Only stop if ALL operations fail\n- When a tool workflow returns an error string, acknowledge it in your response but continue processing other items\n- Track successful vs failed operations and report both in your final summary\n\n**Guidelines:**\n- Always check if the user wants to re-index (clear and refresh) vs incremental indexing\n- When re-indexing is requested, clear the table first\n- Extract contacts from ALL available DM conversations (skipping only those that fail)\n- Deduplicate user IDs before fetching profiles (each user should only be fetched once)\n- Batch process contacts efficiently\n- Handle errors gracefully - continue indexing even if some channels or profiles fail\n- Provide summary of indexed contacts count including any failures\n- Include status and counts in your response"
                 }
             },
             "type": "@n8n/n8n-nodes-langchain.agent",
             "typeVersion": 3,
             "position": [
-                40,
+                128,
                 128
             ],
             "id": "03ddeef5-9336-403a-8f09-bc2993ad3f69",
@@ -27,7 +27,7 @@
             "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
             "typeVersion": 1,
             "position": [
-                172,
+                -80,
                 560
             ],
             "id": "ff496e6c-6125-4c62-9285-ee080d9671fa",
@@ -50,61 +50,23 @@
                     "cachedResultUrl": "/projects/GEUEn6ArNROzJ5FY/datatables/aqMjQOYOqhSGVImr"
                 },
                 "filters": {
-                    "conditions": []
+                    "conditions": [
+                        {
+                            "keyName": "discord_id",
+                            "condition": "isNotEmpty"
+                        }
+                    ]
                 },
                 "options": {}
             },
             "type": "n8n-nodes-base.dataTableTool",
             "typeVersion": 1,
             "position": [
-                48,
+                136,
                 352
             ],
             "id": "65b04f27-75ad-43a9-9b1a-abaabbe18d75",
             "name": "Clear All Rows in Data table"
-        },
-        {
-            "parameters": {
-                "description": "Call this tool to list all Direct Message conversations/channels from Discord",
-                "workflowId": {
-                    "__rl": true,
-                    "value": "qXzz33pAVkLd4UOO",
-                    "mode": "list",
-                    "cachedResultUrl": "/workflow/qXzz33pAVkLd4UOO",
-                    "cachedResultName": "Discord MCP Client"
-                },
-                "workflowInputs": {
-                    "mappingMode": "defineBelow",
-                    "value": {
-                        "discordRelatedPrompt": "={{ $fromAI('listDMPrompt', `List all Direct Message conversations/channels`, 'string') }}"
-                    },
-                    "matchingColumns": [
-                        "discordRelatedPrompt"
-                    ],
-                    "schema": [
-                        {
-                            "id": "discordRelatedPrompt",
-                            "displayName": "discordRelatedPrompt",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "canBeUsedToMatch": true,
-                            "type": "string",
-                            "removed": false
-                        }
-                    ],
-                    "attemptToConvertTypes": false,
-                    "convertFieldsToString": false
-                }
-            },
-            "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
-            "typeVersion": 2.2,
-            "position": [
-                176,
-                352
-            ],
-            "id": "9bf55401-7b93-49d0-9226-e4c3857c9a0f",
-            "name": "List DM Conversations"
         },
         {
             "parameters": {
@@ -172,26 +134,11 @@
             "type": "n8n-nodes-base.dataTableTool",
             "typeVersion": 1,
             "position": [
-                304,
+                264,
                 352
             ],
             "id": "f1c26c19-17bc-4349-92f1-6575636b5303",
             "name": "Upsert row(s) in Data table"
-        },
-        {
-            "parameters": {
-                "sessionIdType": "customKey",
-                "sessionKey": "={{ $workflow.id }} v1",
-                "contextWindowLength": 10
-            },
-            "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
-            "typeVersion": 1.3,
-            "position": [
-                -80,
-                352
-            ],
-            "id": "c482eee6-2c54-490b-8b57-3f7203ffcea9",
-            "name": "Simple Memory"
         },
         {
             "parameters": {
@@ -221,14 +168,132 @@
             "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
             "typeVersion": 1.3,
             "position": [
-                432,
+                808,
                 352
             ],
             "id": "48fa97c0-e5cb-4428-86f9-aa9bd97a0f5f",
             "name": "Structured Output Parser"
+        },
+        {
+            "parameters": {
+                "operation": "executeTool",
+                "toolName": "discord_list_contacts",
+                "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', `here's the tool schema\n\n{\n  \"name\": \"discord_list_channels\",\n  \"description\": \"List all accessible channels for the current user with pagination support\",\n  \"schema\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"guildId\": {\n        \"type\": \"string\",\n        \"description\": \"Optional: Filter channels by Discord server (guild) ID\"\n      },\n      \"limit\": {\n        \"type\": \"number\",\n        \"description\": \"Number of channels to fetch per page (default: 50, max: 500)\"\n      },\n      \"offset\": {\n        \"type\": \"number\",\n        \"description\": \"Starting position for pagination (default: 0)\"\n      },\n      \"applyFilters\": {\n        \"type\": \"boolean\",\n        \"description\": \"Whether to apply channel whitelist/blacklist filters (default: true)\"\n      },\n      \"checkPermissions\": {\n        \"type\": \"boolean\",\n        \"description\": \"Whether to filter channels based on user permissions (default: true)\"\n      }\n    },\n    \"additionalProperties\": false,\n    \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n  }\n}`, 'json') }}"
+            },
+            "type": "n8n-nodes-mcp.mcpClientTool",
+            "typeVersion": 1,
+            "position": [
+                392,
+                352
+            ],
+            "id": "8cc4b536-c98a-4cdb-94ca-df1ecadfc0ac",
+            "name": "Discord List Contacts",
+            "credentials": {
+                "mcpClientApi": {
+                    "id": "ZFofx3k2ze1wsifx",
+                    "name": "Discord MCP Server"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "dataType": "binary",
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+            "typeVersion": 1.1,
+            "position": [
+                1248,
+                352
+            ],
+            "id": "9a3fd645-cb97-447e-8ba3-9eb3514e5cef",
+            "name": "Default Data Loader"
+        },
+        {
+            "parameters": {
+                "mode": "insert",
+                "memoryKey": {
+                    "__rl": true,
+                    "value": "contact_store_key",
+                    "mode": "list",
+                    "cachedResultName": "contact_store_key"
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+            "typeVersion": 1.2,
+            "position": [
+                1176,
+                128
+            ],
+            "id": "a825025d-230c-43e1-9070-a121226af759",
+            "name": "Insert Data to Store"
+        },
+        {
+            "parameters": {},
+            "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                600,
+                560
+            ],
+            "id": "e3242cf3-57ec-43b1-bb8c-3f4fcbbb4587",
+            "name": "Embeddings Google Gemini",
+            "credentials": {
+                "googlePalmApi": {
+                    "id": "NIhZoi9otQV2vaAP",
+                    "name": "Google Gemini(PaLM) Api account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "sessionIdType": "customKey",
+                "sessionKey": "={{ $workflow.id }} v1",
+                "contextWindowLength": 10
+            },
+            "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+            "typeVersion": 1.3,
+            "position": [
+                8,
+                352
+            ],
+            "id": "c482eee6-2c54-490b-8b57-3f7203ffcea9",
+            "name": "Simple Memory"
+        },
+        {
+            "parameters": {
+                "mode": "retrieve-as-tool",
+                "toolName": "contact_knowledge_base",
+                "toolDescription": "Use this discord contact knowledge base to answer questions from the user",
+                "memoryKey": {
+                    "__rl": true,
+                    "value": "contact_store_key",
+                    "mode": "list",
+                    "cachedResultName": "contact_store_key"
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+            "typeVersion": 1.2,
+            "position": [
+                520,
+                352
+            ],
+            "id": "471e7c2f-e363-4911-a95f-356dcb642fec",
+            "name": "Query Contact Embeddings Tool"
         }
     ],
     "connections": {
+        "Indexer AI Agent": {
+            "main": [
+                [
+                    {
+                        "node": "Insert Data to Store",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
         "Google Gemini Chat Model": {
             "ai_languageModel": [
                 [
@@ -256,34 +321,12 @@
                 ]
             ]
         },
-        "List DM Conversations": {
-            "ai_tool": [
-                [
-                    {
-                        "node": "Indexer AI Agent",
-                        "type": "ai_tool",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
         "Upsert row(s) in Data table": {
             "ai_tool": [
                 [
                     {
                         "node": "Indexer AI Agent",
                         "type": "ai_tool",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Simple Memory": {
-            "ai_memory": [
-                [
-                    {
-                        "node": "Indexer AI Agent",
-                        "type": "ai_memory",
                         "index": 0
                     }
                 ]
@@ -306,6 +349,66 @@
                     {
                         "node": "Indexer AI Agent",
                         "type": "ai_outputParser",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Discord List Contacts": {
+            "ai_tool": [
+                [
+                    {
+                        "node": "Indexer AI Agent",
+                        "type": "ai_tool",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Default Data Loader": {
+            "ai_document": [
+                [
+                    {
+                        "node": "Insert Data to Store",
+                        "type": "ai_document",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Embeddings Google Gemini": {
+            "ai_embedding": [
+                [
+                    {
+                        "node": "Query Contact Embeddings Tool",
+                        "type": "ai_embedding",
+                        "index": 0
+                    },
+                    {
+                        "node": "Insert Data to Store",
+                        "type": "ai_embedding",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Simple Memory": {
+            "ai_memory": [
+                [
+                    {
+                        "node": "Indexer AI Agent",
+                        "type": "ai_memory",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Query Contact Embeddings Tool": {
+            "ai_tool": [
+                [
+                    {
+                        "node": "Indexer AI Agent",
+                        "type": "ai_tool",
                         "index": 0
                     }
                 ]
