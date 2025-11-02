@@ -213,9 +213,9 @@
                 "columns": {
                     "mappingMode": "defineBelow",
                     "value": {
-                        "discord_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('discord_id', ``, 'string') }}",
-                        "username": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('username', ``, 'string') }}",
-                        "display_name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('display_name', ``, 'string') }}"
+                        "discord_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('discord_id', `Discord ID from fetched user profile`, 'string') }}",
+                        "username": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('username', `Username from fetched user profile`, 'string') }}",
+                        "display_name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('display_name', `Display name from fetched user profile`, 'string') }}"
                     },
                     "matchingColumns": [],
                     "schema": [
