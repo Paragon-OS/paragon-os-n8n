@@ -62,7 +62,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const rawContacts = JSON.parse($input.first().json.result.content[0].text)?.contacts;\n\nreturn {\n  output: {\n  contacts: rawContacts.map(contact=>({\n    id: contact.id,\n    username: contact.tag,\n    displayName: contact.displayName,\n    lastMessage: contact.lastMessageAtRelative,\n    contactType: contact.type\n  }))\n}\n}"
+        "jsCode": "const input = $input.first().json;\nlet rawContacts = [];\n\ntry {\n  // Handle MCP response format (from List Contacts)\n  if (input.result && input.result.content && input.result.content[0]) {\n    const parsed = JSON.parse(input.result.content[0].text);\n    rawContacts = parsed?.contacts || [];\n  }\n  // Handle cache format (direct from cache)\n  else if (input.contacts) {\n    rawContacts = Array.isArray(input.contacts) ? input.contacts : [];\n  }\n  // Handle cache output format (from cache system)\n  else if (input.output && input.output.contacts) {\n    rawContacts = Array.isArray(input.output.contacts) ? input.output.contacts : [];\n  }\n  \n  // Validate: if empty or invalid, return empty array\n  if (!Array.isArray(rawContacts) || rawContacts.length === 0) {\n    return {\n      output: {\n        contacts: []\n      },\n      error: 'No valid contacts found',\n      shouldFetch: true\n    };\n  }\n  \n  return {\n    output: {\n      contacts: rawContacts.map(contact=>({\n        id: contact.id,\n        username: contact.tag,\n        displayName: contact.displayName,\n        lastMessage: contact.lastMessageAtRelative,\n        contactType: contact.type\n      }))\n    }\n  };\n} catch (error) {\n  return {\n    output: {\n      contacts: []\n    },\n    error: error.message,\n    shouldFetch: true\n  };\n}"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -89,7 +89,7 @@
     },
     {
       "parameters": {
-        "jsCode": "return JSON.parse($input.first().json.result.content[0].text)"
+        "jsCode": "const item = $input.first().json;\n\n// Handle error cases (from onError: continueErrorOutput)\nif (item.error) {\n  return {\n    error: item.error.message || item.error,\n    toolName: item.toolName,\n    callParams: item.callParams,\n    success: false\n  };\n}\n\n// Handle success cases\ntry {\n  if (item.result && item.result.content && item.result.content[0]) {\n    return JSON.parse(item.result.content[0].text);\n  }\n  return item;\n} catch (error) {\n  return {\n    error: error.message,\n    result: item,\n    success: false\n  };\n}"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -248,7 +248,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const rawGuilds = JSON.parse($input.first().json.result.content[0].text)?.guilds;\n\nreturn {\n  output: {\n  guilds: rawGuilds.map(guild=>({\n    id: guild.id,\n    name: guild.name,\n    members: guild.memberCount\n  }))\n}\n}"
+        "jsCode": "const input = $input.first().json;\nlet rawGuilds = [];\n\ntry {\n  // Handle MCP response format (from List Guilds/Servers)\n  if (input.result && input.result.content && input.result.content[0]) {\n    const parsed = JSON.parse(input.result.content[0].text);\n    rawGuilds = parsed?.guilds || [];\n  }\n  // Handle cache format (direct from cache)\n  else if (input.guilds) {\n    rawGuilds = Array.isArray(input.guilds) ? input.guilds : [];\n  }\n  // Handle cache output format (from cache system)\n  else if (input.output && input.output.guilds) {\n    rawGuilds = Array.isArray(input.output.guilds) ? input.output.guilds : [];\n  }\n  \n  // Validate: if empty or invalid, return empty array\n  if (!Array.isArray(rawGuilds) || rawGuilds.length === 0) {\n    return {\n      output: {\n        guilds: []\n      },\n      error: 'No valid guilds found',\n      shouldFetch: true\n    };\n  }\n  \n  return {\n    output: {\n      guilds: rawGuilds.map(guild=>({\n        id: guild.id,\n        name: guild.name,\n        members: guild.memberCount\n      }))\n    }\n  };\n} catch (error) {\n  return {\n    output: {\n      guilds: []\n    },\n    error: error.message,\n    shouldFetch: true\n  };\n}"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -447,7 +447,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const tools = $input.first().json.tools;\n\nreturn {\n  output: {\n    tools\n  }\n}"
+        "jsCode": "const input = $input.first().json;\n\n// Validate cache result - check if tools exist and is valid\nif (!input || !input.tools || (Array.isArray(input.tools) && input.tools.length === 0) || (typeof input.tools === 'object' && Object.keys(input.tools).length === 0)) {\n  // Invalid/empty cache - return error to trigger fetch\n  return {\n    error: 'Invalid or empty cache result',\n    shouldFetch: true,\n    output: { tools: [] }\n  };\n}\n\nreturn {\n  output: {\n    tools: input.tools\n  }\n}"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -792,7 +792,8 @@
           "id": "ZFofx3k2ze1wsifx",
           "name": "Discord MCP Server"
         }
-      }
+      },
+      "onError": "continueErrorOutput"
     }
   ],
   "pinData": {
@@ -850,6 +851,11 @@
             "node": "Update Contact Cache",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Context Aggregator",
+            "type": "main",
+            "index": 1
           }
         ]
       ]
@@ -880,9 +886,9 @@
       "main": [
         [
           {
-            "node": "Context Aggregator",
+            "node": "Guild Data Simplifier",
             "type": "main",
-            "index": 3
+            "index": 0
           }
         ],
         [
@@ -912,6 +918,11 @@
             "node": "Update Guild Cache",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Context Aggregator",
+            "type": "main",
+            "index": 3
           }
         ]
       ]
@@ -975,9 +986,9 @@
       "main": [
         [
           {
-            "node": "Context Aggregator",
+            "node": "Contact Data Simplifier",
             "type": "main",
-            "index": 1
+            "index": 0
           }
         ],
         [
@@ -1104,6 +1115,13 @@
     },
     "MCP Sequence Executor": {
       "main": [
+        [
+          {
+            "node": "Execution Data Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Execution Data Aggregator",

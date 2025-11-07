@@ -340,9 +340,7 @@
             }
           ]
         },
-        "options": {
-          "dryRun": true
-        }
+        "options": {}
       },
       "id": "c33d06de-3c8e-45a2-805b-cdc64748f0c9",
       "name": "Drop all rows with expired cache entires",
