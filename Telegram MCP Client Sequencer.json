@@ -1,19 +1,18 @@
 {
-  "name": "Discord MCP Client Sequencer",
   "nodes": [
     {
       "parameters": {
         "options": {
-          "temperature": 0.2
+          "temperature": 0.4
         }
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        296,
-        320
+        -1032,
+        424
       ],
-      "id": "f90d8467-c7ea-4390-899c-35a12c404e08",
+      "id": "98f0b3b2-dfa1-43da-b7a3-e7ed90e2463b",
       "name": "Google Gemini Chat Model",
       "credentials": {
         "googlePalmApi": {
@@ -27,50 +26,50 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        -672,
-        -256
+        -2000,
+        -152
       ],
-      "id": "0fbe6559-c2aa-43b7-95bb-7020423d5559",
+      "id": "50c3a471-932b-4b08-836f-cdaf98d52276",
       "name": "List MCP Tools",
       "credentials": {
         "mcpClientApi": {
-          "id": "ZFofx3k2ze1wsifx",
-          "name": "Discord MCP Server"
+          "id": "aiYCclLDUqob5iQ0",
+          "name": "Telegram MCP Client (STDIO) account"
         }
       }
     },
     {
       "parameters": {
         "operation": "executeTool",
-        "toolName": "=discord_list_contacts",
+        "toolName": "=telegram_list_contacts",
         "toolParameters": "={}"
       },
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        -672,
-        -544
+        -2000,
+        -464
       ],
-      "id": "b919b10f-6a17-4294-974a-662e85b2eecb",
+      "id": "24be1123-dbf6-4fdc-9596-9280141b5dfc",
       "name": "List Contacts",
       "credentials": {
         "mcpClientApi": {
-          "id": "ZFofx3k2ze1wsifx",
-          "name": "Discord MCP Server"
+          "id": "aiYCclLDUqob5iQ0",
+          "name": "Telegram MCP Client (STDIO) account"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.first().json;\nlet rawContacts = [];\n\ntry {\n  // Handle MCP response format (from List Contacts)\n  if (input.result && input.result.content && input.result.content[0]) {\n    const parsed = JSON.parse(input.result.content[0].text);\n    rawContacts = parsed?.contacts || [];\n  }\n  // Handle cache format (direct from cache)\n  else if (input.contacts) {\n    rawContacts = Array.isArray(input.contacts) ? input.contacts : [];\n  }\n  // Handle cache output format (from cache system)\n  else if (input.output && input.output.contacts) {\n    rawContacts = Array.isArray(input.output.contacts) ? input.output.contacts : [];\n  }\n  \n  // Validate: if empty or invalid, return empty array\n  if (!Array.isArray(rawContacts) || rawContacts.length === 0) {\n    return {\n      output: {\n        contacts: []\n      },\n      error: 'No valid contacts found',\n      shouldFetch: true\n    };\n  }\n  \n  return {\n    output: {\n      contacts: rawContacts.map(contact=>({\n        id: contact.id,\n        username: contact.tag,\n        displayName: contact.displayName,\n        lastMessage: contact.lastMessageAtRelative,\n        contactType: contact.type\n      }))\n    }\n  };\n} catch (error) {\n  return {\n    output: {\n      contacts: []\n    },\n    error: error.message,\n    shouldFetch: true\n  };\n}"
+        "jsCode": "const input = $input.first().json;\nlet rawContacts = [];\n\ntry {\n  // Handle MCP response format (from List Contacts)\n  if (input.result && input.result.content && input.result.content[0]) {\n    const parsed = JSON.parse(input.result.content[0].text);\n    rawContacts = parsed?.contacts || [];\n  }\n  // Handle cache format (direct from cache)\n  else if (input.contacts) {\n    rawContacts = Array.isArray(input.contacts) ? input.contacts : [];\n  }\n  // Handle cache output format (from cache system)\n  else if (input.output && input.output.contacts) {\n    rawContacts = Array.isArray(input.output.contacts) ? input.output.contacts : [];\n  }\n  \n  // Validate: if empty or invalid, return empty array\n  if (!Array.isArray(rawContacts) || rawContacts.length === 0) {\n    return {\n      output: {\n        contacts: []\n      },\n      error: 'No valid contacts found',\n      shouldFetch: true\n    };\n  }\n  \n  return {\n    output: {\n      contacts: rawContacts.map(contact=>(contact))\n    }\n  };\n} catch (error) {\n  return {\n    output: {\n      contacts: []\n    },\n    error: error?.message,\n    shouldFetch: true\n  };\n}"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -448,
-        -544
+        -1776,
+        -440
       ],
-      "id": "e9197182-514a-4010-98b6-5785ba05e109",
+      "id": "4d4adcb0-23ce-45ab-9318-d79e899d0ea7",
       "name": "Contact Data Simplifier"
     },
     {
@@ -81,10 +80,10 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        1116,
-        -40
+        -212,
+        64
       ],
-      "id": "95be56ee-dca9-4af9-bb88-48a6de85939f",
+      "id": "158017ea-9dce-4ef8-9ccf-611df36a0c3d",
       "name": "Split Out"
     },
     {
@@ -94,10 +93,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1788,
-        8
+        460,
+        112
       ],
-      "id": "d9ecb8f9-91d7-4cb7-9433-d9a90d6a58d0",
+      "id": "925240b1-a69b-4a66-83ea-b453a0da853b",
       "name": "Execution Data Aggregator"
     },
     {
@@ -112,7 +111,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "cacheKey": "discordGuilds",
+            "cacheKey": "telegramChats",
             "trueToWrite": false,
             "writeTTLms": 0
           },
@@ -166,11 +165,11 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -896,
-        128
+        -2224,
+        232
       ],
-      "id": "46c0f916-59c1-4597-b845-9f44ab1277f9",
-      "name": "Check Guild Cache",
+      "id": "971c3e4a-63ab-474e-b3c6-615e00fe910d",
+      "name": "Check Chat Cache",
       "onError": "continueErrorOutput"
     },
     {
@@ -186,7 +185,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "writeTTLms": 1000000,
-            "cacheKey": "discordGuilds",
+            "cacheKey": "telegramChats",
             "writeValue": "={{ $json.output }}",
             "trueToWrite": true
           },
@@ -240,43 +239,43 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -224,
-        272
+        -1552,
+        376
       ],
-      "id": "5d0e34a9-b801-47da-ab3d-5c56f0d003d4",
-      "name": "Update Guild Cache"
+      "id": "89b57a73-6ac7-4426-9e91-b5a4b42766eb",
+      "name": "Update Chat Cache"
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.first().json;\nlet rawGuilds = [];\n\ntry {\n  // Handle MCP response format (from List Guilds/Servers)\n  if (input.result && input.result.content && input.result.content[0]) {\n    const parsed = JSON.parse(input.result.content[0].text);\n    rawGuilds = parsed?.guilds || [];\n  }\n  // Handle cache format (direct from cache)\n  else if (input.guilds) {\n    rawGuilds = Array.isArray(input.guilds) ? input.guilds : [];\n  }\n  // Handle cache output format (from cache system)\n  else if (input.output && input.output.guilds) {\n    rawGuilds = Array.isArray(input.output.guilds) ? input.output.guilds : [];\n  }\n  \n  // Validate: if empty or invalid, return empty array\n  if (!Array.isArray(rawGuilds) || rawGuilds.length === 0) {\n    return {\n      output: {\n        guilds: []\n      },\n      error: 'No valid guilds found',\n      shouldFetch: true\n    };\n  }\n  \n  return {\n    output: {\n      guilds: rawGuilds.map(guild=>({\n        id: guild.id,\n        name: guild.name,\n        members: guild.memberCount\n      }))\n    }\n  };\n} catch (error) {\n  return {\n    output: {\n      guilds: []\n    },\n    error: error.message,\n    shouldFetch: true\n  };\n}"
+        "jsCode": "let rawChats = JSON.parse($input.first().json.result.content[0].text)?.items;\n\ntry {  \n  return {\n    output: {\n      chats: rawChats.map(chat=>(chat))\n    }\n  };\n} catch (error) {\n  return {\n    output: {\n      chats: []\n    },\n    error: error.message,\n    shouldFetch: true\n  };\n}"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -448,
-        272
+        -1776,
+        376
       ],
-      "id": "49ec2cea-0867-43a1-95df-39e57928779d",
-      "name": "Guild Data Simplifier"
+      "id": "0b187c38-2bb1-411e-922a-e419a7382866",
+      "name": "Chat Data Simplifier"
     },
     {
       "parameters": {
         "operation": "executeTool",
-        "toolName": "=discord_list_guilds",
+        "toolName": "=telegram_list_chats",
         "toolParameters": "={}"
       },
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        -672,
-        272
+        -2000,
+        376
       ],
-      "id": "0460960b-48e7-4023-99bc-2a2d3fda950b",
-      "name": "List Guilds/Servers",
+      "id": "550a43c2-3628-4cb0-89f6-ac9bffdbfc57",
+      "name": "List Chats",
       "credentials": {
         "mcpClientApi": {
-          "id": "ZFofx3k2ze1wsifx",
-          "name": "Discord MCP Server"
+          "id": "aiYCclLDUqob5iQ0",
+          "name": "Telegram MCP Client (STDIO) account"
         }
       }
     },
@@ -293,10 +292,10 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -1120,
-        -184
+        -2448,
+        -80
       ],
-      "id": "e025920a-044a-4191-bf65-0df153483324",
+      "id": "ff346de8-bd77-4883-ae44-a52eaed26a9f",
       "name": "When Executed by Another Workflow"
     },
     {
@@ -311,7 +310,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "cacheKey": "discordTools",
+            "cacheKey": "telegramTools",
             "trueToWrite": false,
             "writeTTLms": 0
           },
@@ -365,10 +364,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -896,
-        -256
+        -2224,
+        -152
       ],
-      "id": "0f051d6d-f62e-420a-9749-1ec61100bbd6",
+      "id": "973426ee-798e-47a9-9e51-173980fa6114",
       "name": "Check Tool Cache",
       "onError": "continueErrorOutput"
     },
@@ -384,7 +383,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "cacheKey": "discordContacts",
+            "cacheKey": "telegramContacts",
             "trueToWrite": false,
             "writeTTLms": 0
           },
@@ -438,10 +437,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -896,
-        -544
+        -2224,
+        -440
       ],
-      "id": "1d8cdebc-6a31-4e11-b17d-b8c5848ce02a",
+      "id": "177002c1-19d8-4be1-a967-2328b043dc20",
       "name": "Check Contact Cache",
       "onError": "continueErrorOutput"
     },
@@ -452,10 +451,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -448,
-        -256
+        -1776,
+        -152
       ],
-      "id": "303adb7d-01d5-4ac0-8b81-464fd1c64e87",
+      "id": "98e14d20-1330-475c-a8b1-1365e8b5a9b8",
       "name": "Tool Data Simplifier"
     },
     {
@@ -471,7 +470,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "writeTTLms": 1000000,
-            "cacheKey": "discordTools",
+            "cacheKey": "telegramTools",
             "writeValue": "={{ $json.output }}",
             "trueToWrite": true
           },
@@ -525,10 +524,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -224,
-        -256
+        -1552,
+        -152
       ],
-      "id": "d85686d4-e807-43ad-ae16-570de03a2004",
+      "id": "1025078b-69b3-4c02-bf39-f0e3bb71c9c2",
       "name": "Update Tool Cache"
     },
     {
@@ -544,7 +543,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "writeTTLms": 1000000,
-            "cacheKey": "discordContacts",
+            "cacheKey": "telegramContacts",
             "writeValue": "={{ $json.output }}",
             "trueToWrite": true
           },
@@ -598,10 +597,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -224,
-        -544
+        -1552,
+        -464
       ],
-      "id": "221a6676-0da3-4636-8ae0-d1eb6299b018",
+      "id": "612c1d56-4ca4-4397-b382-66753963fef9",
       "name": "Update Contact Cache"
     },
     {
@@ -614,10 +613,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        0,
-        -144
+        -1328,
+        -40
       ],
-      "id": "5eb08e33-8aec-45c6-8339-54a23a45dccd",
+      "id": "2ade36f9-e9b1-4cee-aeff-3a19294d28b3",
       "name": "Context Aggregator"
     },
     {
@@ -626,16 +625,16 @@
         "text": "=Provided task is \"{{ $json.userPrompt }}\". Break it down to achievable action steps.",
         "hasOutputParser": true,
         "options": {
-          "systemMessage": "=## You are a helpful assistant with the capabilities to generate a direct answer to a user's prompt, or a sequential JSON array of tool execution steps to accomplish the task. \n\nInstructions:\n- use the following contact list instead of calling 'discord_list_contacts'\n- use the following guilds/servers list instead of calling 'discord_list_guilds'\n\nIMPORTANT: Use directAnswer ONLY for informational questions that can be answered from the provided context (contacts, guilds, tools lists). \n\nFor ANY operation that requires Discord API calls, you MUST use executionSteps:\n- Reading/list/get operations (list messages, read channel, get user info, etc.)\n- Writing/send operations (send message, etc.)\n- Finding/searching operations (find channel, search messages, etc.)\n- Any action that retrieves or modifies Discord data\n\nExamples:\n- \"list messages with user X\" → MUST use executionSteps (call discord_read_channel or similar tool)\n- \"send a message to channel Y\" → MUST use executionSteps\n- \"what tools are available?\" → Can use directAnswer (from tools list)\n- \"who are my contacts?\" → Can use directAnswer (from contacts list)\n\n{{ $json.tools ? $json.tools.toJsonString() : '[]' }}\n\n## Available contacts:\n\n{{ $json.contacts ? $json.contacts.toJsonString() : '[]' }}\n\n## Servers/Guilds I'm In:\n\n{{ $json.guilds ? $json.guilds.toJsonString() : '[]' }}"
+          "systemMessage": "=## You are a helpful assistant with the capabilities to generate a direct answer to a user's prompt, or a sequential JSON array of tool execution steps to accomplish the task. \n\nVERY IMPORTANT INSTRUCTIONS: \n\n1. Telegram GROUPS have negative channelIDs and Direct messages have positive channelIDs. when using a channelId as a parameter, pay attention to add the `-` prefix.\n2. For tool `telegram_list_chats`: telegram chat (channel) types MUST BE ONE OF `user`, `group`, `supergroup`.\n3. Use \"telegram_search_public_chats\" ONLY when you are asked to search globally. otherwise Always look in contacts instead.\n\nInstructions:\n- use the following contact list instead of calling 'telegram_list_contacts'\n- use the following chats list instead of calling 'telegram_list_chats'\n\nIMPORTANT: Use directAnswer ONLY for informational questions that can be answered from the provided context (contacts, chats, tools lists). \n\nFor ANY operation that requires Telegram API calls, you MUST use executionSteps:\n- Reading/list/get operations (list messages, read channel, get user info, etc.)\n- Writing/send operations (send message, etc.)\n- Finding/searching operations (find channel, search messages, etc.)\n- Any action that retrieves or modifies Telegram data\n\nExamples:\n- \"list messages with user X\" → MUST use executionSteps (call telegram_read_channel or similar tool)\n- \"send a message to channel Y\" → MUST use executionSteps\n- \"what tools are available?\" → Can use directAnswer (from tools list)\n- \"who are my contacts?\" → Can use directAnswer (from contacts list)\n\n{{ $json.tools ? $json.tools.toJsonString() : '[]' }}\n\n## Available contacts:\n\n{{ $json.contacts ? $json.contacts.toJsonString() : '[]' }}\n\n## My Chats:\n\n{{ $json.chats ? $json.chats.toJsonString() : '[]' }}"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3,
       "position": [
-        224,
-        -112
+        -1104,
+        -8
       ],
-      "id": "2a3d4afb-fd32-4835-a809-aead07ff0176",
+      "id": "9cc503eb-236d-4d47-bdcb-0c0c718d5224",
       "name": "Execution Planner AI Agent"
     },
     {
@@ -647,10 +646,10 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        300,
-        112
+        -1028,
+        216
       ],
-      "id": "9ec99c58-ef2d-4106-ae9e-bf01c079f84f",
+      "id": "c9fba54f-cb93-4f24-8552-e6c596be1d2a",
       "name": "Execution Plan Output Parser"
     },
     {
@@ -714,10 +713,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        668,
-        -112
+        -660,
+        -8
       ],
-      "id": "6426184c-96e4-4662-bf01-7a00398b4a68",
+      "id": "40e0f9d1-d5ef-4c1b-a8f2-e4e32e3c7fe9",
       "name": "Has a direct answer?"
     },
     {
@@ -731,10 +730,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1564,
-        -280
+        236,
+        -176
       ],
-      "id": "b5392af4-2136-47b1-9f4a-05b476bbb635",
+      "id": "8c6ed802-b50b-4391-a2e5-a4f77ec26314",
       "name": "Final Response"
     },
     {
@@ -754,10 +753,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        892,
-        -40
+        -436,
+        64
       ],
-      "id": "28017fed-3265-4d67-912c-b05b3cad0936",
+      "id": "1167ffee-e227-488a-be1d-d913ba329b47",
       "name": "Prepare Execution Steps"
     },
     {
@@ -767,10 +766,10 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        1340,
-        -40
+        12,
+        64
       ],
-      "id": "c454ea38-a5d0-4647-9ec2-e93c46764998",
+      "id": "bca7a24a-5d7b-4047-84a4-eb680a520084",
       "name": "Loop Over MCP Execution Steps"
     },
     {
@@ -782,29 +781,20 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        1564,
-        -64
+        236,
+        40
       ],
-      "id": "ee018ac0-dab2-4cfa-90db-b81b5b184bd5",
+      "id": "a09fb8ec-e0f8-4abe-8d06-167882c25b9e",
       "name": "MCP Sequence Executor",
       "credentials": {
         "mcpClientApi": {
-          "id": "ZFofx3k2ze1wsifx",
-          "name": "Discord MCP Server"
+          "id": "aiYCclLDUqob5iQ0",
+          "name": "Telegram MCP Client (STDIO) account"
         }
       },
       "onError": "continueErrorOutput"
     }
   ],
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "userPrompt": "list members in metarune homies server"
-        }
-      }
-    ]
-  },
   "connections": {
     "Google Gemini Chat Model": {
       "ai_languageModel": [
@@ -882,25 +872,25 @@
         ]
       ]
     },
-    "Check Guild Cache": {
+    "Check Chat Cache": {
       "main": [
         [
           {
-            "node": "Guild Data Simplifier",
+            "node": "Context Aggregator",
             "type": "main",
-            "index": 0
+            "index": 3
           }
         ],
         [
           {
-            "node": "List Guilds/Servers",
+            "node": "List Chats",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Update Guild Cache": {
+    "Update Chat Cache": {
       "main": [
         [
           {
@@ -911,27 +901,22 @@
         ]
       ]
     },
-    "Guild Data Simplifier": {
+    "Chat Data Simplifier": {
       "main": [
         [
           {
-            "node": "Update Guild Cache",
+            "node": "Update Chat Cache",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Context Aggregator",
-            "type": "main",
-            "index": 3
           }
         ]
       ]
     },
-    "List Guilds/Servers": {
+    "List Chats": {
       "main": [
         [
           {
-            "node": "Guild Data Simplifier",
+            "node": "Chat Data Simplifier",
             "type": "main",
             "index": 0
           }
@@ -952,7 +937,7 @@
             "index": 0
           },
           {
-            "node": "Check Guild Cache",
+            "node": "Check Chat Cache",
             "type": "main",
             "index": 0
           },
@@ -1130,35 +1115,17 @@
           }
         ]
       ]
-    },
-    "Final Response": {
-      "main": [
-        []
-      ]
     }
   },
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "userPrompt": "who is bhathiya"
+      }
+    ]
   },
-  "versionId": "8191f505-2f4c-4e0e-be54-544987fd5d9c",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "cd381b17813b1f32bbed6ff56a914eb5679cd0e7bd9a8ef4580ebc82f8011b84"
-  },
-  "id": "vfcxqLBDDMKL5lnG",
-  "tags": [
-    {
-      "updatedAt": "2025-11-02T21:22:20.646Z",
-      "createdAt": "2025-11-02T21:22:20.646Z",
-      "id": "95mwWdOxtdnkFLhS",
-      "name": "Discord"
-    },
-    {
-      "updatedAt": "2025-11-02T21:22:14.342Z",
-      "createdAt": "2025-11-02T21:22:14.342Z",
-      "id": "w6FOnYOvODOXV9os",
-      "name": "MCP"
-    }
-  ]
+  }
 }
