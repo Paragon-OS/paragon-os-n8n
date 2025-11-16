@@ -5,7 +5,14 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "sync:n8n:workflows": "node src/sync-workflows.js",
-    "sync:n8n:workflows:dry": "node src/sync-workflows.js --dry-run"
+    "sync:n8n:workflows:dry": "node src/sync-workflows.js --dry-run",
+    "n8n:workflows:backup": "ts-node src/n8n-workflows-cli.ts backup",
+    "n8n:workflows:restore": "ts-node src/n8n-workflows-cli.ts restore"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.0"
   },
   "author": "",
   "license": "ISC",
