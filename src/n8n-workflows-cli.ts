@@ -432,8 +432,23 @@ async function main() {
       process.exit(0);
     }
 
+    /**
+     * NOTE:
+     *   We intentionally do NOT pass "--separate" here.
+     *
+     *   The n8n CLI expects:
+     *     - "--separate" when "--input" points to a directory that contains
+     *       multiple workflow JSON files to import in one go.
+     *     - NO "--separate" when "--input" points directly to a single
+     *       workflow JSON file.
+     *
+     *   This CLI wraps each workflow JSON file individually (to support
+     *   nested/tag-based directory structures created by the backup/organize
+     *   commands), so we call "import:workflow" once per file without
+     *   "--separate".
+     */
     for (const filePath of jsonFiles) {
-      const args = ["import:workflow", "--separate", `--input=${filePath}`, ...passthroughFlags];
+      const args = ["import:workflow", `--input=${filePath}`, ...passthroughFlags];
       const exitCode = await runN8n(args);
 
       if (exitCode !== 0) {
