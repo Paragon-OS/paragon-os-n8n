@@ -96,7 +96,15 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
 
   const jsonFiles = entries.filter((file) => file.toLowerCase().endsWith(".json"));
 
-  const usedNames = new Map<string, number>();
+  type WorkflowFile = {
+    file: string;
+    fullPath: string;
+    id: string | undefined;
+    name: string;
+    baseName: string;
+  };
+
+  const workflowFiles: WorkflowFile[] = [];
 
   for (const file of jsonFiles) {
     const fullPath = path.join(outputDir, file);
@@ -126,68 +134,126 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
       id?: unknown;
       name?: unknown;
     };
-    const rawId = typeof wf.id === "string" ? wf.id : undefined;
+
+    const id = typeof wf.id === "string" ? wf.id : undefined;
     const rawName = typeof wf.name === "string" ? wf.name : "unnamed-workflow";
     const baseName = sanitizeWorkflowName(rawName);
 
+    workflowFiles.push({
+      file,
+      fullPath,
+      id,
+      name: rawName,
+      baseName,
+    });
+  }
+
+  // Group files by workflow ID so we end up with exactly one file per workflow ID.
+  const filesById = new Map<
+    string,
+    {
+      baseName: string;
+      files: WorkflowFile[];
+    }
+  >();
+
+  for (const wfFile of workflowFiles) {
+    if (!wfFile.id) {
+      // If a workflow file has no ID, leave it as-is.
+      continue;
+    }
+
+    const existing = filesById.get(wfFile.id);
+    if (!existing) {
+      filesById.set(wfFile.id, { baseName: wfFile.baseName, files: [wfFile] });
+    } else {
+      existing.files.push(wfFile);
+    }
+  }
+
+  // Assign stable, unique filenames based on sanitized names and numeric suffixes.
+  const usedNames = new Map<string, number>();
+  type Target = {
+    id: string;
+    baseName: string;
+    targetFilename: string;
+    files: WorkflowFile[];
+  };
+
+  const targets: Target[] = [];
+
+  const sortedIds = Array.from(filesById.entries()).sort(([idA, a], [idB, b]) => {
+    const nameCompare = a.baseName.localeCompare(b.baseName);
+    if (nameCompare !== 0) return nameCompare;
+    return idA.localeCompare(idB);
+  });
+
+  for (const [id, group] of sortedIds) {
+    const baseName = group.baseName;
     const existingCount = usedNames.get(baseName) ?? 0;
     const nextCount = existingCount + 1;
     usedNames.set(baseName, nextCount);
 
-    const finalBase =
-      nextCount === 1 ? baseName : `${baseName} (${nextCount})`;
+    const finalBase = nextCount === 1 ? baseName : `${baseName} (${nextCount})`;
+    const targetFilename = `${finalBase}.json`;
 
-    const newFilename = `${finalBase}.json`;
-    const newFullPath = path.join(outputDir, newFilename);
+    targets.push({
+      id,
+      baseName,
+      targetFilename,
+      files: group.files,
+    });
+  }
 
-    if (newFullPath === fullPath) {
-      // Already has the desired name.
-      continue;
+  // For each workflow ID:
+  // - Pick one canonical file to keep (prefer a file that already has the target filename).
+  // - Delete any other files for the same ID.
+  // - Rename the canonical file to the target filename if needed.
+  for (const target of targets) {
+    const targetFullPath = path.join(outputDir, target.targetFilename);
+
+    // Prefer an existing file that already matches the target filename.
+    let canonical = target.files.find((f) => f.fullPath === targetFullPath);
+    if (!canonical) {
+      canonical = target.files[0];
     }
 
-    // If a file with the target name already exists (e.g., from a previous run),
-    // skip renaming this one to avoid overwriting data.
-    try {
-      await fs.promises.access(newFullPath, fs.constants.F_OK);
-
-      // If a file with the target name already exists, replace it only when the
-      // workflow ID matches; otherwise, keep the existing file and skip this one.
-      try {
-        const existingContent = await fs.promises.readFile(newFullPath, "utf8");
-        const existingParsed = JSON.parse(existingContent) as { id?: unknown };
-        const existingId =
-          existingParsed && typeof existingParsed.id === "string"
-            ? existingParsed.id
-            : undefined;
-
-        if (rawId && existingId && rawId === existingId) {
-          // Same workflow ID – replace the old file with the newly exported one.
-          await fs.promises.unlink(newFullPath);
-        } else {
-          console.warn(
-            `Warning: Target filename "${newFullPath}" already exists with a different workflow. Skipping rename of "${fullPath}".`
-          );
-          continue;
-        }
-      } catch (err) {
-        console.warn(
-          `Warning: Target filename "${newFullPath}" already exists but could not be inspected. Skipping rename of "${fullPath}".`,
-          err
-        );
+    // Delete all non-canonical files for this workflow ID.
+    for (const wfFile of target.files) {
+      if (wfFile.fullPath === canonical.fullPath) {
         continue;
       }
-    } catch {
-      // File does not exist, safe to rename.
+
+      try {
+        await fs.promises.unlink(wfFile.fullPath);
+      } catch (err) {
+        console.warn(
+          `Warning: Failed to remove duplicate workflow file "${wfFile.fullPath}" for workflow ID "${target.id}":`,
+          err
+        );
+      }
     }
 
-    try {
-      await fs.promises.rename(fullPath, newFullPath);
-    } catch (err) {
-      console.warn(
-        `Warning: Failed to rename workflow file "${fullPath}" to "${newFullPath}":`,
-        err
-      );
-      continue;
+    // Rename canonical file if needed.
+    if (canonical.fullPath !== targetFullPath) {
+      try {
+        // If a different file somehow already exists at the target path, remove it.
+        try {
+          const stat = await fs.promises.stat(targetFullPath);
+          if (stat.isFile()) {
+            await fs.promises.unlink(targetFullPath);
+          }
+        } catch {
+          // Does not exist; nothing to remove.
+        }
+
+        await fs.promises.rename(canonical.fullPath, targetFullPath);
+      } catch (err) {
+        console.warn(
+          `Warning: Failed to rename workflow file "${canonical.fullPath}" to "${targetFullPath}":`,
+          err
+        );
+      }
     }
   }
 }
