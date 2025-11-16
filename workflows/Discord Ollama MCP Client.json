@@ -1,0 +1,360 @@
+{
+  "updatedAt": "2025-11-01T12:02:26.000Z",
+  "createdAt": "2025-10-31T05:45:17.206Z",
+  "id": "QbUKlvp7wsopIzmo",
+  "name": "Discord Ollama MCP Client",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        -224
+      ],
+      "id": "f28e3724-bb7a-44f9-a0dc-877d271e3049",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"title\": \"ToolFinderResult\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\"action\", \"reason\", \"available_tools\", \"selection\"],\n  \"properties\": {\n    \"action\": { \"type\": \"string\", \"enum\": [\"LIST\", \"ASK\", \"SELECT\"] },\n    \"reason\": { \"type\": \"string\" },\n    \"available_tools\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"additionalProperties\": false,\n        \"required\": [\"name\", \"description\", \"input_schema\"],\n        \"properties\": {\n          \"name\": { \"type\": \"string\" },\n          \"description\": { \"type\": \"string\" },\n          \"input_schema\": { \"type\": \"object\" }\n        }\n      }\n    },\n    \"selection\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\"tool_name\", \"confidence\", \"missing_fields\", \"tool_parameters\", \"tool_info\"],\n      \"properties\": {\n        \"tool_name\": { \"type\": \"string\" },\n        \"confidence\": { \"type\": \"number\", \"minimum\": 0, \"maximum\": 1 },\n        \"missing_fields\": { \"type\": \"array\", \"items\": { \"type\": \"string\" } },\n        \"tool_parameters\": { \"type\": \"object\" },\n        \"tool_info\": {\n          \"type\": \"object\",\n          \"additionalProperties\": false,\n          \"required\": [\"name\", \"description\", \"input_schema\"],\n          \"properties\": {\n            \"name\": { \"type\": \"string\" },\n            \"description\": { \"type\": \"string\" },\n            \"input_schema\": { \"type\": \"object\" }\n          }\n        }\n      }\n    }\n  }\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        96,
+        0
+      ],
+      "id": "76c3caa7-93e5-4117-8072-9b0e51574b96",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "I want to list my contacts",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a **Tool Finder AI Agent** that selects the best tool for a given user instruction.\nYou receive:\n* A **user prompt** in plain language.\n* A **catalog of available tools**, each with `name`, `description`, and `input_schema` (matching the output of a `listTools` MCP command).\nYour job is to:\n1. **Understand the user’s intent.**\n2. **Identify the most relevant tool** based on its name and description.\n3. **Infer required parameters** from the prompt where possible.\n4. **Return a structured JSON object** that follows the `ToolFinderResult` schema (see below).\n### **Behavior Rules**\n1. **LIST**:\n   If no tools are provided or the list is empty, set `action` to `\"LIST\"`.\n   Explain that you need the tool catalog first.\n2. **SELECT**:\n   If you can confidently match a tool and fill all its required fields, set `action` to `\"SELECT\"`.\n   Return the tool name, inferred parameters, and confidence (0–1).\n3. **ASK**:\n   If a tool is found but one or more required fields are missing, set `action` to `\"ASK\"`.\n   List the missing fields and briefly describe what to ask the user.\n4. **Confidence scoring**:\n   * Use the overlap between the user prompt and tool `namedescription` keywords.\n   * Boost confidence when required field names are present in the prompt.\n   * Confidence should be between 0.0 and 1.0.\n5. **Reasoning**:\n   * Always include a brief human-readable explanation in the `reason` field describing how you matched the tool.\n   * Do not include hidden thoughts or inner reasoning steps.\n6. **Formatting**:\n   * Output **only one JSON object** conforming to the schema below.\n   * Do not include natural language outside the JSON.\n   * Follow the schema exactly (no additional keys)."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -112,
+        -224
+      ],
+      "id": "9a032d11-920a-43e0-8c28-7a82f995e51c",
+      "name": "Tool Finder Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list",
+          "cachedResultName": "Claude Haiku 4.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        528,
+        0
+      ],
+      "id": "c9bdb047-678e-4c34-871c-2f293c025ecd",
+      "name": "Anthropic Chat Model1",
+      "credentials": {
+        "anthropicApi": {
+          "id": "isyty1NtptrrMxOT",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"title\": \"ToolExecutionResult\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\"success\", \"reason\", \"tool_name\", \"validated_parameters\", \"execution_result\"],\n  \"properties\": {\n    \"success\": { \"type\": \"boolean\" },\n    \"reason\": { \"type\": \"string\" },\n    \"tool_name\": { \"type\": \"string\" },\n    \"validated_parameters\": { \"type\": \"object\" },\n    \"execution_result\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"status\": { \"type\": \"string\" },\n        \"output\": { \"type\": \"string\" }\n      },\n      \"required\": [\"status\", \"output\"]\n    }\n  }\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        784,
+        0
+      ],
+      "id": "ce3ad530-dbeb-41ab-99f8-7222d541a92d",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Purpose: Discover the current tool catalog from the connected Discord MCP server.\n\nCall me when\n- You do not know the exact tool name or arguments needed\n- You want to refresh the available tools before executing\n- You need to check a tool’s JSON schema or parameter requirements\n\nContract\n- Input: none\n- Output: array of tools, each with { name, description, input_schema }\n- Treat this as ground truth. Do not invent tools or parameters.\n\nUsage pattern\n1) Call MCP List\n2) Read the schema for the chosen tool\n3) Prepare exact JSON arguments for MCP Execute\n\nUse me first to read the live tool registry and each input_schema. Returns exact parameter names and types. No arguments required.\n"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        656,
+        0
+      ],
+      "id": "79d39612-6878-4e79-bc3f-5836fecc85f2",
+      "name": "Discord MCP List Tools1",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ZFofx3k2ze1wsifx",
+          "name": "Discord MCP Server"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.action }}",
+                    "rightValue": "SELECT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "cf78d0ca-cc85-4be1-8ab1-badde07ea481"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        304,
+        -224
+      ],
+      "id": "3459f6e7-9b02-4323-97a7-e6c38b035c3e",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        592,
+        -224
+      ],
+      "id": "f1626b85-5fa6-4cf8-8ab6-ff689a1e2129",
+      "name": "Tool Executer"
+    },
+    {
+      "parameters": {
+        "model": "gpt-oss:20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        48
+      ],
+      "id": "97a01dca-3b5a-4996-b467-ab74875ce6ea",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "ocz8JdQXZuMEnepT",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        0
+      ],
+      "id": "e9494733-98b2-483e-b7fe-e2dce4b1d77d",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "# MCP List Tools Command\n\n**Purpose**: Retrieve the complete catalog of available tools from the connected MCP server.\n\n## When to Use\n- You don't know which tools are available\n- You need to verify exact tool names before execution\n- You want to check a tool's parameters and their types\n- User asks for capabilities or available actions\n- Before executing any tool, to ensure you have current schema\n\n## Input\nNone required. This command takes no arguments.\n\n## Output\nReturns an array of tool objects:\n```json\n[\n  {\n    \"name\": \"tool_name\",\n    \"description\": \"What this tool does\",\n    \"input_schema\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"param1\": {\"type\": \"string\", \"description\": \"...\"},\n        \"param2\": {\"type\": \"number\", \"description\": \"...\"}\n      },\n      \"required\": [\"param1\"]\n    }\n  }\n]\n```\n\n## How to Use\n1. Call MCP List to get the current tool registry\n2. Read the `input_schema` for your chosen tool\n3. Identify required fields (in `\"required\"` array)\n4. Prepare exact JSON arguments matching the schema\n5. Execute the tool with proper parameters\n\n## Key Points\n- This is your **source of truth** - do not invent tool names or parameters\n- Always check `input_schema.required` to know which fields are mandatory\n- Parameter types and descriptions are in `input_schema.properties`\n- Tool availability may change - refresh when needed\n- Use this BEFORE attempting to execute any tool\n\n## Example Workflow\n```\nUser: \"Send a Discord message\"\n↓\n1. Call MCP List (get all tools)\n2. Find \"discord_send_message\" in results\n3. Check its input_schema: needs channel_id, content\n4. Extract values from user request or ask for missing ones\n5. Execute with proper JSON arguments\n```"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        0
+      ],
+      "id": "d378849c-221b-48f8-b0e4-4b431d3afc33",
+      "name": "Discord MCP List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ZFofx3k2ze1wsifx",
+          "name": "Discord MCP Server"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Tool Finder Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Tool Finder Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool Finder Agent": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Tool Executer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Tool Executer",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord MCP List Tools1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Tool Executer",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Tool Executer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Tool Finder Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord MCP List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Tool Finder Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "29eeb808-8214-4848-88a3-a415580bcd57",
+  "versionCounter": 2,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-10-31T05:45:17.208Z",
+      "createdAt": "2025-10-31T05:45:17.208Z",
+      "role": "workflow:owner",
+      "workflowId": "QbUKlvp7wsopIzmo",
+      "projectId": "GEUEn6ArNROzJ5FY",
+      "project": {
+        "updatedAt": "2025-10-28T15:11:59.092Z",
+        "createdAt": "2025-10-28T15:08:17.462Z",
+        "id": "GEUEn6ArNROzJ5FY",
+        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null
+      }
+    }
+  ]
+}
