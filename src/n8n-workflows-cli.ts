@@ -42,7 +42,7 @@ function printUsage() {
       "    ts-node src/n8n-workflows-cli.ts backup",
       "  Backup to a custom directory:",
       "    ts-node src/n8n-workflows-cli.ts backup --output ./backups/latest",
-      "  Restore from ./workflows:",
+      "  Restore from ./workflows (selective restore; only new/changed workflows are imported):",
       "    ts-node src/n8n-workflows-cli.ts restore",
       "  Restore from a custom directory:",
       "    ts-node src/n8n-workflows-cli.ts restore --input ./backups/latest",
@@ -439,6 +439,143 @@ async function removeEmptyDirectoriesUnder(rootDir: string): Promise<void> {
   await removeEmptyRecursive(rootDir, true);
 }
 
+type WorkflowObject = {
+  id?: string;
+  name?: string;
+  [key: string]: unknown;
+};
+
+/**
+ * Return a copy of a workflow object with volatile metadata fields removed so
+ * that we can compare backups to the current n8n instance in a stable way.
+ *
+ * We intentionally keep semantic fields like `active`, nodes, connections,
+ * settings, etc. and only strip obviously time/version-related properties.
+ */
+function normalizeWorkflowForCompare(input: WorkflowObject | undefined): unknown {
+  if (!input || typeof input !== "object") {
+    return input;
+  }
+
+  const volatileRootFields = new Set<string>([
+    "updatedAt",
+    "createdAt",
+    "versionId",
+    "meta",
+  ]);
+
+  const result: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(input)) {
+    if (volatileRootFields.has(key)) {
+      continue;
+    }
+    result[key] = value;
+  }
+
+  return result;
+}
+
+function deepEqual(a: unknown, b: unknown): boolean {
+  if (a === b) {
+    return true;
+  }
+
+  if (a === null || b === null) {
+    return a === b;
+  }
+
+  const typeA = typeof a;
+  const typeB = typeof b;
+
+  if (typeA !== typeB) {
+    return false;
+  }
+
+  if (typeA !== "object") {
+    return a === b;
+  }
+
+  if (Array.isArray(a) || Array.isArray(b)) {
+    if (!Array.isArray(a) || !Array.isArray(b)) {
+      return false;
+    }
+    if (a.length !== b.length) {
+      return false;
+    }
+    for (let i = 0; i < a.length; i++) {
+      if (!deepEqual(a[i], b[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  const objA = a as Record<string, unknown>;
+  const objB = b as Record<string, unknown>;
+
+  const keysA = Object.keys(objA).sort();
+  const keysB = Object.keys(objB).sort();
+
+  if (keysA.length !== keysB.length) {
+    return false;
+  }
+
+  for (let i = 0; i < keysA.length; i++) {
+    if (keysA[i] !== keysB[i]) {
+      return false;
+    }
+    const key = keysA[i];
+    if (!deepEqual(objA[key], objB[key])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+async function exportCurrentWorkflowsForCompare(): Promise<Map<string, WorkflowObject>> {
+  const { code, stdout, stderr } = await runN8nCapture(["export:workflow", "--pretty", "--all"]);
+
+  if (code !== 0) {
+    console.error("n8n export:workflow failed while preparing selective restore with code", code);
+    if (stderr.trim()) {
+      console.error(stderr.trim());
+    }
+    throw new Error("Failed to export current workflows for comparison.");
+  }
+
+  if (!stdout.trim()) {
+    // No workflows currently exist on the instance; treat all backup workflows as new.
+    return new Map();
+  }
+
+  let workflows: unknown;
+
+  try {
+    workflows = JSON.parse(stdout);
+  } catch (err) {
+    console.error("Failed to parse JSON from n8n export:workflow during selective restore:", err);
+    throw new Error("Failed to parse current workflows for comparison.");
+  }
+
+  if (!Array.isArray(workflows)) {
+    console.error("Unexpected export format from n8n during selective restore: expected an array of workflows.");
+    throw new Error("Unexpected export format from n8n during selective restore.");
+  }
+
+  const map = new Map<string, WorkflowObject>();
+
+  for (const wf of workflows as WorkflowObject[]) {
+    if (!wf || typeof wf !== "object") continue;
+    const id = typeof wf.id === "string" ? wf.id : undefined;
+    if (!id) continue;
+    map.set(id, wf);
+  }
+
+  return map;
+}
+
 function runN8nCapture(args: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
   return new Promise((resolve) => {
     const child = spawn("n8n", args, {
@@ -527,6 +664,101 @@ async function main() {
       process.exit(0);
     }
 
+    let currentWorkflows: Map<string, WorkflowObject>;
+    try {
+      currentWorkflows = await exportCurrentWorkflowsForCompare();
+    } catch (err) {
+      console.error(String(err));
+      process.exit(1);
+      return;
+    }
+
+    type BackupWorkflowForRestore = {
+      filePath: string;
+      workflow: WorkflowObject;
+      id?: string;
+      name: string;
+    };
+
+    const backups: BackupWorkflowForRestore[] = [];
+
+    for (const filePath of jsonFiles) {
+      let content: string;
+      try {
+        content = await fs.promises.readFile(filePath, "utf8");
+      } catch (err) {
+        console.warn(`Warning: Failed to read workflow file "${filePath}" during restore:`, err);
+        continue;
+      }
+
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(content);
+      } catch (err) {
+        console.warn(`Warning: Skipping non-JSON file "${filePath}" during restore:`, err);
+        continue;
+      }
+
+      if (!parsed || typeof parsed !== "object") {
+        console.warn(`Warning: Skipping unexpected workflow format in "${filePath}" during restore.`);
+        continue;
+      }
+
+      const wf = parsed as WorkflowObject;
+      const id = typeof wf.id === "string" ? wf.id : undefined;
+      const name = typeof wf.name === "string" ? wf.name : "(unnamed workflow)";
+
+      backups.push({ filePath, workflow: wf, id, name });
+    }
+
+    if (backups.length === 0) {
+      console.log(`No valid workflow JSON files found under "${inputDir}" after parsing.`);
+      process.exit(0);
+    }
+
+    const toImport: BackupWorkflowForRestore[] = [];
+    let unchangedCount = 0;
+    let newCount = 0;
+
+    for (const backup of backups) {
+      if (!backup.id) {
+        // No ID means we cannot correlate with a live workflow; always import.
+        toImport.push(backup);
+        newCount++;
+        continue;
+      }
+
+      const live = currentWorkflows.get(backup.id);
+      if (!live) {
+        toImport.push(backup);
+        newCount++;
+        continue;
+      }
+
+      const backupNormalized = normalizeWorkflowForCompare(backup.workflow);
+      const liveNormalized = normalizeWorkflowForCompare(live);
+
+      if (deepEqual(backupNormalized, liveNormalized)) {
+        unchangedCount++;
+        continue;
+      }
+
+      toImport.push(backup);
+    }
+
+    console.log(
+      [
+        `Found ${backups.length} workflow JSON file(s) in backup.`,
+        `Unchanged on server (skipped): ${unchangedCount}.`,
+        `New or changed (to import): ${toImport.length} (including ${newCount} without existing live workflows).`,
+      ].join(" ")
+    );
+
+    if (toImport.length === 0) {
+      console.log("All workflows in the backup already match the current n8n instance. Nothing to restore.");
+      process.exit(0);
+    }
+
     /**
      * NOTE:
      *   We intentionally do NOT pass "--separate" here.
@@ -542,12 +774,16 @@ async function main() {
      *   commands), so we call "import:workflow" once per file without
      *   "--separate".
      */
-    for (const filePath of jsonFiles) {
-      const args = ["import:workflow", `--input=${filePath}`, ...passthroughFlags];
+    for (const backup of toImport) {
+      const args = ["import:workflow", `--input=${backup.filePath}`, ...passthroughFlags];
+      console.log(
+        `Importing workflow from "${backup.filePath}"` +
+          (backup.id ? ` (id: ${backup.id}, name: ${backup.name})` : ` (name: ${backup.name})`)
+      );
       const exitCode = await runN8n(args);
 
       if (exitCode !== 0) {
-        console.error(`n8n import:workflow failed for "${filePath}" with code`, exitCode);
+        console.error(`n8n import:workflow failed for "${backup.filePath}" with code`, exitCode);
         process.exit(exitCode);
       }
     }

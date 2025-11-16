@@ -99,13 +99,19 @@ Restore from a custom directory:
 npm run n8n:workflows:restore -- --input ./backups/latest
 ```
 
-Under the hood, the restore command now recursively discovers all `.json` files under the chosen directory (for example, `./workflows`, including subdirectories) and imports each one with:
+Under the hood, the restore command recursively discovers all `.json` files under the chosen directory (for example, `./workflows`, including subdirectories). It then:
+
+- Exports the current workflows from the connected n8n instance.
+- Compares each backup workflow (by `id`, when available) against the current instance, ignoring obviously volatile metadata such as timestamps.
+- Imports only workflows that are new or have actually changed compared to what is currently running in n8n.
+
+Each selected workflow is imported individually with:
 
 ```bash
-n8n import:workflow --separate --input=<filePath>
+n8n import:workflow --input=<filePath>
 ```
 
-Just like backup, any additional flags are forwarded to `n8n import:workflow`.
+Just like backup, any additional flags are forwarded to `n8n import:workflow`. Workflows that exist in n8n but are missing from the backup are left untouched by the restore command.
 
 ---
 
