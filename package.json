@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "sync:n8n:workflows": "node src/sync-workflows.js",
-    "sync:n8n:workflows:dry": "node src/sync-workflows.js --dry-run",
     "n8n:workflows:backup": "ts-node src/n8n-workflows-cli.ts backup",
     "n8n:workflows:restore": "ts-node src/n8n-workflows-cli.ts restore"
   },
