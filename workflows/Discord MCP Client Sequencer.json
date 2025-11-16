@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-16T12:16:07.000Z",
+  "updatedAt": "2025-11-16T15:32:18.000Z",
   "createdAt": "2025-11-06T21:51:04.792Z",
   "id": "vfcxqLBDDMKL5lnG",
   "name": "Discord MCP Client Sequencer",
@@ -16,7 +16,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        484,
+        404,
         328
       ],
       "id": "c79482a2-0b52-475c-a1d5-8f92e6b322e2",
@@ -36,7 +36,7 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        1368,
+        1288,
         -104
       ],
       "id": "a913b319-ec9f-419b-ba12-55cd8fe54ec5",
@@ -55,7 +55,7 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -392,
+        -400,
         72
       ],
       "id": "9a1fc959-c92c-4140-877e-6a1badc12e5b",
@@ -73,26 +73,11 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        128,
+        48,
         72
       ],
       "id": "9130e8ca-91b0-45be-8ea1-6851e6c32ec5",
       "name": "Context Aggregator"
-    },
-    {
-      "parameters": {
-        "schemaType": "manual",
-        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"executionSteps\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"toolName\": {\n            \"type\": \"string\"\n          },\n          \"callParams\": {\n            \"type\": \"object\"\n          }\n        },\n        \"required\": [\"toolName\", \"callParams\"],\n        \"additionalProperties\": false\n      },\n      \"description\": \"List MCP tool execution steps to achieve user's goal\"\n    }\n  },\n  \"additionalProperties\": false\n}\n",
-        "autoFix": true
-      },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.3,
-      "position": [
-        -464,
-        264
-      ],
-      "id": "17754b95-a587-43b6-a067-e0dee7ec49c8",
-      "name": "Execution Plan Output Parser"
     },
     {
       "parameters": {
@@ -155,7 +140,7 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        920,
+        840,
         -104
       ],
       "id": "762a6c3b-ecaf-4984-8d41-fe9c43813e40",
@@ -173,7 +158,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2936,
+        2856,
         -288
       ],
       "id": "7ee012e2-dc46-45e4-bb47-d949b8d65d32",
@@ -196,7 +181,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1144,
+        1064,
         -32
       ],
       "id": "8094c0ee-513f-4b2c-97bf-fbd04c293ec3",
@@ -231,7 +216,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2040,
+        1960,
         -200
       ],
       "id": "8c9365ee-290f-410b-978a-5a8389f62a50",
@@ -284,8 +269,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2712,
-        224
+        2632,
+        200
       ],
       "id": "5fcbce29-85d8-4232-838b-2cd38b294adc",
       "name": "Create Diagnostics"
@@ -316,7 +301,7 @@
       "type": "n8n-nodes-base.executionData",
       "typeVersion": 1.1,
       "position": [
-        2936,
+        2856,
         272
       ],
       "id": "0531736f-8a69-45e0-a6b2-8113cd94abf2",
@@ -334,8 +319,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2488,
-        208
+        2408,
+        184
       ],
       "id": "f3c0a50e-a686-4c6c-9a13-e60577c187af",
       "name": "Metadata Collector"
@@ -351,7 +336,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1816,
+        1736,
         -200
       ],
       "id": "871c4869-0387-4c48-9294-950eb3619f49",
@@ -364,7 +349,7 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        1592,
+        1512,
         -32
       ],
       "id": "00a1e7fc-a979-4709-8708-b726d7682e5f",
@@ -379,7 +364,7 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        1816,
+        1736,
         -8
       ],
       "id": "d75824bc-5423-4512-af44-bff9b7180ffd",
@@ -404,7 +389,7 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        2264,
+        2184,
         -200
       ],
       "id": "3022283d-32f3-4b91-b6e5-223d96d8d453",
@@ -428,11 +413,26 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -96,
+        -176,
         144
       ],
       "id": "7382b6fd-ba53-4b3e-95fa-a475585629ef",
       "name": "Call 'Discord Context Cache'"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $execution.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        344,
+        120
+      ],
+      "id": "7b08e3df-3525-412b-8563-ff32b122f63b",
+      "name": "Simple Memory"
     },
     {
       "parameters": {
@@ -447,26 +447,11 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        352,
+        272,
         -104
       ],
       "id": "4d12a4dd-3b4f-472b-a944-6265ad99de9e",
-      "name": "Execution Planner AI Agent1"
-    },
-    {
-      "parameters": {
-        "sessionIdType": "customKey",
-        "sessionKey": "={{ $execution.id }}",
-        "contextWindowLength": 10
-      },
-      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
-      "typeVersion": 1.3,
-      "position": [
-        424,
-        120
-      ],
-      "id": "7b08e3df-3525-412b-8563-ff32b122f63b",
-      "name": "Simple Memory"
+      "name": "Execution Planner AI Agent"
     },
     {
       "parameters": {
@@ -477,11 +462,11 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        552,
+        472,
         120
       ],
       "id": "fc946901-08ae-4ac6-b072-a8d59798086f",
-      "name": "Execution Plan Output Parser2"
+      "name": "Execution Plan Output Parser"
     }
   ],
   "connections": {
@@ -489,17 +474,12 @@
       "ai_languageModel": [
         [
           {
+            "node": "Execution Planner AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
             "node": "Execution Plan Output Parser",
-            "type": "ai_languageModel",
-            "index": 0
-          },
-          {
-            "node": "Execution Planner AI Agent1",
-            "type": "ai_languageModel",
-            "index": 0
-          },
-          {
-            "node": "Execution Plan Output Parser2",
             "type": "ai_languageModel",
             "index": 0
           }
@@ -547,16 +527,11 @@
             "index": 1
           },
           {
-            "node": "Execution Planner AI Agent1",
+            "node": "Execution Planner AI Agent",
             "type": "main",
             "index": 0
           }
         ]
-      ]
-    },
-    "Execution Plan Output Parser": {
-      "ai_outputParser": [
-        []
       ]
     },
     "Has a direct answer?": {
@@ -715,7 +690,18 @@
         ]
       ]
     },
-    "Execution Planner AI Agent1": {
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Execution Planner AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execution Planner AI Agent": {
       "main": [
         [
           {
@@ -726,22 +712,11 @@
         ]
       ]
     },
-    "Simple Memory": {
-      "ai_memory": [
-        [
-          {
-            "node": "Execution Planner AI Agent1",
-            "type": "ai_memory",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Execution Plan Output Parser2": {
+    "Execution Plan Output Parser": {
       "ai_outputParser": [
         [
           {
-            "node": "Execution Planner AI Agent1",
+            "node": "Execution Planner AI Agent",
             "type": "ai_outputParser",
             "index": 0
           }
@@ -765,8 +740,8 @@
       }
     ]
   },
-  "versionId": "1c47f73b-8008-47da-a3a6-b8cfdf5fc3e4",
-  "versionCounter": 60,
+  "versionId": "21c31d49-c36d-4657-8a16-d06cbddbb5c4",
+  "versionCounter": 62,
   "triggerCount": 0,
   "tags": [
     {
