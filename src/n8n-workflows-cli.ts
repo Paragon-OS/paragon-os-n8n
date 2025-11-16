@@ -122,7 +122,11 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
       continue;
     }
 
-    const wf: { name?: unknown } = parsed as { name?: unknown };
+    const wf: { id?: unknown; name?: unknown } = parsed as {
+      id?: unknown;
+      name?: unknown;
+    };
+    const rawId = typeof wf.id === "string" ? wf.id : undefined;
     const rawName = typeof wf.name === "string" ? wf.name : "unnamed-workflow";
     const baseName = sanitizeWorkflowName(rawName);
 
@@ -145,10 +149,33 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
     // skip renaming this one to avoid overwriting data.
     try {
       await fs.promises.access(newFullPath, fs.constants.F_OK);
-      console.warn(
-        `Warning: Target filename "${newFullPath}" already exists. Skipping rename of "${fullPath}".`
-      );
-      continue;
+
+      // If a file with the target name already exists, replace it only when the
+      // workflow ID matches; otherwise, keep the existing file and skip this one.
+      try {
+        const existingContent = await fs.promises.readFile(newFullPath, "utf8");
+        const existingParsed = JSON.parse(existingContent) as { id?: unknown };
+        const existingId =
+          existingParsed && typeof existingParsed.id === "string"
+            ? existingParsed.id
+            : undefined;
+
+        if (rawId && existingId && rawId === existingId) {
+          // Same workflow ID – replace the old file with the newly exported one.
+          await fs.promises.unlink(newFullPath);
+        } else {
+          console.warn(
+            `Warning: Target filename "${newFullPath}" already exists with a different workflow. Skipping rename of "${fullPath}".`
+          );
+          continue;
+        }
+      } catch (err) {
+        console.warn(
+          `Warning: Target filename "${newFullPath}" already exists but could not be inspected. Skipping rename of "${fullPath}".`,
+          err
+        );
+        continue;
+      }
     } catch {
       // File does not exist, safe to rename.
     }
