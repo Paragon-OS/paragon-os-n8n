@@ -171,25 +171,25 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
       continue;
     }
 
-    // Prefer an existing file that already matches the target filename.
-    let canonical = target.files.find((f) => f.fullPath === targetFullPath);
-    if (!canonical) {
-      // Prefer a file from the current backup run when choosing a canonical
-      // representative for this workflow ID. This ensures that when a
-      // workflow's [TAG] or name has changed, we keep the most recent export
-      // (which lives at the root of the backup directory) and treat older
-      // copies under previous tag subdirectories as duplicates to delete.
-      const fromCurrentRunCandidates = target.files.filter((f) => f.fromCurrentRun);
+    // Always prefer a file from the current backup run when choosing a canonical
+    // representative for this workflow ID. This ensures that when a workflow's
+    // [TAG] or name has changed, we keep the most recent export (which lives at
+    // the root of the backup directory) and treat older copies under previous
+    // tag subdirectories as duplicates to delete. This also ensures that the
+    // backup always overwrites existing files with fresh exports from n8n.
+    const fromCurrentRunCandidates = target.files.filter((f) => f.fromCurrentRun);
 
-      if (fromCurrentRunCandidates.length > 0) {
-        // Use a stable order when multiple current-run candidates exist.
-        canonical = fromCurrentRunCandidates.sort((a, b) =>
-          a.fullPath.localeCompare(b.fullPath)
-        )[0];
-      } else {
-        // Fall back to a stable deterministic selection among all files.
-        canonical = [...target.files].sort((a, b) => a.fullPath.localeCompare(b.fullPath))[0];
-      }
+    let canonical: WorkflowFile;
+    if (fromCurrentRunCandidates.length > 0) {
+      // Use a stable order when multiple current-run candidates exist.
+      canonical = fromCurrentRunCandidates.sort((a, b) =>
+        a.fullPath.localeCompare(b.fullPath)
+      )[0];
+    } else {
+      // Fall back to a stable deterministic selection among all files.
+      // This case only happens when no files were exported in the current run
+      // (e.g., when the workflow already exists and n8n skipped it).
+      canonical = [...target.files].sort((a, b) => a.fullPath.localeCompare(b.fullPath))[0];
     }
 
     // Delete all non-canonical files for this workflow ID.
