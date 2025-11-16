@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-16T15:32:18.000Z",
+  "updatedAt": "2025-11-16T21:04:48.000Z",
   "createdAt": "2025-11-06T21:51:04.792Z",
   "id": "vfcxqLBDDMKL5lnG",
   "name": "Discord MCP Client Sequencer",
@@ -16,8 +16,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        404,
-        328
+        1968,
+        608
       ],
       "id": "c79482a2-0b52-475c-a1d5-8f92e6b322e2",
       "name": "Google Gemini Chat Model",
@@ -36,8 +36,8 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        1288,
-        -104
+        2852,
+        320
       ],
       "id": "a913b319-ec9f-419b-ba12-55cd8fe54ec5",
       "name": "Split Out"
@@ -56,7 +56,7 @@
       "typeVersion": 1.1,
       "position": [
         -400,
-        72
+        48
       ],
       "id": "9a1fc959-c92c-4140-877e-6a1badc12e5b",
       "name": "When Executed by Another Workflow",
@@ -74,7 +74,7 @@
       "typeVersion": 3.2,
       "position": [
         48,
-        72
+        48
       ],
       "id": "9130e8ca-91b0-45be-8ea1-6851e6c32ec5",
       "name": "Context Aggregator"
@@ -140,8 +140,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        840,
-        -104
+        2404,
+        176
       ],
       "id": "762a6c3b-ecaf-4984-8d41-fe9c43813e40",
       "name": "Has a direct answer?"
@@ -158,8 +158,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2856,
-        -288
+        4420,
+        -160
       ],
       "id": "7ee012e2-dc46-45e4-bb47-d949b8d65d32",
       "name": "Final Response"
@@ -181,8 +181,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1064,
-        -32
+        2628,
+        248
       ],
       "id": "8094c0ee-513f-4b2c-97bf-fbd04c293ec3",
       "name": "Prepare Execution Steps"
@@ -216,8 +216,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1960,
-        -200
+        3524,
+        272
       ],
       "id": "8c9365ee-290f-410b-978a-5a8389f62a50",
       "name": "Edit Fields"
@@ -269,8 +269,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2632,
-        200
+        4196,
+        -272
       ],
       "id": "5fcbce29-85d8-4232-838b-2cd38b294adc",
       "name": "Create Diagnostics"
@@ -301,8 +301,8 @@
       "type": "n8n-nodes-base.executionData",
       "typeVersion": 1.1,
       "position": [
-        2856,
-        272
+        4420,
+        88
       ],
       "id": "0531736f-8a69-45e0-a6b2-8113cd94abf2",
       "name": "Input Data Logger"
@@ -319,8 +319,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2408,
-        184
+        3972,
+        -288
       ],
       "id": "f3c0a50e-a686-4c6c-9a13-e60577c187af",
       "name": "Metadata Collector"
@@ -336,8 +336,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1736,
-        -200
+        3300,
+        272
       ],
       "id": "871c4869-0387-4c48-9294-950eb3619f49",
       "name": "Merge"
@@ -349,8 +349,8 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        1512,
-        -32
+        3076,
+        440
       ],
       "id": "00a1e7fc-a979-4709-8708-b726d7682e5f",
       "name": "Loop Over Items"
@@ -364,8 +364,8 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        1736,
-        -8
+        3300,
+        512
       ],
       "id": "d75824bc-5423-4512-af44-bff9b7180ffd",
       "name": "MCP Sequence Executor",
@@ -389,35 +389,11 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        2184,
-        -200
+        3748,
+        272
       ],
       "id": "3022283d-32f3-4b91-b6e5-223d96d8d453",
       "name": "Aggregate"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "zBL0JT7t26pK2x95",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/zBL0JT7t26pK2x95",
-          "cachedResultName": "Discord Context Cache"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {}
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        -176,
-        144
-      ],
-      "id": "7382b6fd-ba53-4b3e-95fa-a475585629ef",
-      "name": "Call 'Discord Context Cache'"
     },
     {
       "parameters": {
@@ -428,8 +404,8 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
-        344,
-        120
+        1908,
+        400
       ],
       "id": "7b08e3df-3525-412b-8563-ff32b122f63b",
       "name": "Simple Memory"
@@ -437,7 +413,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ $json.userPrompt }}",
+        "text": "=User Prompt: `{{ $json.userPrompt }}`\nRecommended Playbook Play: `{{ $json.playbookRecommendations.toJsonString() }}`\nRecommended Tools to Use: `{{ $json.toolRecommendations.toJsonString() }}`",
         "hasOutputParser": true,
         "options": {
           "systemMessage": "=## You are a helpful assistant with the capabilities to generate\n- Either a sequential JSON enclosed array of tool execution steps for a user's prompt to accomplish the task OR a JSON with a `directAnswer` answer if you can answer directly from your knowledge\n- You MUST smartly decide if it can be answered from your current knowledge or memory\n\nInstructions:\n- you are PROHIBITED from using guild/server/channel/contact display names instead of proper IDs as execution parameters.\n- If you only have a name of a guild/server/channel/contact, your TOP PRIORITY is finding the discord guild/server/channel/contact IDs.\n- try to use your knowledge of the contact list instead of calling 'discord_list_contacts'\n- try to use your knowledge of the guilds/servers list instead of calling 'discord_list_guilds'\n\nFor ANY operation that requires Discord API calls, you MUST use executionSteps:\n- Reading/list/get operations (list messages, read channel, get user info, etc.)\n- Writing/send operations (send message, etc.)\n- Finding/searching operations (find channel, search messages, etc.)\n- Any action that retrieves or modifies Discord data\n\nExamples:\n- \"list messages with user X\" → find contact ID then list messages\n- \"list channels in guild/server Y\" → find guild ID then list\n- \"list messages in the guild/server Y channel Z\" → find guild ID, list channels, then list messages of the matching channel\n- \"send a message to channel Y\" → find channel ID, then send a message\n- \"who are in my contacts?\" → list contacts\n\n## Your Knowledge of Discord Contacts:\n\n```\n{{ $json.discordContacts ? $json.discordContacts.toJsonString() : '[]' }}\n```\n\n## Your Knowledge of Discord Servers/Guilds:\n\n```\n{{ $json.serversOrGuilds ? $json.serversOrGuilds.toJsonString() : '[]' }}\n```\n\n## Your Knowledge of Available MCP tools:\n\n```\n{{ $json.tools ? $json.tools.toJsonString() : '[]' }}\n```",
@@ -447,8 +423,8 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        272,
-        -104
+        1836,
+        176
       ],
       "id": "4d12a4dd-3b4f-472b-a944-6265ad99de9e",
       "name": "Execution Planner AI Agent"
@@ -462,11 +438,264 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        472,
-        120
+        2036,
+        400
       ],
       "id": "fc946901-08ae-4ac6-b072-a8d59798086f",
       "name": "Execution Plan Output Parser"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "zBL0JT7t26pK2x95",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/zBL0JT7t26pK2x95",
+          "cachedResultName": "[HELPERS] Discord Context Cache"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -176,
+        120
+      ],
+      "id": "7382b6fd-ba53-4b3e-95fa-a475585629ef",
+      "name": "Fetch Discord Context"
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        344,
+        800
+      ],
+      "id": "6bc75621-75de-42b0-b50d-9f4b9db661e3",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"prompt\": {\n      \"type\": \"string\",\n      \"description\": \"The optimized, less ambiguous user prompt\"\n    },\n    \"plays\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of recommended plays from the playbook to accomplish the task\"\n    },\n    \"tools\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of recommended tool names required to execute the task\"\n    }\n  },\n  \"required\": [\"prompt\"],\n  \"additionalProperties\": false\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        348,
+        592
+      ],
+      "id": "4d6341b6-7339-411b-9088-b87ab81f58fb",
+      "name": "Context Optimizer Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.userPrompt }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=## You are a helpful assistant with the capabilities to decide & output\n- An optimal, enriched version of the user prompt with less ambiguities in wording and identifiers (include userIds, guildIds).\n- Recommend 'plays' from the playbook as an array of play-names (e.g. [\"dm_contact_by_name\", \"search_topic_in_channel_and_summarize\"])\n- Recommend 'tools' from the tool catalog as an array of tool-names (e.g. [\"discord_read_channel\", \"discord_send_message\"])\n\n## Your Knowledge of The Discord Playbook:\n\n```\n{{ $json.discordPlaybook ? $json.discordPlaybook.toJsonString() : '[]' }}\n```\n\n## Your Knowledge of Discord Contacts:\n\n```\n{{ $json.discordContacts ? $json.discordContacts.toJsonString() : '[]' }}\n```\n\n## Your Knowledge of Discord Servers/Guilds:\n\n```\n{{ $json.serversOrGuilds ? $json.serversOrGuilds.toJsonString() : '[]' }}\n```\n\n## Your Knowledge of Available Discord API MCP tools:\n\n```\n{{ $json.tools ? $json.tools.toJsonString() : '[]' }}\n```",
+          "returnIntermediateSteps": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        272,
+        368
+      ],
+      "id": "6c26f0b0-9003-46d6-b62e-dd80f691638d",
+      "name": "Context Optimizer AI Agent"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.plays",
+        "include": "selectedOtherFields",
+        "fieldsToInclude": "=discordPlaybook",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        940,
+        -96
+      ],
+      "id": "c0fa4f4c-fbd4-4eac-baa9-233b77dba3cf",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.tools",
+        "include": "selectedOtherFields",
+        "fieldsToInclude": "tools",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        940,
+        224
+      ],
+      "id": "264fcaf7-38ef-4c4f-885f-bdf38ecbb860",
+      "name": "Split Out2"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        716,
+        224
+      ],
+      "id": "735f0c79-bb29-4b17-807d-ee542f3d64b7",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d78d5a24-205f-4aa6-a671-845182883ec1",
+              "name": "toolName",
+              "value": "={{ $json['output.tools'] }}",
+              "type": "string"
+            },
+            {
+              "id": "bb33be81-c1e0-4777-a0a7-83d3ba8fbba5",
+              "name": "toolSpecification",
+              "value": "={{ $json.tools.find(item => item.name == $json['output.tools']) }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1164,
+        224
+      ],
+      "id": "de585ebc-7537-4509-97d2-301bde85bf4f",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d78d5a24-205f-4aa6-a671-845182883ec1",
+              "name": "playName",
+              "value": "={{ $json['output.plays'] }}",
+              "type": "string"
+            },
+            {
+              "id": "bb33be81-c1e0-4777-a0a7-83d3ba8fbba5",
+              "name": "playSpecification",
+              "value": "={{ $json.discordPlaybook.find(item => item.name == $json['output.plays']) }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1164,
+        -96
+      ],
+      "id": "1a984116-34ce-4c7d-b101-fe15b86b8c1c",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "playbookRecommendations",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1388,
+        -96
+      ],
+      "id": "cb4b1c51-1859-4c62-848f-263e17d72ddb",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "toolRecommendations",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1388,
+        224
+      ],
+      "id": "662f7319-4b39-4a4a-a65c-17ba34fb5170",
+      "name": "Aggregate2"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 3,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1612,
+        160
+      ],
+      "id": "4f1bb9d0-7b34-446a-9d67-0c02470ded84",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "34bcd304-8d1e-4815-bf00-f0f91ca0a829",
+              "name": "userPrompt",
+              "value": "={{ $json.output.prompt }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1388,
+        416
+      ],
+      "id": "78e7ac79-906c-4feb-8ea4-d615444ae915",
+      "name": "Edit Fields1"
     }
   ],
   "connections": {
@@ -511,7 +740,7 @@
             "index": 0
           },
           {
-            "node": "Call 'Discord Context Cache'",
+            "node": "Fetch Discord Context",
             "type": "main",
             "index": 0
           }
@@ -527,7 +756,12 @@
             "index": 1
           },
           {
-            "node": "Execution Planner AI Agent",
+            "node": "Context Optimizer AI Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
             "type": "main",
             "index": 0
           }
@@ -679,17 +913,6 @@
         []
       ]
     },
-    "Call 'Discord Context Cache'": {
-      "main": [
-        [
-          {
-            "node": "Context Aggregator",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
     "Simple Memory": {
       "ai_memory": [
         [
@@ -722,6 +945,164 @@
           }
         ]
       ]
+    },
+    "Fetch Discord Context": {
+      "main": [
+        [
+          {
+            "node": "Context Aggregator",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Context Optimizer AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Context Optimizer Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Context Optimizer Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Context Optimizer AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Context Optimizer AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Out2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate2": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Execution Planner AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -740,8 +1121,8 @@
       }
     ]
   },
-  "versionId": "21c31d49-c36d-4657-8a16-d06cbddbb5c4",
-  "versionCounter": 62,
+  "versionId": "d5deed34-64af-48a8-a47f-f7b67915f596",
+  "versionCounter": 88,
   "triggerCount": 0,
   "tags": [
     {
