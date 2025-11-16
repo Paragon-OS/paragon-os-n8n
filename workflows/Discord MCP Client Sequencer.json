@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-16T21:04:48.000Z",
+  "updatedAt": "2025-11-16T22:23:16.000Z",
   "createdAt": "2025-11-06T21:51:04.792Z",
   "id": "vfcxqLBDDMKL5lnG",
   "name": "Discord MCP Client Sequencer",
@@ -17,7 +17,7 @@
       "typeVersion": 1,
       "position": [
         1968,
-        608
+        576
       ],
       "id": "c79482a2-0b52-475c-a1d5-8f92e6b322e2",
       "name": "Google Gemini Chat Model",
@@ -37,7 +37,7 @@
       "typeVersion": 1,
       "position": [
         2852,
-        320
+        288
       ],
       "id": "a913b319-ec9f-419b-ba12-55cd8fe54ec5",
       "name": "Split Out"
@@ -56,7 +56,7 @@
       "typeVersion": 1.1,
       "position": [
         -400,
-        48
+        16
       ],
       "id": "9a1fc959-c92c-4140-877e-6a1badc12e5b",
       "name": "When Executed by Another Workflow",
@@ -74,7 +74,7 @@
       "typeVersion": 3.2,
       "position": [
         48,
-        48
+        16
       ],
       "id": "9130e8ca-91b0-45be-8ea1-6851e6c32ec5",
       "name": "Context Aggregator"
@@ -141,7 +141,7 @@
       "typeVersion": 3.3,
       "position": [
         2404,
-        176
+        144
       ],
       "id": "762a6c3b-ecaf-4984-8d41-fe9c43813e40",
       "name": "Has a direct answer?"
@@ -159,7 +159,7 @@
       "typeVersion": 3.2,
       "position": [
         4420,
-        -160
+        -264
       ],
       "id": "7ee012e2-dc46-45e4-bb47-d949b8d65d32",
       "name": "Final Response"
@@ -182,7 +182,7 @@
       "typeVersion": 3.4,
       "position": [
         2628,
-        248
+        216
       ],
       "id": "8094c0ee-513f-4b2c-97bf-fbd04c293ec3",
       "name": "Prepare Execution Steps"
@@ -217,7 +217,7 @@
       "typeVersion": 3.4,
       "position": [
         3524,
-        272
+        200
       ],
       "id": "8c9365ee-290f-410b-978a-5a8389f62a50",
       "name": "Edit Fields"
@@ -302,7 +302,7 @@
       "typeVersion": 1.1,
       "position": [
         4420,
-        88
+        -16
       ],
       "id": "0531736f-8a69-45e0-a6b2-8113cd94abf2",
       "name": "Input Data Logger"
@@ -337,7 +337,7 @@
       "typeVersion": 3.2,
       "position": [
         3300,
-        272
+        200
       ],
       "id": "871c4869-0387-4c48-9294-950eb3619f49",
       "name": "Merge"
@@ -350,7 +350,7 @@
       "typeVersion": 3,
       "position": [
         3076,
-        440
+        384
       ],
       "id": "00a1e7fc-a979-4709-8708-b726d7682e5f",
       "name": "Loop Over Items"
@@ -365,7 +365,7 @@
       "typeVersion": 1,
       "position": [
         3300,
-        512
+        432
       ],
       "id": "d75824bc-5423-4512-af44-bff9b7180ffd",
       "name": "MCP Sequence Executor",
@@ -390,7 +390,7 @@
       "typeVersion": 1,
       "position": [
         3748,
-        272
+        200
       ],
       "id": "3022283d-32f3-4b91-b6e5-223d96d8d453",
       "name": "Aggregate"
@@ -405,7 +405,7 @@
       "typeVersion": 1.3,
       "position": [
         1908,
-        400
+        368
       ],
       "id": "7b08e3df-3525-412b-8563-ff32b122f63b",
       "name": "Simple Memory"
@@ -413,10 +413,10 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=User Prompt: `{{ $json.userPrompt }}`\nRecommended Playbook Play: `{{ $json.playbookRecommendations.toJsonString() }}`\nRecommended Tools to Use: `{{ $json.toolRecommendations.toJsonString() }}`",
+        "text": "=User Prompt: `{{ $json.userPrompt }}`",
         "hasOutputParser": true,
         "options": {
-          "systemMessage": "=## You are a helpful assistant with the capabilities to generate\n- Either a sequential JSON enclosed array of tool execution steps for a user's prompt to accomplish the task OR a JSON with a `directAnswer` answer if you can answer directly from your knowledge\n- You MUST smartly decide if it can be answered from your current knowledge or memory\n\nInstructions:\n- you are PROHIBITED from using guild/server/channel/contact display names instead of proper IDs as execution parameters.\n- If you only have a name of a guild/server/channel/contact, your TOP PRIORITY is finding the discord guild/server/channel/contact IDs.\n- try to use your knowledge of the contact list instead of calling 'discord_list_contacts'\n- try to use your knowledge of the guilds/servers list instead of calling 'discord_list_guilds'\n\nFor ANY operation that requires Discord API calls, you MUST use executionSteps:\n- Reading/list/get operations (list messages, read channel, get user info, etc.)\n- Writing/send operations (send message, etc.)\n- Finding/searching operations (find channel, search messages, etc.)\n- Any action that retrieves or modifies Discord data\n\nExamples:\n- \"list messages with user X\" → find contact ID then list messages\n- \"list channels in guild/server Y\" → find guild ID then list\n- \"list messages in the guild/server Y channel Z\" → find guild ID, list channels, then list messages of the matching channel\n- \"send a message to channel Y\" → find channel ID, then send a message\n- \"who are in my contacts?\" → list contacts\n\n## Your Knowledge of Discord Contacts:\n\n```\n{{ $json.discordContacts ? $json.discordContacts.toJsonString() : '[]' }}\n```\n\n## Your Knowledge of Discord Servers/Guilds:\n\n```\n{{ $json.serversOrGuilds ? $json.serversOrGuilds.toJsonString() : '[]' }}\n```\n\n## Your Knowledge of Available MCP tools:\n\n```\n{{ $json.tools ? $json.tools.toJsonString() : '[]' }}\n```",
+          "systemMessage": "=## You are a helpful assistant with the capabilities to generate\n- Either a sequential JSON enclosed array of tool execution steps for a user's prompt to accomplish the task OR a JSON with a `directAnswer` answer if you can answer directly from your knowledge\n- You MUST smartly decide if it can be answered from your current knowledge or memory\n- You are NOT a tool executor.\n\nInstructions:\n- you are PROHIBITED from using guild/server/channel/contact display names instead of proper IDs as execution parameters.\n- If you only have a name of a guild/server/channel/contact, your TOP PRIORITY is finding the discord guild/server/channel/contact IDs.\n- try to use your knowledge of the contact list instead of calling 'discord_list_contacts'\n- try to use your knowledge of the guilds/servers list instead of calling 'discord_list_guilds'\n\nFor ANY operation that requires Discord API calls, you MUST use executionSteps:\n- Reading/list/get operations (list messages, read channel, get user info, etc.)\n- Writing/send operations (send message, etc.)\n- Finding/searching operations (find channel, search messages, etc.)\n- Any action that retrieves or modifies Discord data\n\nExamples:\n- \"list messages with user X\" → find contact ID then list messages\n- \"list channels in guild/server Y\" → find guild ID then list\n- \"list messages in the guild/server Y channel Z\" → find guild ID, list channels, then list messages of the matching channel\n- \"send a message to channel Y\" → find channel ID, then send a message\n- \"who are in my contacts?\" → list contacts\n\n## Your Knowledge of Discord Contacts:\n\n```\n{{ $json.discordContacts ? $json.discordContacts.toJsonString() : '[]' }}\n```\n\n## Your Knowledge of Discord Servers/Guilds:\n\n```\n{{ $json.serversOrGuilds ? $json.serversOrGuilds.toJsonString() : '[]' }}\n```\n\n## Your Knowledge of Recommended resources:\n\n```\nRecommended Playbook Play: `{{ $json.playbookRecommendations.toJsonString() }}`\nRecommended Tools to Use: `{{ $json.toolRecommendations.toJsonString() }}`\n```",
           "returnIntermediateSteps": true
         }
       },
@@ -424,7 +424,7 @@
       "typeVersion": 2.2,
       "position": [
         1836,
-        176
+        144
       ],
       "id": "4d12a4dd-3b4f-472b-a944-6265ad99de9e",
       "name": "Execution Planner AI Agent"
@@ -439,7 +439,7 @@
       "typeVersion": 1.3,
       "position": [
         2036,
-        400
+        368
       ],
       "id": "fc946901-08ae-4ac6-b072-a8d59798086f",
       "name": "Execution Plan Output Parser"
@@ -463,7 +463,7 @@
       "typeVersion": 1.3,
       "position": [
         -176,
-        120
+        88
       ],
       "id": "7382b6fd-ba53-4b3e-95fa-a475585629ef",
       "name": "Fetch Discord Context"
@@ -492,7 +492,7 @@
     {
       "parameters": {
         "schemaType": "manual",
-        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"prompt\": {\n      \"type\": \"string\",\n      \"description\": \"The optimized, less ambiguous user prompt\"\n    },\n    \"plays\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of recommended plays from the playbook to accomplish the task\"\n    },\n    \"tools\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of recommended tool names required to execute the task\"\n    }\n  },\n  \"required\": [\"prompt\"],\n  \"additionalProperties\": false\n}",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"prompt\": {\n      \"type\": \"string\",\n      \"description\": \"The optimized, less ambiguous user prompt\"\n    },\n    \"plays\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of recommended plays from the playbook to accomplish the task\"\n    },\n    \"toolsToUse\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of recommended tool names required to execute the task\"\n    },\n     \"toolsNotRelated\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of tool names not at all relavent to execute the task\"\n    }\n  },\n  \"required\": [\"prompt\"],\n  \"additionalProperties\": false\n}",
         "autoFix": true
       },
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
@@ -510,7 +510,7 @@
         "text": "={{ $json.userPrompt }}",
         "hasOutputParser": true,
         "options": {
-          "systemMessage": "=## You are a helpful assistant with the capabilities to decide & output\n- An optimal, enriched version of the user prompt with less ambiguities in wording and identifiers (include userIds, guildIds).\n- Recommend 'plays' from the playbook as an array of play-names (e.g. [\"dm_contact_by_name\", \"search_topic_in_channel_and_summarize\"])\n- Recommend 'tools' from the tool catalog as an array of tool-names (e.g. [\"discord_read_channel\", \"discord_send_message\"])\n\n## Your Knowledge of The Discord Playbook:\n\n```\n{{ $json.discordPlaybook ? $json.discordPlaybook.toJsonString() : '[]' }}\n```\n\n## Your Knowledge of Discord Contacts:\n\n```\n{{ $json.discordContacts ? $json.discordContacts.toJsonString() : '[]' }}\n```\n\n## Your Knowledge of Discord Servers/Guilds:\n\n```\n{{ $json.serversOrGuilds ? $json.serversOrGuilds.toJsonString() : '[]' }}\n```\n\n## Your Knowledge of Available Discord API MCP tools:\n\n```\n{{ $json.tools ? $json.tools.toJsonString() : '[]' }}\n```",
+          "systemMessage": "=## You are a helpful assistant with the capabilities to decide & output\n- An optimal, enriched version of the user prompt with less ambiguities in wording and identifiers (include userIds, guildIds).\n- Recommend 'plays' from the playbook as an array of play-names (e.g. [\"dm_contact_by_name\", \"search_topic_in_channel_and_summarize\"])\n- Based on the plays you picked, Recommend 'toolsToUse' from the tool catalog as an array of tool-names (e.g. [\"discord_read_channel\", \"discord_send_message\"])\n- Based on the plays you picked, Recommend 'toolsNotRelated' by picking an completely unrelated list of tool names to EXCLUDE from the full tool list to save context.\n- DO NOT HILLUCINATE Ids, tool-names & play-names\n\n## Your Knowledge of The Discord Playbook:\n\n```\n{{ $json.discordPlaybook ? $json.discordPlaybook.toJsonString() : '[]' }}\n```\n\n## Your Knowledge of Discord Contacts:\n\n```\n{{ $json.discordContacts ? $json.discordContacts.toJsonString() : '[]' }}\n```\n\n## Your Knowledge of Discord Servers/Guilds:\n\n```\n{{ $json.serversOrGuilds ? $json.serversOrGuilds.toJsonString() : '[]' }}\n```\n\n## Your Knowledge of Available Discord API MCP tools:\n\n```\n{{ $json.tools ? $json.tools.toJsonString() : '[]' }}\n```",
           "returnIntermediateSteps": false
         }
       },
@@ -541,7 +541,7 @@
     },
     {
       "parameters": {
-        "fieldToSplitOut": "output.tools",
+        "fieldToSplitOut": "output.toolsToUse",
         "include": "selectedOtherFields",
         "fieldsToInclude": "tools",
         "options": {}
@@ -550,7 +550,7 @@
       "typeVersion": 1,
       "position": [
         940,
-        224
+        96
       ],
       "id": "264fcaf7-38ef-4c4f-885f-bdf38ecbb860",
       "name": "Split Out2"
@@ -565,7 +565,7 @@
       "typeVersion": 3.2,
       "position": [
         716,
-        224
+        192
       ],
       "id": "735f0c79-bb29-4b17-807d-ee542f3d64b7",
       "name": "Merge1"
@@ -577,13 +577,13 @@
             {
               "id": "d78d5a24-205f-4aa6-a671-845182883ec1",
               "name": "toolName",
-              "value": "={{ $json['output.tools'] }}",
+              "value": "={{ $json['output.toolsToUse'] }}",
               "type": "string"
             },
             {
               "id": "bb33be81-c1e0-4777-a0a7-83d3ba8fbba5",
               "name": "toolSpecification",
-              "value": "={{ $json.tools.find(item => item.name == $json['output.tools']) }}",
+              "value": "={{ $json.tools.find(item => item.name == $json['output.toolsToUse']) }}",
               "type": "object"
             }
           ]
@@ -594,7 +594,7 @@
       "typeVersion": 3.4,
       "position": [
         1164,
-        224
+        96
       ],
       "id": "de585ebc-7537-4509-97d2-301bde85bf4f",
       "name": "Edit Fields2"
@@ -653,7 +653,7 @@
       "typeVersion": 1,
       "position": [
         1388,
-        224
+        96
       ],
       "id": "662f7319-4b39-4a4a-a65c-17ba34fb5170",
       "name": "Aggregate2"
@@ -662,14 +662,16 @@
       "parameters": {
         "mode": "combine",
         "combineBy": "combineByPosition",
-        "numberInputs": 3,
-        "options": {}
+        "numberInputs": 4,
+        "options": {
+          "includeUnpaired": false
+        }
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
         1612,
-        160
+        112
       ],
       "id": "4f1bb9d0-7b34-446a-9d67-0c02470ded84",
       "name": "Merge2"
@@ -680,6 +682,18 @@
           "assignments": [
             {
               "id": "34bcd304-8d1e-4815-bf00-f0f91ca0a829",
+              "name": "serversOrGuilds",
+              "value": "={{ $json.serversOrGuilds }}",
+              "type": "string"
+            },
+            {
+              "id": "5a3fa6e2-058b-434b-95a0-872aaabedce9",
+              "name": "discordContacts",
+              "value": "={{ $json.discordContacts }}",
+              "type": "array"
+            },
+            {
+              "id": "c04f7e88-7103-45f5-8b5d-6a30503e61b4",
               "name": "userPrompt",
               "value": "={{ $json.output.prompt }}",
               "type": "string"
@@ -692,10 +706,88 @@
       "typeVersion": 3.4,
       "position": [
         1388,
-        416
+        288
       ],
       "id": "78e7ac79-906c-4feb-8ea4-d615444ae915",
       "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "tools",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        940,
+        480
+      ],
+      "id": "2c79a8b4-04d8-4fd8-8d57-9be5fdc22e0b",
+      "name": "Split Out3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4c60793c-c435-486e-9438-3083ed36c7bb",
+              "leftValue": "={{ $('Merge1').item.json.output.toolsNotRelated }}",
+              "rightValue": "={{ $json.name }}",
+              "operator": {
+                "type": "array",
+                "operation": "notContains",
+                "rightType": "any"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1164,
+        480
+      ],
+      "id": "ea8ebc2d-30c9-461a-89d1-8dc4d7ea86e8",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "allRelaventTools",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1388,
+        480
+      ],
+      "id": "e64f78cd-294c-4998-9e3a-ac3a022f9a71",
+      "name": "Aggregate3"
+    },
+    {
+      "parameters": {
+        "content": "### Lets fetch & cache discord server channels on demand"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        912,
+        688
+      ],
+      "id": "afab36d3-39dd-4af3-82e5-f1b4f12767ec",
+      "name": "Sticky Note"
     }
   ],
   "connections": {
@@ -1023,6 +1115,11 @@
             "node": "Edit Fields1",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Split Out3",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -1103,6 +1200,39 @@
           }
         ]
       ]
+    },
+    "Split Out3": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Aggregate3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate3": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -1121,8 +1251,8 @@
       }
     ]
   },
-  "versionId": "d5deed34-64af-48a8-a47f-f7b67915f596",
-  "versionCounter": 88,
+  "versionId": "d850d4aa-b662-4fe7-bd37-25975c0b14ba",
+  "versionCounter": 116,
   "triggerCount": 0,
   "tags": [
     {
