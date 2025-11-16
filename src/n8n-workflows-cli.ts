@@ -124,16 +124,22 @@ function sanitizeWorkflowName(name: string): string {
 }
 
 async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> {
-  let entries: string[];
+  const normalizedOutputDir = path.resolve(outputDir);
 
+  let jsonPaths: string[];
   try {
-    entries = await fs.promises.readdir(outputDir);
+    jsonPaths = await collectJsonFilesRecursive(normalizedOutputDir);
   } catch (err) {
-    console.warn(`Warning: Failed to read export directory "${outputDir}":`, err);
+    console.warn(
+      `Warning: Failed to collect workflow JSON files under "${normalizedOutputDir}":`,
+      err
+    );
     return;
   }
 
-  const jsonFiles = entries.filter((file) => file.toLowerCase().endsWith(".json"));
+  if (jsonPaths.length === 0) {
+    return;
+  }
 
   type WorkflowFile = {
     file: string;
@@ -152,12 +158,20 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
      * Optional tag extracted from the workflow name.
      */
     tag?: string;
+    /**
+     * True if this file was created in the most recent backup run, i.e. it is a
+     * JSON file located directly under the backup root directory (not in a
+     * nested/tag subdirectory).
+     */
+    fromCurrentRun: boolean;
   };
 
   const workflowFiles: WorkflowFile[] = [];
 
-  for (const file of jsonFiles) {
-    const fullPath = path.join(outputDir, file);
+  for (const fullPath of jsonPaths) {
+    const file = path.basename(fullPath);
+    const parentDir = path.dirname(fullPath);
+    const fromCurrentRun = path.resolve(parentDir) === normalizedOutputDir;
 
     let content: string;
     try {
@@ -213,6 +227,7 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
       baseName,
       fileBaseName,
       tag,
+      fromCurrentRun,
     });
   }
 
@@ -288,7 +303,7 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
   for (const target of targets) {
     const sample = target.files[0];
     const tag = sample.tag;
-    const targetDir = tag ? path.join(outputDir, tag) : outputDir;
+    const targetDir = tag ? path.join(normalizedOutputDir, tag) : normalizedOutputDir;
     const targetFullPath = path.join(targetDir, target.targetFilename);
 
     try {
@@ -301,7 +316,22 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
     // Prefer an existing file that already matches the target filename.
     let canonical = target.files.find((f) => f.fullPath === targetFullPath);
     if (!canonical) {
-      canonical = target.files[0];
+      // Prefer a file from the current backup run when choosing a canonical
+      // representative for this workflow ID. This ensures that when a
+      // workflow's [TAG] or name has changed, we keep the most recent export
+      // (which lives at the root of the backup directory) and treat older
+      // copies under previous tag subdirectories as duplicates to delete.
+      const fromCurrentRunCandidates = target.files.filter((f) => f.fromCurrentRun);
+
+      if (fromCurrentRunCandidates.length > 0) {
+        // Use a stable order when multiple current-run candidates exist.
+        canonical = fromCurrentRunCandidates.sort((a, b) =>
+          a.fullPath.localeCompare(b.fullPath)
+        )[0];
+      } else {
+        // Fall back to a stable deterministic selection among all files.
+        canonical = [...target.files].sort((a, b) => a.fullPath.localeCompare(b.fullPath))[0];
+      }
     }
 
     // Delete all non-canonical files for this workflow ID.
@@ -342,6 +372,71 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
       }
     }
   }
+
+  // After renaming/deleting files, remove any now-empty directories beneath the
+  // backup root (excluding the root itself).
+  try {
+    await removeEmptyDirectoriesUnder(normalizedOutputDir);
+  } catch (err) {
+    console.warn(
+      `Warning: Failed to remove empty directories under "${normalizedOutputDir}":`,
+      err
+    );
+  }
+}
+
+async function removeEmptyDirectoriesUnder(rootDir: string): Promise<void> {
+  async function removeEmptyRecursive(dir: string, isRoot: boolean): Promise<boolean> {
+    let entries: fs.Dirent[];
+
+    try {
+      entries = await fs.promises.readdir(dir, { withFileTypes: true });
+    } catch {
+      // If we cannot read the directory, treat it as non-empty to avoid
+      // accidental deletions.
+      return false;
+    }
+
+    let hasFiles = false;
+
+    for (const entry of entries) {
+      const childPath = path.join(dir, entry.name);
+
+      if (entry.isDirectory()) {
+        const childEmpty = await removeEmptyRecursive(childPath, false);
+
+        // If the child directory is now empty, attempt to remove it.
+        if (childEmpty) {
+          try {
+            await fs.promises.rmdir(childPath);
+          } catch {
+            // Ignore failures and continue.
+          }
+        }
+      } else {
+        // Any file means the directory is not empty.
+        hasFiles = true;
+      }
+    }
+
+    if (hasFiles) {
+      return false;
+    }
+
+    // Re-read to see if any children remain (e.g. directories we could not remove).
+    try {
+      const remaining = await fs.promises.readdir(dir);
+      if (remaining.length === 0 && !isRoot) {
+        return true;
+      }
+    } catch {
+      // If we fail to re-read, err on the side of not deleting.
+    }
+
+    return false;
+  }
+
+  await removeEmptyRecursive(rootDir, true);
 }
 
 function runN8nCapture(args: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
