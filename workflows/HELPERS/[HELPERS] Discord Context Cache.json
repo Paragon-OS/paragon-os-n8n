@@ -7,6 +7,29 @@
   "isArchived": false,
   "nodes": [
     {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cache_ttl_ms",
+              "name": "cacheTTLms",
+              "value": 1000000,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1344,
+        96
+      ],
+      "id": "config-cache-ttl",
+      "name": "Cache Config"
+    },
+    {
       "parameters": {},
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
@@ -142,7 +165,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "writeTTLms": 1000000,
+            "writeTTLms": "={{ $('Cache Config').item.json.cacheTTLms }}",
             "cacheKey": "discordGuilds",
             "writeValue": "={{ {serversOrGuilds: $json.guilds} }}",
             "trueToWrite": true
@@ -404,7 +427,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "writeTTLms": 1000000,
+            "writeTTLms": "={{ $('Cache Config').item.json.cacheTTLms }}",
             "cacheKey": "discordTools",
             "writeValue": "={{ $json.output }}",
             "trueToWrite": true
@@ -477,7 +500,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "writeTTLms": 1000000,
+            "writeTTLms": "={{ $('Cache Config').item.json.cacheTTLms }}",
             "cacheKey": "discordContacts",
             "writeValue": "={{ {discordContacts: $json.contacts} }}",
             "trueToWrite": true
@@ -651,6 +674,17 @@
       ]
     },
     "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Cache Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cache Config": {
       "main": [
         [
           {
