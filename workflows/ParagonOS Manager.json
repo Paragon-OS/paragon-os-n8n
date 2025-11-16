@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-16T12:24:46.000Z",
+  "updatedAt": "2025-11-16T15:23:41.000Z",
   "createdAt": "2025-11-06T23:04:10.688Z",
   "id": "z1Ry4y4k5dGR0BqR",
   "name": "ParagonOS Manager",
@@ -133,7 +133,7 @@
       ],
       "id": "c2a04407-3712-44aa-a758-a324f3b37a33",
       "name": "When Executed by Another Workflow",
-      "disabled": false
+      "disabled": true
     },
     {
       "parameters": {},
@@ -231,8 +231,8 @@
       }
     ]
   },
-  "versionId": "4c3b2b45-668b-40b6-9d8e-4b55c372cad5",
-  "versionCounter": 52,
+  "versionId": "e7d441da-421a-411d-bbd4-18aa40b72292",
+  "versionCounter": 54,
   "triggerCount": 0,
   "tags": [],
   "shared": [
