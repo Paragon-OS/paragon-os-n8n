@@ -1,0 +1,256 @@
+{
+  "updatedAt": "2025-11-16T12:24:46.000Z",
+  "createdAt": "2025-11-06T23:04:10.688Z",
+  "id": "z1Ry4y4k5dGR0BqR",
+  "name": "ParagonOS Manager",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -448,
+        -48
+      ],
+      "id": "4077b1f3-df5a-4112-a949-a4a86c743d57",
+      "name": "When chat message received",
+      "webhookId": "171c216b-baf1-4dfc-b52e-280926480ed7"
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        80
+      ],
+      "id": "4478f090-adaf-495e-8b71-37592aa93537",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Executes Discord operations. Supports both single operations and multi-step sequential operations.\n\n# Capabilities: \n\nThe Discord MCP tools enable comprehensive Discord integration including reading messages from channels and DMs (with pagination and date filtering), searching message content, sending/editing/deleting messages with file attachment support, downloading attachments, and managing server/channel access. You can list guilds/servers you are part of, list channels, contacts, member counts and guild/server members, search for specific contacts, configure whitelist/blacklist filters for channels and DMs, and retrieve pending channels or DMs that need attention (unread messages or mentions). The tools support both server channels and direct messages, with automatic DM channel creation when sending to users.\n\nSINGLE operations (examples):\n- \"find channel ID for dev-chat in metarune homies guild\"\n- \"send message 'hello' to channel ID 1234567890\"\n- \"list all channels in metarune homies guild\"\n- \"list all guilds i'm in\"\n\nMULTI-STEP operations (the tool will break these down automatically):\n- \"find dev-chat channel and send a message\"\n- \"get channel ID for general then send message 'hello'\"\n- \"list members in server X and find user Y\"\n\nThe tool intelligently plans and executes sequences of Discord operations. For multi-step operations, it will automatically break them down, execute steps sequentially, and pass data between steps.",
+        "workflowId": {
+          "__rl": true,
+          "value": "vfcxqLBDDMKL5lnG",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/vfcxqLBDDMKL5lnG",
+          "cachedResultName": "Discord MCP Client Sequencer"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `discord action to perform, with exact guild/server or channel IDs`, 'string') }}"
+          },
+          "matchingColumns": [
+            "userPrompt"
+          ],
+          "schema": [
+            {
+              "id": "userPrompt",
+              "displayName": "userPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        32,
+        80
+      ],
+      "id": "a85ea5f0-1f3f-4d39-af49-35e27cade5b4",
+      "name": "Discord Agent with Caching"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $workflow.id }} v2"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -96,
+        80
+      ],
+      "id": "8b52e12c-7f0e-4129-8a64-80a18a1714b6",
+      "name": "Conversation Memory"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "=You are a Discord manager that can perform operations tasks.\n\nBreak down tasks into sequential, independent steps:\n1. Multi-step instructions to the Discord tool must be independent and NOT expect data from the previous steps.\n2. Each tool call must be completely self-contained with ALL necessary information\n3. When you need information from a previous step, YOU must extract it and pass it explicitly in the next call\n\nEXAMPLES:\n\"say hi to dev-chat in metarune homies guild\"\n  Step 1: \"find the channel ID for dev-chat in metarune homies guild\"\n  Step 2: Extract channel ID, then \"send message 'hi' to channel ID 1234567890\"\n  \nIMPORTANT:\n- Always specify IDs explicitly when sending messages - never use channel names in tool calls.\n- If you don't have guild/server or user IDs, use the MCP to fetch them\n- There's no concept of `unread` messages in Discord MCP. unread means any message after my last response to the channel."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -168,
+        -144
+      ],
+      "id": "e572d52c-0585-473c-84aa-34fc1b8ee691",
+      "name": "Metarune Admin Chat Agent"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "chatInput"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        -240
+      ],
+      "id": "c2a04407-3712-44aa-a758-a324f3b37a33",
+      "name": "When Executed by Another Workflow",
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -144
+      ],
+      "id": "b435c3de-9724-4add-bbbe-a0f0eeea066e",
+      "name": "No Operation, do nothing"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord Agent with Caching": {
+      "ai_tool": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Metarune Admin Chat Agent": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "chatInput": "find staryo admin only channel in metarune labs guild, then list messages"
+        }
+      }
+    ]
+  },
+  "versionId": "4c3b2b45-668b-40b6-9d8e-4b55c372cad5",
+  "versionCounter": 51,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-11-06T23:04:10.693Z",
+      "createdAt": "2025-11-06T23:04:10.693Z",
+      "role": "workflow:owner",
+      "workflowId": "z1Ry4y4k5dGR0BqR",
+      "projectId": "GEUEn6ArNROzJ5FY",
+      "project": {
+        "updatedAt": "2025-10-28T15:11:59.092Z",
+        "createdAt": "2025-10-28T15:08:17.462Z",
+        "id": "GEUEn6ArNROzJ5FY",
+        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null
+      }
+    }
+  ]
+}

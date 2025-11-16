@@ -1,0 +1,457 @@
+{
+  "updatedAt": "2025-11-07T12:44:43.000Z",
+  "createdAt": "2025-10-30T15:38:17.824Z",
+  "id": "qXzz33pAVkLd4UOO",
+  "name": "[LAB] Discord MCP Client",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an expert Discord MCP assistant agent. Your role is to help users interact with Discord through MCP tools and return JSON results that match the expected schema exactly, without unnecessary wrapping objects.\n\n**Capabilities:**\n\n* Discover available Discord MCP tools by calling `mcp_list_tools` when needed\n* Execute Discord MCP tools directly using the Discord MCP Tool Executer\n* Understand natural language requests and select appropriate tools automatically\n* Handle multi-step workflows by chaining tool calls when necessary\n\n**Workflow:**\n\n1. When you need to discover available tools, call `mcp_list_tools` first\n2. Analyze the user's request and identify which tool(s) to use\n3. Execute the tool(s) with appropriate parameters\n4. Return tool results in valid JSON that conforms to the expected schema, with no extra nesting\n\n**Guidelines:**\n\n* Always check available tools if unsure which one to use\n* Extract parameter values from the user's natural language request\n* Ensure output strictly matches the schema: do not wrap results in additional objects like `\"output\"`\n* Maintain context across multiple tool calls in a conversation\n",
+          "enableStreaming": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        320,
+        -144
+      ],
+      "id": "0fe747a8-f76f-4c24-9c59-008f9be58269",
+      "name": "Discord MCP Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        256,
+        400
+      ],
+      "id": "599a479a-c033-46c0-a26d-9cd6bda0e81d",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "={{ $json.outputSchema.toJsonString() }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        608,
+        208
+      ],
+      "id": "d4d5b1de-2466-45bd-895a-445fa5831ff9",
+      "name": "Generic MCP Response Parser"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI('tool_name', ``, 'string') }}",
+        "toolParameters": "={{ $fromAI('tool_parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        352,
+        208
+      ],
+      "id": "4c521e1e-5079-4c76-bd8f-d89c32f14d49",
+      "name": "Discord MCP Tool Executer",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ZFofx3k2ze1wsifx",
+          "name": "Discord MCP Server"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "**Tool Name:** `mcp_list_tools`\n\n**Purpose:**\nDiscover and return the current live catalog of tools from the connected Discord MCP server.\nThis catalog is the single source of truth for all tool names, descriptions, and input schemas.\n\n**Call When:**\n- You do not yet know which tools exist\n- You need to refresh the tool registry before selection\n- You must check parameter names, types, or schema requirements\n\n**Contract:**\n- **Input:** none\n- **Output:** Array of tools → each object has `{ name, description, input_schema }`\n- Treat this response as authoritative; never invent tools or fields\n\n**Usage Pattern:**\n1. Call `mcp_list_tools` to fetch the live catalog\n2. Review available tools and their `input_schema` for parameter requirements\n3. Select and execute the appropriate tool directly using the Discord MCP Tool Executer\n\n**Notes:**\n- No parameters are required\n- Always use this first when you need to discover available Discord MCP tools\n- Acts as the ground truth registry for the MCP environment\n"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        480,
+        208
+      ],
+      "id": "b4a6b06e-d5d0-4c35-9437-5decbc2b8f8a",
+      "name": "Discord MCP List Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ZFofx3k2ze1wsifx",
+          "name": "Discord MCP Server"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "chatInput"
+            },
+            {
+              "name": "outputType"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -336,
+        -128
+      ],
+      "id": "b09662fb-1fdb-49bc-bf26-6c9010af1ea9",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "errorMessage": "Must provide a valid outputType"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        112,
+        -208
+      ],
+      "id": "dac85359-305c-4371-a25c-b15ad072bcf7",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0b847a75-02e7-4d74-a3c7-dbe0efc87a43",
+                    "leftValue": "={{ $json.outputType }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "empty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "NO_OUTPUT_TYPE"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.outputType }}",
+                    "rightValue": "DIRECT_MESSAGES",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "11d11cc8-2e65-4394-b36d-44421925f0f3"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DIRECT_MESSAGES"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e9737d44-e65c-402c-8694-a0a8e29b33dc",
+                    "leftValue": "={{ $json.outputType }}",
+                    "rightValue": "CONTACTS",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CONTACTS"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -112,
+        -112
+      ],
+      "id": "503f19e7-54d5-4873-b1dd-2b9af38fdab6",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"outputSchema\": {\n  \"type\": \"object\",\n  \"properties\": {\n    \"data\": {\n      \"type\": \"array\",\n      \"description\": \"An array of message objects\",\n      \"items\": {\n        \"type\": \"object\",\n        \"description\": \"Message object containing the message fields\",\n        \"required\": [\n          \"messageId\",\n          \"channelId\",\n          \"messageType\",\n          \"content\",\n          \"timestamp\"\n        ],\n        \"properties\": {\n          \"messageId\": {\n            \"type\": \"string\",\n            \"description\": \"Message ID\"\n          },\n          \"channelId\": {\n            \"type\": \"string\",\n            \"description\": \"Channel ID of the message\"\n          },\n          \"messageType\": {\n            \"type\": \"string\",\n            \"enum\": [\n              \"dm\",\n              \"group\"\n            ]\n          },\n          \"content\": {\n            \"type\": \"string\",\n            \"description\": \"Message text content\"\n          },\n          \"timestamp\": {\n            \"type\": \"string\",\n            \"format\": \"date-time\",\n            \"description\": \"ISO 8601 datetime\"\n          },\n          \"attachments\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"object\"\n            }\n          },\n          \"replyTo\": {\n            \"type\": \"string\",\n            \"description\": \"optional message ID\"\n          }\n        },\n        \"additionalProperties\": false\n      }\n    },\n    \"pagination\": {\n      \"type\": \"object\"\n    },\n    \"status\": {\n      \"type\": \"string\"\n    },\n    \"message\": {\n      \"type\": \"string\"\n    },\n    \"error\": {\n      \"type\": \"string\"\n    }\n  },\n  \"additionalProperties\": false\n}\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        -16
+      ],
+      "id": "766ebc8c-2701-4628-abf5-c10a58bc3e1a",
+      "name": "DIRECT_MESSAGES"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"outputSchema\": {\n    \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n    \"type\": \"object\",\n    \"properties\": {\n      \"data\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"object\",\n          \"required\": [\n            \"id\",\n            \"username\",\n            \"discriminator\"\n          ],\n          \"properties\": {\n            \"id\": {\n              \"type\": \"string\",\n              \"description\": \"Discord user ID\"\n            },\n            \"username\": {\n              \"type\": \"string\",\n              \"description\": \"Username\"\n            },\n            \"discriminator\": {\n              \"type\": \"string\",\n              \"description\": \"4-digit tag\"\n            },\n            \"displayName\": {\n              \"type\": \"string\",\n              \"description\": \"nickname/display name\"\n            }\n          },\n          \"additionalProperties\": false\n        }\n      },\n      \"pagination\": {\n        \"type\": \"object\"\n      },\n      \"status\": {\n        \"type\": \"string\"\n      },\n      \"message\": {\n        \"type\": \"string\"\n      },\n      \"error\": {\n        \"type\": \"string\"\n      }\n    },\n    \"additionalProperties\": false\n  }\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        96,
+        176
+      ],
+      "id": "34267a00-c86d-4867-ac42-396b3733c750",
+      "name": "CONTACTS"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list",
+          "cachedResultName": "Claude Haiku 4.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        432,
+        416
+      ],
+      "id": "f46f131c-e796-4dd5-b556-1013d6d905b8",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "isyty1NtptrrMxOT",
+          "name": "Anthropic account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Discord MCP Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generic MCP Response Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Discord MCP Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord MCP Tool Executer": {
+      "ai_tool": [
+        [
+          {
+            "node": "Discord MCP Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord MCP List Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "Discord MCP Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DIRECT_MESSAGES",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CONTACTS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DIRECT_MESSAGES": {
+      "main": [
+        [
+          {
+            "node": "Discord MCP Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONTACTS": {
+      "main": [
+        [
+          {
+            "node": "Discord MCP Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "chatInput": "get last 10 messages with sebastianMoy.",
+          "outputType": "DIRECT_MESSAGES"
+        }
+      }
+    ]
+  },
+  "versionId": "8efe0ace-d946-4e56-b6e9-6816d69204bc",
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [
+    {
+      "updatedAt": "2025-11-02T21:22:20.646Z",
+      "createdAt": "2025-11-02T21:22:20.646Z",
+      "id": "95mwWdOxtdnkFLhS",
+      "name": "Discord"
+    },
+    {
+      "updatedAt": "2025-11-07T12:42:46.406Z",
+      "createdAt": "2025-11-07T12:42:46.406Z",
+      "id": "nP0FjyF3pFepp7fe",
+      "name": "LAB"
+    },
+    {
+      "updatedAt": "2025-11-02T21:22:14.342Z",
+      "createdAt": "2025-11-02T21:22:14.342Z",
+      "id": "w6FOnYOvODOXV9os",
+      "name": "MCP"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-10-30T15:38:17.826Z",
+      "createdAt": "2025-10-30T15:38:17.826Z",
+      "role": "workflow:owner",
+      "workflowId": "qXzz33pAVkLd4UOO",
+      "projectId": "GEUEn6ArNROzJ5FY",
+      "project": {
+        "updatedAt": "2025-10-28T15:11:59.092Z",
+        "createdAt": "2025-10-28T15:08:17.462Z",
+        "id": "GEUEn6ArNROzJ5FY",
+        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null
+      }
+    }
+  ]
+}
