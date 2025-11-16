@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2025-11-07T12:44:34.000Z",
-  "createdAt": "2025-11-01T13:35:27.874Z",
-  "id": "VbvcfNnJy8eGKtvD",
-  "name": "[LAB] Discord Manager",
+  "updatedAt": "2025-11-07T12:43:35.000Z",
+  "createdAt": "2025-11-04T08:49:45.191Z",
+  "id": "hSb1J5CmvO8KcWPv",
+  "name": "[LAB] Discord Message Retriever",
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -20,7 +20,7 @@
         -288,
         -304
       ],
-      "id": "d113adc9-916e-43fc-89e7-187d109d32c5",
+      "id": "9f779468-de37-4b07-8337-f112928ca8c4",
       "name": "AI Agent"
     },
     {
@@ -35,7 +35,7 @@
         -656,
         -80
       ],
-      "id": "e0e6e785-82e7-4d9b-8d15-3e553e014b52",
+      "id": "e2af2d7e-6944-41b9-a15f-875728a1cbbe",
       "name": "Simple Memory"
     },
     {
@@ -50,7 +50,7 @@
         -784,
         -80
       ],
-      "id": "fb7b9a56-d23b-4f29-9cd7-41abed69e2e1",
+      "id": "fa7d158f-5f2e-4666-8f62-1c6ea3d398d0",
       "name": "Google Gemini Chat Model",
       "credentials": {
         "googlePalmApi": {
@@ -99,7 +99,7 @@
         -528,
         -80
       ],
-      "id": "024ba43e-7de2-4746-9487-8b98ba6ce9d2",
+      "id": "7f0a2d1e-067b-47d6-9a7f-865630a79246",
       "name": "List last messages"
     },
     {
@@ -142,7 +142,7 @@
         -400,
         -80
       ],
-      "id": "990b58ee-517e-4015-88be-a62d58f0fb23",
+      "id": "a3eb9b19-2f31-4b79-a9ab-1de8496c7cd3",
       "name": "Call 'Discord Contact CRUD Agent'"
     },
     {
@@ -185,7 +185,7 @@
         -272,
         -80
       ],
-      "id": "0f215f6c-64c6-4465-93fa-e6974fb9d139",
+      "id": "7534c3a6-cfc6-4881-bf92-86a1ba604f45",
       "name": "Search Discord Servers"
     },
     {
@@ -228,7 +228,7 @@
         -144,
         -80
       ],
-      "id": "96d83773-8abf-4b3f-ab64-d4048fb29e9b",
+      "id": "7553aa7d-b55a-4943-a656-344fea760523",
       "name": "List Discord Servers"
     },
     {
@@ -241,9 +241,9 @@
         -1008,
         -304
       ],
-      "id": "54685de8-5efc-4e1a-a511-0b3f2187fa82",
+      "id": "fe0a01b8-2bee-420a-a844-4ff0be23c7c4",
       "name": "When chat message received",
-      "webhookId": "b7a7dead-ba90-4ef1-8e6a-2222f40b67f3"
+      "webhookId": "54e1af82-9897-4d75-875f-cb62b3ff2623"
     },
     {
       "parameters": {
@@ -285,7 +285,7 @@
         -16,
         -80
       ],
-      "id": "1fc13e38-a3a3-449b-b18b-e2135e041034",
+      "id": "151fb731-0a62-4d5d-86a0-bc9be666583d",
       "name": "List Discord Channels"
     },
     {
@@ -328,7 +328,7 @@
         112,
         -80
       ],
-      "id": "3cc12775-83d8-444d-8663-dd746f620820",
+      "id": "68ec4392-e6b9-46e4-813f-9e4fd34a9c24",
       "name": "Get Channel Messages"
     },
     {
@@ -371,7 +371,7 @@
         240,
         -80
       ],
-      "id": "5a0efc2a-0f2e-4285-b4f4-0c3e82403db4",
+      "id": "47a06778-ec8a-4239-9e91-16c05d44196f",
       "name": "Send Discord Server Message"
     },
     {
@@ -414,7 +414,7 @@
         368,
         -80
       ],
-      "id": "8de3a9b5-fed8-4ec6-97e7-8de855afc71b",
+      "id": "844694a0-4911-448d-8180-dd0add3e0a7e",
       "name": "Send Discord DM"
     }
   ],
@@ -549,8 +549,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "1cc1a804-73a0-4666-bdc9-f492fe4f4146",
-  "versionCounter": 1,
+  "versionId": "0a863fa7-6a53-4096-a002-708adf24179a",
+  "versionCounter": 2,
   "triggerCount": 0,
   "tags": [
     {
@@ -562,10 +562,10 @@
   ],
   "shared": [
     {
-      "updatedAt": "2025-11-01T13:35:27.877Z",
-      "createdAt": "2025-11-01T13:35:27.877Z",
+      "updatedAt": "2025-11-04T08:49:45.194Z",
+      "createdAt": "2025-11-04T08:49:45.194Z",
       "role": "workflow:owner",
-      "workflowId": "VbvcfNnJy8eGKtvD",
+      "workflowId": "hSb1J5CmvO8KcWPv",
       "projectId": "GEUEn6ArNROzJ5FY",
       "project": {
         "updatedAt": "2025-10-28T15:11:59.092Z",

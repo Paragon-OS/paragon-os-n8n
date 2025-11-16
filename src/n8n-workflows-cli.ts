@@ -1,5 +1,6 @@
 import { spawn } from "child_process";
 import path from "path";
+import fs from "fs";
 
 type Command = "backup" | "restore" | "tree";
 
@@ -70,6 +71,100 @@ function runN8n(args: string[]): Promise<number> {
   });
 }
 
+function sanitizeWorkflowName(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) {
+    return "unnamed-workflow";
+  }
+
+  // Replace characters that are typically unsafe in filenames on common filesystems.
+  const unsafePattern = /[\/\\:\*\?"<>\|]/g;
+  const sanitized = trimmed.replace(unsafePattern, "_");
+
+  return sanitized || "unnamed-workflow";
+}
+
+async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> {
+  let entries: string[];
+
+  try {
+    entries = await fs.promises.readdir(outputDir);
+  } catch (err) {
+    console.warn(`Warning: Failed to read export directory "${outputDir}":`, err);
+    return;
+  }
+
+  const jsonFiles = entries.filter((file) => file.toLowerCase().endsWith(".json"));
+
+  const usedNames = new Map<string, number>();
+
+  for (const file of jsonFiles) {
+    const fullPath = path.join(outputDir, file);
+
+    let content: string;
+    try {
+      content = await fs.promises.readFile(fullPath, "utf8");
+    } catch (err) {
+      console.warn(`Warning: Failed to read workflow file "${fullPath}":`, err);
+      continue;
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(content);
+    } catch (err) {
+      console.warn(`Warning: Skipping non-JSON file "${fullPath}":`, err);
+      continue;
+    }
+
+    if (!parsed || typeof parsed !== "object") {
+      console.warn(`Warning: Skipping unexpected workflow format in "${fullPath}".`);
+      continue;
+    }
+
+    const wf: { name?: unknown } = parsed as { name?: unknown };
+    const rawName = typeof wf.name === "string" ? wf.name : "unnamed-workflow";
+    const baseName = sanitizeWorkflowName(rawName);
+
+    const existingCount = usedNames.get(baseName) ?? 0;
+    const nextCount = existingCount + 1;
+    usedNames.set(baseName, nextCount);
+
+    const finalBase =
+      nextCount === 1 ? baseName : `${baseName} (${nextCount})`;
+
+    const newFilename = `${finalBase}.json`;
+    const newFullPath = path.join(outputDir, newFilename);
+
+    if (newFullPath === fullPath) {
+      // Already has the desired name.
+      continue;
+    }
+
+    // If a file with the target name already exists (e.g., from a previous run),
+    // skip renaming this one to avoid overwriting data.
+    try {
+      await fs.promises.access(newFullPath, fs.constants.F_OK);
+      console.warn(
+        `Warning: Target filename "${newFullPath}" already exists. Skipping rename of "${fullPath}".`
+      );
+      continue;
+    } catch {
+      // File does not exist, safe to rename.
+    }
+
+    try {
+      await fs.promises.rename(fullPath, newFullPath);
+    } catch (err) {
+      console.warn(
+        `Warning: Failed to rename workflow file "${fullPath}" to "${newFullPath}":`,
+        err
+      );
+      continue;
+    }
+  }
+}
+
 function runN8nCapture(args: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
   return new Promise((resolve) => {
     const child = spawn("n8n", args, {
@@ -109,6 +204,13 @@ async function main() {
     );
 
     const exitCode = await runN8n([...args, ...passthroughFlags]);
+
+    if (exitCode === 0) {
+      // If export succeeded, rename exported files to use workflow names while
+      // keeping restore/import behavior based solely on workflow IDs inside JSON.
+      await renameExportedWorkflowsToNames(outputDir);
+    }
+
     process.exit(exitCode);
   }
 
@@ -117,6 +219,8 @@ async function main() {
 
     // For directory-based restore we use --separate.
     // Equivalent to: n8n import:workflow --separate --input=./workflows/
+    // Note: import relies on the workflow `id` inside each JSON, so filenames
+    // can safely be human-friendly (e.g. `<Workflow Name>.json`).
     const args = ["import:workflow", "--separate", `--input=${inputDir}`];
 
     const passthroughFlags = flags.filter(
