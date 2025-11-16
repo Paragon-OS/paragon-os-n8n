@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-16T14:34:39.000Z",
+  "updatedAt": "2025-11-16T20:15:42.000Z",
   "createdAt": "2025-11-12T21:20:27.994Z",
   "id": "zBL0JT7t26pK2x95",
   "name": "[HELPERS] Discord Context Cache",
@@ -13,7 +13,7 @@
             {
               "id": "cache_ttl_ms",
               "name": "cacheTTLms",
-              "value": 1000000,
+              "value": "={{ 10 * 60 * 1000 }}",
               "type": "number"
             }
           ]
@@ -23,8 +23,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1344,
-        96
+        -1120,
+        448
       ],
       "id": "config-cache-ttl",
       "name": "Cache Config"
@@ -34,7 +34,7 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        -896,
+        -672,
         256
       ],
       "id": "b1591543-d0a6-4487-b157-4528a60b414f",
@@ -55,7 +55,7 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        -896,
+        -672,
         -32
       ],
       "id": "a2272364-e322-4a57-a5d4-f367ffc55d38",
@@ -74,7 +74,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -672,
+        -448,
         -32
       ],
       "id": "e04c25bb-01e3-4637-aa93-83419fd3a1cc",
@@ -146,8 +146,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -1120,
-        576
+        -896,
+        568
       ],
       "id": "92809e66-0977-4b8c-9232-6db43888d156",
       "name": "Check Guild Cache",
@@ -160,7 +160,7 @@
           "value": "HTXqB729RFNozetP",
           "mode": "list",
           "cachedResultUrl": "/workflow/HTXqB729RFNozetP",
-          "cachedResultName": "Global Cache System"
+          "cachedResultName": "[HELPERS] Global Cache System"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -220,7 +220,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -448,
+        -224,
         640
       ],
       "id": "d1959366-cd12-4b0a-b4de-4ec8bbeddb79",
@@ -233,7 +233,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -672,
+        -448,
         640
       ],
       "id": "2425a730-c2b8-42fa-8440-2c14896399a0",
@@ -248,7 +248,7 @@
       "typeVersion": 1.1,
       "position": [
         -1344,
-        336
+        448
       ],
       "id": "6d835265-7154-4f78-a7ea-70662bc484b2",
       "name": "When Executed by Another Workflow",
@@ -322,8 +322,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -1120,
-        336
+        -896,
+        328
       ],
       "id": "7d689a30-94d3-4015-a454-08afb2669801",
       "name": "Check Tool Cache",
@@ -395,8 +395,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -1120,
-        48
+        -896,
+        40
       ],
       "id": "5b80a680-cfa4-4b5a-a671-814478314e15",
       "name": "Check Contact Cache",
@@ -409,7 +409,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -672,
+        -448,
         256
       ],
       "id": "96131711-c2a7-40dc-96cf-062315fe4ba9",
@@ -482,7 +482,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -448,
+        -224,
         256
       ],
       "id": "bd6f1409-affe-480c-8189-d6acb9ce174a",
@@ -555,7 +555,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -448,
+        -224,
         -32
       ],
       "id": "c1810def-e770-405e-92a4-5a51fbed30b9",
@@ -565,14 +565,14 @@
       "parameters": {
         "mode": "combine",
         "combineBy": "combineByPosition",
-        "numberInputs": 3,
+        "numberInputs": 4,
         "options": {}
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -224,
-        320
+        0,
+        368
       ],
       "id": "db8dbe1c-55ef-4f6c-b1a9-44e450d327ec",
       "name": "Context Aggregator"
@@ -586,7 +586,7 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        -896,
+        -672,
         640
       ],
       "id": "fe8ec60f-05ab-45d5-8a88-6f6bbed20efb",
@@ -597,6 +597,21 @@
           "name": "Discord MCP Server"
         }
       }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"discordPlaybook\": [\n  {\n    \"name\": \"dm_contact_by_name\",\n    \"whenToUse\": \"User asks to DM or message a person by name.\",\n    \"steps\": [\n      \"Extract contact name and requested message content.\",\n      \"If userId is already known from discordContacts, use it; otherwise call discord_search_contacts with query=<name>.\",\n      \"Pick the best matching contact and use its id as channelId.\",\n      \"Call discord_send_message with channelId=<userId> and content=<message>.\"\n    ]\n  },\n  {\n    \"name\": \"reply_to_latest_pending_dms\",\n    \"whenToUse\": \"User asks to catch up on or reply to pending DMs.\",\n    \"steps\": [\n      \"Call discord_get_pending_dms with a reasonable limit (for example 10).\",\n      \"For each pending DM, call discord_read_channel with userId=<dmUserId> and a small limit (for example 20) to get recent context.\",\n      \"Summarize pending threads and ask user which ones to answer and how, if not already specified.\",\n      \"For each chosen DM, call discord_send_message with channelId=<dmUserId> and content=<crafted reply>.\"\n    ]\n  },\n  {\n    \"name\": \"catch_up_on_channel_since_time_or_message\",\n    \"whenToUse\": \"User asks to see or summarize what they missed in a specific channel.\",\n    \"steps\": [\n      \"Resolve server and channel names to channelId using serversOrGuilds; if missing, call discord_list_channels (optionally with guildId) and match by name in the model.\",\n      \"If the user gives a time window, call discord_read_channel with channelId=<channelId> and afterDate / beforeDate; otherwise use before / after messageId or a recent limit.\",\n      \"Summarize important messages, mentions, and decisions for the user.\",\n      \"Offer to draft replies and, if accepted, call discord_reply_message or discord_send_message as appropriate.\"\n    ]\n  },\n  {\n    \"name\": \"search_topic_in_channel_and_summarize\",\n    \"whenToUse\": \"User asks what was said about a topic in a channel.\",\n    \"steps\": [\n      \"Resolve the channel to channelId as in catch_up_on_channel_since_time_or_message.\",\n      \"Call discord_search_messages with channelId=<channelId>, query=<topic>, and a suitable limit.\",\n      \"Cluster or order hits by time or subtopic and summarize key points, decisions, and action items.\",\n      \"If the user wants to follow up, call discord_reply_message to the most relevant message or discord_send_message to the channel.\"\n    ]\n  },\n  {\n    \"name\": \"edit_or_delete_own_recent_message\",\n    \"whenToUse\": \"User wants to fix or remove their last message in a DM or channel.\",\n    \"steps\": [\n      \"Resolve the DM or channel to channelId (userId for DM, channelId for channel).\",\n      \"Call discord_read_channel with channelId or userId and a small limit (for example 20). Filter messages authored by the logged in user (from discord_get_user_info or tool output) and pick the most recent.\",\n      \"If the user wants to edit, call discord_edit_message with channelId, messageId=<lastOwnMessageId>, content=<corrected text>.\",\n      \"If the user wants to delete, call discord_delete_message with channelId, messageId=<lastOwnMessageId>, force=false unless the user explicitly requests force.\"\n    ]\n  },\n  {\n    \"name\": \"triage_pending_guild_channels\",\n    \"whenToUse\": \"User asks what needs attention in a given server.\",\n    \"steps\": [\n      \"Resolve the server name to guildId using serversOrGuilds; if unknown, call discord_list_guilds and match by name in the model.\",\n      \"Call discord_get_pending_guild_channels with guildId=<guildId> and a suitable limit.\",\n      \"For each pending channel, call discord_read_channel with channelId=<channelId> and a small limit focused on the newest messages.\",\n      \"Summarize per channel what is unread or mentioning the user, highlight priorities, and offer to draft replies using discord_send_message or discord_reply_message.\"\n    ]\n  },\n  {\n    \"name\": \"download_message_attachments\",\n    \"whenToUse\": \"User asks to download or save files from a specific message or recent messages.\",\n    \"steps\": [\n      \"If the user provides a messageId and channelId, call discord_download_attachments directly.\",\n      \"If not, first locate the message: resolve channelId, then call discord_search_messages or discord_read_channel to find the target message and its messageId.\",\n      \"Call discord_download_attachments with channelId=<channelId>, messageId=<messageId>, and downloadPath or maxFileSizeMB if the user specifies them.\",\n      \"Report back which files were downloaded and their paths.\"\n    ]\n  }\n]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        832
+      ],
+      "id": "40abd333-b5b5-495f-b047-0a034ce5b67f",
+      "name": "Discord Playbook"
     }
   ],
   "connections": {
@@ -701,6 +716,11 @@
             "node": "Check Guild Cache",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Discord Playbook",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -784,6 +804,17 @@
           }
         ]
       ]
+    },
+    "Discord Playbook": {
+      "main": [
+        [
+          {
+            "node": "Context Aggregator",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -792,8 +823,8 @@
   "staticData": null,
   "meta": null,
   "pinData": {},
-  "versionId": "64799840-d7a1-4a77-947e-d68ded7f2cc2",
-  "versionCounter": 15,
+  "versionId": "c2826869-dd23-4c14-8016-af3f4cd5890c",
+  "versionCounter": 23,
   "triggerCount": 0,
   "tags": [
     {
