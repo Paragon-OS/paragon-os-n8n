@@ -133,7 +133,7 @@
       ],
       "id": "c2a04407-3712-44aa-a758-a324f3b37a33",
       "name": "When Executed by Another Workflow",
-      "disabled": true
+      "disabled": false
     },
     {
       "parameters": {},

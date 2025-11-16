@@ -6,12 +6,21 @@ import { collectJsonFilesRecursive, removeEmptyDirectoriesUnder } from "../utils
 import { parseTagFromName, sanitizeWorkflowName } from "../utils/workflow";
 import type { WorkflowFile } from "../types/index";
 
-async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> {
+async function renameExportedWorkflowsToNames(
+  outputDir: string,
+  tempDir?: string
+): Promise<void> {
   const normalizedOutputDir = path.resolve(outputDir);
 
   let jsonPaths: string[];
   try {
     jsonPaths = await collectJsonFilesRecursive(normalizedOutputDir);
+    
+    // If there's a temp directory with old files, include those too
+    if (tempDir) {
+      const tempPaths = await collectJsonFilesRecursive(tempDir);
+      jsonPaths.push(...tempPaths);
+    }
   } catch (err) {
     console.warn(
       `Warning: Failed to collect workflow JSON files under "${normalizedOutputDir}":`,
@@ -29,7 +38,11 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
   for (const fullPath of jsonPaths) {
     const file = path.basename(fullPath);
     const parentDir = path.dirname(fullPath);
-    const fromCurrentRun = path.resolve(parentDir) === normalizedOutputDir;
+    // Files from the current run are those in the root output directory.
+    // Files in the temp directory are from previous backups and should not be
+    // considered as from the current run.
+    const isInTempDir = tempDir && fullPath.startsWith(path.resolve(tempDir) + path.sep);
+    const fromCurrentRun = !isInTempDir && path.resolve(parentDir) === normalizedOutputDir;
 
     let content: string;
     try {
@@ -199,6 +212,15 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
       }
 
       try {
+        // Check if file still exists before trying to delete it (it may have
+        // already been moved/renamed by a previous operation)
+        try {
+          await fs.promises.access(wfFile.fullPath);
+        } catch {
+          // File doesn't exist, skip it
+          continue;
+        }
+        
         await fs.promises.unlink(wfFile.fullPath);
       } catch (err) {
         console.warn(
@@ -245,6 +267,37 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
 
 export async function executeBackup(flags: string[]): Promise<void> {
   const outputDir = resolveDir("--output", flags, "./workflows");
+  const normalizedOutputDir = path.resolve(outputDir);
+
+  // n8n's export command does not overwrite existing files - it skips them.
+  // To ensure we always get fresh exports, temporarily move existing workflow
+  // files to a staging area, run the export, then let our renaming logic merge
+  // the new exports with any existing files.
+  const tempDir = path.join(normalizedOutputDir, ".backup-temp");
+  let movedFiles = false;
+
+  try {
+    // Collect existing JSON files before export
+    const existingJsonPaths = await collectJsonFilesRecursive(normalizedOutputDir);
+    
+    if (existingJsonPaths.length > 0) {
+      // Create temp directory and move existing files there
+      await fs.promises.mkdir(tempDir, { recursive: true });
+      
+      for (const filePath of existingJsonPaths) {
+        const relativePath = path.relative(normalizedOutputDir, filePath);
+        const tempPath = path.join(tempDir, relativePath);
+        
+        await fs.promises.mkdir(path.dirname(tempPath), { recursive: true });
+        await fs.promises.rename(filePath, tempPath);
+      }
+      
+      movedFiles = true;
+    }
+  } catch (err) {
+    console.warn("Warning: Failed to move existing workflow files to temp directory:", err);
+    // Continue anyway - worst case n8n will skip existing files
+  }
 
   // Mirrors: n8n export:workflow --backup --output=./workflows/
   const args = ["export:workflow", "--backup", `--output=${outputDir}`];
@@ -259,7 +312,37 @@ export async function executeBackup(flags: string[]): Promise<void> {
   if (exitCode === 0) {
     // If export succeeded, rename exported files to use workflow names while
     // keeping restore/import behavior based solely on workflow IDs inside JSON.
-    await renameExportedWorkflowsToNames(outputDir);
+    // Pass the temp directory so the renaming logic can process both old and
+    // new files together, with new files taking precedence.
+    await renameExportedWorkflowsToNames(outputDir, movedFiles ? tempDir : undefined);
+    
+    // Clean up temp directory after renaming logic has processed everything
+    if (movedFiles) {
+      try {
+        await fs.promises.rm(tempDir, { recursive: true, force: true });
+      } catch (err) {
+        console.warn("Warning: Failed to clean up temporary directory:", err);
+      }
+    }
+  } else {
+    // If export failed, restore files from temp directory
+    if (movedFiles) {
+      try {
+        const tempJsonPaths = await collectJsonFilesRecursive(tempDir);
+        
+        for (const tempPath of tempJsonPaths) {
+          const relativePath = path.relative(tempDir, tempPath);
+          const originalPath = path.join(normalizedOutputDir, relativePath);
+          
+          await fs.promises.mkdir(path.dirname(originalPath), { recursive: true });
+          await fs.promises.rename(tempPath, originalPath);
+        }
+        
+        await fs.promises.rm(tempDir, { recursive: true, force: true });
+      } catch (err) {
+        console.warn("Warning: Failed to restore files after export failure:", err);
+      }
+    }
   }
 
   process.exit(exitCode);
