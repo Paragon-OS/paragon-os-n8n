@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2025-11-16T12:26:56.000Z",
+  "updatedAt": "2025-11-16T14:37:40.000Z",
   "createdAt": "2025-11-12T23:05:43.150Z",
   "id": "Ivkq7vq8ZTC7C1pg",
-  "name": "[EXP] Generic MCP Client Sequencer",
+  "name": "[LAB] Generic MCP Client Sequencer",
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -819,8 +819,8 @@
       }
     ]
   },
-  "versionId": "2f7054b0-1265-4900-8505-0466832cba28",
-  "versionCounter": 55,
+  "versionId": "e41ab471-d739-472b-8825-1374423e9e83",
+  "versionCounter": 56,
   "triggerCount": 0,
   "tags": [
     {
