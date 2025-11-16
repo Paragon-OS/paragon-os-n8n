@@ -39,10 +39,11 @@ npm install
 
 ## CLI wrapper overview
 
-The wrapper exposes two high-level commands:
+The wrapper exposes three high-level commands:
 
 - **backup**: Export workflows from the connected n8n instance into JSON files (one file per workflow) under a chosen directory.
 - **restore**: Import workflows from a directory of JSON files into the n8n instance.
+- **tree**: Print a logical folder structure of workflows from the connected n8n instance (using the local n8n CLI).
 
 Internally it shells out to the official n8n CLI:
 

@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "n8n:workflows:backup": "ts-node src/n8n-workflows-cli.ts backup",
-    "n8n:workflows:restore": "ts-node src/n8n-workflows-cli.ts restore"
+    "n8n:workflows:restore": "ts-node src/n8n-workflows-cli.ts restore",
+    "n8n:workflows:tree": "ts-node src/n8n-workflows-cli.ts tree --all"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
