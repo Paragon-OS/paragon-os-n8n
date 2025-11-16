@@ -38,7 +38,7 @@ function printUsage() {
       "  ts-node src/n8n-workflows-cli.ts tree [--all] [extra n8n flags]",
       "",
       "Examples:",
-      "  Backup all workflows (pretty, separate files) into ./workflows:",
+      "  Backup all workflows (pretty, separate files) into ./workflows (excluding archived workflows):",
       "    ts-node src/n8n-workflows-cli.ts backup",
       "  Backup to a custom directory:",
       "    ts-node src/n8n-workflows-cli.ts backup --output ./backups/latest",
@@ -180,10 +180,23 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
       continue;
     }
 
-    const wf: { id?: unknown; name?: unknown } = parsed as {
+    const wf: { id?: unknown; name?: unknown; isArchived?: unknown } = parsed as {
       id?: unknown;
       name?: unknown;
+      isArchived?: unknown;
     };
+
+    const isArchived =
+      typeof wf.isArchived === "boolean" ? wf.isArchived : wf.isArchived === "true";
+
+    if (isArchived) {
+      try {
+        await fs.promises.unlink(fullPath);
+      } catch (err) {
+        console.warn(`Warning: Failed to remove archived workflow file "${fullPath}":`, err);
+      }
+      continue;
+    }
 
     const id = typeof wf.id === "string" ? wf.id : undefined;
     const rawName = typeof wf.name === "string" ? wf.name : "unnamed-workflow";
