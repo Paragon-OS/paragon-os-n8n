@@ -2,7 +2,7 @@ import { spawn } from "child_process";
 import path from "path";
 import fs from "fs";
 
-type Command = "backup" | "restore" | "tree";
+type Command = "backup" | "restore" | "tree" | "organize";
 
 interface ParsedArgs {
   command: Command;
@@ -12,7 +12,12 @@ interface ParsedArgs {
 function parseArgs(argv: string[]): ParsedArgs {
   const [, , commandArg, ...rest] = argv;
 
-  if (commandArg !== "backup" && commandArg !== "restore" && commandArg !== "tree") {
+  if (
+    commandArg !== "backup" &&
+    commandArg !== "restore" &&
+    commandArg !== "tree" &&
+    commandArg !== "organize"
+  ) {
     printUsage();
     process.exit(1);
   }
@@ -29,6 +34,7 @@ function printUsage() {
       "Usage:",
       "  ts-node src/n8n-workflows-cli.ts backup [--output <dir>] [--all]",
       "  ts-node src/n8n-workflows-cli.ts restore [--input <dir>]",
+      "  ts-node src/n8n-workflows-cli.ts organize [--input <dir>]",
       "  ts-node src/n8n-workflows-cli.ts tree [--all] [extra n8n flags]",
       "",
       "Examples:",
@@ -40,6 +46,11 @@ function printUsage() {
       "    ts-node src/n8n-workflows-cli.ts restore",
       "  Restore from a custom directory:",
       "    ts-node src/n8n-workflows-cli.ts restore --input ./backups/latest",
+      "",
+      "  Organize workflows in ./workflows/ into tag-based subdirectories based on filenames:",
+      "    ts-node src/n8n-workflows-cli.ts organize",
+      "  Organize a different directory:",
+      "    ts-node src/n8n-workflows-cli.ts organize --input ./backups/latest",
       "",
       "  Print logical n8n workflow folders and workflows (uses local n8n CLI):",
       "    ts-node src/n8n-workflows-cli.ts tree --all",
@@ -56,6 +67,34 @@ function resolveDir(flagName: "--output" | "--input", argv: string[], fallback: 
   }
 
   return path.resolve(fallback);
+}
+
+/**
+ * Extract an optional leading [TAG] prefix from a workflow name.
+ *
+ * Examples:
+ *   "[LAB] Demo workflow" -> { tag: "LAB", baseName: "Demo workflow" }
+ *   "No tag here"         -> { tag: undefined, baseName: "No tag here" }
+ */
+function parseTagFromName(name: string): { tag?: string; baseName: string } {
+  const trimmed = name.trim();
+  if (!trimmed) {
+    return { baseName: "" };
+  }
+
+  const tagMatch = /^\[(?<tag>[^\]]+)\]\s*(.*)$/.exec(trimmed);
+  if (!tagMatch) {
+    return { baseName: trimmed };
+  }
+
+  const groups = tagMatch.groups as { tag?: string } | undefined;
+  const tag = groups?.tag?.trim() || undefined;
+  const baseName = (tagMatch[2] ?? "").trim();
+
+  return {
+    tag,
+    baseName: baseName || trimmed,
+  };
 }
 
 function runN8n(args: string[]): Promise<number> {
@@ -101,7 +140,18 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
     fullPath: string;
     id: string | undefined;
     name: string;
+    /**
+     * Workflow name with any leading [TAG] removed and sanitized for filesystem use.
+     */
     baseName: string;
+    /**
+     * Sanitized full workflow name (including tag if present), used for filenames.
+     */
+    fileBaseName: string;
+    /**
+     * Optional tag extracted from the workflow name.
+     */
+    tag?: string;
   };
 
   const workflowFiles: WorkflowFile[] = [];
@@ -137,7 +187,10 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
 
     const id = typeof wf.id === "string" ? wf.id : undefined;
     const rawName = typeof wf.name === "string" ? wf.name : "unnamed-workflow";
-    const baseName = sanitizeWorkflowName(rawName);
+
+    const { tag, baseName: taglessName } = parseTagFromName(rawName);
+    const baseName = sanitizeWorkflowName(taglessName || rawName);
+    const fileBaseName = sanitizeWorkflowName(rawName);
 
     workflowFiles.push({
       file,
@@ -145,6 +198,8 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
       id,
       name: rawName,
       baseName,
+      fileBaseName,
+      tag,
     });
   }
 
@@ -190,11 +245,19 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
 
   for (const [id, group] of sortedIds) {
     const baseName = group.baseName;
-    const existingCount = usedNames.get(baseName) ?? 0;
-    const nextCount = existingCount + 1;
-    usedNames.set(baseName, nextCount);
 
-    const finalBase = nextCount === 1 ? baseName : `${baseName} (${nextCount})`;
+    // Use the tag and fileBaseName of the first file in the group as the
+    // canonical source for the target directory and filename.
+    const sample = group.files[0];
+    const tag = sample.tag;
+    const fileBaseName = sample.fileBaseName || baseName || "unnamed-workflow";
+
+    const usedKey = `${tag ?? ""}/${fileBaseName}`;
+    const existingCount = usedNames.get(usedKey) ?? 0;
+    const nextCount = existingCount + 1;
+    usedNames.set(usedKey, nextCount);
+
+    const finalBase = nextCount === 1 ? fileBaseName : `${fileBaseName} (${nextCount})`;
     const targetFilename = `${finalBase}.json`;
 
     targets.push({
@@ -210,7 +273,17 @@ async function renameExportedWorkflowsToNames(outputDir: string): Promise<void> 
   // - Delete any other files for the same ID.
   // - Rename the canonical file to the target filename if needed.
   for (const target of targets) {
-    const targetFullPath = path.join(outputDir, target.targetFilename);
+    const sample = target.files[0];
+    const tag = sample.tag;
+    const targetDir = tag ? path.join(outputDir, tag) : outputDir;
+    const targetFullPath = path.join(targetDir, target.targetFilename);
+
+    try {
+      await fs.promises.mkdir(path.dirname(targetFullPath), { recursive: true });
+    } catch (err) {
+      console.warn(`Warning: Failed to ensure directory for "${targetFullPath}":`, err);
+      continue;
+    }
 
     // Prefer an existing file that already matches the target filename.
     let canonical = target.files.find((f) => f.fullPath === targetFullPath);
@@ -282,6 +355,31 @@ function runN8nCapture(args: string[]): Promise<{ code: number; stdout: string; 
   });
 }
 
+async function collectJsonFilesRecursive(dir: string): Promise<string[]> {
+  let entries: fs.Dirent[];
+
+  try {
+    entries = await fs.promises.readdir(dir, { withFileTypes: true });
+  } catch (err) {
+    console.warn(`Warning: Failed to read directory "${dir}":`, err);
+    return [];
+  }
+
+  const results: string[] = [];
+
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      const nested = await collectJsonFilesRecursive(fullPath);
+      results.push(...nested);
+    } else if (entry.isFile() && entry.name.toLowerCase().endsWith(".json")) {
+      results.push(fullPath);
+    }
+  }
+
+  return results;
+}
+
 async function main() {
   const { command, flags } = parseArgs(process.argv);
 
@@ -310,18 +408,34 @@ async function main() {
   if (command === "restore") {
     const inputDir = resolveDir("--input", flags, "./workflows");
 
-    // For directory-based restore we use --separate.
-    // Equivalent to: n8n import:workflow --separate --input=./workflows/
-    // Note: import relies on the workflow `id` inside each JSON, so filenames
-    // can safely be human-friendly (e.g. `<Workflow Name>.json`).
-    const args = ["import:workflow", "--separate", `--input=${inputDir}`];
-
     const passthroughFlags = flags.filter(
       (f) => !["--input"].includes(f) && !["backup", "restore"].includes(f)
     );
 
-    const exitCode = await runN8n([...args, ...passthroughFlags]);
-    process.exit(exitCode);
+    const jsonFiles = await collectJsonFilesRecursive(inputDir);
+
+    if (jsonFiles.length === 0) {
+      console.log(`No workflow JSON files found under "${inputDir}".`);
+      process.exit(0);
+    }
+
+    for (const filePath of jsonFiles) {
+      const args = ["import:workflow", "--separate", `--input=${filePath}`, ...passthroughFlags];
+      const exitCode = await runN8n(args);
+
+      if (exitCode !== 0) {
+        console.error(`n8n import:workflow failed for "${filePath}" with code`, exitCode);
+        process.exit(exitCode);
+      }
+    }
+
+    process.exit(0);
+  }
+
+  if (command === "organize") {
+    const inputDir = resolveDir("--input", flags, "./workflows");
+    await organizeWorkflows(inputDir);
+    process.exit(0);
   }
 
   if (command === "tree") {
@@ -441,6 +555,67 @@ async function main() {
     }
 
     process.exit(0);
+  }
+}
+
+async function organizeWorkflows(baseDir: string): Promise<void> {
+  let entries: string[];
+
+  try {
+    entries = await fs.promises.readdir(baseDir);
+  } catch (err) {
+    console.error(`Failed to read workflows directory "${baseDir}":`, err);
+    process.exit(1);
+  }
+
+  const jsonFiles = entries.filter((file) => file.toLowerCase().endsWith(".json"));
+
+  for (const file of jsonFiles) {
+    const fullPath = path.join(baseDir, file);
+    const nameWithoutExt = file.replace(/\.json$/i, "");
+    const { tag } = parseTagFromName(nameWithoutExt);
+
+    if (!tag) {
+      continue;
+    }
+
+    const targetDir = path.join(baseDir, tag);
+
+    try {
+      await fs.promises.mkdir(targetDir, { recursive: true });
+    } catch (err) {
+      console.warn(`Warning: Failed to create directory "${targetDir}":`, err);
+      continue;
+    }
+
+    const targetPath = path.join(targetDir, file);
+
+    if (targetPath === fullPath) {
+      continue;
+    }
+
+    try {
+      // If a file already exists at the target path, skip to avoid overwriting.
+      const existingStat = await fs.promises
+        .stat(targetPath)
+        .catch(() => undefined as unknown as fs.Stats | undefined);
+
+      if (existingStat && existingStat.isFile()) {
+        console.warn(
+          `Warning: Skipping move of "${fullPath}" to "${targetPath}" because the target file already exists.`
+        );
+        continue;
+      }
+    } catch {
+      // Ignore stat errors; we'll attempt to move below.
+    }
+
+    try {
+      await fs.promises.rename(fullPath, targetPath);
+      console.log(`Moved "${fullPath}" -> "${targetPath}"`);
+    } catch (err) {
+      console.warn(`Warning: Failed to move "${fullPath}" to "${targetPath}":`, err);
+    }
   }
 }
 
