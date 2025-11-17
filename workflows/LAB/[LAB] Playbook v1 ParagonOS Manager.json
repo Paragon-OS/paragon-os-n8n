@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-16T16:28:00.000Z",
+  "updatedAt": "2025-11-17T07:19:44.000Z",
   "createdAt": "2025-11-16T16:28:00.502Z",
   "id": "LhOq7oS95v5spmX3",
   "name": "[LAB] Playbook v1 ParagonOS Manager",
@@ -479,7 +479,7 @@
     ]
   },
   "versionId": "9f724db9-4cb6-427c-856a-f0624414013f",
-  "versionCounter": 65,
+  "versionCounter": 67,
   "triggerCount": 0,
   "tags": [],
   "shared": [

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-16T22:21:28.000Z",
+  "updatedAt": "2025-11-17T08:12:14.000Z",
   "createdAt": "2025-11-06T23:04:10.688Z",
   "id": "z1Ry4y4k5dGR0BqR",
   "name": "ParagonOS Manager",
@@ -233,8 +233,8 @@
       }
     ]
   },
-  "versionId": "a5c04be0-4757-4a23-84fc-438b3449dda4",
-  "versionCounter": 69,
+  "versionId": "64061d62-d73c-4b5b-babb-a7f49c8979a6",
+  "versionCounter": 70,
   "triggerCount": 0,
   "tags": [],
   "shared": [
