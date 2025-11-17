@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-17T08:12:14.000Z",
+  "updatedAt": "2025-11-17T21:57:54.000Z",
   "createdAt": "2025-11-06T23:04:10.688Z",
   "id": "z1Ry4y4k5dGR0BqR",
   "name": "ParagonOS Manager",
@@ -233,10 +233,17 @@
       }
     ]
   },
-  "versionId": "64061d62-d73c-4b5b-babb-a7f49c8979a6",
-  "versionCounter": 70,
+  "versionId": "c0480ef7-185e-477d-b507-afe2d4f30d02",
+  "versionCounter": 72,
   "triggerCount": 0,
-  "tags": [],
+  "tags": [
+    {
+      "updatedAt": "2025-11-02T21:22:20.646Z",
+      "createdAt": "2025-11-02T21:22:20.646Z",
+      "id": "95mwWdOxtdnkFLhS",
+      "name": "Discord"
+    }
+  ],
   "shared": [
     {
       "updatedAt": "2025-11-06T23:04:10.693Z",
