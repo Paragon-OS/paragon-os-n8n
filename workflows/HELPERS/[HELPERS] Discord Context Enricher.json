@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2025-11-17T10:42:59.000Z",
+  "updatedAt": "2025-11-17T10:53:07.000Z",
   "createdAt": "2025-11-12T21:20:27.994Z",
   "id": "zBL0JT7t26pK2x95",
-  "name": "[HELPERS] Discord Context Cache",
+  "name": "[HELPERS] Discord Context Enricher",
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -1086,8 +1086,8 @@
       }
     ]
   },
-  "versionId": "16521d7a-2d1d-4f25-b5a0-80a386f1c305",
-  "versionCounter": 30,
+  "versionId": "4e946285-6213-4361-8b3c-a3722489912d",
+  "versionCounter": 31,
   "triggerCount": 0,
   "tags": [
     {
