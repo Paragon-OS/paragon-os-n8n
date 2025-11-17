@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-16T20:15:42.000Z",
+  "updatedAt": "2025-11-17T09:27:21.000Z",
   "createdAt": "2025-11-12T21:20:27.994Z",
   "id": "zBL0JT7t26pK2x95",
   "name": "[HELPERS] Discord Context Cache",
@@ -228,7 +228,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.first().json;\nlet rawGuilds = [];\n\ntry {\n  // Handle MCP response format (from List Guilds/Servers)\n  if (input.result && input.result.content && input.result.content[0]) {\n    const parsed = JSON.parse(input.result.content[0].text);\n    rawGuilds = parsed?.guilds || [];\n  }\n  // Handle cache format (direct from cache)\n  else if (input.guilds) {\n    rawGuilds = Array.isArray(input.guilds) ? input.guilds : [];\n  }\n  // Handle cache output format (from cache system)\n  else if (input.output && input.output.guilds) {\n    rawGuilds = Array.isArray(input.output.guilds) ? input.output.guilds : [];\n  }\n  \n  // Validate: if empty or invalid, return empty array\n  if (!Array.isArray(rawGuilds) || rawGuilds.length === 0) {\n    return {\n      guilds: [],\n      error: 'No valid guilds found',\n      shouldFetch: true\n    };\n  }\n  \n  return {\n      guilds: rawGuilds.map(guild=>({\n        id: guild.id,\n        name: guild.name,\n        members: guild.memberCount\n      }))\n  };\n} catch (error) {\n  return {\n    guilds: [],\n    error: error.message,\n    shouldFetch: true\n  };\n}"
+        "jsCode": "const input = $input.first().json;\nlet rawGuilds = [];\n\ntry {\n  // Handle MCP response format (from List Guilds/Servers)\n  if (input.result && input.result.content && input.result.content[0]) {\n    const parsed = JSON.parse(input.result.content[0].text);\n    rawGuilds = parsed?.guilds || [];\n  }\n  // Handle cache format (direct from cache)\n  else if (input.guilds) {\n    rawGuilds = Array.isArray(input.guilds) ? input.guilds : [];\n  }\n  // Handle cache output format (from cache system)\n  else if (input.output && input.output.guilds) {\n    rawGuilds = Array.isArray(input.output.guilds) ? input.output.guilds : [];\n  }\n  \n  // Validate: if empty or invalid, return empty array\n  if (!Array.isArray(rawGuilds) || rawGuilds.length === 0) {\n    return {\n      guilds: [],\n      error: 'No valid guilds found',\n      shouldFetch: true\n    };\n  }\n  \n  return {\n      guilds: rawGuilds.map(guild=>({\n        id: guild.id,\n        name: guild.name,\n        members: guild.memberCount,\n        channels: guild.channels ?? []\n      }))\n  };\n} catch (error) {\n  return {\n    guilds: [],\n    error: error.message,\n    shouldFetch: true\n  };\n}"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -823,8 +823,8 @@
   "staticData": null,
   "meta": null,
   "pinData": {},
-  "versionId": "c2826869-dd23-4c14-8016-af3f4cd5890c",
-  "versionCounter": 23,
+  "versionId": "f8cc456f-088f-425c-93fa-b3197dd2a9ba",
+  "versionCounter": 26,
   "triggerCount": 0,
   "tags": [
     {
