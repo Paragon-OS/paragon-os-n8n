@@ -1,47 +1,11 @@
 {
-  "updatedAt": "2025-11-17T10:08:49.000Z",
+  "updatedAt": "2025-11-17T10:18:10.000Z",
   "createdAt": "2025-11-06T21:51:04.792Z",
   "id": "vfcxqLBDDMKL5lnG",
   "name": "Discord MCP Client Sequencer",
   "active": false,
   "isArchived": false,
   "nodes": [
-    {
-      "parameters": {
-        "modelName": "models/gemini-2.5-pro",
-        "options": {
-          "temperature": 0.2
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-      "typeVersion": 1,
-      "position": [
-        1296,
-        560
-      ],
-      "id": "c79482a2-0b52-475c-a1d5-8f92e6b322e2",
-      "name": "Google Gemini Chat Model",
-      "credentials": {
-        "googlePalmApi": {
-          "id": "NIhZoi9otQV2vaAP",
-          "name": "Google Gemini(PaLM) Api account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "fieldToSplitOut": "executionSteps",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.splitOut",
-      "typeVersion": 1,
-      "position": [
-        2180,
-        272
-      ],
-      "id": "a913b319-ec9f-419b-ba12-55cd8fe54ec5",
-      "name": "Split Out"
-    },
     {
       "parameters": {
         "workflowInputs": {
@@ -159,7 +123,7 @@
       "typeVersion": 3.2,
       "position": [
         3748,
-        -216
+        -208
       ],
       "id": "7ee012e2-dc46-45e4-bb47-d949b8d65d32",
       "name": "Final Response"
@@ -186,41 +150,6 @@
       ],
       "id": "8094c0ee-513f-4b2c-97bf-fbd04c293ec3",
       "name": "Prepare Execution Steps"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "ee6d0a21-266b-44c6-8536-a80f30695e6a",
-              "name": "stepResult.stepOutput",
-              "value": "={{ JSON.parse($json.result.content[0].text) }}",
-              "type": "object"
-            },
-            {
-              "id": "bec043e7-22fd-4b23-a549-d1e81ec6bcb6",
-              "name": "stepResult.toolName",
-              "value": "={{ $json.toolName }}",
-              "type": "string"
-            },
-            {
-              "id": "3cbfb631-8642-43bb-82f4-1333495056f8",
-              "name": "stepResult.callParams",
-              "value": "={{ $json.callParams }}",
-              "type": "object"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        2852,
-        224
-      ],
-      "id": "8c9365ee-290f-410b-978a-5a8389f62a50",
-      "name": "Edit Fields"
     },
     {
       "parameters": {
@@ -302,7 +231,7 @@
       "typeVersion": 1.1,
       "position": [
         3748,
-        32
+        40
       ],
       "id": "0531736f-8a69-45e0-a6b2-8113cd94abf2",
       "name": "Input Data Logger"
@@ -324,36 +253,6 @@
       ],
       "id": "f3c0a50e-a686-4c6c-9a13-e60577c187af",
       "name": "Metadata Collector"
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineByPosition",
-        "options": {
-          "includeUnpaired": false
-        }
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        2628,
-        224
-      ],
-      "id": "871c4869-0387-4c48-9294-950eb3619f49",
-      "name": "Merge"
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [
-        2404,
-        392
-      ],
-      "id": "00a1e7fc-a979-4709-8708-b726d7682e5f",
-      "name": "Loop Over Items"
     },
     {
       "parameters": {
@@ -379,21 +278,6 @@
         }
       },
       "onError": "continueErrorOutput"
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "destinationFieldName": "executionSteps",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        3076,
-        224
-      ],
-      "id": "3022283d-32f3-4b91-b6e5-223d96d8d453",
-      "name": "Aggregate"
     },
     {
       "parameters": {
@@ -470,27 +354,6 @@
     },
     {
       "parameters": {
-        "options": {
-          "temperature": 0.2
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-      "typeVersion": 1,
-      "position": [
-        344,
-        760
-      ],
-      "id": "6bc75621-75de-42b0-b50d-9f4b9db661e3",
-      "name": "Google Gemini Chat Model1",
-      "credentials": {
-        "googlePalmApi": {
-          "id": "NIhZoi9otQV2vaAP",
-          "name": "Google Gemini(PaLM) Api account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "schemaType": "manual",
         "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"prompt\": {\n      \"type\": \"string\",\n      \"description\": \"The optimized, less ambiguous user prompt\"\n    },\n    \"plays\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of recommended plays from the playbook to accomplish the task\"\n    },\n    \"toolsToUse\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of recommended tool names required to execute the task\"\n    },\n     \"toolsNotRelated\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of tool names not at all relavent to execute the task\"\n    }\n  },\n  \"required\": [\"prompt\"],\n  \"additionalProperties\": false\n}",
         "autoFix": true
@@ -499,7 +362,7 @@
       "typeVersion": 1.3,
       "position": [
         348,
-        552
+        560
       ],
       "id": "4d6341b6-7339-411b-9088-b87ab81f58fb",
       "name": "Context Optimizer Output Parser"
@@ -518,10 +381,104 @@
       "typeVersion": 2.2,
       "position": [
         272,
-        328
+        336
       ],
       "id": "6c26f0b0-9003-46d6-b62e-dd80f691638d",
       "name": "Context Optimizer AI Agent"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "executionSteps",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2180,
+        272
+      ],
+      "id": "a913b319-ec9f-419b-ba12-55cd8fe54ec5",
+      "name": "Split Execution Steps"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": false
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2628,
+        224
+      ],
+      "id": "871c4869-0387-4c48-9294-950eb3619f49",
+      "name": "Merge Step with Params"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2404,
+        392
+      ],
+      "id": "00a1e7fc-a979-4709-8708-b726d7682e5f",
+      "name": "Loop Over Execution Steps"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "executionSteps",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3076,
+        224
+      ],
+      "id": "3022283d-32f3-4b91-b6e5-223d96d8d453",
+      "name": "Aggregate Step Results"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ee6d0a21-266b-44c6-8536-a80f30695e6a",
+              "name": "stepResult.stepOutput",
+              "value": "={{ JSON.parse($json.result.content[0].text) }}",
+              "type": "object"
+            },
+            {
+              "id": "bec043e7-22fd-4b23-a549-d1e81ec6bcb6",
+              "name": "stepResult.toolName",
+              "value": "={{ $json.toolName }}",
+              "type": "string"
+            },
+            {
+              "id": "3cbfb631-8642-43bb-82f4-1333495056f8",
+              "name": "stepResult.callParams",
+              "value": "={{ $json.callParams }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2852,
+        224
+      ],
+      "id": "8c9365ee-290f-410b-978a-5a8389f62a50",
+      "name": "Format Step Results"
     },
     {
       "parameters": {
@@ -536,7 +493,7 @@
         128
       ],
       "id": "735f0c79-bb29-4b17-807d-ee542f3d64b7",
-      "name": "Merge1"
+      "name": "Merge Context with Optimized Prompt"
     },
     {
       "parameters": {
@@ -589,42 +546,53 @@
         128
       ],
       "id": "78e7ac79-906c-4feb-8ea4-d615444ae915",
-      "name": "Edit Fields1"
+      "name": "Prepare Planner Context"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        560
+      ],
+      "id": "c79482a2-0b52-475c-a1d5-8f92e6b322e2",
+      "name": "Gemini Model (Execution Planner)",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        344,
+        768
+      ],
+      "id": "6bc75621-75de-42b0-b50d-9f4b9db661e3",
+      "name": "Gemini Model (Context Optimizer)",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
     }
   ],
   "connections": {
-    "Google Gemini Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Execution Planner AI Agent",
-            "type": "ai_languageModel",
-            "index": 0
-          },
-          {
-            "node": "Execution Plan Output Parser",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Split Out": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Loop Over Items",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "When Executed by Another Workflow": {
       "main": [
         [
@@ -655,7 +623,7 @@
             "index": 0
           },
           {
-            "node": "Merge1",
+            "node": "Merge Context with Optimized Prompt",
             "type": "main",
             "index": 0
           }
@@ -684,23 +652,12 @@
       "main": [
         [
           {
-            "node": "Split Out",
+            "node": "Split Execution Steps",
             "type": "main",
             "index": 0
           },
           {
             "node": "Metadata Collector",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields": {
-      "main": [
-        [
-          {
-            "node": "Aggregate",
             "type": "main",
             "index": 0
           }
@@ -739,63 +696,18 @@
         ]
       ]
     },
-    "Merge": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Loop Over Items": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 1
-          }
-        ],
-        [
-          {
-            "node": "MCP Sequence Executor",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "MCP Sequence Executor": {
       "main": [
         [
           {
-            "node": "Loop Over Items",
+            "node": "Loop Over Execution Steps",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Loop Over Items",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Aggregate": {
-      "main": [
-        [
-          {
-            "node": "Metadata Collector",
-            "type": "main",
-            "index": 2
-          },
-          {
-            "node": "Final Response",
+            "node": "Loop Over Execution Steps",
             "type": "main",
             "index": 0
           }
@@ -851,22 +763,6 @@
         ]
       ]
     },
-    "Google Gemini Chat Model1": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Context Optimizer AI Agent",
-            "type": "ai_languageModel",
-            "index": 0
-          },
-          {
-            "node": "Context Optimizer Output Parser",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Context Optimizer Output Parser": {
       "ai_outputParser": [
         [
@@ -882,30 +778,134 @@
       "main": [
         [
           {
-            "node": "Merge1",
+            "node": "Merge Context with Optimized Prompt",
             "type": "main",
             "index": 1
           }
         ]
       ]
     },
-    "Merge1": {
+    "Split Execution Steps": {
       "main": [
         [
           {
-            "node": "Edit Fields1",
+            "node": "Merge Step with Params",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over Execution Steps",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Edit Fields1": {
+    "Merge Step with Params": {
+      "main": [
+        [
+          {
+            "node": "Format Step Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Execution Steps": {
+      "main": [
+        [
+          {
+            "node": "Merge Step with Params",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "MCP Sequence Executor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Step Results": {
+      "main": [
+        [
+          {
+            "node": "Metadata Collector",
+            "type": "main",
+            "index": 2
+          },
+          {
+            "node": "Final Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Step Results": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Step Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Context with Optimized Prompt": {
+      "main": [
+        [
+          {
+            "node": "Prepare Planner Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Planner Context": {
       "main": [
         [
           {
             "node": "Execution Planner AI Agent",
             "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Model (Execution Planner)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Execution Planner AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Execution Plan Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Model (Context Optimizer)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Context Optimizer AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Context Optimizer Output Parser",
+            "type": "ai_languageModel",
             "index": 0
           }
         ]
@@ -928,8 +928,8 @@
       }
     ]
   },
-  "versionId": "308a5eb5-e010-4f31-bf48-492dae03bc5d",
-  "versionCounter": 141,
+  "versionId": "c7c9438c-96e4-41f3-a49b-32f1294ffe04",
+  "versionCounter": 143,
   "triggerCount": 0,
   "tags": [
     {
