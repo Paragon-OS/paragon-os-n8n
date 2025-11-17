@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-17T14:31:18.000Z",
+  "updatedAt": "2025-11-17T15:03:24.000Z",
   "createdAt": "2025-11-17T13:03:59.561Z",
   "id": "uoYXevOl4ePWKeNx",
   "name": "[HELPERS] Discord Step Executor",
@@ -13,6 +13,9 @@
             {
               "name": "executionSteps",
               "type": "array"
+            },
+            {
+              "name": "targetMcp"
             }
           ]
         }
@@ -21,7 +24,7 @@
       "typeVersion": 1.1,
       "position": [
         -1616,
-        400
+        520
       ],
       "id": "dd089a93-3eb3-466d-9dd8-efc4a57a9e0e",
       "name": "When Executed by Another Workflow",
@@ -49,6 +52,12 @@
               "name": "executionSteps",
               "value": "={{ $json.executionSteps ?? [] }}",
               "type": "array"
+            },
+            {
+              "id": "0e38eab1-172a-4f92-b8a2-9c5cc9164081",
+              "name": "targetMcp",
+              "value": "={{ $json.targetMcp }}",
+              "type": "string"
             }
           ]
         },
@@ -58,46 +67,23 @@
       "typeVersion": 3.4,
       "position": [
         -1392,
-        400
+        520
       ],
       "id": "490cd53f-a549-4be3-888d-e9838dc053e8",
       "name": "Prepare Execution Steps"
     },
     {
       "parameters": {
-        "operation": "executeTool",
-        "toolName": "={{ $json.toolName }}",
-        "toolParameters": "={{ $json.callParams }}"
-      },
-      "type": "n8n-nodes-mcp.mcpClient",
-      "typeVersion": 1,
-      "position": [
-        -720,
-        568
-      ],
-      "id": "270e0f6f-4f16-4f79-b584-b01584a96185",
-      "name": "MCP Sequence Executor",
-      "executeOnce": false,
-      "alwaysOutputData": true,
-      "retryOnFail": false,
-      "credentials": {
-        "mcpClientApi": {
-          "id": "ZFofx3k2ze1wsifx",
-          "name": "Discord MCP Server"
-        }
-      },
-      "onError": "continueErrorOutput"
-    },
-    {
-      "parameters": {
         "fieldToSplitOut": "executionSteps",
+        "include": "selectedOtherFields",
+        "fieldsToInclude": "targetMcp",
         "options": {}
       },
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
         -1168,
-        400
+        520
       ],
       "id": "b996eb98-f301-4d48-9b5a-999e52135faa",
       "name": "Split Execution Steps"
@@ -127,7 +113,7 @@
       "typeVersion": 3,
       "position": [
         -944,
-        496
+        616
       ],
       "id": "cd5a8d92-5e4f-4164-af15-6861fe96b4c4",
       "name": "Loop Over Execution Steps"
@@ -160,13 +146,13 @@
             {
               "id": "bec043e7-22fd-4b23-a549-d1e81ec6bcb6",
               "name": "stepResult.toolName",
-              "value": "={{ $json.toolName }}",
+              "value": "={{ $json.executionSteps.toolName }}",
               "type": "string"
             },
             {
               "id": "3cbfb631-8642-43bb-82f4-1333495056f8",
               "name": "stepResult.callParams",
-              "value": "={{ $json.callParams }}",
+              "value": "={{ $json.executionSteps.callParams }}",
               "type": "object"
             }
           ]
@@ -181,6 +167,122 @@
       ],
       "id": "73ffba95-efca-4332-aefc-34112a5152c2",
       "name": "Format Step Results"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.targetMcp }}",
+                    "rightValue": "DISCORD",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "36eba5f2-818c-447e-86ac-accdaa6f2ef7"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DISCORD"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3d90bc7f-67a0-4e8c-be9f-785fc15c7b40",
+                    "leftValue": "={{ $json.targetMcp }}",
+                    "rightValue": "TELEGRAM",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TELEGRAM"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -720,
+        568
+      ],
+      "id": "a27c4d61-edcb-4f92-8f59-ed3dd8b09fcc",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $json.executionSteps.toolName }}",
+        "toolParameters": "={{ $json.executionSteps.callParams }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        640
+      ],
+      "id": "270e0f6f-4f16-4f79-b584-b01584a96185",
+      "name": "Discord Step Executor",
+      "executeOnce": false,
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ZFofx3k2ze1wsifx",
+          "name": "Discord MCP Client (STDIO) account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $json.executionSteps.toolName }}",
+        "toolParameters": "={{ $json.executionSteps.callParams }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        832
+      ],
+      "id": "cbac631b-218c-438b-a039-331db550c36a",
+      "name": "Telegram Step Executor",
+      "executeOnce": false,
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "mcpClientApi": {
+          "id": "aiYCclLDUqob5iQ0",
+          "name": "Telegram MCP Client (STDIO) account"
+        }
+      },
+      "onError": "continueErrorOutput"
     }
   ],
   "connections": {
@@ -200,24 +302,6 @@
         [
           {
             "node": "Split Execution Steps",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "MCP Sequence Executor": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Execution Steps",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Loop Over Execution Steps",
             "type": "main",
             "index": 0
           }
@@ -262,7 +346,7 @@
         ],
         [
           {
-            "node": "MCP Sequence Executor",
+            "node": "Switch",
             "type": "main",
             "index": 0
           }
@@ -290,6 +374,60 @@
           }
         ]
       ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Discord Step Executor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram Step Executor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord Step Executor": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Execution Steps",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Execution Steps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Step Executor": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Execution Steps",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Execution Steps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -298,10 +436,25 @@
   "staticData": null,
   "meta": null,
   "pinData": {
-    "When Executed by Another Workflow": []
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "executionSteps": [
+            {
+              "toolName": "discord_read_channel",
+              "callParams": {
+                "limit": 3,
+                "userId": "1130657282364031016"
+              }
+            }
+          ],
+          "targetMcp": "DISCORD"
+        }
+      }
+    ]
   },
-  "versionId": "38cc99a9-fa6c-4cf2-997f-c8f6539e9de2",
-  "versionCounter": 39,
+  "versionId": "025a0930-25df-4f13-a5b5-2990ea44d91b",
+  "versionCounter": 46,
   "triggerCount": 0,
   "tags": [
     {
