@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-17T10:53:07.000Z",
+  "updatedAt": "2025-11-17T10:54:56.000Z",
   "createdAt": "2025-11-12T21:20:27.994Z",
   "id": "zBL0JT7t26pK2x95",
   "name": "[HELPERS] Discord Context Enricher",
@@ -13,7 +13,7 @@
             {
               "id": "cache_ttl_ms",
               "name": "cacheTTLms",
-              "value": "={{ 10 * 60 * 1000 }}",
+              "value": "={{ 30 * 60 * 1000 }}",
               "type": "number"
             }
           ]
@@ -1086,8 +1086,8 @@
       }
     ]
   },
-  "versionId": "4e946285-6213-4361-8b3c-a3722489912d",
-  "versionCounter": 31,
+  "versionId": "ab528050-1a63-47c8-becc-b76ece973500",
+  "versionCounter": 32,
   "triggerCount": 0,
   "tags": [
     {

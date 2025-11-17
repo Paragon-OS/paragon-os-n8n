@@ -1,0 +1,338 @@
+{
+  "updatedAt": "2025-11-17T14:31:18.000Z",
+  "createdAt": "2025-11-17T13:03:59.561Z",
+  "id": "uoYXevOl4ePWKeNx",
+  "name": "[HELPERS] Discord Step Executor",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "executionSteps",
+              "type": "array"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1616,
+        400
+      ],
+      "id": "dd089a93-3eb3-466d-9dd8-efc4a57a9e0e",
+      "name": "When Executed by Another Workflow",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "maxTries": 2
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        352
+      ],
+      "id": "90a8d7ee-6bb9-46b7-8e15-f8d8b17fd413",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "497d547e-48e4-4218-a02e-9648db9a4c93",
+              "name": "executionSteps",
+              "value": "={{ $json.executionSteps ?? [] }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1392,
+        400
+      ],
+      "id": "490cd53f-a549-4be3-888d-e9838dc053e8",
+      "name": "Prepare Execution Steps"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $json.toolName }}",
+        "toolParameters": "={{ $json.callParams }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        568
+      ],
+      "id": "270e0f6f-4f16-4f79-b584-b01584a96185",
+      "name": "MCP Sequence Executor",
+      "executeOnce": false,
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ZFofx3k2ze1wsifx",
+          "name": "Discord MCP Server"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "executionSteps",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1168,
+        400
+      ],
+      "id": "b996eb98-f301-4d48-9b5a-999e52135faa",
+      "name": "Split Execution Steps"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": false
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -720,
+        352
+      ],
+      "id": "878574b5-68ac-4ce9-a9fc-dce16d283558",
+      "name": "Merge Step with Params"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -944,
+        496
+      ],
+      "id": "cd5a8d92-5e4f-4164-af15-6861fe96b4c4",
+      "name": "Loop Over Execution Steps"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "executionSteps",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        352
+      ],
+      "id": "cebbe5e6-8690-4a13-b927-0af6d2e757c5",
+      "name": "Aggregate Step Results"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ee6d0a21-266b-44c6-8536-a80f30695e6a",
+              "name": "stepResult.stepOutput",
+              "value": "={{ JSON.parse($json.result.content[0].text) }}",
+              "type": "object"
+            },
+            {
+              "id": "bec043e7-22fd-4b23-a549-d1e81ec6bcb6",
+              "name": "stepResult.toolName",
+              "value": "={{ $json.toolName }}",
+              "type": "string"
+            },
+            {
+              "id": "3cbfb631-8642-43bb-82f4-1333495056f8",
+              "name": "stepResult.callParams",
+              "value": "={{ $json.callParams }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -496,
+        352
+      ],
+      "id": "73ffba95-efca-4332-aefc-34112a5152c2",
+      "name": "Format Step Results"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare Execution Steps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Execution Steps": {
+      "main": [
+        [
+          {
+            "node": "Split Execution Steps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Sequence Executor": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Execution Steps",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Execution Steps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Execution Steps": {
+      "main": [
+        [
+          {
+            "node": "Merge Step with Params",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over Execution Steps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Step with Params": {
+      "main": [
+        [
+          {
+            "node": "Format Step Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Execution Steps": {
+      "main": [
+        [
+          {
+            "node": "Merge Step with Params",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "MCP Sequence Executor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Step Results": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Step Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Step Results": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "When Executed by Another Workflow": []
+  },
+  "versionId": "38cc99a9-fa6c-4cf2-997f-c8f6539e9de2",
+  "versionCounter": 39,
+  "triggerCount": 0,
+  "tags": [
+    {
+      "updatedAt": "2025-11-02T21:22:20.646Z",
+      "createdAt": "2025-11-02T21:22:20.646Z",
+      "id": "95mwWdOxtdnkFLhS",
+      "name": "Discord"
+    },
+    {
+      "updatedAt": "2025-11-02T21:22:14.342Z",
+      "createdAt": "2025-11-02T21:22:14.342Z",
+      "id": "w6FOnYOvODOXV9os",
+      "name": "MCP"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2025-11-17T13:03:59.565Z",
+      "createdAt": "2025-11-17T13:03:59.565Z",
+      "role": "workflow:owner",
+      "workflowId": "uoYXevOl4ePWKeNx",
+      "projectId": "GEUEn6ArNROzJ5FY",
+      "project": {
+        "updatedAt": "2025-10-28T15:11:59.092Z",
+        "createdAt": "2025-10-28T15:08:17.462Z",
+        "id": "GEUEn6ArNROzJ5FY",
+        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null
+      }
+    }
+  ]
+}
