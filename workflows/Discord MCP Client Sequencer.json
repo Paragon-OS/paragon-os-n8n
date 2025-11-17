@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-17T10:18:10.000Z",
+  "updatedAt": "2025-11-17T10:44:54.000Z",
   "createdAt": "2025-11-06T21:51:04.792Z",
   "id": "vfcxqLBDDMKL5lnG",
   "name": "Discord MCP Client Sequencer",
@@ -27,21 +27,6 @@
       "alwaysOutputData": true,
       "retryOnFail": true,
       "maxTries": 2
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineByPosition",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        48,
-        -48
-      ],
-      "id": "9130e8ca-91b0-45be-8ea1-6851e6c32ec5",
-      "name": "Context Aggregator"
     },
     {
       "parameters": {
@@ -104,7 +89,7 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        1732,
+        616,
         128
       ],
       "id": "762a6c3b-ecaf-4984-8d41-fe9c43813e40",
@@ -122,7 +107,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        3748,
+        2632,
         -208
       ],
       "id": "7ee012e2-dc46-45e4-bb47-d949b8d65d32",
@@ -145,7 +130,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1956,
+        840,
         200
       ],
       "id": "8094c0ee-513f-4b2c-97bf-fbd04c293ec3",
@@ -198,7 +183,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3524,
+        2408,
         -272
       ],
       "id": "5fcbce29-85d8-4232-838b-2cd38b294adc",
@@ -230,7 +215,7 @@
       "type": "n8n-nodes-base.executionData",
       "typeVersion": 1.1,
       "position": [
-        3748,
+        2632,
         40
       ],
       "id": "0531736f-8a69-45e0-a6b2-8113cd94abf2",
@@ -248,7 +233,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        3300,
+        2184,
         -288
       ],
       "id": "f3c0a50e-a686-4c6c-9a13-e60577c187af",
@@ -263,7 +248,7 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        2628,
+        1512,
         416
       ],
       "id": "d75824bc-5423-4512-af44-bff9b7180ffd",
@@ -288,7 +273,7 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
-        1236,
+        120,
         352
       ],
       "id": "7b08e3df-3525-412b-8563-ff32b122f63b",
@@ -307,7 +292,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        1164,
+        48,
         128
       ],
       "id": "4d12a4dd-3b4f-472b-a944-6265ad99de9e",
@@ -322,7 +307,7 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        1364,
+        248,
         352
       ],
       "id": "fc946901-08ae-4ac6-b072-a8d59798086f",
@@ -339,7 +324,26 @@
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
-          "value": {}
+          "value": {
+            "userPrompt": "={{ $json.userPrompt }}"
+          },
+          "matchingColumns": [
+            "userPrompt"
+          ],
+          "schema": [
+            {
+              "id": "userPrompt",
+              "displayName": "userPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
         },
         "options": {}
       },
@@ -347,44 +351,10 @@
       "typeVersion": 1.3,
       "position": [
         -176,
-        24
+        -48
       ],
       "id": "7382b6fd-ba53-4b3e-95fa-a475585629ef",
       "name": "Fetch Discord Context"
-    },
-    {
-      "parameters": {
-        "schemaType": "manual",
-        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"prompt\": {\n      \"type\": \"string\",\n      \"description\": \"The optimized, less ambiguous user prompt\"\n    },\n    \"plays\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of recommended plays from the playbook to accomplish the task\"\n    },\n    \"toolsToUse\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of recommended tool names required to execute the task\"\n    },\n     \"toolsNotRelated\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of tool names not at all relavent to execute the task\"\n    }\n  },\n  \"required\": [\"prompt\"],\n  \"additionalProperties\": false\n}",
-        "autoFix": true
-      },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.3,
-      "position": [
-        348,
-        560
-      ],
-      "id": "4d6341b6-7339-411b-9088-b87ab81f58fb",
-      "name": "Context Optimizer Output Parser"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "={{ $json.userPrompt }}",
-        "hasOutputParser": true,
-        "options": {
-          "systemMessage": "=## You are a helpful assistant with the capabilities to decide & output\n- An optimal, enriched version of the user prompt with less ambiguities in wording and identifiers (include userIds, guildIds).\n- Recommend 'plays' from the playbook as an array of play-names (e.g. [\"dm_contact_by_name\", \"search_topic_in_channel_and_summarize\"])\n- Based on the plays you picked, Recommend 'toolsToUse' from the tool catalog as an array of tool-names (e.g. [\"discord_read_channel\", \"discord_send_message\"])\n- Based on the plays you picked, Recommend 'toolsNotRelated' by picking an completely unrelated list of tool names to EXCLUDE from the full tool list to save context.\n- DO NOT HILLUCINATE Ids, tool-names & play-names\n\n## Your Knowledge of The Discord Playbook:\n\n```\n{{ $json.discordPlaybook ? $json.discordPlaybook.toJsonString() : '[]' }}\n```\n\n## Your Knowledge of Discord Contacts:\n\n```\n{{ $json.discordContacts ? $json.discordContacts.toJsonString() : '[]' }}\n```\n\n## Your Knowledge of Discord Servers/Guilds:\n\n```\n{{ $json.serversOrGuilds ? $json.serversOrGuilds.toJsonString() : '[]' }}\n```\n\n## Your Knowledge of Available Discord API MCP tools:\n\n```\n{{ $json.tools ? $json.tools.toJsonString() : '[]' }}\n```",
-          "returnIntermediateSteps": false
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 2.2,
-      "position": [
-        272,
-        336
-      ],
-      "id": "6c26f0b0-9003-46d6-b62e-dd80f691638d",
-      "name": "Context Optimizer AI Agent"
     },
     {
       "parameters": {
@@ -394,7 +364,7 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        2180,
+        1064,
         272
       ],
       "id": "a913b319-ec9f-419b-ba12-55cd8fe54ec5",
@@ -411,7 +381,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2628,
+        1512,
         224
       ],
       "id": "871c4869-0387-4c48-9294-950eb3619f49",
@@ -424,7 +394,7 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        2404,
+        1288,
         392
       ],
       "id": "00a1e7fc-a979-4709-8708-b726d7682e5f",
@@ -439,7 +409,7 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        3076,
+        1960,
         224
       ],
       "id": "3022283d-32f3-4b91-b6e5-223d96d8d453",
@@ -474,79 +444,11 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2852,
+        1736,
         224
       ],
       "id": "8c9365ee-290f-410b-978a-5a8389f62a50",
       "name": "Format Step Results"
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineByPosition",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        716,
-        128
-      ],
-      "id": "735f0c79-bb29-4b17-807d-ee542f3d64b7",
-      "name": "Merge Context with Optimized Prompt"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "c04f7e88-7103-45f5-8b5d-6a30503e61b4",
-              "name": "userPrompt",
-              "value": "={{ $json.output.prompt }}",
-              "type": "string"
-            },
-            {
-              "id": "34bcd304-8d1e-4815-bf00-f0f91ca0a829",
-              "name": "serversOrGuilds",
-              "value": "={{ $json.serversOrGuilds }}",
-              "type": "array"
-            },
-            {
-              "id": "5a3fa6e2-058b-434b-95a0-872aaabedce9",
-              "name": "discordContacts",
-              "value": "={{ $json.discordContacts }}",
-              "type": "array"
-            },
-            {
-              "id": "49e373d2-9111-4b16-9d40-cc0070e11a2b",
-              "name": "toolRecommendations",
-              "value": "={{ $json.tools.filter(tool => $json.output.toolsToUse?.includes(tool.name)) }}",
-              "type": "array"
-            },
-            {
-              "id": "b5a7ad03-dd43-4382-9f27-5f72a175aaa6",
-              "name": "playbookRecommendations",
-              "value": "={{ $json.discordPlaybook.filter(play => $json.output.plays?.includes(play.name)) }}",
-              "type": "array"
-            },
-            {
-              "id": "375a2a0a-e41a-450b-b698-9733995e11a5",
-              "name": "allRelaventTools",
-              "value": "={{ $json.tools.filter(tool => !$json.output.toolsNotRelated?.includes(tool.name)) }}",
-              "type": "array"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        940,
-        128
-      ],
-      "id": "78e7ac79-906c-4feb-8ea4-d615444ae915",
-      "name": "Prepare Planner Context"
     },
     {
       "parameters": {
@@ -558,32 +460,11 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        1296,
+        180,
         560
       ],
       "id": "c79482a2-0b52-475c-a1d5-8f92e6b322e2",
       "name": "Gemini Model (Execution Planner)",
-      "credentials": {
-        "googlePalmApi": {
-          "id": "NIhZoi9otQV2vaAP",
-          "name": "Google Gemini(PaLM) Api account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "options": {
-          "temperature": 0.2
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-      "typeVersion": 1,
-      "position": [
-        344,
-        768
-      ],
-      "id": "6bc75621-75de-42b0-b50d-9f4b9db661e3",
-      "name": "Gemini Model (Context Optimizer)",
       "credentials": {
         "googlePalmApi": {
           "id": "NIhZoi9otQV2vaAP",
@@ -597,33 +478,7 @@
       "main": [
         [
           {
-            "node": "Context Aggregator",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "Fetch Discord Context",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Context Aggregator": {
-      "main": [
-        [
-          {
-            "node": "Metadata Collector",
-            "type": "main",
-            "index": 1
-          },
-          {
-            "node": "Context Optimizer AI Agent",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Merge Context with Optimized Prompt",
             "type": "main",
             "index": 0
           }
@@ -756,29 +611,12 @@
       "main": [
         [
           {
-            "node": "Context Aggregator",
+            "node": "Execution Planner AI Agent",
             "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Context Optimizer Output Parser": {
-      "ai_outputParser": [
-        [
-          {
-            "node": "Context Optimizer AI Agent",
-            "type": "ai_outputParser",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Context Optimizer AI Agent": {
-      "main": [
-        [
+          },
           {
-            "node": "Merge Context with Optimized Prompt",
+            "node": "Metadata Collector",
             "type": "main",
             "index": 1
           }
@@ -857,28 +695,6 @@
         ]
       ]
     },
-    "Merge Context with Optimized Prompt": {
-      "main": [
-        [
-          {
-            "node": "Prepare Planner Context",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Planner Context": {
-      "main": [
-        [
-          {
-            "node": "Execution Planner AI Agent",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Gemini Model (Execution Planner)": {
       "ai_languageModel": [
         [
@@ -889,22 +705,6 @@
           },
           {
             "node": "Execution Plan Output Parser",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Gemini Model (Context Optimizer)": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Context Optimizer AI Agent",
-            "type": "ai_languageModel",
-            "index": 0
-          },
-          {
-            "node": "Context Optimizer Output Parser",
             "type": "ai_languageModel",
             "index": 0
           }
@@ -928,8 +728,8 @@
       }
     ]
   },
-  "versionId": "c7c9438c-96e4-41f3-a49b-32f1294ffe04",
-  "versionCounter": 143,
+  "versionId": "f53f4d3f-df82-4be8-ba87-0db091176930",
+  "versionCounter": 146,
   "triggerCount": 0,
   "tags": [
     {
