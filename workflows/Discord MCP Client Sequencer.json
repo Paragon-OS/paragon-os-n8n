@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-17T08:27:35.000Z",
+  "updatedAt": "2025-11-17T10:08:49.000Z",
   "createdAt": "2025-11-06T21:51:04.792Z",
   "id": "vfcxqLBDDMKL5lnG",
   "name": "Discord MCP Client Sequencer",
@@ -16,8 +16,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        1520,
-        576
+        1296,
+        560
       ],
       "id": "c79482a2-0b52-475c-a1d5-8f92e6b322e2",
       "name": "Google Gemini Chat Model",
@@ -36,8 +36,8 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        2404,
-        288
+        2180,
+        272
       ],
       "id": "a913b319-ec9f-419b-ba12-55cd8fe54ec5",
       "name": "Split Out"
@@ -56,7 +56,7 @@
       "typeVersion": 1.1,
       "position": [
         -400,
-        16
+        -48
       ],
       "id": "9a1fc959-c92c-4140-877e-6a1badc12e5b",
       "name": "When Executed by Another Workflow",
@@ -74,7 +74,7 @@
       "typeVersion": 3.2,
       "position": [
         48,
-        16
+        -48
       ],
       "id": "9130e8ca-91b0-45be-8ea1-6851e6c32ec5",
       "name": "Context Aggregator"
@@ -140,8 +140,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        1956,
-        144
+        1732,
+        128
       ],
       "id": "762a6c3b-ecaf-4984-8d41-fe9c43813e40",
       "name": "Has a direct answer?"
@@ -158,8 +158,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        3972,
-        -264
+        3748,
+        -216
       ],
       "id": "7ee012e2-dc46-45e4-bb47-d949b8d65d32",
       "name": "Final Response"
@@ -181,8 +181,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2180,
-        216
+        1956,
+        200
       ],
       "id": "8094c0ee-513f-4b2c-97bf-fbd04c293ec3",
       "name": "Prepare Execution Steps"
@@ -216,8 +216,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3076,
-        200
+        2852,
+        224
       ],
       "id": "8c9365ee-290f-410b-978a-5a8389f62a50",
       "name": "Edit Fields"
@@ -269,7 +269,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3748,
+        3524,
         -272
       ],
       "id": "5fcbce29-85d8-4232-838b-2cd38b294adc",
@@ -301,8 +301,8 @@
       "type": "n8n-nodes-base.executionData",
       "typeVersion": 1.1,
       "position": [
-        3972,
-        -16
+        3748,
+        32
       ],
       "id": "0531736f-8a69-45e0-a6b2-8113cd94abf2",
       "name": "Input Data Logger"
@@ -319,7 +319,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        3524,
+        3300,
         -288
       ],
       "id": "f3c0a50e-a686-4c6c-9a13-e60577c187af",
@@ -336,8 +336,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2852,
-        200
+        2628,
+        224
       ],
       "id": "871c4869-0387-4c48-9294-950eb3619f49",
       "name": "Merge"
@@ -349,8 +349,8 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        2628,
-        384
+        2404,
+        392
       ],
       "id": "00a1e7fc-a979-4709-8708-b726d7682e5f",
       "name": "Loop Over Items"
@@ -364,8 +364,8 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        2852,
-        432
+        2628,
+        416
       ],
       "id": "d75824bc-5423-4512-af44-bff9b7180ffd",
       "name": "MCP Sequence Executor",
@@ -389,8 +389,8 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        3300,
-        200
+        3076,
+        224
       ],
       "id": "3022283d-32f3-4b91-b6e5-223d96d8d453",
       "name": "Aggregate"
@@ -404,8 +404,8 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
-        1460,
-        368
+        1236,
+        352
       ],
       "id": "7b08e3df-3525-412b-8563-ff32b122f63b",
       "name": "Simple Memory"
@@ -423,8 +423,8 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        1388,
-        144
+        1164,
+        128
       ],
       "id": "4d12a4dd-3b4f-472b-a944-6265ad99de9e",
       "name": "Execution Planner AI Agent"
@@ -438,8 +438,8 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        1588,
-        368
+        1364,
+        352
       ],
       "id": "fc946901-08ae-4ac6-b072-a8d59798086f",
       "name": "Execution Plan Output Parser"
@@ -463,7 +463,7 @@
       "typeVersion": 1.3,
       "position": [
         -176,
-        88
+        24
       ],
       "id": "7382b6fd-ba53-4b3e-95fa-a475585629ef",
       "name": "Fetch Discord Context"
@@ -478,7 +478,7 @@
       "typeVersion": 1,
       "position": [
         344,
-        800
+        760
       ],
       "id": "6bc75621-75de-42b0-b50d-9f4b9db661e3",
       "name": "Google Gemini Chat Model1",
@@ -499,7 +499,7 @@
       "typeVersion": 1.3,
       "position": [
         348,
-        592
+        552
       ],
       "id": "4d6341b6-7339-411b-9088-b87ab81f58fb",
       "name": "Context Optimizer Output Parser"
@@ -518,7 +518,7 @@
       "typeVersion": 2.2,
       "position": [
         272,
-        368
+        328
       ],
       "id": "6c26f0b0-9003-46d6-b62e-dd80f691638d",
       "name": "Context Optimizer AI Agent"
@@ -533,38 +533,26 @@
       "typeVersion": 3.2,
       "position": [
         716,
-        192
+        128
       ],
       "id": "735f0c79-bb29-4b17-807d-ee542f3d64b7",
       "name": "Merge1"
     },
     {
       "parameters": {
-        "mode": "combine",
-        "combineBy": "combineByPosition",
-        "numberInputs": 4,
-        "options": {
-          "includeUnpaired": false
-        }
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        1164,
-        112
-      ],
-      "id": "4f1bb9d0-7b34-446a-9d67-0c02470ded84",
-      "name": "Merge2"
-    },
-    {
-      "parameters": {
         "assignments": {
           "assignments": [
+            {
+              "id": "c04f7e88-7103-45f5-8b5d-6a30503e61b4",
+              "name": "userPrompt",
+              "value": "={{ $json.output.prompt }}",
+              "type": "string"
+            },
             {
               "id": "34bcd304-8d1e-4815-bf00-f0f91ca0a829",
               "name": "serversOrGuilds",
               "value": "={{ $json.serversOrGuilds }}",
-              "type": "string"
+              "type": "array"
             },
             {
               "id": "5a3fa6e2-058b-434b-95a0-872aaabedce9",
@@ -573,10 +561,22 @@
               "type": "array"
             },
             {
-              "id": "c04f7e88-7103-45f5-8b5d-6a30503e61b4",
-              "name": "userPrompt",
-              "value": "={{ $json.output.prompt }}",
-              "type": "string"
+              "id": "49e373d2-9111-4b16-9d40-cc0070e11a2b",
+              "name": "toolRecommendations",
+              "value": "={{ $json.tools.filter(tool => $json.output.toolsToUse?.includes(tool.name)) }}",
+              "type": "array"
+            },
+            {
+              "id": "b5a7ad03-dd43-4382-9f27-5f72a175aaa6",
+              "name": "playbookRecommendations",
+              "value": "={{ $json.discordPlaybook.filter(play => $json.output.plays?.includes(play.name)) }}",
+              "type": "array"
+            },
+            {
+              "id": "375a2a0a-e41a-450b-b698-9733995e11a5",
+              "name": "allRelaventTools",
+              "value": "={{ $json.tools.filter(tool => !$json.output.toolsNotRelated?.includes(tool.name)) }}",
+              "type": "array"
             }
           ]
         },
@@ -586,55 +586,10 @@
       "typeVersion": 3.4,
       "position": [
         940,
-        288
+        128
       ],
       "id": "78e7ac79-906c-4feb-8ea4-d615444ae915",
       "name": "Edit Fields1"
-    },
-    {
-      "parameters": {
-        "mode": "raw",
-        "jsonOutput": "={\n  \"playbookRecommendations\": {{ $json.discordPlaybook.filter(play => $json.output.plays?.includes(play.name)) }}\n}\n",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        940,
-        -96
-      ],
-      "id": "6e83edd8-ba77-4f6e-b0d2-7feb41a19576",
-      "name": "Edit Fields4"
-    },
-    {
-      "parameters": {
-        "mode": "raw",
-        "jsonOutput": "={\n  \"toolRecommendations\": {{ $json.tools.filter(tool => $json.output.toolsToUse?.includes(tool.name)) }}\n}\n",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        940,
-        96
-      ],
-      "id": "a19179ae-cb03-4cfb-bb1d-fbc467e4218c",
-      "name": "Edit Fields5"
-    },
-    {
-      "parameters": {
-        "mode": "raw",
-        "jsonOutput": "={\n  \"allRelaventTools\": {{ $json.tools.filter(tool => !$json.output.toolsNotRelated?.includes(tool.name)) }}\n}\n",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        940,
-        480
-      ],
-      "id": "c056da53-dd1c-42bc-95e9-aa2e9c4bbc25",
-      "name": "Edit Fields6"
     }
   ],
   "connections": {
@@ -941,32 +896,6 @@
             "node": "Edit Fields1",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Edit Fields4",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Edit Fields5",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Edit Fields6",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Merge2": {
-      "main": [
-        [
-          {
-            "node": "Execution Planner AI Agent",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -975,42 +904,9 @@
       "main": [
         [
           {
-            "node": "Merge2",
-            "type": "main",
-            "index": 2
-          }
-        ]
-      ]
-    },
-    "Edit Fields4": {
-      "main": [
-        [
-          {
-            "node": "Merge2",
+            "node": "Execution Planner AI Agent",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields5": {
-      "main": [
-        [
-          {
-            "node": "Merge2",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Edit Fields6": {
-      "main": [
-        [
-          {
-            "node": "Merge2",
-            "type": "main",
-            "index": 3
           }
         ]
       ]
@@ -1032,8 +928,8 @@
       }
     ]
   },
-  "versionId": "0c4b3111-e916-4434-b74b-a607f6507ad0",
-  "versionCounter": 138,
+  "versionId": "308a5eb5-e010-4f31-bf48-492dae03bc5d",
+  "versionCounter": 141,
   "triggerCount": 0,
   "tags": [
     {
