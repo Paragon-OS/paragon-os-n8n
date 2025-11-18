@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-18T15:34:46.000Z",
+  "updatedAt": "2025-11-18T16:11:23.000Z",
   "createdAt": "2025-11-12T21:20:27.994Z",
   "id": "zBL0JT7t26pK2x95",
   "name": "[HELPERS] Discord Context Enricher",
@@ -25,7 +25,7 @@
       "typeVersion": 3.4,
       "position": [
         -1120,
-        672
+        664
       ],
       "id": "config-cache-ttl",
       "name": "Cache Config"
@@ -148,7 +148,7 @@
       "typeVersion": 1.3,
       "position": [
         -896,
-        576
+        568
       ],
       "id": "92809e66-0977-4b8c-9232-6db43888d156",
       "name": "Check Guild Cache",
@@ -254,7 +254,7 @@
       "typeVersion": 1.1,
       "position": [
         -1344,
-        672
+        664
       ],
       "id": "6d835265-7154-4f78-a7ea-70662bc484b2",
       "name": "When Executed by Another Workflow",
@@ -329,7 +329,7 @@
       "typeVersion": 1.3,
       "position": [
         -896,
-        336
+        328
       ],
       "id": "7d689a30-94d3-4015-a454-08afb2669801",
       "name": "Check Tool Cache",
@@ -402,7 +402,7 @@
       "typeVersion": 1.3,
       "position": [
         -896,
-        48
+        40
       ],
       "id": "5b80a680-cfa4-4b5a-a671-814478314e15",
       "name": "Check Contact Cache",
@@ -628,7 +628,7 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        304,
+        300,
         896
       ],
       "id": "6b81163c-5a17-4ed8-adf9-99d524005b4b",
@@ -706,7 +706,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        896,
+        892,
         496
       ],
       "id": "6f21e6e0-e873-4205-915b-7434c660a220",
@@ -721,7 +721,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        304,
+        296,
         1104
       ],
       "id": "10bb4322-a169-4562-b993-64d4a576a396",
@@ -765,7 +765,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        672,
+        668,
         496
       ],
       "id": "70097737-a191-431e-82ab-0dbcc46ece9d",
@@ -776,7 +776,7 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        1120,
+        1116,
         496
       ],
       "id": "58391c37-e320-4f43-9a54-1e8490d2c1f9",
@@ -1153,8 +1153,8 @@
       }
     ]
   },
-  "versionId": "377d650c-b8a3-45c6-9236-5e81b5640bb4",
-  "versionCounter": 39,
+  "versionId": "ea38743a-dedc-4fc4-8a01-7908d6dabaac",
+  "versionCounter": 40,
   "triggerCount": 0,
   "tags": [
     {

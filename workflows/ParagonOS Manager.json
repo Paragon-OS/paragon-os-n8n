@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-18T15:53:48.000Z",
+  "updatedAt": "2025-11-18T16:14:25.000Z",
   "createdAt": "2025-11-06T23:04:10.688Z",
   "id": "z1Ry4y4k5dGR0BqR",
   "name": "ParagonOS Manager",
@@ -22,9 +22,8 @@
     },
     {
       "parameters": {
-        "modelName": "models/gemini-2.5-pro",
         "options": {
-          "temperature": 0.4
+          "temperature": 0.3
         }
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
@@ -88,7 +87,7 @@
     {
       "parameters": {
         "sessionIdType": "customKey",
-        "sessionKey": "={{ $workflow.id }} v6.4",
+        "sessionKey": "={{ $workflow.id }} v6.5",
         "contextWindowLength": 10
       },
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
@@ -231,19 +230,10 @@
           "chatInput": "find staryo admin only channel in metarune labs guild, then list messages"
         }
       }
-    ],
-    "When chat message received": [
-      {
-        "json": {
-          "sessionId": "4b374c2acaef43dcb6dbff1739456849",
-          "action": "sendMessage",
-          "chatInput": "did i forget to reply to messages on wandrlust admin & dev"
-        }
-      }
     ]
   },
-  "versionId": "0b61bc62-c6af-4fe0-a3da-260c4a808f1e",
-  "versionCounter": 76,
+  "versionId": "b3b18d8e-2085-4c90-9de2-73880565d039",
+  "versionCounter": 82,
   "triggerCount": 0,
   "tags": [
     {
