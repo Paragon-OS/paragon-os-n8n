@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-18T18:14:55.000Z",
+  "updatedAt": "2025-11-18T18:33:49.000Z",
   "createdAt": "2025-11-12T21:20:27.994Z",
   "id": "zBL0JT7t26pK2x95",
   "name": "[HELPERS] Discord Context Enricher",
@@ -660,7 +660,7 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "={\n  \"userPrompt\": {{ $json.output.prompt.toJsonString() }},\n  \"context\": {\n      \"serversOrGuilds\": {{ $json.serversOrGuilds }},\n      \"discordContacts\": {{ $json.discordContacts }},\n      \"toolRecommendations\": {{ $json.tools.filter(tool => $json.output.toolsToUse?.includes(tool.name)) }},\n      \"playbookRecommendations\": {{ $json.discordPlaybook.filter(play => $json.output.plays?.includes(play.name)) }},\n      \"allRelaventTools\": {{ $json.tools.filter(tool => !$json.output.toolsNotRelated?.includes(tool.name)) }},\n      \"myProfile\": {{ $json.myProfile }}\n  }\n}",
+        "jsonOutput": "={\n  \"userPrompt\": {{ $json.output.prompt.toJsonString() }},\n  \"context\": {\n      \"serversOrGuilds\": {{ $json.serversOrGuilds }},\n      \"discordContacts\": {{ $json.discordContacts }},\n      \"toolRecommendations\": {{ $json.tools.filter(tool => $json.output.toolsToUse?.includes(tool.name)) }},\n      \"playbookRecommendations\": {{ $json.discordPlaybook.filter(play => $json.output.plays?.includes(play.name)) }},\n      \"allRelaventTools\": {{ $json.tools.filter(tool => !$json.output.toolsNotRelated?.includes(tool.name)) }},\n      \"myProfile\": {{ $json.myProfile }},\n      \"previousAttempt\": {{ $json.previousAttempt }}\n  }\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.set",
@@ -1124,8 +1124,8 @@
       }
     ]
   },
-  "versionId": "6de1bd62-db11-4c82-beb7-20ad6ecf2be0",
-  "versionCounter": 49,
+  "versionId": "b8fef0e7-626e-4914-9810-faee2013f7c3",
+  "versionCounter": 51,
   "triggerCount": 0,
   "tags": [
     {
