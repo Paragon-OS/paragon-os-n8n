@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-17T22:13:07.000Z",
+  "updatedAt": "2025-11-18T15:25:26.000Z",
   "createdAt": "2025-11-06T21:51:04.792Z",
   "id": "vfcxqLBDDMKL5lnG",
   "name": "Discord MCP Client Sequencer",
@@ -89,7 +89,7 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        616,
+        624,
         -1408
       ],
       "id": "762a6c3b-ecaf-4984-8d41-fe9c43813e40",
@@ -123,7 +123,7 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        248,
+        256,
         -1008
       ],
       "id": "fc946901-08ae-4ac6-b072-a8d59798086f",
@@ -139,7 +139,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        180,
+        192,
         -800
       ],
       "id": "c79482a2-0b52-475c-a1d5-8f92e6b322e2",
@@ -199,8 +199,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        840,
-        -1304
+        848,
+        -1312
       ],
       "id": "06e27531-aa79-4d3c-aa37-748e1b322840",
       "name": "Call Discord Step Executor"
@@ -251,13 +251,13 @@
     {
       "parameters": {
         "schemaType": "manual",
-        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"shouldRetry\": {\n      \"type\": \"boolean\",\n      \"description\": \"Indicates whether the operation should be retried\"\n    },\n    \"retryStrategy\": {\n      \"type\": \"string\",\n      \"description\": \"The retry strategy to use (e.g., 'none', 'exponential', 'linear')\"\n    },\n    \"reasoning\": {\n      \"type\": \"string\",\n      \"description\": \"Explanation of the decision-making process\"\n    }\n  },\n  \"required\": [\"shouldRetry\"],\n  \"additionalProperties\": false\n}\n",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"shouldRetry\": {\n      \"type\": \"boolean\",\n      \"description\": \"Indicates whether the operation should be retried\"\n    },\n    \"retryStrategy\": {\n      \"type\": \"string\",\n      \"description\": \"The retry strategy to use (e.g., 'none', 'exponential', 'linear')\"\n    },\n    \"reasoning\": {\n      \"type\": \"string\",\n      \"description\": \"Explanation of the decision-making process\"\n    },\n    \"directAnswer\": {\n      \"type\": \"string\",\n      \"description\": \"Direct answer to the user's prompt\"\n    }\n  },\n  \"required\": [\"shouldRetry\"],\n  \"additionalProperties\": false\n}\n",
         "autoFix": true
       },
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        1588,
+        1600,
         -1184
       ],
       "id": "538e65bd-9cdf-4ccb-aee3-900717e59667",
@@ -291,7 +291,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1956,
+        1968,
         -1408
       ],
       "id": "a9a10da9-6271-473d-a015-5c866fee05c0",
@@ -308,7 +308,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1288,
+        1296,
         -1408
       ],
       "id": "116b33a8-d590-4a79-b13b-74d5fa60c436",
@@ -323,8 +323,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1064,
-        -1304
+        1072,
+        -1312
       ],
       "id": "4c572b6c-6bf9-4497-a6a1-9ffcf3eebb98",
       "name": "Merge1"
@@ -332,16 +332,16 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=## User's prompt input:\n\n\"{{ $json.userPrompt }}\"\n\nGenerated output: \n\n\"{{ $json.executionSteps?.toJsonString() ?? $('Has a direct answer?').item.json.output.directAnswer }}\"\n",
+        "text": "=## User's prompt input:\n\n\"{{ $json.userPrompt }}\"\n\n## Generated output: \n\n\"{{ $json.executionSteps?.toJsonString() ?? $('Has a direct answer?').item.json.output.directAnswer }}\"\n",
         "hasOutputParser": true,
         "options": {
-          "systemMessage": "=You are SOLELY a AI generated answer validator. You are NOT a tool executor. \n\n# IMPORTANT:\n- You just judge the user's prompt vs the generated output answer and output as a {} object.\n- If there is no Generated output, it's automatically a failure.\n\nYou must output in JSON:\n- shouldRetry: boolean\n- retryStrategy: \"refine_prompt\" | \"change_approach\" | \"add_context\" | \"none\"\n- reasoning: string\n\n## Your Knowledge of Discord Contacts:\n\n{{ $json.discordContacts ? $json.discordContacts.toJsonString() : '[]' }}\n\n## Your Knowledge of Discord Servers/Guilds:\n\n{{ $json.serversOrGuilds ? $json.serversOrGuilds.toJsonString() : '[]' }}\n\n## Your Knowledge of Your Own Profile:\n\n{{ $json.myProfile?.toJsonString() ?? 'Error! No Profile Info' }}\n\n## Your Knowledge of Recommended Tools to Use:\n\n{{ $json.toolRecommendations.toJsonString() }}\n"
+          "systemMessage": "=You are SOLELY a AI generated answer validator. You are NOT a tool executor. \n\n# IMPORTANT:\n- You just judge the user's prompt vs the generated output answer and output as a {} object.\n- If there is no Generated output, it's automatically a failure.\n\nYou must output in JSON:\n- shouldRetry: boolean\n- retryStrategy: \"refine_prompt\" | \"change_approach\" | \"add_context\" | \"none\"\n- reasoning: string\n- directAnswer: string\n\n# If you receive an already processed Direct Anwer to the user's prompt: put that in the `directAnswer` of your output, and pass the validation.\n\n# If you receive a MCP tool execution result array: \nONLY IF the execution results doesn't trivially answer the user prompt AND you can confidently answer the question, use `directAnswer` to output an accurate answer based on the available execution results.\n\n## Your Knowledge of Discord Contacts:\n\n{{ $json.discordContacts ? $json.discordContacts.toJsonString() : '[]' }}\n\n## Your Knowledge of Discord Servers/Guilds:\n\n{{ $json.serversOrGuilds ? $json.serversOrGuilds.toJsonString() : '[]' }}\n\n## Your Knowledge of Your Own Profile:\n\n{{ $json.myProfile?.toJsonString() ?? 'Error! No Profile Info' }}\n\n## Your Knowledge of Recommended Tools to Use:\n\n{{ $json.toolRecommendations.toJsonString() }}\n"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3,
       "position": [
-        1512,
+        1520,
         -1408
       ],
       "id": "eefe7dfc-4226-4cd7-90bf-fde29a23adbf",
@@ -360,13 +360,19 @@
             {
               "id": "c6d2472e-3c6b-4fa5-af80-aa60691fdd36",
               "name": "directAnswer",
-              "value": "={{ $('Has a direct answer?').item.json.output.directAnswer ?? null }}",
+              "value": "={{ $('Has a direct answer?').item.json.output.directAnswer ?? $json.output.directAnswer ?? null }}",
               "type": "string"
             },
             {
               "id": "7125ca2a-e0db-4750-b9c9-1a521e60ff7b",
               "name": "answerValidation",
               "value": "={{ $json.output.reasoning }}",
+              "type": "string"
+            },
+            {
+              "id": "aab0f5f3-c0f4-4f99-b31b-a9181c1d6666",
+              "name": "refinedUserPrompt",
+              "value": "={{ $('Merge').item.json.userPrompt }}",
               "type": "string"
             }
           ]
@@ -376,7 +382,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2180,
+        2192,
         -1456
       ],
       "id": "b145076c-014e-42a5-aee7-cc476819044f",
@@ -436,7 +442,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2180,
+        2192,
         -1104
       ],
       "id": "3fed03a8-c1d7-47a7-aaa9-cdce67f2fd74",
@@ -455,9 +461,8 @@
     },
     {
       "parameters": {
-        "modelName": "models/gemini-2.5-flash-lite",
         "options": {
-          "temperature": 0.4
+          "temperature": 0.2
         }
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
@@ -484,7 +489,7 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
-        120,
+        128,
         -1008
       ],
       "id": "7b08e3df-3525-412b-8563-ff32b122f63b",
@@ -709,13 +714,13 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "userPrompt": "last 5 NON-EMPTY text messages with sebastian, also last 5 message with metaops"
+          "userPrompt": "Check for unreplied messages in the wandrlust admin & dev channel"
         }
       }
     ]
   },
-  "versionId": "9c0bac82-fdc6-41a6-9838-e715886fa33a",
-  "versionCounter": 220,
+  "versionId": "9dcd15a2-bb8e-4e3c-b73f-fd342d14fcae",
+  "versionCounter": 226,
   "triggerCount": 0,
   "tags": [
     {

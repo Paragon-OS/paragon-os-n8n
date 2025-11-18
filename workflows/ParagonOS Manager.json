@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-17T21:57:54.000Z",
+  "updatedAt": "2025-11-18T15:53:48.000Z",
   "createdAt": "2025-11-06T23:04:10.688Z",
   "id": "z1Ry4y4k5dGR0BqR",
   "name": "ParagonOS Manager",
@@ -44,7 +44,7 @@
     },
     {
       "parameters": {
-        "description": "Plans & Executes Discord operations\n\n# Capabilities: \n\nThe Discord MCP tools enable comprehensive Discord integration including reading messages from channels and DMs (with pagination and date filtering), searching message content, sending/editing/deleting messages with file attachment support, downloading attachments, and managing server/channel access. You can list guilds/servers you are part of, list channels, contacts, member counts and guild/server members, search for specific contacts, configure whitelist/blacklist filters for channels and DMs, and retrieve pending channels or DMs that need attention (unread messages or mentions). The tools support both server channels and direct messages, with automatic DM channel creation when sending to users.\n\nThe MCP tool intelligently plans and executes sequences of Discord operations. For multi-step operations, it will automatically break them down, execute steps sequentially, and pass data between steps.",
+        "description": "={{ `\nIntelligently plans and executes Discord operations using cached context and AI-powered sequencing.\\n\\n# How It Works:\\n\\n1. **Context Enrichment**: Automatically retrieves and caches Discord contacts, guilds/servers, channels, available MCP tools, and your profile. Uses a 30-minute cache to minimize API calls.\\n\\n2. **AI Planning**: Analyzes your request against a Discord playbook of common workflows (DMing contacts, catching up on channels, replying to pending messages, searching topics, editing/deleting messages, downloading attachments, triaging guild channels). Recommends relevant tools and generates either:\\n   - A direct answer (if no API calls needed)\\n   - A sequential execution plan with specific MCP tool calls\\n\\n3. **Sequential Execution**: Executes planned steps in order, passing data between steps automatically.\\n\\n4. **Validation & Retry**: Validates execution results against your original request. Automatically retries with refined approach if needed.\\n\\n# Capabilities:\\n\\nRead messages (channels/DMs with pagination, date filtering), search messages, send/edit/delete messages with attachments, download attachments, list guilds/servers/channels/contacts/members, search contacts, get pending channels/DMs (messages after your last reply), manage whitelist/blacklist filters. Supports both server channels and direct messages.\n`}}",
         "workflowId": {
           "__rl": true,
           "value": "vfcxqLBDDMKL5lnG",
@@ -55,7 +55,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `What the intelligent MCP tool should do. Keep it close to what user asked for.`, 'string') }}"
+            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `Natural language request for Discord operations. Examples: 'Check for unreplied messages in wandrlust admin channel', 'DM sebastian about the meeting', 'What did people say about the launch in metarune-labs?', 'Reply to my pending DMs', 'List all members in the dev server'`, 'string') }}"
           },
           "matchingColumns": [
             "userPrompt"
@@ -88,7 +88,7 @@
     {
       "parameters": {
         "sessionIdType": "customKey",
-        "sessionKey": "={{ $workflow.id }} v6x2",
+        "sessionKey": "={{ $workflow.id }} v6.4",
         "contextWindowLength": 10
       },
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
@@ -111,7 +111,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3,
       "position": [
-        -168,
+        -176,
         -144
       ],
       "id": "e572d52c-0585-473c-84aa-34fc1b8ee691",
@@ -231,10 +231,19 @@
           "chatInput": "find staryo admin only channel in metarune labs guild, then list messages"
         }
       }
+    ],
+    "When chat message received": [
+      {
+        "json": {
+          "sessionId": "4b374c2acaef43dcb6dbff1739456849",
+          "action": "sendMessage",
+          "chatInput": "did i forget to reply to messages on wandrlust admin & dev"
+        }
+      }
     ]
   },
-  "versionId": "c0480ef7-185e-477d-b507-afe2d4f30d02",
-  "versionCounter": 72,
+  "versionId": "0b61bc62-c6af-4fe0-a3da-260c4a808f1e",
+  "versionCounter": 76,
   "triggerCount": 0,
   "tags": [
     {
