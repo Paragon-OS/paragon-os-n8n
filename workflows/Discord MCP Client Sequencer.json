@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-18T17:04:25.000Z",
+  "updatedAt": "2025-11-18T18:14:48.000Z",
   "createdAt": "2025-11-06T21:51:04.792Z",
   "id": "vfcxqLBDDMKL5lnG",
   "name": "Discord MCP Client Sequencer",
@@ -101,7 +101,7 @@
         "text": "=User prompt: \"{{ $json.userPrompt }}\"\n\nIs a retry: \"{{ $if( $('Is Successful').isExecuted, $('Is Successful')?.item?.json?.output?.toJsonString(), \"\") }}\"",
         "hasOutputParser": true,
         "options": {
-          "systemMessage": "=## You are a helpful assistant with the capabilities to generate\n- Either a sequential JSON enclosed array of tool execution steps for a user's prompt to accomplish the task OR a JSON with a `directAnswer` answer if you can answer directly from your knowledge\n- You are NOT a tool executor.\n\nInstructions:\n- you are PROHIBITED from using guild/server/channel/contact display names instead of proper IDs as execution parameters.\n- If you only have a name of a guild/server/channel/contact, your TOP PRIORITY is finding the discord guild/server/channel/contact IDs.\n- try to use your knowledge of the contact list instead of calling 'discord_list_contacts'\n- try to use your knowledge of the guilds/servers list instead of calling 'discord_list_guilds'\n\nFor ANY operation that requires Discord API calls, you MUST use executionSteps:\n- Reading/list/get operations (list messages, read channel, get user info, etc.)\n- Writing/send operations (send message, etc.)\n- Finding/searching operations (find channel, search messages, etc.)\n- Any action that retrieves or modifies Discord data\n\nExamples:\n- \"list messages with user X\" → find contact ID then list messages\n- \"list channels in guild/server Y\" → find guild ID then list\n- \"list messages in the guild/server Y channel Z\" → find guild ID, list channels, then list messages of the matching channel\n- \"send a message to channel Y\" → find channel ID, then send a message\n- \"who are in my contacts?\" → list contacts\n\n## Your Knowledge of Discord Contacts:\n\n{{ $json.discordContacts ? $json.discordContacts.toJsonString() : '[]' }}\n\n## Your Knowledge of Your Own Profile:\n\n{{ $json.myProfile?.toJsonString() ?? 'Error! No Profile Info' }}\n\n## Your Knowledge of Discord Servers/Guilds:\n\n{{ $json.serversOrGuilds ? $json.serversOrGuilds.toJsonString() : '[]' }}\n\n## Your Knowledge of Recommended Playbook Play: \n\n{{ $json.playbookRecommendations.toJsonString() }}\n\n## Your Knowledge of Recommended Tools to Use:\n\n{{ $json.toolRecommendations.toJsonString() }}\n",
+          "systemMessage": "=## You are a helpful assistant with the capabilities to generate\n- Either a sequential JSON enclosed array of tool execution steps for a user's prompt to accomplish the task OR a JSON with a `directAnswer` answer if you can answer directly from your knowledge\n- You are NOT a tool executor.\n\nInstructions:\n- you are PROHIBITED from using guild/server/channel/contact display names instead of proper IDs as execution parameters.\n- If you only have a name of a guild/server/channel/contact, your TOP PRIORITY is finding the discord guild/server/channel/contact IDs.\n- try to use your knowledge of the contact list instead of calling 'discord_list_contacts'\n- try to use your knowledge of the guilds/servers list instead of calling 'discord_list_guilds'\n\nFor ANY operation that requires Discord API calls, you MUST use executionSteps:\n- Reading/list/get operations (list messages, read channel, get user info, etc.)\n- Writing/send operations (send message, etc.)\n- Finding/searching operations (find channel, search messages, etc.)\n- Any action that retrieves or modifies Discord data\n\nExamples:\n- \"list messages with user X\" → find contact ID then list messages\n- \"list channels in guild/server Y\" → find guild ID then list\n- \"list messages in the guild/server Y channel Z\" → find guild ID, list channels, then list messages of the matching channel\n- \"send a message to channel Y\" → find channel ID, then send a message\n- \"who are in my contacts?\" → list contacts\n\n## Your Knowledge of Discord Contacts:\n\n{{ $json.context.discordContacts?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Your Own Profile:\n\n{{ $json.context.myProfile?.toJsonString() ?? 'Error! No Profile Info' }}\n\n## Your Knowledge of Discord Servers/Guilds:\n\n{{ $json.context.serversOrGuilds?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Recommended Playbook Play: \n\n{{ $json.context.playbookRecommendations?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Recommended Tools to Use:\n\n{{ $json.context.toolRecommendations?.toJsonString() ?? '[]' }}\n",
           "returnIntermediateSteps": true
         }
       },
@@ -109,7 +109,7 @@
       "typeVersion": 2.2,
       "position": [
         48,
-        -1232
+        -1408
       ],
       "id": "4d12a4dd-3b4f-472b-a944-6265ad99de9e",
       "name": "Execution Planner AI Agent"
@@ -124,7 +124,7 @@
       "typeVersion": 1.3,
       "position": [
         248,
-        -1008
+        -1184
       ],
       "id": "fc946901-08ae-4ac6-b072-a8d59798086f",
       "name": "Execution Plan Output Parser"
@@ -140,7 +140,7 @@
       "typeVersion": 1,
       "position": [
         180,
-        -800
+        -976
       ],
       "id": "c79482a2-0b52-475c-a1d5-8f92e6b322e2",
       "name": "Gemini Model (Execution Planner)",
@@ -217,7 +217,8 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "userPrompt": "={{ $json.userPrompt }}"
+            "userPrompt": "={{ $json.userPrompt }}",
+            "previousAttempt": "={{ $json.previousAttempt ?? {} }}"
           },
           "matchingColumns": [
             "userPrompt"
@@ -231,6 +232,16 @@
               "display": true,
               "canBeUsedToMatch": true,
               "type": "string",
+              "removed": false
+            },
+            {
+              "id": "previousAttempt",
+              "displayName": "previousAttempt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "object",
               "removed": false
             }
           ],
@@ -320,7 +331,7 @@
         "text": "=## User's prompt input:\n\n\"{{ $('Enrich With Discord Context').item.json.userPrompt }}\"\n\n## Generated output: \n\n\"{{ $json.executionSteps?.toJsonString() ?? $('Has a direct answer?').item.json.output.directAnswer }}\"\n",
         "hasOutputParser": true,
         "options": {
-          "systemMessage": "=You are SOLELY a AI generated answer validator. You are NOT a tool executor. \n\n# IMPORTANT:\n- You just judge the user's prompt vs the generated output answer and output as a {} object.\n- If there is no Generated output, it's automatically a failure.\n\nYou must output in JSON:\n- shouldRetry: boolean\n- retryStrategy: \"refine_prompt\" | \"change_approach\" | \"add_context\" | \"none\"\n- reasoning: string\n- directAnswer: string\n\n# If you receive an already processed Direct Anwer to the user's prompt: put that in the `directAnswer` of your output, and pass the validation.\n\n# If you receive a MCP tool execution result array: \nONLY IF the execution results doesn't trivially answer the user prompt AND you can confidently answer the question, use `directAnswer` to output an accurate answer based on the available execution results.\n\n## Your Knowledge of Discord Contacts:\n\n{{ $('Enrich With Discord Context').item.json.discordContacts?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Discord Servers/Guilds:\n\n{{ $('Enrich With Discord Context').item.json.serversOrGuilds?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Your Own Profile:\n\n{{ $('Enrich With Discord Context').item.json.myProfile?.toJsonString() ?? 'Error! No Profile Info' }}\n\n## Your Knowledge of Recommended Tools to Use:\n\n{{ $('Enrich With Discord Context').item.json.toolRecommendations.toJsonString() }}\n"
+          "systemMessage": "=You are SOLELY a AI generated answer validator. You are NOT a tool executor. \n\n# IMPORTANT:\n- You just judge the user's prompt vs the generated output answer and output as a {} object.\n- If there is no Generated output, it's automatically a failure.\n\nYou must output in JSON:\n- shouldRetry: boolean\n- retryStrategy: \"refine_prompt\" | \"change_approach\" | \"add_context\" | \"none\"\n- reasoning: string\n- directAnswer: string\n\n# If you receive an already processed Direct Anwer to the user's prompt: put that in the `directAnswer` of your output, and pass the validation.\n\n# If you receive a MCP tool execution result array: \nONLY IF the execution results doesn't trivially answer the user prompt AND you can confidently answer the question, use `directAnswer` to output an accurate answer based on the available execution results.\n\n## Your Knowledge of Discord Contacts:\n\n{{ $('Enrich With Discord Context').item.json.context.discordContacts?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Discord Servers/Guilds:\n\n{{ $('Enrich With Discord Context').item.json.context.serversOrGuilds?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Your Own Profile:\n\n{{ $('Enrich With Discord Context').item.json.context.myProfile?.toJsonString() ?? 'Error! No Profile Info' }}\n\n## Your Knowledge of Recommended Tools to Use:\n\n{{ $('Enrich With Discord Context').item.json.context.toolRecommendations.toJsonString() }}\n"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -368,66 +379,6 @@
       "name": "Format Final Output"
     },
     {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "0decf8ed-6eb3-43cb-9428-6cb5249b2c29",
-              "name": "userPrompt",
-              "value": "={{ $('Enrich With Discord Context').item.json.userPrompt }}",
-              "type": "string"
-            },
-            {
-              "id": "15105e4a-8781-4d90-9fd6-516aa8736b83",
-              "name": "serversOrGuilds",
-              "value": "={{ $('Enrich With Discord Context').item.json.serversOrGuilds }}",
-              "type": "array"
-            },
-            {
-              "id": "325b70b0-5825-41a8-80ca-fa6628b809ec",
-              "name": "discordContacts",
-              "value": "={{ $('Enrich With Discord Context').item.json.discordContacts }}",
-              "type": "array"
-            },
-            {
-              "id": "ab31dbdd-4621-466c-b2b6-22ee3664cdfa",
-              "name": "toolRecommendations",
-              "value": "={{ $('Enrich With Discord Context').item.json.toolRecommendations }}",
-              "type": "array"
-            },
-            {
-              "id": "9a661cf5-119c-4a3e-a137-bd70f147e43b",
-              "name": "playbookRecommendations",
-              "value": "={{ $('Enrich With Discord Context').item.json.playbookRecommendations }}",
-              "type": "array"
-            },
-            {
-              "id": "601f97fa-5ac4-49d5-b7ff-4498fc45b3ec",
-              "name": "allRelaventTools",
-              "value": "={{ $('Enrich With Discord Context').item.json.allRelaventTools }}",
-              "type": "array"
-            },
-            {
-              "id": "db2debae-df3c-4dc9-bbc1-4e8a9259c92d",
-              "name": "=previousAttemptFeedback",
-              "value": "={{ $json.output ?? null }}",
-              "type": "object"
-            }
-          ]
-        },
-        "includeOtherFields": true,
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1956,
-        -1104
-      ],
-      "id": "3fed03a8-c1d7-47a7-aaa9-cdce67f2fd74",
-      "name": "Prepare Retry Attempt"
-    },
-    {
       "parameters": {},
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
@@ -469,10 +420,39 @@
       "typeVersion": 1.3,
       "position": [
         120,
-        -1008
+        -1184
       ],
       "id": "7b08e3df-3525-412b-8563-ff32b122f63b",
       "name": "Execution Planning Memory"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "12099019-73e3-4d7d-9a3e-ae6101e4ede3",
+              "name": "userPrompt",
+              "value": "={{ $('When Executed by Another Workflow').item.json.userPrompt }}",
+              "type": "string"
+            },
+            {
+              "id": "f59a7d1a-f3c6-45f5-bcac-2508d5625233",
+              "name": "previousAttempt",
+              "value": "={{ $json.output }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1956,
+        -1104
+      ],
+      "id": "79bf2852-a5b3-42af-b671-6a220ba9bf75",
+      "name": "Edit Fields"
     }
   ],
   "connections": {
@@ -587,7 +567,7 @@
         ],
         [
           {
-            "node": "Prepare Retry Attempt",
+            "node": "Edit Fields",
             "type": "main",
             "index": 0
           }
@@ -627,17 +607,6 @@
         ]
       ]
     },
-    "Prepare Retry Attempt": {
-      "main": [
-        [
-          {
-            "node": "Execution Planner AI Agent",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Gemini Model (Validator)": {
       "ai_languageModel": [
         [
@@ -664,6 +633,17 @@
           }
         ]
       ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Enrich With Discord Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -677,13 +657,13 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "userPrompt": "Get last 3 messages of each wandrlust admin & dev channels"
+          "userPrompt": "list last 5 dms with sebastian"
         }
       }
     ]
   },
-  "versionId": "38e781f3-6661-4563-b0f8-15d85336e177",
-  "versionCounter": 231,
+  "versionId": "ec6d4cd5-3a31-4c4f-987c-0c15a445cda7",
+  "versionCounter": 251,
   "triggerCount": 0,
   "tags": [
     {

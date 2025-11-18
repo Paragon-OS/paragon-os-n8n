@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-18T16:11:23.000Z",
+  "updatedAt": "2025-11-18T18:14:55.000Z",
   "createdAt": "2025-11-12T21:20:27.994Z",
   "id": "zBL0JT7t26pK2x95",
   "name": "[HELPERS] Discord Context Enricher",
@@ -25,7 +25,7 @@
       "typeVersion": 3.4,
       "position": [
         -1120,
-        664
+        784
       ],
       "id": "config-cache-ttl",
       "name": "Cache Config"
@@ -246,6 +246,10 @@
           "values": [
             {
               "name": "userPrompt"
+            },
+            {
+              "name": "previousAttempt",
+              "type": "object"
             }
           ]
         }
@@ -254,7 +258,7 @@
       "typeVersion": 1.1,
       "position": [
         -1344,
-        664
+        784
       ],
       "id": "6d835265-7154-4f78-a7ea-70662bc484b2",
       "name": "When Executed by Another Workflow",
@@ -571,14 +575,14 @@
       "parameters": {
         "mode": "combine",
         "combineBy": "combineByPosition",
-        "numberInputs": 6,
+        "numberInputs": 7,
         "options": {}
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
         0,
-        432
+        488
       ],
       "id": "db8dbe1c-55ef-4f6c-b1a9-44e450d327ec",
       "name": "Context Aggregator"
@@ -614,7 +618,7 @@
       "typeVersion": 3.4,
       "position": [
         -224,
-        832
+        928
       ],
       "id": "40abd333-b5b5-495f-b047-0a034ce5b67f",
       "name": "Discord Playbook"
@@ -629,7 +633,7 @@
       "typeVersion": 1.3,
       "position": [
         300,
-        896
+        968
       ],
       "id": "6b81163c-5a17-4ed8-adf9-99d524005b4b",
       "name": "Context Optimizer Output Parser"
@@ -637,7 +641,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ $json.userPrompt }}",
+        "text": "=User Prompt:\n{{ $json.userPrompt }}\n\n{{ $json.previousAttempt.isNotEmpty() && `There has been a failed previous attempt: \\n\\n` + $json.previousAttempt.toJsonString() }}",
         "hasOutputParser": true,
         "options": {
           "systemMessage": "=## You are a helpful assistant with the capabilities to decide & output\n- An optimal, enriched version of the user prompt with less ambiguities in wording and identifiers (include userIds, guildIds).\n- Recommend 'plays' from the playbook as an array of play-names (e.g. [\"dm_contact_by_name\", \"search_topic_in_channel_and_summarize\"])\n- Based on the plays you picked, Recommend 'toolsToUse' from the tool catalog as an array of tool-names (e.g. [\"discord_read_channel\", \"discord_send_message\"])\n- Based on the plays you picked, Recommend 'toolsNotRelated' by picking an completely unrelated list of tool names to EXCLUDE from the full tool list to save context.\n- DO NOT HILLUCINATE Ids, tool-names & play-names\n- Be aware of the diffrence between UNREAD & UNRESPONDED\n\n## Your Knowledge of The Discord Playbook:\n\n{{ $json.discordPlaybook ? $json.discordPlaybook.toJsonString() : '[]' }}\n\n## Your Knowledge of Discord Contacts:\n\n{{ $json.discordContacts ? $json.discordContacts.toJsonString() : '[]' }}\n\n## Your Knowledge of Discord Servers/Guilds:\n\n{{ $json.serversOrGuilds ? $json.serversOrGuilds.toJsonString() : '[]' }}\n\n## Your Knowledge of Available Discord API MCP tools:\n\n{{ $json.tools ? $json.tools.toJsonString() : '[]' }}\n\n## Your own discord profile:\n\n{{ $json.myProfile?.toJsonString() ?? 'No profile available' }}",
@@ -648,66 +652,22 @@
       "typeVersion": 2.2,
       "position": [
         224,
-        672
+        744
       ],
       "id": "5b3749cc-4b46-4285-988a-1c91cbaf9928",
       "name": "Context Optimizer AI Agent"
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "c04f7e88-7103-45f5-8b5d-6a30503e61b4",
-              "name": "userPrompt",
-              "value": "={{ $json.output.prompt }}",
-              "type": "string"
-            },
-            {
-              "id": "34bcd304-8d1e-4815-bf00-f0f91ca0a829",
-              "name": "serversOrGuilds",
-              "value": "={{ $json.serversOrGuilds }}",
-              "type": "array"
-            },
-            {
-              "id": "5a3fa6e2-058b-434b-95a0-872aaabedce9",
-              "name": "discordContacts",
-              "value": "={{ $json.discordContacts }}",
-              "type": "array"
-            },
-            {
-              "id": "49e373d2-9111-4b16-9d40-cc0070e11a2b",
-              "name": "toolRecommendations",
-              "value": "={{ $json.tools.filter(tool => $json.output.toolsToUse?.includes(tool.name)) }}",
-              "type": "array"
-            },
-            {
-              "id": "b5a7ad03-dd43-4382-9f27-5f72a175aaa6",
-              "name": "playbookRecommendations",
-              "value": "={{ $json.discordPlaybook.filter(play => $json.output.plays?.includes(play.name)) }}",
-              "type": "array"
-            },
-            {
-              "id": "375a2a0a-e41a-450b-b698-9733995e11a5",
-              "name": "allRelaventTools",
-              "value": "={{ $json.tools.filter(tool => !$json.output.toolsNotRelated?.includes(tool.name)) }}",
-              "type": "array"
-            },
-            {
-              "id": "d629caae-37d3-4c0f-b1aa-77501b1502d2",
-              "name": "myProfile",
-              "value": "={{ $json.myProfile }}",
-              "type": "object"
-            }
-          ]
-        },
+        "mode": "raw",
+        "jsonOutput": "={\n  \"userPrompt\": {{ $json.output.prompt.toJsonString() }},\n  \"context\": {\n      \"serversOrGuilds\": {{ $json.serversOrGuilds }},\n      \"discordContacts\": {{ $json.discordContacts }},\n      \"toolRecommendations\": {{ $json.tools.filter(tool => $json.output.toolsToUse?.includes(tool.name)) }},\n      \"playbookRecommendations\": {{ $json.discordPlaybook.filter(play => $json.output.plays?.includes(play.name)) }},\n      \"allRelaventTools\": {{ $json.tools.filter(tool => !$json.output.toolsNotRelated?.includes(tool.name)) }},\n      \"myProfile\": {{ $json.myProfile }}\n  }\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
         892,
-        496
+        568
       ],
       "id": "6f21e6e0-e873-4205-915b-7434c660a220",
       "name": "Prepare Planner Context"
@@ -722,7 +682,7 @@
       "typeVersion": 1,
       "position": [
         296,
-        1104
+        1176
       ],
       "id": "10bb4322-a169-4562-b993-64d4a576a396",
       "name": "Gemini Model (Context Optimizer)",
@@ -751,7 +711,7 @@
       "typeVersion": 3.4,
       "position": [
         -224,
-        1024
+        1120
       ],
       "id": "69d1de78-3e6d-46de-b38c-507805bca509",
       "name": "User Prompt Extractor"
@@ -766,7 +726,7 @@
       "typeVersion": 3.2,
       "position": [
         668,
-        496
+        568
       ],
       "id": "70097737-a191-431e-82ab-0dbcc46ece9d",
       "name": "Merge Context with Optimized Prompt"
@@ -777,7 +737,7 @@
       "typeVersion": 1,
       "position": [
         1116,
-        496
+        568
       ],
       "id": "58391c37-e320-4f43-9a54-1e8490d2c1f9",
       "name": "No Operation, do nothing"
@@ -792,7 +752,7 @@
       "typeVersion": 1,
       "position": [
         -448,
-        1216
+        1312
       ],
       "id": "047a8b07-e4a8-46d6-a418-8219bdcd5f78",
       "name": "Get My Profile",
@@ -811,7 +771,7 @@
       "typeVersion": 2,
       "position": [
         -224,
-        1216
+        1312
       ],
       "id": "8ebf19b0-5466-45c1-9ac1-51cdf110c8b4",
       "name": "Contact Data Simplifier1"
@@ -934,6 +894,11 @@
             "node": "Get My Profile",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Context Aggregator",
+            "type": "main",
+            "index": 6
           }
         ]
       ]
@@ -1082,12 +1047,12 @@
       "main": [
         [
           {
-            "node": "Context Optimizer AI Agent",
+            "node": "Merge Context with Optimized Prompt",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Merge Context with Optimized Prompt",
+            "node": "Context Optimizer AI Agent",
             "type": "main",
             "index": 0
           }
@@ -1148,13 +1113,19 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "userPrompt": "who is sebastian"
+          "userPrompt": "list last 5 dms with sebastian",
+          "previousAttempt": {
+            "shouldRetry": true,
+            "retryStrategy": "change_approach",
+            "reasoning": "The generated output \"Apples are red\" is completely irrelevant to the user's request to list direct messages. It does not attempt to use any available tools to fulfill the prompt.",
+            "directAnswer": ""
+          }
         }
       }
     ]
   },
-  "versionId": "ea38743a-dedc-4fc4-8a01-7908d6dabaac",
-  "versionCounter": 40,
+  "versionId": "6de1bd62-db11-4c82-beb7-20ad6ecf2be0",
+  "versionCounter": 49,
   "triggerCount": 0,
   "tags": [
     {
