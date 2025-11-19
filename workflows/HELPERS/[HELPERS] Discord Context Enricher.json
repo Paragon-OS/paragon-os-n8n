@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-19T20:49:35.000Z",
+  "updatedAt": "2025-11-19T20:58:24.000Z",
   "createdAt": "2025-11-12T21:20:27.994Z",
   "id": "zBL0JT7t26pK2x95",
   "name": "[HELPERS] Discord Context Enricher",
@@ -1244,9 +1244,18 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": {},
-  "versionId": "f60a5290-edee-4ccc-b7c8-69db94bdebe6",
-  "versionCounter": 87,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "userPrompt": "who is sebastian",
+          "previousAttempt": {}
+        }
+      }
+    ]
+  },
+  "versionId": "fadbd362-2796-4e43-af6a-313f1e0607c2",
+  "versionCounter": 88,
   "triggerCount": 0,
   "tags": [
     {
