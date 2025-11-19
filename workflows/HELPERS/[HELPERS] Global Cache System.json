@@ -180,10 +180,10 @@
               "id": "03943791-3760-46e3-ac12-028fdbd5b440",
               "operator": {
                 "type": "dateTime",
-                "operation": "after"
+                "operation": "before"
               },
-              "leftValue": "={{ $now }}",
-              "rightValue": "={{ $json.ttl }}"
+              "leftValue": "={{ $json.ttl }}",
+              "rightValue": "={{ $now }}"
             }
           ],
           "combinator": "and"
