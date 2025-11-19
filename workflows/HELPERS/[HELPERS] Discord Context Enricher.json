@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-19T16:42:20.000Z",
+  "updatedAt": "2025-11-19T17:22:01.000Z",
   "createdAt": "2025-11-12T21:20:27.994Z",
   "id": "zBL0JT7t26pK2x95",
   "name": "[HELPERS] Discord Context Enricher",
@@ -11,8 +11,8 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        -752,
-        256
+        -1264,
+        -496
       ],
       "id": "b1591543-d0a6-4487-b157-4528a60b414f",
       "name": "List MCP Tools",
@@ -32,8 +32,8 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        -752,
-        -32
+        -1264,
+        -784
       ],
       "id": "a2272364-e322-4a57-a5d4-f367ffc55d38",
       "name": "List Contacts",
@@ -51,8 +51,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -528,
-        -32
+        -1040,
+        -784
       ],
       "id": "e04c25bb-01e3-4637-aa93-83419fd3a1cc",
       "name": "Contact Data Simplifier"
@@ -123,8 +123,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -976,
-        568
+        -1488,
+        -184
       ],
       "id": "92809e66-0977-4b8c-9232-6db43888d156",
       "name": "Check Guild Cache",
@@ -142,7 +142,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "writeTTLms": "={{ $('Cache Config').item.json.cacheTTLms }}",
+            "writeTTLms": "={{ 30 * 60 * 1000 }}",
             "cacheKey": "discordGuilds",
             "writeValue": "={{ {serversOrGuilds: $json.guilds} }}",
             "trueToWrite": true
@@ -197,8 +197,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -304,
-        640
+        -816,
+        -112
       ],
       "id": "d1959366-cd12-4b0a-b4de-4ec8bbeddb79",
       "name": "Update Guild Cache"
@@ -210,8 +210,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -528,
-        640
+        -1040,
+        -112
       ],
       "id": "2425a730-c2b8-42fa-8440-2c14896399a0",
       "name": "Guild Data Simplifier"
@@ -237,8 +237,8 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -1648,
-        328
+        -1712,
+        -40
       ],
       "id": "6d835265-7154-4f78-a7ea-70662bc484b2",
       "name": "When Executed by Another Workflow",
@@ -312,8 +312,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -976,
-        328
+        -1488,
+        -424
       ],
       "id": "7d689a30-94d3-4015-a454-08afb2669801",
       "name": "Check Tool Cache",
@@ -326,7 +326,7 @@
           "value": "HTXqB729RFNozetP",
           "mode": "list",
           "cachedResultUrl": "/workflow/HTXqB729RFNozetP",
-          "cachedResultName": "Global Cache System"
+          "cachedResultName": "[HELPERS] Global Cache System"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -385,8 +385,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -976,
-        40
+        -1488,
+        -712
       ],
       "id": "5b80a680-cfa4-4b5a-a671-814478314e15",
       "name": "Check Contact Cache",
@@ -399,8 +399,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -528,
-        256
+        -1040,
+        -496
       ],
       "id": "96131711-c2a7-40dc-96cf-062315fe4ba9",
       "name": "Tool Data Simplifier"
@@ -417,7 +417,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "writeTTLms": "={{ $('Cache Config').item.json.cacheTTLms }}",
+            "writeTTLms": "={{ 30 * 60 * 1000 }}",
             "cacheKey": "discordTools",
             "writeValue": "={{ $json.output }}",
             "trueToWrite": true
@@ -472,8 +472,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -304,
-        256
+        -816,
+        -496
       ],
       "id": "bd6f1409-affe-480c-8189-d6acb9ce174a",
       "name": "Update Tool Cache"
@@ -485,12 +485,12 @@
           "value": "HTXqB729RFNozetP",
           "mode": "list",
           "cachedResultUrl": "/workflow/HTXqB729RFNozetP",
-          "cachedResultName": "Global Cache System"
+          "cachedResultName": "[HELPERS] Global Cache System"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "writeTTLms": "={{ $('Cache Config').item.json.cacheTTLms }}",
+            "writeTTLms": "={{ 30 * 60 * 1000 }}",
             "cacheKey": "discordContacts",
             "writeValue": "={{ {discordContacts: $json.contacts} }}",
             "trueToWrite": true
@@ -545,8 +545,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -304,
-        -32
+        -816,
+        -784
       ],
       "id": "c1810def-e770-405e-92a4-5a51fbed30b9",
       "name": "Update Contact Cache"
@@ -555,14 +555,14 @@
       "parameters": {
         "mode": "combine",
         "combineBy": "combineByPosition",
-        "numberInputs": 7,
+        "numberInputs": 6,
         "options": {}
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -80,
-        368
+        -592,
+        -248
       ],
       "id": "db8dbe1c-55ef-4f6c-b1a9-44e450d327ec",
       "name": "Context Aggregator"
@@ -576,8 +576,8 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        -752,
-        640
+        -1264,
+        -112
       ],
       "id": "fe8ec60f-05ab-45d5-8a88-6f6bbed20efb",
       "name": "List Guilds/Servers",
@@ -597,8 +597,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -304,
-        832
+        -816,
+        368
       ],
       "id": "40abd333-b5b5-495f-b047-0a034ce5b67f",
       "name": "Discord Playbook"
@@ -612,8 +612,8 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        220,
-        848
+        -292,
+        216
       ],
       "id": "6b81163c-5a17-4ed8-adf9-99d524005b4b",
       "name": "Context Optimizer Output Parser"
@@ -621,7 +621,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=User Prompt:\n{{ $json.userPrompt }}\n\n{{ $json.previousAttempt.isNotEmpty() && `There has been a failed previous attempt: \\n\\n` + $json.previousAttempt.toJsonString() }}",
+        "text": "=User Prompt:\n{{ $json.userPrompt }}\n\n{{ $('When Executed by Another Workflow').item.json.previousAttempt.isNotEmpty() ? `There has been a failed previous attempt: \\n\\n` + $('When Executed by Another Workflow').item.json.previousAttempt.toJsonString() : '' }}",
         "hasOutputParser": true,
         "options": {
           "systemMessage": "=## You are a helpful assistant with the capabilities to decide & output\n- An optimal, enriched version of the user prompt with less ambiguities in wording and identifiers (include userIds, guildIds).\n- Recommend 'plays' from the playbook as an array of play-names (e.g. [\"dm_contact_by_name\", \"search_topic_in_channel_and_summarize\"])\n- Based on the plays you picked, Recommend 'toolsToUse' from the tool catalog as an array of tool-names (e.g. [\"discord_read_channel\", \"discord_send_message\"])\n- Based on the plays you picked, Recommend 'toolsNotRelated' by picking an completely unrelated list of tool names to EXCLUDE from the full tool list to save context.\n- DO NOT HILLUCINATE Ids, tool-names & play-names\n- Be aware of the diffrence between UNREAD & UNRESPONDED\n\n## Your Knowledge of The Discord Playbook:\n\n{{ $json.discordPlaybook ? $json.discordPlaybook.toJsonString() : '[]' }}\n\n## Your Knowledge of Discord Contacts:\n\n{{ $json.discordContacts ? $json.discordContacts.toJsonString() : '[]' }}\n\n## Your Knowledge of Discord Servers/Guilds:\n\n{{ $json.serversOrGuilds ? $json.serversOrGuilds.toJsonString() : '[]' }}\n\n## Your Knowledge of Available Discord API MCP tools:\n\n{{ $json.tools ? $json.tools.toJsonString() : '[]' }}\n\n## Your own discord profile:\n\n{{ $json.myProfile?.toJsonString() ?? 'No profile available' }}",
@@ -631,8 +631,8 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        144,
-        624
+        -368,
+        -8
       ],
       "id": "5b3749cc-4b46-4285-988a-1c91cbaf9928",
       "name": "Context Optimizer AI Agent"
@@ -640,14 +640,14 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "={\n  \"userPrompt\": {{ $json.output.prompt.toJsonString() }},\n  \"retryCount\": {{ $json.retryCount ?? 0 }},\n  \"context\": {\n      \"serversOrGuilds\": {{ $json.serversOrGuilds }},\n      \"discordContacts\": {{ $json.discordContacts }},\n      \"toolRecommendations\": {{ $json.tools.filter(tool => $json.output.toolsToUse?.includes(tool.name)) }},\n      \"playbookRecommendations\": {{ $json.discordPlaybook.filter(play => $json.output.plays?.includes(play.name)) }},\n      \"allRelaventTools\": {{ $json.tools.filter(tool => !$json.output.toolsNotRelated?.includes(tool.name)) }},\n      \"myProfile\": {{ $json.myProfile }},\n      \"previousAttempt\": {{ $json.previousAttempt }}\n  }\n}",
+        "jsonOutput": "={\n  \"userPrompt\": {{ $json.output.prompt.toJsonString() }},\n  \"retryCount\": {{ $json.retryCount ?? 0 }},\n  \"context\": {\n      \"serversOrGuilds\": {{ $json.serversOrGuilds }},\n      \"discordContacts\": {{ $json.discordContacts }},\n      \"toolRecommendations\": {{ $json.tools.filter(tool => $json.output.toolsToUse?.includes(tool.name)) }},\n      \"playbookRecommendations\": {{ $json.discordPlaybook.filter(play => $json.output.plays?.includes(play.name)) }},\n      \"allRelaventTools\": {{ $json.tools.filter(tool => !$json.output.toolsNotRelated?.includes(tool.name)) }},\n      \"myProfile\": {{ $json.myProfile }},\n      \"previousAttempt\": {{ $('When Executed by Another Workflow').item.json.previousAttempt }}\n  }\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        812,
-        448
+        300,
+        -184
       ],
       "id": "6f21e6e0-e873-4205-915b-7434c660a220",
       "name": "Prepare Planner Context"
@@ -661,8 +661,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        216,
-        1056
+        -296,
+        424
       ],
       "id": "10bb4322-a169-4562-b993-64d4a576a396",
       "name": "Gemini Model (Context Optimizer)",
@@ -690,8 +690,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -304,
-        1024
+        -816,
+        560
       ],
       "id": "69d1de78-3e6d-46de-b38c-507805bca509",
       "name": "User Prompt Extractor"
@@ -705,8 +705,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        588,
-        448
+        76,
+        -184
       ],
       "id": "70097737-a191-431e-82ab-0dbcc46ece9d",
       "name": "Merge Context with Optimized Prompt"
@@ -716,8 +716,8 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        1036,
-        448
+        524,
+        -184
       ],
       "id": "58391c37-e320-4f43-9a54-1e8490d2c1f9",
       "name": "No Operation, do nothing"
@@ -731,8 +731,8 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        -528,
-        1216
+        -1264,
+        176
       ],
       "id": "047a8b07-e4a8-46d6-a418-8219bdcd5f78",
       "name": "Get My Profile",
@@ -745,53 +745,162 @@
     },
     {
       "parameters": {
-        "jsCode": "// Generic simplifier function - reusable for contacts, guilds, etc.\nfunction simplifyMCPData(input, config) {\n  const {\n    dataKey,           // 'contacts' or 'guilds'\n    mcpDataKey,        // 'contacts' or 'guilds' in parsed JSON\n    mapperFunction,    // Function to map each item\n    errorMessage       // 'No valid contacts found' or 'No valid guilds found'\n  } = config;\n  \n  let rawData = [];\n  \n  try {\n    // Handle MCP response format (from List Contacts/Guilds)\n    if (input.result && input.result.content && input.result.content[0]) {\n      const parsed = JSON.parse(input.result.content[0].text);\n      rawData = parsed?.[mcpDataKey] || [];\n    }\n    // Handle cache format (direct from cache)\n    else if (input[dataKey]) {\n      rawData = Array.isArray(input[dataKey]) ? input[dataKey] : [];\n    }\n    // Handle cache output format (from cache system)\n    else if (input.output && input.output[dataKey]) {\n      rawData = Array.isArray(input.output[dataKey]) ? input.output[dataKey] : [];\n    }\n    \n    // Validate: if empty or invalid, return empty array\n    if (!Array.isArray(rawData) || rawData.length === 0) {\n      return {\n        [dataKey]: [],\n        error: errorMessage,\n        shouldFetch: true\n      };\n    }\n    \n    return {\n      [dataKey]: rawData.map(mapperFunction)\n    };\n  } catch (error) {\n    return {\n      [dataKey]: [],\n      error: error.message,\n      shouldFetch: true\n    };\n  }\n}\n\n// Store function in output for other nodes to use\nreturn {\n  simplifyMCPData: simplifyMCPData.toString()\n};"
+        "jsCode": "return {\n    myProfile: JSON.parse($input.first().json.result.content[0].text)\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1200,
-        664
-      ],
-      "id": "b876f4de-ff11-4f65-a5b5-273287612203",
-      "name": "Generic Data Simplifier Helper"
-    },
-    {
-      "parameters": {
-        "jsCode": "return {\n  myProfile: JSON.parse($input.first().json.result.content[0].text)\n};"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -304,
-        1216
+        -1040,
+        176
       ],
       "id": "8ebf19b0-5466-45c1-9ac1-51cdf110c8b4",
       "name": "User Profile Simplifier"
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "cache_ttl_ms",
-              "name": "cacheTTLms",
-              "value": "={{ 30 * 60 * 1000 }}",
-              "type": "number"
-            }
-          ]
+        "workflowId": {
+          "__rl": true,
+          "value": "HTXqB729RFNozetP",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/HTXqB729RFNozetP",
+          "cachedResultName": "[HELPERS] Global Cache System"
         },
-        "includeOtherFields": true,
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cacheKey": "discordProfile",
+            "trueToWrite": false,
+            "writeTTLms": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "trueToWrite",
+              "displayName": "trueToWrite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "cacheKey",
+              "displayName": "cacheKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "writeValue",
+              "displayName": "writeValue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "writeTTLms",
+              "displayName": "writeTTLms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
         "options": {}
       },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
       "position": [
-        -1424,
-        328
+        -1488,
+        104
       ],
-      "id": "6bd8e08f-da86-453c-a669-eb9aa2791ac0",
-      "name": "Cache Config"
+      "id": "e31480ab-a2af-4ba3-98a5-88b1ce57ad6e",
+      "name": "Check Profile Cache",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "HTXqB729RFNozetP",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/HTXqB729RFNozetP",
+          "cachedResultName": "[HELPERS] Global Cache System"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "writeTTLms": "={{ 30 * 60 * 1000 }}",
+            "cacheKey": "discordProfile",
+            "writeValue": "={{ {myProfile: $json.myProfile} }}",
+            "trueToWrite": true
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "trueToWrite",
+              "displayName": "trueToWrite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "cacheKey",
+              "displayName": "cacheKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "writeValue",
+              "displayName": "writeValue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "writeTTLms",
+              "displayName": "writeTTLms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -816,
+        176
+      ],
+      "id": "553db23f-45a2-468e-8d35-2ec1091394ce",
+      "name": "Update Profile Cache"
     }
   ],
   "connections": {
@@ -872,7 +981,32 @@
       "main": [
         [
           {
-            "node": "Cache Config",
+            "node": "Check Contact Cache",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Tool Cache",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Guild Cache",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Profile Cache",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Discord Playbook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "User Prompt Extractor",
             "type": "main",
             "index": 0
           }
@@ -965,7 +1099,7 @@
           {
             "node": "Context Aggregator",
             "type": "main",
-            "index": 3
+            "index": 4
           }
         ]
       ]
@@ -1014,7 +1148,7 @@
           {
             "node": "Context Aggregator",
             "type": "main",
-            "index": 4
+            "index": 5
           }
         ]
       ]
@@ -1068,34 +1202,27 @@
         ]
       ]
     },
-    "Generic Data Simplifier Helper": {
+    "User Profile Simplifier": {
       "main": [
         [
           {
-            "node": "Check Contact Cache",
+            "node": "Update Profile Cache",
             "type": "main",
             "index": 0
-          },
+          }
+        ]
+      ]
+    },
+    "Check Profile Cache": {
+      "main": [
+        [
           {
-            "node": "Check Tool Cache",
+            "node": "Context Aggregator",
             "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Check Guild Cache",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Discord Playbook",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "User Prompt Extractor",
-            "type": "main",
-            "index": 0
-          },
+            "index": 3
+          }
+        ],
+        [
           {
             "node": "Get My Profile",
             "type": "main",
@@ -1104,29 +1231,13 @@
         ]
       ]
     },
-    "User Profile Simplifier": {
+    "Update Profile Cache": {
       "main": [
         [
           {
             "node": "Context Aggregator",
             "type": "main",
-            "index": 5
-          }
-        ]
-      ]
-    },
-    "Cache Config": {
-      "main": [
-        [
-          {
-            "node": "Generic Data Simplifier Helper",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Context Aggregator",
-            "type": "main",
-            "index": 6
+            "index": 3
           }
         ]
       ]
@@ -1152,8 +1263,8 @@
       }
     ]
   },
-  "versionId": "c9c77987-37e4-4f62-9259-97cc27de58bc",
-  "versionCounter": 61,
+  "versionId": "c35fd6a7-27a7-465f-b91a-ab82987ad2ee",
+  "versionCounter": 85,
   "triggerCount": 0,
   "tags": [
     {
