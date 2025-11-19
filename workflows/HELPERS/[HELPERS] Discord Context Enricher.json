@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-19T17:22:01.000Z",
+  "updatedAt": "2025-11-19T20:49:35.000Z",
   "createdAt": "2025-11-12T21:20:27.994Z",
   "id": "zBL0JT7t26pK2x95",
   "name": "[HELPERS] Discord Context Enricher",
@@ -124,7 +124,7 @@
       "typeVersion": 1.3,
       "position": [
         -1488,
-        -184
+        -192
       ],
       "id": "92809e66-0977-4b8c-9232-6db43888d156",
       "name": "Check Guild Cache",
@@ -226,10 +226,6 @@
             {
               "name": "previousAttempt",
               "type": "object"
-            },
-            {
-              "name": "retryCount",
-              "type": "number"
             }
           ]
         }
@@ -238,7 +234,7 @@
       "typeVersion": 1.1,
       "position": [
         -1712,
-        -40
+        -48
       ],
       "id": "6d835265-7154-4f78-a7ea-70662bc484b2",
       "name": "When Executed by Another Workflow",
@@ -313,7 +309,7 @@
       "typeVersion": 1.3,
       "position": [
         -1488,
-        -424
+        -432
       ],
       "id": "7d689a30-94d3-4015-a454-08afb2669801",
       "name": "Check Tool Cache",
@@ -386,7 +382,7 @@
       "typeVersion": 1.3,
       "position": [
         -1488,
-        -712
+        -720
       ],
       "id": "5b80a680-cfa4-4b5a-a671-814478314e15",
       "name": "Check Contact Cache",
@@ -562,7 +558,7 @@
       "typeVersion": 3.2,
       "position": [
         -592,
-        -248
+        -256
       ],
       "id": "db8dbe1c-55ef-4f6c-b1a9-44e450d327ec",
       "name": "Context Aggregator"
@@ -612,8 +608,8 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        -292,
-        216
+        -288,
+        224
       ],
       "id": "6b81163c-5a17-4ed8-adf9-99d524005b4b",
       "name": "Context Optimizer Output Parser"
@@ -632,7 +628,7 @@
       "typeVersion": 2.2,
       "position": [
         -368,
-        -8
+        -16
       ],
       "id": "5b3749cc-4b46-4285-988a-1c91cbaf9928",
       "name": "Context Optimizer AI Agent"
@@ -640,14 +636,14 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "={\n  \"userPrompt\": {{ $json.output.prompt.toJsonString() }},\n  \"retryCount\": {{ $json.retryCount ?? 0 }},\n  \"context\": {\n      \"serversOrGuilds\": {{ $json.serversOrGuilds }},\n      \"discordContacts\": {{ $json.discordContacts }},\n      \"toolRecommendations\": {{ $json.tools.filter(tool => $json.output.toolsToUse?.includes(tool.name)) }},\n      \"playbookRecommendations\": {{ $json.discordPlaybook.filter(play => $json.output.plays?.includes(play.name)) }},\n      \"allRelaventTools\": {{ $json.tools.filter(tool => !$json.output.toolsNotRelated?.includes(tool.name)) }},\n      \"myProfile\": {{ $json.myProfile }},\n      \"previousAttempt\": {{ $('When Executed by Another Workflow').item.json.previousAttempt }}\n  }\n}",
+        "jsonOutput": "={\n  \"userPrompt\": {{ $json.output.prompt.toJsonString() }},\n  \"context\": {\n      \"serversOrGuilds\": {{ $json.serversOrGuilds }},\n      \"discordContacts\": {{ $json.discordContacts }},\n      \"toolRecommendations\": {{ $json.tools.filter(tool => $json.output.toolsToUse?.includes(tool.name)) }},\n      \"playbookRecommendations\": {{ $json.discordPlaybook.filter(play => $json.output.plays?.includes(play.name)) }},\n      \"allRelaventTools\": {{ $json.tools.filter(tool => !$json.output.toolsNotRelated?.includes(tool.name)) }},\n      \"myProfile\": {{ $json.myProfile }},\n      \"previousAttempt\": {{ $('When Executed by Another Workflow').item.json.previousAttempt }}\n  }\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        300,
-        -184
+        304,
+        -192
       ],
       "id": "6f21e6e0-e873-4205-915b-7434c660a220",
       "name": "Prepare Planner Context"
@@ -661,8 +657,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        -296,
-        424
+        -304,
+        432
       ],
       "id": "10bb4322-a169-4562-b993-64d4a576a396",
       "name": "Gemini Model (Context Optimizer)",
@@ -705,8 +701,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        76,
-        -184
+        80,
+        -192
       ],
       "id": "70097737-a191-431e-82ab-0dbcc46ece9d",
       "name": "Merge Context with Optimized Prompt"
@@ -716,8 +712,8 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        524,
-        -184
+        528,
+        -192
       ],
       "id": "58391c37-e320-4f43-9a54-1e8490d2c1f9",
       "name": "No Operation, do nothing"
@@ -823,7 +819,7 @@
       "typeVersion": 1.3,
       "position": [
         -1488,
-        104
+        112
       ],
       "id": "e31480ab-a2af-4ba3-98a5-88b1ce57ad6e",
       "name": "Check Profile Cache",
@@ -1248,23 +1244,9 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "userPrompt": "list last 5 dms with sebastian",
-          "previousAttempt": {
-            "shouldRetry": true,
-            "retryStrategy": "change_approach",
-            "reasoning": "The generated output \"Apples are red\" is completely irrelevant to the user's request to list direct messages. It does not attempt to use any available tools to fulfill the prompt.",
-            "directAnswer": ""
-          }
-        }
-      }
-    ]
-  },
-  "versionId": "c35fd6a7-27a7-465f-b91a-ab82987ad2ee",
-  "versionCounter": 85,
+  "pinData": {},
+  "versionId": "f60a5290-edee-4ccc-b7c8-69db94bdebe6",
+  "versionCounter": 87,
   "triggerCount": 0,
   "tags": [
     {
