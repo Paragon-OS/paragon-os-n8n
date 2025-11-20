@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-18T17:08:40.000Z",
+  "updatedAt": "2025-11-20T20:26:47.000Z",
   "createdAt": "2025-11-06T23:04:10.688Z",
   "id": "z1Ry4y4k5dGR0BqR",
   "name": "ParagonOS Manager",
@@ -110,7 +110,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3,
       "position": [
-        -168,
+        -104,
         -144
       ],
       "id": "e572d52c-0585-473c-84aa-34fc1b8ee691",
@@ -141,11 +141,54 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        240,
+        368,
         -144
       ],
       "id": "b435c3de-9724-4add-bbbe-a0f0eeea066e",
       "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "description": "={{ `\nIntelligently plans and executes Discord operations using cached context and AI-powered sequencing.\\n\\n# How It Works:\\n\\n1. **Context Enrichment**: Automatically retrieves and caches Discord contacts, guilds/servers, channels, available MCP tools, and your profile. Uses a 30-minute cache to minimize API calls.\\n\\n2. **AI Planning**: Analyzes your request against a Discord playbook of common workflows (DMing contacts, catching up on channels, replying to pending messages, searching topics, editing/deleting messages, downloading attachments, triaging guild channels). Recommends relevant tools and generates either:\\n   - A direct answer (if no API calls needed)\\n   - A sequential execution plan with specific MCP tool calls\\n\\n3. **Sequential Execution**: Executes planned steps in order, passing data between steps automatically.\\n\\n4. **Validation & Retry**: Validates execution results against your original request. Automatically retries with refined approach if needed.\\n\\n# Capabilities:\\n\\nRead messages (channels/DMs with pagination, date filtering), search messages, send/edit/delete messages with attachments, download attachments, list guilds/servers/channels/contacts/members, search contacts, get pending channels/DMs (messages after your last reply), manage whitelist/blacklist filters. Supports both server channels and direct messages.\n`}}",
+        "workflowId": {
+          "__rl": true,
+          "value": "vfcxqLBDDMKL5lnG",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/vfcxqLBDDMKL5lnG",
+          "cachedResultName": "Discord MCP Client Sequencer"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `Natural language request for Discord operations. Examples: 'Check for unreplied messages in wandrlust admin channel', 'DM sebastian about the meeting', 'What did people say about the launch in metarune-labs?', 'Reply to my pending DMs', 'List all members in the dev server'`, 'string') }}"
+          },
+          "matchingColumns": [
+            "userPrompt"
+          ],
+          "schema": [
+            {
+              "id": "userPrompt",
+              "displayName": "userPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        160,
+        80
+      ],
+      "id": "77779f7b-6217-46a5-a355-4cb35d2e935a",
+      "name": "Telegram Agent with Caching"
     }
   ],
   "connections": {
@@ -214,6 +257,17 @@
           }
         ]
       ]
+    },
+    "Telegram Agent with Caching": {
+      "ai_tool": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -232,8 +286,8 @@
       }
     ]
   },
-  "versionId": "1671b678-9667-4b81-bebb-0371b77cb342",
-  "versionCounter": 83,
+  "versionId": "1df1ce11-a061-4c99-8665-48cb9cc74c0e",
+  "versionCounter": 84,
   "triggerCount": 0,
   "tags": [
     {

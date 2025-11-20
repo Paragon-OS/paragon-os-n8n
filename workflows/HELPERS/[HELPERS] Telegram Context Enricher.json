@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-19T21:37:03.000Z",
+  "updatedAt": "2025-11-20T20:21:03.000Z",
   "createdAt": "2025-11-12T21:13:55.082Z",
   "id": "WFlhiFmm1Tt6ICRM",
   "name": "[HELPERS] Telegram Context Enricher",
@@ -18,7 +18,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "cacheKey": "telegramGuilds",
+            "cacheKey": "telegramChannels",
             "trueToWrite": false,
             "writeTTLms": 0
           },
@@ -154,7 +154,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.first().json;\n// Generic helper function (inline)\nfunction simplifyMCPData(input, dataKey, mcpDataKey, mapper, errorMsg) {\n  let rawData = [];\n  try {\n    if (input.result?.content?.[0]) {\n      const parsed = JSON.parse(input.result.content[0].text);\n      rawData = parsed?.[mcpDataKey] || [];\n\n    } else if (input[dataKey]) {\n      rawData = Array.isArray(input[dataKey]) ? input[dataKey] : [];\n    } else if (input.output?.[dataKey]) {\n      rawData = Array.isArray(input.output[dataKey]) ? input.output[dataKey] : [];\n    }\n    \n    if (!Array.isArray(rawData) || rawData.length === 0) {\n      return { [dataKey]: [], error: errorMsg, shouldFetch: true };\n    }\n    \n    return { [dataKey]: rawData.map(mapper) };\n  } catch (error) {\n    return { [dataKey]: [], error: error.message, shouldFetch: true };\n  }\n}\n\n// Use it\nreturn simplifyMCPData(\n  input,\n  'channels',\n  'items',\n  (g) => ({\n    id: g.id,\n    name: g.name,\n    members: g.memberCount,\n    kind: g.kind,\n    unread: g.unread,\n    lastMessage: g.last_message\n  }),\n  'No valid guilds found'\n);"
+        "jsCode": "const input = $input.first().json;\n// Generic helper function (inline)\nfunction simplifyMCPData(input, dataKey, mcpDataKey, mapper, errorMsg) {\n  let rawData = [];\n  try {\n    if (input.result?.content?.[0]) {\n      const parsed = JSON.parse(input.result.content[0].text);\n      rawData = parsed?.[mcpDataKey] || [];\n\n    } else if (input[dataKey]) {\n      rawData = Array.isArray(input[dataKey]) ? input[dataKey] : [];\n    } else if (input.output?.[dataKey]) {\n      rawData = Array.isArray(input.output[dataKey]) ? input.output[dataKey] : [];\n    }\n    \n    if (!Array.isArray(rawData) || rawData.length === 0) {\n      return { [dataKey]: [], error: errorMsg, shouldFetch: true };\n    }\n    \n    return { [dataKey]: rawData.map(mapper) };\n  } catch (error) {\n    return { [dataKey]: [], error: error.message, shouldFetch: true };\n  }\n}\n\n// Use it\nreturn simplifyMCPData(\n  input,\n  'channels',\n  'items',\n  (g) => ({\n    id: g.id,\n    name: g.name,\n    members: g.memberCount,\n    kind: g.kind,\n    unread: g.unread,\n    //lastMessage: g.last_message\n  }),\n  'No valid guilds found'\n);"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -194,13 +194,13 @@
     {
       "parameters": {
         "schemaType": "manual",
-        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"prompt\": {\n      \"type\": \"string\",\n      \"description\": \"The optimized, less ambiguous user prompt\"\n    },\n    \"plays\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of recommended plays from the playbook to accomplish the task\"\n    },\n    \"toolsToUse\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of recommended tool names required to execute the task\"\n    },\n     \"toolsNotRelated\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of tool names not at all relavent to execute the task\"\n    }\n  },\n  \"required\": [\"prompt\"],\n  \"additionalProperties\": false\n}",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"prompt\": {\n      \"type\": \"string\",\n      \"description\": \"The optimized, less ambiguous user prompt\"\n    },\n    \"plays\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of recommended plays from the playbook to accomplish the task\"\n    },\n    \"toolsToUse\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of recommended tool names required to execute the task\"\n    },\n    \"matchingContacts\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\"\n      },\n      \"description\": \"List of contacts with potentially matching display names specified in the task\"\n    },\n   \"toolsNotRelated\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of tool names not at all relavent to execute the task\"\n    }\n  },\n  \"required\": [\"prompt\"],\n  \"additionalProperties\": false\n}",
         "autoFix": true
       },
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        400,
+        528,
         1792
       ],
       "id": "13b29c50-3251-47a2-b931-53719c758a86",
@@ -212,7 +212,7 @@
         "text": "=User Prompt:\n{{ $json.userPrompt }}\n\n{{ $('When Executed by Another Workflow').item.json.previousAttempt.isNotEmpty() ? `There has been a failed previous attempt: \\n\\n` + $('When Executed by Another Workflow').item.json.previousAttempt.toJsonString() : '' }}",
         "hasOutputParser": true,
         "options": {
-          "systemMessage": "=## You are a helpful assistant with the capabilities to decide & output\n- An optimal, enriched version of the user prompt with less ambiguities in wording and identifiers (include user_ids, chat_ids).\n- Recommend 'plays' from the playbook as an array of play-names (e.g. [\"message_contact_by_name\", \"search_topic_in_chat_and_summarize\"])\n- Based on the plays you picked, Recommend 'toolsToUse' from the tool catalog as an array of tool-names (e.g. [\"telegram_list_messages\", \"telegram_send_message\"])\n- Based on the plays you picked, Recommend 'toolsNotRelated' by picking a completely unrelated list of tool names to EXCLUDE from the full tool list to save context.\n- DO NOT HALLUCINATE chat_ids, user_ids, tool-names & play-names\n- Be aware of the difference between UNREAD & UNRESPONDED (pending chats may be unread OR last message was inbound)\n- Remember that Telegram uses chat_id for all conversations (users, groups, channels) unlike Discord's separate userId/channelId pattern\n\n## Your Knowledge of The Telegram Playbook:\n\n{{ $json.telegramPlaybook?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Telegram Contacts:\n\n{{ $json.telegramContacts?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Telegram Channels:\n\n{{ $json.channels?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Available Telegram API MCP tools:\n\n{{ $json.tools?.toJsonString() ?? '[]' }}\n\n## Your own Telegram profile:\n\n{{ $json.myProfile?.toJsonString() ?? 'No profile available' }}",
+          "systemMessage": "=## You are a helpful assistant with the capabilities to decide & output\n- An optimal, enriched version of the user prompt with less ambiguities in wording and identifiers (include user_ids, chat_ids).\n- Tool calling to fuzzy search for telegram contacts to resolve telegram display names.\n- Recommend 'plays' from the playbook as an array of play-names (e.g. [\"message_contact_by_name\", \"search_topic_in_chat_and_summarize\"])\n- Based on the plays you picked, Recommend 'toolsToUse' from the tool catalog as an array of tool-names (e.g. [\"telegram_list_messages\", \"telegram_send_message\"])\n- Based on the plays you picked, Recommend 'toolsNotRelated' by picking a completely unrelated list of tool names to EXCLUDE from the full tool list to save context.\n- DO NOT HALLUCINATE chat_ids, user_ids, tool-names & play-names\n- Be aware of the difference between UNREAD & UNRESPONDED (pending chats may be unread OR last message was inbound)\n- Remember that Telegram uses chat_id for all conversations (users, groups, channels) unlike Discord's separate userId/channelId pattern\n\n## Your Knowledge of The Telegram Playbook:\n\n{{ $json.telegramPlaybook?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Telegram Contacts:\n\n{{ $json.telegramContacts?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Telegram Channels:\n\n{{ $json.channels?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Available Telegram API MCP tools:\n\n{{ $json.tools?.toJsonString() ?? '[]' }}\n\n## Your own Telegram profile:\n\n{{ $json.myProfile?.toJsonString() ?? 'No profile available' }}",
           "returnIntermediateSteps": false
         }
       },
@@ -228,13 +228,13 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "={\n  \"userPrompt\": {{ $json.output.prompt.toJsonString() }},\n  \"context\": {\n      \"telegramChannels\": {{ $json.channels }},\n      \"telegramContacts\": {{ $json.telegramContacts}},\n      \"toolRecommendations\": {{ $json.tools.filter(tool => $json.output.toolsToUse?.includes(tool.name)) }},\n      \"playbookRecommendations\": {{ $json.telegramPlaybook.filter(play => $json.output.plays?.includes(play.name)) }},\n      \"allRelaventTools\": {{ $json.tools.filter(tool => !$json.output.toolsNotRelated?.includes(tool.name)) }},\n      \"myProfile\": {{ $json.myProfile }},\n      \"previousAttempt\": {{ $('When Executed by Another Workflow').item.json.previousAttempt }}\n  }\n}",
+        "jsonOutput": "={\n  \"userPrompt\": {{ $json.output.prompt.toJsonString() }},\n  \"context\": {\n      \"telegramChannels\": {{ $json.channels }},\n      \"telegramContacts\": {{ $json.telegramContacts}},\n      \"matchingContacts\": {{ $json.output.matchingContacts }},\n      \"toolRecommendations\": {{ $json.tools.filter(tool => $json.output.toolsToUse?.includes(tool.name)) }},\n      \"playbookRecommendations\": {{ $json.telegramPlaybook.filter(play => $json.output.plays?.includes(play.name)) }},\n      \"allRelaventTools\": {{ $json.tools.filter(tool => !$json.output.toolsNotRelated?.includes(tool.name)) }},\n      \"myProfile\": {{ $json.myProfile }},\n      \"previousAttempt\": {{ $('When Executed by Another Workflow').item.json.previousAttempt }}\n  }\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        992,
+        1120,
         1392
       ],
       "id": "84c7a28b-2fb8-4b99-9721-5cb1d1869684",
@@ -242,6 +242,7 @@
     },
     {
       "parameters": {
+        "modelName": "models/gemini-2.5-pro",
         "options": {
           "temperature": 0.2
         }
@@ -249,7 +250,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        400,
+        464,
         2000
       ],
       "id": "29635f7a-4f0b-41f8-8cb1-f1f50c5790d2",
@@ -293,7 +294,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        768,
+        896,
         1392
       ],
       "id": "5f645ba0-07b4-4f1c-a7a8-556f214157e0",
@@ -818,7 +819,7 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        1216,
+        1344,
         1392
       ],
       "id": "00dc9fdc-81b6-40ed-9cbd-5d2ef5b8d40a",
@@ -828,7 +829,7 @@
       "parameters": {
         "operation": "executeTool",
         "toolName": "=telegram_list_contacts",
-        "toolParameters": "={\n  \"limit\": 20\n}"
+        "toolParameters": "={\n  \"limit\": 30\n}"
       },
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
@@ -866,7 +867,7 @@
       "parameters": {
         "operation": "executeTool",
         "toolName": "=telegram_list_chats",
-        "toolParameters": "={\n  \"limit\": 20\n}"
+        "toolParameters": "={\n  \"limit\": 40\n}"
       },
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
@@ -897,6 +898,29 @@
       ],
       "id": "b87af872-842d-4c27-98c9-68b2fbff644b",
       "name": "Telegram Playbook"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Call this tool to search for telegram contact names to find their userID, when your current knowledge doesn't know",
+        "operation": "executeTool",
+        "toolName": "telegram_search_contacts",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', `{\n  \"query\": {\n    \"type\": \"string\"\n  },\n  \"limit\": {\n    \"type\": \"integer\"\n  },\n  \"offset\": {\n    \"type\": \"integer\"\n  }\n}`, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        320,
+        1840
+      ],
+      "id": "477af021-a4bc-4be0-8206-225733a50e85",
+      "name": "Search for Telegram Contacts",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "aiYCclLDUqob5iQ0",
+          "name": "Telegram MCP Client (STDIO) account"
+        }
+      }
     }
   ],
   "connections": {
@@ -1237,13 +1261,26 @@
           }
         ]
       ]
+    },
+    "Search for Telegram Contacts": {
+      "ai_tool": [
+        [
+          {
+            "node": "Context Optimizer AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
     "executionOrder": "v1"
   },
   "staticData": null,
-  "meta": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
   "pinData": {
     "When Executed by Another Workflow": [
       {
@@ -1254,8 +1291,8 @@
       }
     ]
   },
-  "versionId": "6d77dc11-9366-4180-9f7a-766b9fdef4cd",
-  "versionCounter": 33,
+  "versionId": "0bbc8342-89fd-4f23-b70c-85d9b48824bd",
+  "versionCounter": 53,
   "triggerCount": 0,
   "tags": [
     {

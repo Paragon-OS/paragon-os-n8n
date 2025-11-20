@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2025-11-18T16:11:18.000Z",
+  "updatedAt": "2025-11-20T20:17:45.000Z",
   "createdAt": "2025-11-17T13:03:59.561Z",
   "id": "uoYXevOl4ePWKeNx",
-  "name": "[HELPERS] Discord Step Executor",
+  "name": "[HELPERS] Discord & Telegram Step Executor",
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -113,7 +113,7 @@
       "typeVersion": 3,
       "position": [
         -944,
-        616
+        760
       ],
       "id": "cd5a8d92-5e4f-4164-af15-6861fe96b4c4",
       "name": "Loop Over Execution Steps"
@@ -138,7 +138,7 @@
         "assignments": {
           "assignments": [
             {
-              "id": "ee6d0a21-266b-44c6-8536-a80f30695e6a",
+              "id": "bad98a97-9638-4b86-8bc3-f93523320a80",
               "name": "stepResult.stepOutput",
               "value": "={{ JSON.parse($json.result.content[0].text) }}",
               "type": "object"
@@ -229,7 +229,7 @@
       "typeVersion": 3.3,
       "position": [
         -720,
-        568
+        544
       ],
       "id": "a27c4d61-edcb-4f92-8f59-ed3dd8b09fcc",
       "name": "Switch"
@@ -283,6 +283,19 @@
         }
       },
       "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const jsonString = $input.first().json.result.content[0].text;\nconst parsed = JSON.parse(jsonString);\n\n// Check and wrap\nconst result = Array.isArray(parsed) \n  ? { data: parsed } \n  : parsed;\n\n$input.first().json.result.content[0].text = JSON.stringify({ json: result });\nreturn $input.first().json"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -272,
+        904
+      ],
+      "id": "070d5a92-aef4-4406-9c71-04252c3cd22a",
+      "name": "Code in JavaScript"
     }
   ],
   "connections": {
@@ -415,11 +428,22 @@
       "main": [
         [
           {
-            "node": "Loop Over Execution Steps",
+            "node": "Code in JavaScript",
             "type": "main",
             "index": 0
           }
         ],
+        [
+          {
+            "node": "Loop Over Execution Steps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
         [
           {
             "node": "Loop Over Execution Steps",
@@ -441,20 +465,20 @@
         "json": {
           "executionSteps": [
             {
-              "toolName": "discord_read_channel",
+              "toolName": "telegram_list_messages",
               "callParams": {
-                "limit": 3,
-                "userId": "1130657282364031016"
+                "chat_id": 6051734492,
+                "limit": 5
               }
             }
           ],
-          "targetMcp": "DISCORD"
+          "targetMcp": "TELEGRAM"
         }
       }
     ]
   },
-  "versionId": "2b03ab8d-8d31-4054-a360-18ea4384526e",
-  "versionCounter": 47,
+  "versionId": "1e16ed35-de26-46a2-8946-604e1aeb9af5",
+  "versionCounter": 61,
   "triggerCount": 0,
   "tags": [
     {
