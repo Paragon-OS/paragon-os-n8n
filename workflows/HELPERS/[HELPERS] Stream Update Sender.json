@@ -1,0 +1,171 @@
+{
+  "updatedAt": "2025-11-20T21:34:05.000Z",
+  "createdAt": "2025-11-20T21:29:51.803Z",
+  "id": "che6u5z0grJ4AoNr",
+  "name": "[HELPERS] Stream Update Sender",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "executionId"
+            },
+            {
+              "name": "stage"
+            },
+            {
+              "name": "status"
+            },
+            {
+              "name": "message"
+            },
+            {
+              "name": "data",
+              "type": "object"
+            },
+            {
+              "name": "streamUrl"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -144,
+        -112
+      ],
+      "id": "620a761f-a3df-4749-a6d7-1dff35c52717",
+      "name": "When Executed by Another Workflow",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.streamUrl || 'http://localhost:3001/stream/update' }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "executionId",
+              "value": "={{ $json.executionId }}"
+            },
+            {
+              "name": "stage",
+              "value": "={{ $json.stage }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ $json.status }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}"
+            },
+            {
+              "name": "data",
+              "value": "={{ $json.data }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        80,
+        -112
+      ],
+      "id": "e1fc4022-cef5-4ed3-9cfe-8dc9c2ef60cb",
+      "name": "Send Stream Update",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        304,
+        -112
+      ],
+      "id": "d0606ce0-1cc5-4db6-a518-1f26119cee01",
+      "name": "Output"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Send Stream Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Stream Update": {
+      "main": [
+        [
+          {
+            "node": "Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "executionId": "test-123",
+          "stage": "context_enrichment",
+          "status": "in_progress",
+          "message": "Fetching Discord contacts...",
+          "data": {
+            "contactsCount": 0
+          },
+          "streamUrl": "http://localhost:3001/stream/update"
+        }
+      }
+    ]
+  },
+  "versionId": "e1bcb330-64a4-4097-8661-77d25143217a",
+  "versionCounter": 3,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-11-20T21:29:51.806Z",
+      "createdAt": "2025-11-20T21:29:51.806Z",
+      "role": "workflow:owner",
+      "workflowId": "che6u5z0grJ4AoNr",
+      "projectId": "GEUEn6ArNROzJ5FY",
+      "project": {
+        "updatedAt": "2025-10-28T15:11:59.092Z",
+        "createdAt": "2025-10-28T15:08:17.462Z",
+        "id": "GEUEn6ArNROzJ5FY",
+        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null
+      }
+    }
+  ]
+}
