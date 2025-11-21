@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-20T20:17:45.000Z",
+  "updatedAt": "2025-11-21T17:06:47.000Z",
   "createdAt": "2025-11-17T13:03:59.561Z",
   "id": "uoYXevOl4ePWKeNx",
   "name": "[HELPERS] Discord & Telegram Step Executor",
@@ -286,7 +286,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const jsonString = $input.first().json.result.content[0].text;\nconst parsed = JSON.parse(jsonString);\n\n// Check and wrap\nconst result = Array.isArray(parsed) \n  ? { data: parsed } \n  : parsed;\n\n$input.first().json.result.content[0].text = JSON.stringify({ json: result });\nreturn $input.first().json"
+        "jsCode": "const jsonString = $input.first().json.result.content[0].text;\n\nif($input.first().json.result.isError){\n  return {\n    error: jsonString\n  }\n}\n\ntry{\n  const parsed = JSON.parse(jsonString);\n  // Check and wrap\n  const result = Array.isArray(parsed) \n    ? { data: parsed } \n    : parsed;\n  \n  $input.first().json.result.content[0].text = JSON.stringify({ json: result });\n  return $input.first().json\n} catch (err){\n  return {\n    error: jsonString\n  }\n}\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -465,10 +465,27 @@
         "json": {
           "executionSteps": [
             {
-              "toolName": "telegram_list_messages",
+              "toolName": "telegram_get_chat",
               "callParams": {
-                "chat_id": 6051734492,
-                "limit": 5
+                "chat_id": 6420478756
+              }
+            },
+            {
+              "toolName": "telegram_get_chat",
+              "callParams": {
+                "chat_id": 1567827880
+              }
+            },
+            {
+              "toolName": "telegram_get_chat",
+              "callParams": {
+                "chat_id": 42158468
+              }
+            },
+            {
+              "toolName": "telegram_get_chat",
+              "callParams": {
+                "chat_id": 92458973
               }
             }
           ],
@@ -477,8 +494,8 @@
       }
     ]
   },
-  "versionId": "1e16ed35-de26-46a2-8946-604e1aeb9af5",
-  "versionCounter": 61,
+  "versionId": "f720bfa7-fc5a-44e7-96b2-1d900f2c906f",
+  "versionCounter": 65,
   "triggerCount": 0,
   "tags": [
     {

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-18T16:11:33.000Z",
+  "updatedAt": "2025-11-21T00:07:04.000Z",
   "createdAt": "2025-11-06T21:54:34.704Z",
   "id": "HTXqB729RFNozetP",
   "name": "[HELPERS] Global Cache System",
@@ -196,7 +196,7 @@
       "type": "n8n-nodes-base.if",
       "position": [
         1424,
-        248
+        256
       ],
       "typeVersion": 2.2
     },
@@ -303,7 +303,7 @@
       "type": "n8n-nodes-base.set",
       "position": [
         1648,
-        296
+        304
       ],
       "typeVersion": 3.4
     },
@@ -322,7 +322,7 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "position": [
         304,
-        520
+        528
       ],
       "typeVersion": 1.2
     },
@@ -354,7 +354,7 @@
       "type": "n8n-nodes-base.dataTable",
       "position": [
         528,
-        520
+        528
       ],
       "typeVersion": 1
     }
@@ -490,18 +490,17 @@
     "When Executed by Another Workflow": [
       {
         "json": {
+          "userPrompt": "Who is sebastian on Telegram?",
+          "previousAttempt": {},
+          "cacheKey": "telegramContacts",
           "trueToWrite": false,
-          "cacheKey": "discordGuilds",
-          "writeTTLms": 1000000,
-          "writeValue": {
-            "data": "cool data"
-          }
+          "writeTTLms": 0
         }
       }
     ]
   },
-  "versionId": "f582a8bf-ed61-4194-bb97-b40e6e58a6a2",
-  "versionCounter": 7,
+  "versionId": "2de8b652-009b-455f-9934-3e4fe5b32589",
+  "versionCounter": 13,
   "triggerCount": 0,
   "tags": [],
   "shared": [

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-20T21:34:05.000Z",
+  "updatedAt": "2025-11-21T16:44:23.000Z",
   "createdAt": "2025-11-20T21:29:51.803Z",
   "id": "che6u5z0grJ4AoNr",
   "name": "[HELPERS] Stream Update Sender",
@@ -11,7 +11,8 @@
         "workflowInputs": {
           "values": [
             {
-              "name": "executionId"
+              "name": "data",
+              "type": "object"
             },
             {
               "name": "stage"
@@ -21,13 +22,6 @@
             },
             {
               "name": "message"
-            },
-            {
-              "name": "data",
-              "type": "object"
-            },
-            {
-              "name": "streamUrl"
             }
           ]
         }
@@ -36,7 +30,7 @@
       "typeVersion": 1.1,
       "position": [
         -144,
-        -112
+        -288
       ],
       "id": "620a761f-a3df-4749-a6d7-1dff35c52717",
       "name": "When Executed by Another Workflow",
@@ -45,36 +39,10 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $json.streamUrl || 'http://localhost:3001/stream/update' }}",
+        "url": "={{ $json.streamUrl || 'http://localhost:3000/api/stream/update' }}",
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "executionId",
-              "value": "={{ $json.executionId }}"
-            },
-            {
-              "name": "stage",
-              "value": "={{ $json.stage }}"
-            },
-            {
-              "name": "status",
-              "value": "={{ $json.status }}"
-            },
-            {
-              "name": "message",
-              "value": "={{ $json.message }}"
-            },
-            {
-              "name": "timestamp",
-              "value": "={{ $now.toISO() }}"
-            },
-            {
-              "name": "data",
-              "value": "={{ $json.data }}"
-            }
-          ]
-        },
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.eventBody }}",
         "options": {
           "timeout": 5000
         }
@@ -82,23 +50,27 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        80,
-        -112
+        304,
+        -288
       ],
-      "id": "e1fc4022-cef5-4ed3-9cfe-8dc9c2ef60cb",
+      "id": "23d01899-e4c6-4a3f-8c1d-d058bb42a977",
       "name": "Send Stream Update",
       "onError": "continueErrorOutput"
     },
     {
-      "parameters": {},
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n   \"eventBody\":   {\n    \"executionId\": {{ $execution.id.toJsonString() }},\n    \"stage\": {{ $json.stage.toJsonString() }},\n    \"status\": {{ $json.status.toJsonString() }},\n    \"message\": {{ $json.message.toJsonString() }},\n    \"data\": {{ $json.data?.toJsonString() }} ,\n    \"streamUrl\": \"http://localhost:3000/api/stream/update\"\n  } \n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
-        304,
-        -112
+        80,
+        -288
       ],
-      "id": "d0606ce0-1cc5-4db6-a518-1f26119cee01",
-      "name": "Output"
+      "id": "27ce6c7c-468d-4511-82b3-03f71f5b0d82",
+      "name": "Create Event Data"
     }
   ],
   "connections": {
@@ -106,18 +78,18 @@
       "main": [
         [
           {
-            "node": "Send Stream Update",
+            "node": "Create Event Data",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Send Stream Update": {
+    "Create Event Data": {
       "main": [
         [
           {
-            "node": "Output",
+            "node": "Send Stream Update",
             "type": "main",
             "index": 0
           }
@@ -134,20 +106,18 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "executionId": "test-123",
           "stage": "context_enrichment",
           "status": "in_progress",
-          "message": "Fetching Discord contacts...",
+          "message": "Thinking about your prompt...",
           "data": {
-            "contactsCount": 0
-          },
-          "streamUrl": "http://localhost:3001/stream/update"
+            "sampleField": "sampleValue"
+          }
         }
       }
     ]
   },
-  "versionId": "e1bcb330-64a4-4097-8661-77d25143217a",
-  "versionCounter": 3,
+  "versionId": "1cbb65e2-9179-4276-9221-f3a6c907ee06",
+  "versionCounter": 8,
   "triggerCount": 0,
   "tags": [],
   "shared": [
