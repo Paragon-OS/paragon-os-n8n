@@ -45,6 +45,11 @@ const SupabaseThreadListItems: FC = () => {
     return null;
   }
 
+  const handleSessionClick = (sessionId: string) => {
+    console.log("[thread-list] Clicked session:", sessionId);
+    setActiveSessionId(sessionId);
+  };
+
   return (
     <>
       {sessions.map((session) => (
@@ -53,7 +58,7 @@ const SupabaseThreadListItems: FC = () => {
           className={`aui-thread-list-item flex items-center gap-2 rounded-lg transition-all hover:bg-muted focus-visible:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none cursor-pointer ${
             activeSessionId === session.session_id ? "bg-muted" : ""
           }`}
-          onClick={() => setActiveSessionId(session.session_id)}
+          onClick={() => handleSessionClick(session.session_id)}
         >
           <div className="flex-grow px-3 py-2 text-start">
             <span className="aui-thread-list-item-title text-sm block truncate">

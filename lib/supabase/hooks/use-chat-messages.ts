@@ -58,6 +58,7 @@ export function useChatMessages(
         offset,
       });
 
+      console.log("[use-chat-messages] Fetched", fetchedMessages.length, "messages for session:", sessionId);
       setMessages(fetchedMessages);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
@@ -75,6 +76,7 @@ export function useChatMessages(
       return;
     }
 
+    console.log("[use-chat-messages] Fetching messages for session:", sessionId);
     fetchMessages();
 
     const supabase = createSupabaseClient();

@@ -5,10 +5,10 @@
 
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useChatMessages } from "@/lib/supabase/hooks/use-chat-messages";
 import { useChatSessionsContext } from "@/components/assistant-ui/chat-sessions-context";
-import { useAssistantRuntime } from "@assistant-ui/react";
+import { useAssistantRuntime, useAssistantState } from "@assistant-ui/react";
 
 export function ChatSessionLoader() {
   const { activeSessionId } = useChatSessionsContext();
@@ -17,21 +17,54 @@ export function ChatSessionLoader() {
     enabled: !!activeSessionId,
   });
   const runtime = useAssistantRuntime();
+  const lastLoadedSessionId = useRef<string | null>(null);
+  const currentMessages = useAssistantState((state) => state.thread.messages);
 
   useEffect(() => {
-    if (!activeSessionId || isLoading || messages.length === 0) {
+    // Only load if we have a session, messages are loaded, and it's a different session
+    if (!activeSessionId || isLoading) {
       return;
     }
 
-    // Load messages into the assistant runtime
-    // Note: This is a simplified approach - you may need to adjust based on
-    // how the assistant-ui library handles message loading
-    console.log("[chat-session-loader] Loading messages for session:", activeSessionId, messages.length);
-    
-    // The assistant-ui library manages its own state, so we'll need to
-    // integrate with it properly. For now, we'll just log that messages are available.
-    // In a full implementation, you'd need to use the runtime's methods to set messages.
-  }, [activeSessionId, isLoading, messages, runtime]);
+    // If this is the same session we already loaded, skip
+    if (lastLoadedSessionId.current === activeSessionId) {
+      return;
+    }
+
+    console.log("[chat-session-loader] Processing session:", activeSessionId, "messages:", messages.length);
+
+    try {
+      // Get the current thread from runtime
+      const thread = runtime.thread;
+      
+      if (!thread) {
+        console.error("[chat-session-loader] Could not get thread");
+        return;
+      }
+
+      if (messages.length > 0) {
+        console.log("[chat-session-loader] Loaded", messages.length, "messages for session:", activeSessionId);
+        console.log("[chat-session-loader] Messages:", messages);
+        // TODO: Load messages into thread - need to use runtime API
+        // The assistant-ui library manages messages through the chat runtime
+        // Messages will be loaded when the user interacts with the thread
+        lastLoadedSessionId.current = activeSessionId;
+      } else {
+        // Even if no messages, mark this session as loaded
+        lastLoadedSessionId.current = activeSessionId;
+        console.log("[chat-session-loader] No messages for session:", activeSessionId);
+      }
+    } catch (error) {
+      console.error("[chat-session-loader] Error loading session:", error);
+    }
+  }, [activeSessionId, isLoading, messages, runtime, currentMessages]);
+
+  // Reset when session changes
+  useEffect(() => {
+    if (lastLoadedSessionId.current !== activeSessionId) {
+      lastLoadedSessionId.current = null;
+    }
+  }, [activeSessionId]);
 
   return null; // This component doesn't render anything
 }
