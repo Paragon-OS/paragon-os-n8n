@@ -9,6 +9,36 @@ import { useEffect, useRef } from "react";
 import { useChatMessages } from "@/lib/supabase/hooks/use-chat-messages";
 import { useChatSessionsContext } from "@/components/assistant-ui/chat-sessions-context";
 import { useAssistantRuntime, useAssistantState } from "@assistant-ui/react";
+import type { UIMessage } from "ai";
+
+/**
+ * Convert UIMessage to format expected by thread.append()
+ * The append method expects content as an array of message parts
+ */
+function convertMessageForAppend(message: UIMessage): { role: string; content: unknown[]; id?: string } {
+  const messageRecord = message as unknown as Record<string, unknown>;
+  
+  // Extract content - can be string, array, or object
+  const content: unknown = messageRecord.content ?? messageRecord.parts;
+  
+  // Convert content to array format expected by append
+  let contentArray: unknown[];
+  if (typeof content === "string") {
+    contentArray = [{ type: "text", text: content }];
+  } else if (Array.isArray(content)) {
+    contentArray = content;
+  } else if (content && typeof content === "object") {
+    contentArray = [content];
+  } else {
+    contentArray = [{ type: "text", text: "" }];
+  }
+
+  return {
+    role: message.role,
+    content: contentArray,
+    id: message.id,
+  };
+}
 
 export function ChatSessionLoader() {
   const { activeSessionId } = useChatSessionsContext();
@@ -42,19 +72,15 @@ export function ChatSessionLoader() {
         return;
       }
 
-      // Clear existing messages when switching sessions by resetting the thread
-      if (currentMessages.length > 0 && lastLoadedSessionId.current !== null) {
-        console.log("[chat-session-loader] Clearing existing messages from previous session");
-        // Reset the thread to clear messages
-        // The assistant-ui runtime may have a reset method, or we can work with append
+      // Always reset the thread first when switching sessions to ensure clean state
+      if (lastLoadedSessionId.current !== null && lastLoadedSessionId.current !== activeSessionId) {
+        console.log("[chat-session-loader] Resetting thread for new session");
         try {
           if (typeof thread.reset === 'function') {
             thread.reset();
-          } else if (typeof thread.clear === 'function') {
-            thread.clear();
           }
         } catch (err) {
-          console.warn("[chat-session-loader] Could not clear thread, continuing anyway:", err);
+          console.warn("[chat-session-loader] Could not reset thread, continuing anyway:", err);
         }
       }
 
@@ -62,46 +88,19 @@ export function ChatSessionLoader() {
         console.log("[chat-session-loader] Loading", messages.length, "messages for session:", activeSessionId);
         
         // Load messages into the thread
-        // Try different API methods that might be available
+        // Note: We reset the thread first to ensure clean state and prevent resubmission
         try {
-          // Method 1: Try append (the actual method available on the thread)
+          // Use append to add messages - since we reset first, this should load historical messages
+          // without triggering continuation
           if (typeof thread.append === 'function') {
-            // Append each message individually
+            // Convert and append each message - the reset above ensures we start fresh
             messages.forEach((message) => {
-              thread.append(message);
+              const appendMessage = convertMessageForAppend(message);
+              thread.append(appendMessage as Parameters<typeof thread.append>[0]);
             });
-            console.log("[chat-session-loader] Used append to load messages");
-          }
-          // Method 2: Try import (might work for bulk loading)
-          else if (typeof thread.import === 'function') {
-            // Try importing messages as state
-            const state = thread.getState();
-            const importedState = {
-              ...state,
-              messages: messages,
-            };
-            thread.import(importedState);
-            console.log("[chat-session-loader] Used import to load messages");
-          }
-          // Method 3: Try appendMessages (batch) - fallback
-          else if (typeof thread.appendMessages === 'function') {
-            thread.appendMessages(messages);
-            console.log("[chat-session-loader] Used appendMessages to load messages");
-          }
-          // Method 4: Try appendMessage (individual) - fallback
-          else if (typeof thread.appendMessage === 'function') {
-            messages.forEach((message) => {
-              thread.appendMessage(message);
-            });
-            console.log("[chat-session-loader] Used appendMessage to load messages");
-          }
-          // Method 5: Try setMessages - fallback
-          else if (typeof thread.setMessages === 'function') {
-            thread.setMessages(messages);
-            console.log("[chat-session-loader] Used setMessages to load messages");
-          }
-          else {
-            console.error("[chat-session-loader] No known method to load messages into thread. Available methods:", Object.keys(thread));
+            console.log("[chat-session-loader] Used append to load messages (after reset to prevent resubmission)");
+          } else {
+            console.error("[chat-session-loader] thread.append is not available. Available methods:", Object.keys(thread));
           }
         } catch (err) {
           console.error("[chat-session-loader] Error loading messages into thread:", err);
