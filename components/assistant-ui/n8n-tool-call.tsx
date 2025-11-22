@@ -20,6 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useStreaming } from "./streaming-context";
 import { extractExecutionId } from "@/lib/n8n-client/webhook-utils";
+import { useExecutionStore } from "@/lib/execution-store";
 
 export const N8nToolCall: ToolCallMessagePartComponent = ({
   toolName,
@@ -31,6 +32,8 @@ export const N8nToolCall: ToolCallMessagePartComponent = ({
   const [isExecuting, setIsExecuting] = useState(false);
   const [isUpdatesExpanded, setIsUpdatesExpanded] = useState(false);
   const { updates } = useStreaming();
+  const registerExecution = useExecutionStore((state) => state.registerExecution);
+  const getExecution = useExecutionStore((state) => state.getExecution);
 
   // Parse arguments
   let args: Record<string, unknown> = {};
@@ -69,6 +72,22 @@ export const N8nToolCall: ToolCallMessagePartComponent = ({
     if (!resultData) return null;
     return extractExecutionId(resultData);
   }, [resultData]);
+
+  // Register execution in store when executionId is found
+  useEffect(() => {
+    if (executionId && resultData) {
+      const dataObj = resultData && typeof resultData === "object" ? resultData as Record<string, unknown> : null;
+      const workflowId = dataObj?.workflowId as string | undefined;
+      
+      registerExecution(executionId, {
+        workflowId,
+        status: resultSuccess ? "completed" : "error",
+      });
+    }
+  }, [executionId, resultData, resultSuccess, registerExecution]);
+
+  // Get execution metadata from store
+  const executionMetadata = executionId ? getExecution(executionId) : undefined;
 
   // Filter updates by executionId
   const filteredUpdates = useMemo(() => {

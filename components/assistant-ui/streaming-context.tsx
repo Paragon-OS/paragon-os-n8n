@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import type { StreamUpdate } from "@/lib/n8n-client/types";
+import { useExecutionStore } from "@/lib/execution-store";
 
 interface StreamingContextType {
   updates: StreamUpdate[];
@@ -29,6 +30,7 @@ export function StreamingProvider({ children }: StreamingProviderProps) {
   const [updates, setUpdates] = useState<StreamUpdate[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
+  const updateFromStreamUpdate = useExecutionStore((state) => state.updateFromStreamUpdate);
 
   const connect = () => {
     // Clean up any existing connection
@@ -63,6 +65,9 @@ export function StreamingProvider({ children }: StreamingProviderProps) {
           const update: StreamUpdate = data;
           console.log(`[streaming-context] 📨 Received update:`, update);
           setUpdates((prev) => [...prev, update]);
+          
+          // Auto-track execution in execution store
+          updateFromStreamUpdate(update);
         } catch (error) {
           console.error("[streaming-context] Failed to parse update:", error);
         }

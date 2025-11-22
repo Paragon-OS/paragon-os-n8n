@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useStreaming } from "./streaming-context";
+import { useExecutionStore } from "@/lib/execution-store";
 
 interface StreamMonitorProps {
   executionIds?: string[]; // Optional: filter to specific executions
@@ -12,6 +13,11 @@ export function StreamMonitor({
 }: StreamMonitorProps) {
   const { updates, isConnected, connect, disconnect, clearUpdates } = useStreaming();
   const updatesEndRef = useRef<HTMLDivElement>(null);
+  const getAllExecutions = useExecutionStore((state) => state.getAllExecutions);
+  const getStats = useExecutionStore((state) => state.getStats);
+  
+  const executions = getAllExecutions();
+  const stats = getStats();
 
   // Auto-scroll to bottom when new updates arrive
   useEffect(() => {
@@ -181,12 +187,22 @@ export function StreamMonitor({
       </div>
 
       {/* Footer */}
-      <div className="border-t p-2 text-xs text-muted-foreground text-center">
-        {filteredUpdates.length} update{filteredUpdates.length !== 1 ? "s" : ""}{" "}
-        {executionIds.length > 0 ? "shown" : "received"}
-        {executionIds.length > 0 && (
-          <span> • Filtering {executionIds.length} execution(s)</span>
-        )}
+      <div className="border-t p-2">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div>
+            {filteredUpdates.length} update{filteredUpdates.length !== 1 ? "s" : ""}{" "}
+            {executionIds.length > 0 ? "shown" : "received"}
+            {executionIds.length > 0 && (
+              <span> • Filtering {executionIds.length} execution(s)</span>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <span>Executions: {stats.total}</span>
+            {stats.running > 0 && <span className="text-orange-400">Running: {stats.running}</span>}
+            {stats.completed > 0 && <span className="text-green-400">Completed: {stats.completed}</span>}
+            {stats.error > 0 && <span className="text-red-400">Errors: {stats.error}</span>}
+          </div>
+        </div>
       </div>
     </div>
   );
