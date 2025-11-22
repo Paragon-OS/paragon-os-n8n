@@ -38,6 +38,12 @@ function getSupabaseClient() {
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+  if (!serviceRoleKey) {
+    throw new Error(
+      "Neither SUPABASE_SERVICE_ROLE_KEY nor NEXT_PUBLIC_SUPABASE_ANON_KEY is set. Please configure Supabase in your environment variables."
+    );
+  }
+
   return createClient(url, serviceRoleKey);
 }
 
@@ -45,7 +51,9 @@ function getSupabaseClient() {
  * Create migrations tracking table if it doesn't exist
  */
 async function ensureMigrationsTable(client: ReturnType<typeof createClient>) {
-  const { error } = await client.rpc("exec_sql", {
+  // Note: exec_sql RPC function may not exist in all Supabase instances
+  // Using type assertion since this is a migration utility script
+  const { error } = await (client.rpc as any)("exec_sql", {
     sql: `
       CREATE TABLE IF NOT EXISTS ${MIGRATIONS_TABLE} (
         version VARCHAR(255) PRIMARY KEY,
@@ -103,12 +111,14 @@ async function markMigrationApplied(
 ): Promise<void> {
   // Ensure migrations table exists first
   try {
-    await client
-      .from(MIGRATIONS_TABLE)
-      .insert({ version })
-      .then(() => {
-        console.log(`[migrate] Marked migration ${version} as applied`);
-      });
+    // Using type assertion since schema_migrations table is not in the generated types
+    const { error } = await (client.from(MIGRATIONS_TABLE) as any).insert({ 
+      version 
+    });
+    
+    if (!error) {
+      console.log(`[migrate] Marked migration ${version} as applied`);
+    }
   } catch (error: any) {
     // If insert fails because table doesn't exist, create it and retry
     if (

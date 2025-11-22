@@ -5,7 +5,7 @@
 
 import { createSupabaseClient } from "./supabase-config";
 import type { StreamUpdate } from "../n8n-client/types";
-import { checkStreamEventsTable, needsMigrations, logMigrationInstructions } from "./supabase-migrations";
+import { needsMigrations, logMigrationInstructions } from "./supabase-migrations";
 
 /**
  * Database row type for stream_events table
