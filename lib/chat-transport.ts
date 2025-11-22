@@ -6,37 +6,46 @@
 import { AssistantChatTransport } from "@assistant-ui/react-ai-sdk";
 import type { HttpChatTransportInitOptions, UIMessage, ChatRequestOptions, UIMessageChunk } from "ai";
 
-// Global flag to track when we're loading historical messages
-// This prevents reconnectToStream from triggering new executions
-let isLoadingHistoricalMessages = false;
-let loadingSessionId: string | null = null;
+/**
+ * Track sessions that have been loaded from history (complete conversations).
+ * These sessions should not trigger automatic reconnection via reconnectToStream.
+ * Sessions are marked as historical when messages are loaded, and removed when
+ * the user sends a new message to allow the conversation to continue.
+ */
+const historicalSessions = new Set<string>();
 
-// Track sessions that have been fully loaded from history (complete sessions)
-// These sessions should not trigger automatic reconnection
-const loadedHistoricalSessions = new Set<string>();
+/**
+ * Mark a session as historical (loaded from history).
+ * This prevents reconnectToStream from automatically continuing the conversation.
+ */
+export function markSessionAsHistorical(sessionId: string) {
+  historicalSessions.add(sessionId);
+}
 
+/**
+ * Mark a session as active (not just historical).
+ * This allows reconnectToStream to work normally for the session.
+ * Called when user sends a new message to continue a historical conversation.
+ */
+export function markSessionAsActive(sessionId: string) {
+  historicalSessions.delete(sessionId);
+}
+
+/**
+ * @deprecated Use markSessionAsHistorical instead
+ */
 export function setIsLoadingHistoricalMessages(value: boolean, sessionId?: string | null) {
-  isLoadingHistoricalMessages = value;
-  loadingSessionId = value ? (sessionId || null) : null;
-  if (value) {
-    console.log("[chat-transport] Set loading flag for session:", sessionId);
-    // Mark session as historical IMMEDIATELY when starting to load
-    // This ensures reconnectToStream is blocked even during the append process
-    if (sessionId) {
-      loadedHistoricalSessions.add(sessionId);
-      console.log("[chat-transport] Marked session as historical (will block reconnection):", sessionId);
-    }
-  } else {
-    console.log("[chat-transport] Cleared loading flag");
-    // Session is already marked as historical above, so we just clear the loading flag
-    // The session stays in loadedHistoricalSessions to continue blocking reconnection
+  if (value && sessionId) {
+    markSessionAsHistorical(sessionId);
   }
 }
 
+/**
+ * @deprecated Use markSessionAsActive instead
+ */
 export function markSessionAsNew(sessionId: string | null) {
   if (sessionId) {
-    loadedHistoricalSessions.delete(sessionId);
-    console.log("[chat-transport] Marked session as new (not historical):", sessionId);
+    markSessionAsActive(sessionId);
   }
 }
 
@@ -61,14 +70,13 @@ export class SessionAwareChatTransport<
     abortSignal: AbortSignal | undefined;
   } & ChatRequestOptions): Promise<ReadableStream<UIMessageChunk>> {
     // When user sends a new message, mark session as active (not just historical)
-    // This allows the conversation to continue
+    // This allows the conversation to continue and reconnectToStream to work
     const sessionId = this.getSessionId();
     if (sessionId && options.trigger === "submit-message") {
       // Check if last message is from user
       const lastMessage = options.messages[options.messages.length - 1];
       if (lastMessage && lastMessage.role === "user") {
-        loadedHistoricalSessions.delete(sessionId);
-        console.log("[chat-transport] User sent new message, allowing continuation for session:", sessionId);
+        markSessionAsActive(sessionId);
       }
     }
 
@@ -107,22 +115,10 @@ export class SessionAwareChatTransport<
   } & ChatRequestOptions): Promise<ReadableStream<UIMessageChunk> | null> {
     const currentSessionId = this.getSessionId();
     
-    // Prevent reconnection when loading historical messages
-    if (isLoadingHistoricalMessages) {
-      console.log("[chat-transport] Preventing reconnectToStream - loading historical messages", {
-        loadingSessionId,
-        currentSessionId,
-        match: loadingSessionId === currentSessionId
-      });
-      return null;
-    }
-
-    // Prevent reconnection for sessions that were loaded from history
-    // These are complete conversations that shouldn't be automatically continued
-    if (currentSessionId && loadedHistoricalSessions.has(currentSessionId)) {
-      console.log("[chat-transport] Preventing reconnectToStream - session was loaded from history (complete conversation)", {
-        sessionId: currentSessionId
-      });
+    // Prevent reconnection for sessions that were loaded from history.
+    // These are complete conversations that shouldn't be automatically continued.
+    // The session will be removed from historicalSessions when user sends a new message.
+    if (currentSessionId && historicalSessions.has(currentSessionId)) {
       return null;
     }
 
