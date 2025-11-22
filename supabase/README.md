@@ -91,6 +91,7 @@ Example: `20240120000000_create_stream_events.sql`
 ### Existing Migrations
 
 - `20240120000000_create_stream_events.sql` - Creates the `stream_events` table for storing n8n workflow execution stream events
+- `20251123041748_create_chat_tables.sql` - Creates `chat_sessions` and `chat_messages` tables for AI chat persistence with full AI SDK UIMessage compatibility
 
 ## Local Development Setup
 

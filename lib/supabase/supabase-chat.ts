@@ -1,0 +1,623 @@
+/**
+ * Supabase Chat Persistence
+ * Handles persistence of AI chat messages and sessions to Supabase
+ * Follows the AI SDK UIMessage format for compatibility
+ */
+
+import type { UIMessage } from "ai";
+import { createSupabaseClient } from "./supabase-config";
+
+/**
+ * Flexible message type that accepts AI SDK UIMessage
+ * This allows us to work with the generic UIMessage type from the AI SDK
+ */
+type FlexibleUIMessage = UIMessage | {
+  id: string;
+  role: "user" | "assistant" | "system" | "tool";
+  content?: string | unknown[] | Record<string, unknown>;
+  parts?: string | unknown[] | Record<string, unknown>;
+  toolInvocations?: unknown[];
+  [key: string]: unknown;
+};
+
+/**
+ * Chat session database row type
+ */
+export interface ChatSessionRow {
+  id?: string; // UUID, auto-generated
+  session_id: string;
+  user_id?: string;
+  title?: string;
+  metadata?: Record<string, unknown>;
+  created_at?: string; // Auto-generated
+  updated_at?: string; // Auto-generated
+}
+
+/**
+ * Chat message database row type
+ * Follows AI SDK UIMessage structure
+ */
+export interface ChatMessageRow {
+  id?: string; // UUID, auto-generated
+  session_id: string;
+  message_id?: string;
+  role: "user" | "assistant" | "system" | "tool";
+  content?: string; // For simple text messages
+  content_parts?: unknown[]; // For complex messages with multiple parts
+  tool_calls?: unknown[]; // For tool invocations
+  tool_invocations?: unknown[]; // For tool results
+  metadata?: Record<string, unknown>;
+  created_at?: string; // Auto-generated
+}
+
+/**
+ * Re-export UIMessage type from AI SDK for convenience
+ */
+export type { UIMessage } from "ai";
+
+/**
+ * Options for saving chat messages
+ */
+export interface SaveChatMessagesOptions {
+  sessionId: string;
+  messages: FlexibleUIMessage[];
+  userId?: string;
+  sessionTitle?: string;
+  sessionMetadata?: Record<string, unknown>;
+}
+
+/**
+ * Options for retrieving chat messages
+ */
+export interface GetChatMessagesOptions {
+  sessionId: string;
+  limit?: number;
+  offset?: number;
+}
+
+// Cache for table existence check to avoid repeated queries
+let chatTablesExistCache: boolean | null = null;
+let chatTableCheckPerformed = false;
+
+/**
+ * Check if chat tables exist in the database
+ */
+async function checkChatTablesExist(): Promise<boolean> {
+  const supabase = createSupabaseClient();
+  if (!supabase) {
+    return false;
+  }
+
+  try {
+    // Try to query the chat_sessions table with a limit of 0 to check if it exists
+    const { error } = await supabase
+      .from("chat_sessions")
+      .select("*")
+      .limit(0);
+
+    // If no error, table exists
+    if (!error) {
+      return true;
+    }
+
+    // Check if error is "relation does not exist"
+    if (error.code === "42P01" || error.message.includes("does not exist")) {
+      return false;
+    }
+
+    // Other errors might mean table exists but we don't have permissions
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Ensure chat session exists, create if it doesn't
+ */
+async function ensureChatSession(
+  sessionId: string,
+  userId?: string,
+  title?: string,
+  metadata?: Record<string, unknown>
+): Promise<void> {
+  const supabase = createSupabaseClient();
+  if (!supabase) {
+    return;
+  }
+
+  try {
+    // Check if session exists
+    const { data: existingSession } = await supabase
+      .from("chat_sessions")
+      .select("session_id")
+      .eq("session_id", sessionId)
+      .single();
+
+    if (!existingSession) {
+      // Create new session
+      const sessionRow: ChatSessionRow = {
+        session_id: sessionId,
+        user_id: userId,
+        title: title,
+        metadata: metadata || {},
+      };
+
+      const { error } = await supabase
+        .from("chat_sessions")
+        .insert(sessionRow);
+
+      if (error) {
+        console.error(
+          "[supabase-chat] Error creating chat session:",
+          error,
+          { sessionId }
+        );
+      } else {
+        console.log(
+          `[supabase-chat] Created new chat session: ${sessionId}`
+        );
+      }
+    }
+  } catch (error) {
+    console.error(
+      "[supabase-chat] Unexpected error ensuring chat session:",
+      error,
+      { sessionId }
+    );
+  }
+}
+
+/**
+ * Convert UIMessage to ChatMessageRow for database storage
+ */
+function convertUIMessageToRow(
+  message: FlexibleUIMessage,
+  sessionId: string
+): ChatMessageRow {
+  const row: ChatMessageRow = {
+    session_id: sessionId,
+    message_id: message.id,
+    role: message.role,
+    metadata: {},
+  };
+
+  // Handle content field - can be string, array, object, or undefined
+  // The AI SDK UIMessage type may have content, parts, or both
+  const messageRecord = message as Record<string, unknown>;
+  const content = messageRecord.content ?? messageRecord.parts;
+
+  if (content !== undefined) {
+    if (typeof content === "string") {
+      row.content = content;
+    } else if (Array.isArray(content)) {
+      row.content_parts = content;
+    } else if (content && typeof content === "object") {
+      row.content_parts = [content];
+    }
+  }
+
+  // Handle tool invocations
+  const toolInvocations = messageRecord.toolInvocations;
+  if (toolInvocations) {
+    row.tool_invocations = Array.isArray(toolInvocations) 
+      ? toolInvocations 
+      : [toolInvocations];
+  }
+
+  // Store any additional properties in metadata
+  const knownKeys = ["id", "role", "content", "parts", "toolInvocations"];
+  Object.keys(messageRecord).forEach((key) => {
+    if (!knownKeys.includes(key)) {
+      row.metadata![key] = messageRecord[key];
+    }
+  });
+
+  return row;
+}
+
+/**
+ * Convert ChatMessageRow from database to UIMessage format
+ */
+export function convertRowToUIMessage(row: ChatMessageRow): UIMessage {
+  // Reconstruct content from either content or content_parts
+  let content: string | unknown[] | Record<string, unknown> = "";
+  if (row.content) {
+    content = row.content;
+  } else if (row.content_parts) {
+    content = row.content_parts;
+  }
+
+  const messageData: Record<string, unknown> = {
+    id: row.message_id || row.id || "",
+    role: row.role,
+    content,
+    parts: content, // AI SDK may expect parts property
+  };
+
+  // Add tool invocations if present
+  if (row.tool_invocations) {
+    messageData.toolInvocations = row.tool_invocations;
+  }
+
+  // Restore metadata properties
+  if (row.metadata) {
+    Object.assign(messageData, row.metadata);
+  }
+
+  return messageData as unknown as UIMessage;
+}
+
+/**
+ * Save chat messages to Supabase
+ * This function is non-blocking and will not throw errors to avoid affecting chat performance
+ * Errors are logged but do not propagate
+ */
+export async function saveChatMessagesToSupabase(
+  options: SaveChatMessagesOptions
+): Promise<void> {
+  const supabase = createSupabaseClient();
+
+  // If Supabase is not configured, silently skip
+  if (!supabase) {
+    console.warn(
+      "[supabase-chat] Supabase not configured, skipping save",
+      { sessionId: options.sessionId }
+    );
+    return;
+  }
+
+  // Check if migrations have been applied (once per session)
+  if (!chatTableCheckPerformed) {
+    const tablesExist = await checkChatTablesExist();
+    chatTablesExistCache = tablesExist;
+    chatTableCheckPerformed = true;
+
+    if (!tablesExist) {
+      console.warn(
+        "[supabase-chat] Chat tables not found. Run migrations to enable chat persistence."
+      );
+      console.log(
+        "[supabase-chat] Run: npm run db:migrate:apply or apply migration: 20251123041748_create_chat_tables.sql"
+      );
+      return;
+    }
+  }
+
+  // Use cached result
+  if (chatTablesExistCache === false) {
+    return;
+  }
+
+  try {
+    // Ensure session exists
+    await ensureChatSession(
+      options.sessionId,
+      options.userId,
+      options.sessionTitle,
+      options.sessionMetadata
+    );
+
+    // Convert messages to database rows
+    const messageRows = options.messages.map((msg) =>
+      convertUIMessageToRow(msg, options.sessionId)
+    );
+
+    // Insert messages
+    const { error } = await supabase
+      .from("chat_messages")
+      .insert(messageRows);
+
+    if (error) {
+      console.error(
+        "[supabase-chat] Error saving chat messages:",
+        error,
+        { sessionId: options.sessionId, messageCount: options.messages.length }
+      );
+      return;
+    }
+
+    console.log(
+      `[supabase-chat] Saved ${options.messages.length} message(s) for session: ${options.sessionId}`
+    );
+  } catch (error) {
+    // Catch any unexpected errors to prevent them from propagating
+    console.error(
+      "[supabase-chat] Unexpected error saving chat messages:",
+      error,
+      { sessionId: options.sessionId }
+    );
+  }
+}
+
+/**
+ * Save a single chat message to Supabase
+ */
+export async function saveChatMessageToSupabase(
+  sessionId: string,
+  message: FlexibleUIMessage,
+  userId?: string
+): Promise<void> {
+  return saveChatMessagesToSupabase({
+    sessionId,
+    messages: [message],
+    userId,
+  });
+}
+
+/**
+ * Retrieve chat messages for a specific session from Supabase
+ * Returns empty array if Supabase is not configured or on error
+ */
+export async function getChatMessagesBySessionId(
+  options: GetChatMessagesOptions
+): Promise<UIMessage[]> {
+  const supabase = createSupabaseClient();
+
+  if (!supabase) {
+    console.warn(
+      "[supabase-chat] Supabase not configured, cannot retrieve messages"
+    );
+    return [];
+  }
+
+  try {
+    let query = supabase
+      .from("chat_messages")
+      .select("*")
+      .eq("session_id", options.sessionId)
+      .order("created_at", { ascending: true });
+
+    if (options.limit !== undefined) {
+      query = query.limit(options.limit);
+    }
+
+    if (options.offset !== undefined) {
+      query = query.range(
+        options.offset,
+        options.offset + (options.limit || 100) - 1
+      );
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error(
+        "[supabase-chat] Error retrieving chat messages:",
+        error,
+        { sessionId: options.sessionId }
+      );
+      return [];
+    }
+
+    return (data as ChatMessageRow[]).map(convertRowToUIMessage);
+  } catch (error) {
+    console.error(
+      "[supabase-chat] Unexpected error retrieving chat messages:",
+      error,
+      { sessionId: options.sessionId }
+    );
+    return [];
+  }
+}
+
+/**
+ * Retrieve all chat sessions from Supabase (with optional limit)
+ * Returns empty array if Supabase is not configured or on error
+ */
+export async function getAllChatSessions(
+  limit?: number,
+  userId?: string
+): Promise<ChatSessionRow[]> {
+  const supabase = createSupabaseClient();
+
+  if (!supabase) {
+    console.warn(
+      "[supabase-chat] Supabase not configured, cannot retrieve sessions"
+    );
+    return [];
+  }
+
+  try {
+    let query = supabase
+      .from("chat_sessions")
+      .select("*")
+      .order("updated_at", { ascending: false });
+
+    if (userId) {
+      query = query.eq("user_id", userId);
+    }
+
+    if (limit !== undefined) {
+      query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error(
+        "[supabase-chat] Error retrieving chat sessions:",
+        error
+      );
+      return [];
+    }
+
+    return (data as ChatSessionRow[]) || [];
+  } catch (error) {
+    console.error(
+      "[supabase-chat] Unexpected error retrieving chat sessions:",
+      error
+    );
+    return [];
+  }
+}
+
+/**
+ * Get a specific chat session by session ID
+ */
+export async function getChatSessionById(
+  sessionId: string
+): Promise<ChatSessionRow | null> {
+  const supabase = createSupabaseClient();
+
+  if (!supabase) {
+    console.warn(
+      "[supabase-chat] Supabase not configured, cannot retrieve session"
+    );
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("chat_sessions")
+      .select("*")
+      .eq("session_id", sessionId)
+      .single();
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        // No rows returned
+        return null;
+      }
+      console.error(
+        "[supabase-chat] Error retrieving chat session:",
+        error,
+        { sessionId }
+      );
+      return null;
+    }
+
+    return data as ChatSessionRow;
+  } catch (error) {
+    console.error(
+      "[supabase-chat] Unexpected error retrieving chat session:",
+      error,
+      { sessionId }
+    );
+    return null;
+  }
+}
+
+/**
+ * Update a chat session's metadata or title
+ */
+export async function updateChatSession(
+  sessionId: string,
+  updates: {
+    title?: string;
+    metadata?: Record<string, unknown>;
+  }
+): Promise<boolean> {
+  const supabase = createSupabaseClient();
+
+  if (!supabase) {
+    console.warn(
+      "[supabase-chat] Supabase not configured, cannot update session"
+    );
+    return false;
+  }
+
+  try {
+    const { error } = await supabase
+      .from("chat_sessions")
+      .update(updates)
+      .eq("session_id", sessionId);
+
+    if (error) {
+      console.error(
+        "[supabase-chat] Error updating chat session:",
+        error,
+        { sessionId }
+      );
+      return false;
+    }
+
+    console.log(`[supabase-chat] Updated chat session: ${sessionId}`);
+    return true;
+  } catch (error) {
+    console.error(
+      "[supabase-chat] Unexpected error updating chat session:",
+      error,
+      { sessionId }
+    );
+    return false;
+  }
+}
+
+/**
+ * Delete a chat session and all its messages
+ */
+export async function deleteChatSession(sessionId: string): Promise<boolean> {
+  const supabase = createSupabaseClient();
+
+  if (!supabase) {
+    console.warn(
+      "[supabase-chat] Supabase not configured, cannot delete session"
+    );
+    return false;
+  }
+
+  try {
+    // Delete session (messages will be cascade deleted due to foreign key)
+    const { error } = await supabase
+      .from("chat_sessions")
+      .delete()
+      .eq("session_id", sessionId);
+
+    if (error) {
+      console.error(
+        "[supabase-chat] Error deleting chat session:",
+        error,
+        { sessionId }
+      );
+      return false;
+    }
+
+    console.log(`[supabase-chat] Deleted chat session: ${sessionId}`);
+    return true;
+  } catch (error) {
+    console.error(
+      "[supabase-chat] Unexpected error deleting chat session:",
+      error,
+      { sessionId }
+    );
+    return false;
+  }
+}
+
+/**
+ * Get message count for a session
+ */
+export async function getChatMessageCount(sessionId: string): Promise<number> {
+  const supabase = createSupabaseClient();
+
+  if (!supabase) {
+    return 0;
+  }
+
+  try {
+    const { count, error } = await supabase
+      .from("chat_messages")
+      .select("*", { count: "exact", head: true })
+      .eq("session_id", sessionId);
+
+    if (error) {
+      console.error(
+        "[supabase-chat] Error getting message count:",
+        error,
+        { sessionId }
+      );
+      return 0;
+    }
+
+    return count || 0;
+  } catch (error) {
+    console.error(
+      "[supabase-chat] Unexpected error getting message count:",
+      error,
+      { sessionId }
+    );
+    return 0;
+  }
+}
+
