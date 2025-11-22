@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-21T17:26:32.000Z",
+  "updatedAt": "2025-11-22T14:16:04.000Z",
   "createdAt": "2025-11-17T13:03:59.561Z",
   "id": "uoYXevOl4ePWKeNx",
   "name": "[HELPERS] Discord & Telegram Step Executor",
@@ -37,8 +37,8 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        -48,
-        256
+        176,
+        352
       ],
       "id": "90a8d7ee-6bb9-46b7-8e15-f8d8b17fd413",
       "name": "No Operation, do nothing"
@@ -140,7 +140,7 @@
             {
               "id": "bad98a97-9638-4b86-8bc3-f93523320a80",
               "name": "stepResult.stepOutput",
-              "value": "={{ JSON.parse($json.result.content[0].text) }}",
+              "value": "={{ $json.result.isError?$json.result : JSON.parse($json.result.content[0].text) }}",
               "type": "object"
             },
             {
@@ -286,7 +286,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const jsonString = $input.first().json.result.content[0].text;\n\nif($input.first().json.result.isError){\n  return {\n    error: jsonString\n  }\n}\n\ntry{\n  const parsed = JSON.parse(jsonString);\n  // Check and wrap\n  const result = Array.isArray(parsed) \n    ? { data: parsed } \n    : parsed;\n  \n  $input.first().json.result.content[0].text = JSON.stringify({ json: result });\n  return $input.first().json\n} catch (err){\n  return {\n    error: jsonString\n  }\n}\n"
+        "jsCode": "const jsonString = $input.first().json.result.content[0].text;\n\nif($input.first().json.result.isError){\n  return {\n    error: jsonString\n  }\n}\n\ntry{\n  const parsed = JSON.parse(jsonString);\n  // Check and wrap\n  const result = Array.isArray(parsed) \n    ? { data: parsed } \n    : parsed;\n  \n  $input.first().json.result.content[0].text = JSON.stringify(result);\n  return $input.first().json\n} catch (err){\n  $input.first().json.result.isError = true;\n  return {\n    result: {\n        ...$input.first().json.result,\n        error: `${jsonString} - ${err}`\n    }\n  }\n}\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -370,6 +370,19 @@
       ],
       "id": "5fa75dc5-8188-40ad-97d9-3353ee08a8f6",
       "name": "Send Stream Update1"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -48,
+        352
+      ],
+      "id": "fcda4537-84f6-421c-ba62-724d289b661f",
+      "name": "Merge"
     }
   ],
   "connections": {
@@ -460,7 +473,7 @@
       "main": [
         [
           {
-            "node": "No Operation, do nothing",
+            "node": "Merge",
             "type": "main",
             "index": 0
           }
@@ -531,6 +544,28 @@
           }
         ]
       ]
+    },
+    "Send Stream Update1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -556,8 +591,8 @@
       }
     ]
   },
-  "versionId": "ffccf876-e5da-433d-969a-e206cf1eab50",
-  "versionCounter": 70,
+  "versionId": "9fd409d3-06fd-4d07-8942-9375c80d338f",
+  "versionCounter": 86,
   "triggerCount": 0,
   "tags": [
     {

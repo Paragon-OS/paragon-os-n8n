@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-21T17:32:25.000Z",
+  "updatedAt": "2025-11-22T14:16:37.000Z",
   "createdAt": "2025-11-06T23:04:10.688Z",
   "id": "z1Ry4y4k5dGR0BqR",
   "name": "ParagonOS Manager",
@@ -193,7 +193,7 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "paragonos-send-message",
+        "path": "paragon-os",
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
@@ -475,40 +475,10 @@
           "chatInput": "find staryo admin only channel in metarune labs guild, then list messages"
         }
       }
-    ],
-    "Webhook": [
-      {
-        "json": {
-          "headers": {
-            "host": "localhost:5678",
-            "connection": "keep-alive",
-            "content-type": "application/json",
-            "accept": "*/*",
-            "accept-language": "*",
-            "sec-fetch-mode": "cors",
-            "user-agent": "node",
-            "accept-encoding": "gzip, deflate",
-            "content-length": "188"
-          },
-          "params": {},
-          "query": {},
-          "body": {
-            "stage": "context_enrichment",
-            "status": "in_progress",
-            "message": "Processing message...",
-            "data": {
-              "chatInput": "who is cody on both telegram & discord"
-            },
-            "streamUrl": "http://localhost:3000/api/stream/update"
-          },
-          "webhookUrl": "http://localhost:5678/webhook-test/paragonos-send-message",
-          "executionMode": "test"
-        }
-      }
     ]
   },
-  "versionId": "6de55b62-3da4-449a-87fe-867d013bf6ce",
-  "versionCounter": 190,
+  "versionId": "4880314a-4274-483f-a34a-94120cac38f9",
+  "versionCounter": 203,
   "triggerCount": 1,
   "tags": [
     {
