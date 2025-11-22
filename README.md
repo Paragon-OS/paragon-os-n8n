@@ -1,150 +1,161 @@
-## paragon-os-n8n
+This is the ParagonOS UI project, built on top of the [assistant-ui](https://github.com/Yonom/assistant-ui) starter template.
 
-This repository contains **n8n workflows** for ParagonOS and a small **TypeScript CLI wrapper** around the `n8n` CLI to make backing up and restoring workflows easy and repeatable.
+## Getting Started
 
-The goal is to treat your n8n workflows as code: export them into version-controlled JSON files and re-import them reliably into any n8n instance.
+First, add your API key(s) to `.env.local`:
 
----
+```
+# Gemini (default)
+GOOGLE_GENERATIVE_AI_API_KEY=your-gemini-api-key
 
-## Project layout
-
-- `archived/`  
-  Archived / legacy workflow exports (JSON) that you may want to keep for reference but not necessarily import by default.
-
-- `workflows/`  
-  Current canonical workflow exports. Running the backup command regenerates these JSON files from your n8n instance.
-
-- `src/n8n-workflows-cli.ts`  
-  TypeScript wrapper around `n8n export:workflow` and `n8n import:workflow` with `backup` and `restore` subcommands.
-
-- `package.json`  
-  npm scripts and dev dependencies (`typescript`, `ts-node`, `@types/node`) used to drive the wrapper.
-
-- `tsconfig.json`  
-  Minimal TypeScript configuration for running the CLI via `ts-node`.
-
----
-
-## Prerequisites
-
-- `n8n` is available on your `PATH` (e.g. globally installed `n8n`, Docker exec into the n8n container, or adapt commands to `npx n8n`).
-- Node.js and npm installed.
-- Install dependencies:
-
-```bash
-npm install
+# Optional: keep OpenAI support by wiring your key as well
+# OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
----
+By default the chat endpoint uses Gemini `models/gemini-2.5-flash`. You can switch
+to another Google model (for example, `models/gemini-1.5-pro`) by updating
+`app/api/chat/route.ts`.
 
-## CLI wrapper overview
+## n8n Workflow Integration
 
-The wrapper exposes four high-level commands:
+This project includes integration with locally running n8n workflows, allowing the AI assistant to call workflows for answering questions, generating triages, and sending messages.
 
-- **backup**: Export workflows from the connected n8n instance into JSON files (one file per workflow) under a chosen directory.
-- **restore**: Import workflows from a directory tree of JSON files into the n8n instance.
-- **organize**: Organize existing workflow JSON files into tag-based subdirectories under the workflows directory.
-- **tree**: Print a logical folder structure of workflows from the connected n8n instance (using the local n8n CLI).
+### Configuration
 
-Internally it shells out to the official n8n CLI:
+Add n8n configuration to your `.env.local`:
 
-- **Backup**: `n8n export:workflow --backup --output=<resolvedOutputDir> [extra flags]`
-- **Restore**: `n8n import:workflow --separate --input=<filePath> [extra flags]` (called once per JSON file discovered recursively)
+```
+# n8n Configuration
+N8N_BASE_URL=http://localhost:5678
 
-Any extra flags you pass (for example `--all`) are forwarded directly to `n8n`.
+# Optional: Override webhook base URL (not recommended when using mode switching)
+# N8N_WEBHOOK_BASE_URL=http://localhost:5678/webhook
 
----
+# Optional: API key for n8n API authentication
+# N8N_API_KEY=your-n8n-api-key
 
-## Backup workflows
+# Optional: Synchronous execution settings
+# N8N_WAIT_FOR_COMPLETION=true  # Wait for workflow completion (default: true)
+# N8N_POLL_INTERVAL=500         # Polling interval in ms (default: 500ms)
 
-Back up all workflows, pretty-printed into separate files under `./workflows`:
-
-```bash
-npm run n8n:workflows:backup
+# Optional: Streaming configuration (uses Next.js API routes by default)
+# N8N_STREAMING_SERVER_URL=http://localhost:3000/api/stream
+# N8N_STREAMING_CONNECTION_TYPE=sse  # 'sse' or 'websocket' (default: sse)
 ```
 
-This is equivalent to running:
+**Note**: For webhook mode switching (test vs production) to work properly, it's recommended to **NOT** set `N8N_WEBHOOK_BASE_URL`. The system will automatically construct the correct URL based on the selected mode:
+- Test mode: `http://localhost:5678/webhook-test/paragon-os`
+- Production mode: `http://localhost:5678/webhook/paragon-os`
+
+If you do set `N8N_WEBHOOK_BASE_URL`, the system will still respect the mode by replacing any `/webhook` or `/webhook-test` suffix with the mode-appropriate prefix.
+
+### Setting Up Workflows
+
+1. **Configure Workflow Webhooks**: Update `lib/n8n-config.ts` with your n8n workflow webhook paths or URLs:
+   - `paragonOS`: Webhook path for the main ParagonOS Manager workflow
+
+2. **Workflow Webhook Paths**: In n8n, create webhook nodes and note their paths. For example:
+   - If your webhook URL is `http://localhost:5678/webhook/paragon-os`, use `/paragon-os` as the `webhookPath`
+
+3. **Confirmation Requirements**: Workflows that modify external state (like sending messages) can be configured to require confirmation. You can adjust this in `lib/n8n-config.ts` by setting `requiresConfirmation: true/false`.
+
+4. **Synchronous Execution**: By default, the system waits for workflows to complete before returning results. If your n8n webhook is configured for asynchronous execution ("Response Mode: Immediately"), the system will automatically poll the execution API until completion. You can disable this behavior by setting `N8N_WAIT_FOR_COMPLETION=false` in your `.env.local`.
+
+### Available Tools
+
+The AI assistant has access to the following n8n workflow tool:
+
+- **paragonOS**: Unified interface for ParagonOS to handle messaging, questions, and tasks via Discord and Telegram
+
+### Usage
+
+Once configured, you can ask the AI assistant to:
+- "Answer this question using my chat history: [your question]"
+- "Send a message to [recipient] on Telegram: [message]"
+- "Generate a triage for: [context]"
+- "Check for unreplied messages in Discord"
+
+The assistant will automatically call the ParagonOS workflow and display the results in the chat interface.
+
+### Real-Time Streaming Updates
+
+The application includes built-in real-time streaming for workflow execution monitoring via Server-Sent Events (SSE).
+
+#### Features
+
+- **Built-in Streaming Server**: No external services needed - streaming is integrated into Next.js API routes
+- **Stream Monitor Tab**: View real-time workflow updates in the UI
+- **Immediate Response**: Get workflow ID and execution ID as soon as workflows start
+- **Real-Time Progress**: See workflow progress updates as they happen
+- **Multiple Executions**: Track multiple concurrent workflows simultaneously
+
+#### Usage
+
+1. **View Stream Monitor**: Click the "Stream Monitor" tab in the UI to see real-time workflow updates
+
+2. **Configure n8n Workflows**: Add HTTP Request nodes in your n8n workflows to send updates:
+   ```json
+   {
+     "method": "POST",
+     "url": "http://localhost:3000/api/stream/update",
+     "body": {
+       "executionId": "{{ $execution.id }}",
+       "stage": "processing",
+       "status": "in_progress",
+       "message": "Processing data...",
+       "timestamp": "{{ $now }}",
+       "data": { "progress": 50 }
+     }
+   }
+   ```
+
+3. **Use Streaming in Code** (optional):
+   ```typescript
+   import { callN8nWorkflow } from '@/lib/n8n-client';
+
+   const result = await callN8nWorkflow({
+     webhookUrl: 'http://localhost:5678/webhook/my-workflow',
+     method: 'POST',
+     payload: { input: 'data' },
+     streaming: {
+       onStart: (executionId, workflowId) => {
+         console.log('Started:', executionId);
+       },
+       onUpdate: (update) => {
+         console.log('Update:', update.stage, update.message);
+       },
+       onComplete: (result, executionId) => {
+         console.log('Completed:', result);
+       },
+       onError: (error) => {
+         console.error('Error:', error);
+       },
+     },
+   });
+   ```
+
+#### API Endpoints
+
+- `GET /api/stream/sse/[executionId]` - Subscribe to real-time updates
+- `POST /api/stream/update` - Receive updates from n8n workflows
+- `GET /api/stream/health` - Check streaming server status
+
+See `app/api/stream/README.md` for complete API documentation.
+
+## Development
+
+Run the development server:
 
 ```bash
-n8n export:workflow --backup --output=./workflows
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-You can choose a different output directory:
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-```bash
-npm run n8n:workflows:backup -- --output ./backups/latest
-```
-
-You can also forward any supported n8n flags:
-
-```bash
-npm run n8n:workflows:backup -- --output ./workflows --all
-```
-
-The JSON files written into `workflows/` (or your chosen directory) are intended to be committed to git so you have a versioned history of your automations.
-
----
-
-## Restore workflows
-
-Restore from the default `./workflows` directory:
-
-```bash
-npm run n8n:workflows:restore
-```
-
-Restore from a custom directory:
-
-```bash
-npm run n8n:workflows:restore -- --input ./backups/latest
-```
-
-Under the hood, the restore command recursively discovers all `.json` files under the chosen directory (for example, `./workflows`, including subdirectories). It then:
-
-- Exports the current workflows from the connected n8n instance.
-- Compares each backup workflow (by `id`, when available) against the current instance, ignoring obviously volatile metadata such as timestamps.
-- Imports only workflows that are new or have actually changed compared to what is currently running in n8n.
-
-Each selected workflow is imported individually with:
-
-```bash
-n8n import:workflow --input=<filePath>
-```
-
-Just like backup, any additional flags are forwarded to `n8n import:workflow`. Workflows that exist in n8n but are missing from the backup are left untouched by the restore command.
-
----
-
-## Tag-based workflow layout
-
-If a workflow name in n8n starts with `[SOME_TAG]`, the backup command will:
-
-- Export it into a JSON file whose name is derived from the full workflow name (including the tag).
-- Place that file under a `SOME_TAG/` subdirectory of the chosen output directory (for example, `[LAB] Demo` becomes `workflows/LAB/[LAB] Demo.json`).
-
-Workflows without a leading `[TAG]` prefix continue to be written directly into the root of the output directory (for example, `workflows/My workflow.json`).
-
-The restore command recursively discovers all JSON files, so it will import both tagged and untagged workflows regardless of their folder layout.
-
-To retrofit an existing flat `workflows/` directory into tag-based subdirectories based on filename prefixes, you can run:
-
-```bash
-npm run n8n:workflows:restore -- organize
-```
-
-This will look for filenames that start with `[TAG]` and move them into corresponding `TAG/` subdirectories (for example, `[LAB] Foo.json` → `workflows/LAB/[LAB] Foo.json`).
-
----
-
-## Existing scripts
-
-In addition to the new backup/restore commands, `package.json` also defines:
-
-- **sync:n8n:workflows**: `node src/sync-workflows.js`  
-  Custom sync logic (not implemented in TypeScript here) that you may already be using to push/pull workflows.
-
-- **sync:n8n:workflows:dry**: `node src/sync-workflows.js --dry-run`  
-  Dry-run variant of the sync script.
-
-These scripts can coexist with the new backup/restore wrapper; you can choose whichever best fits your workflow.
-
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
