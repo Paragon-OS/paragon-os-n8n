@@ -10,11 +10,11 @@
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "db:migrate": "node -r tsx/register scripts/migrate-supabase.ts",
-    "db:migrate:apply": "supabase db reset || echo 'Supabase CLI not found. Run: npm run db:setup'",
-    "db:status": "supabase migration list || echo 'Supabase CLI not found. Run: npm run db:setup'",
+    "db:migrate:apply": "bash scripts/supabase-wrapper.sh db reset || echo 'Supabase CLI not found. Run: npm run db:setup'",
+    "db:status": "bash scripts/supabase-wrapper.sh migration list || echo 'Supabase CLI not found. Run: npm run db:setup'",
     "db:setup": "bash scripts/setup-supabase.sh",
-    "db:start": "supabase start || echo 'Supabase CLI not found. Run: npm run db:setup'",
-    "db:stop": "supabase stop || echo 'Supabase CLI not found'"
+    "db:start": "bash scripts/supabase-wrapper.sh start || echo 'Supabase CLI not found. Run: npm run db:setup'",
+    "db:stop": "bash scripts/supabase-wrapper.sh stop || echo 'Supabase CLI not found'"
   },
   "prettier": {
     "plugins": [

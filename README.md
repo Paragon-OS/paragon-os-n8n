@@ -152,11 +152,15 @@ This project uses Supabase for database persistence. The stream events are autom
    ```bash
    npm run db:setup
    ```
+   
+   The setup script automatically detects and configures **Podman** or **Docker** for you.
 
 2. **Start local Supabase**:
    ```bash
    npm run db:start
    ```
+   
+   **Note**: The npm scripts automatically detect and configure Podman if you're using it instead of Docker.
 
 3. **Apply migrations automatically**:
    Migrations are automatically applied when you run `supabase start`. If you need to reset:
@@ -169,6 +173,32 @@ This project uses Supabase for database persistence. The stream events are autom
    NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
    NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon_key_from_supabase_start>
    ```
+
+### Podman Support
+
+This project fully supports **Podman** as an alternative to Docker. The setup scripts automatically:
+- Detect if you're using Podman
+- Configure `DOCKER_HOST` to point to Podman's socket
+- Ensure Podman service is running
+
+If you need to run Supabase CLI commands directly with Podman:
+
+For **Podman Machine** (rootful - most common):
+```bash
+export DOCKER_HOST=unix:///var/run/docker.sock
+supabase start
+```
+
+For **rootless Podman**:
+```bash
+export DOCKER_HOST=unix:///run/user/$(id -u)/podman/podman.sock
+supabase start
+```
+
+Or use the npm scripts which handle this automatically (detects both rootful and rootless):
+```bash
+npm run db:start    # Automatically configures Podman
+```
 
 ### Migration Management
 

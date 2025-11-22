@@ -22,9 +22,19 @@ This directory contains database migrations for Supabase. Migrations are SQL fil
 
 3. **Start local Supabase**:
    ```bash
+   npm run db:start
+   # or directly:
    supabase start
    ```
    This will automatically apply all migrations in the `migrations/` directory.
+
+   **Note for Podman users**: The npm scripts automatically detect and configure Podman. If running Supabase CLI directly, set:
+   ```bash
+   export DOCKER_HOST=unix:///var/run/docker.sock  # for rootful Podman
+   # or
+   export DOCKER_HOST=unix:///run/user/$(id -u)/podman/podman.sock  # for rootless
+   supabase start
+   ```
 
 4. **Apply migrations** (for remote Supabase):
    ```bash
@@ -46,6 +56,10 @@ If you don't have Supabase CLI installed, you can apply migrations manually:
 - `npm run db:migrate:apply` - Apply migrations using Supabase CLI (`supabase db reset`)
 - `npm run db:status` - Check migration status using Supabase CLI
 - `npm run db:setup` - Initialize Supabase in the project
+- `npm run db:start` - Start local Supabase (auto-detects Podman/Docker)
+- `npm run db:stop` - Stop local Supabase
+
+**Note**: All npm scripts automatically detect and configure Podman if you're using it instead of Docker.
 
 ## Migration Files
 
@@ -84,6 +98,8 @@ For local development with Supabase:
 
 1. **Start Supabase locally**:
    ```bash
+   npm run db:start
+   # or directly:
    supabase start
    ```
 
@@ -101,7 +117,39 @@ For local development with Supabase:
 4. **Apply migrations**:
    Migrations are automatically applied when you run `supabase start`, but you can reset the database with:
    ```bash
+   npm run db:migrate:apply
+   # or directly:
    supabase db reset
+   ```
+
+### Using Podman instead of Docker
+
+The project automatically detects and configures Podman. **Analytics is disabled by default** in `config.toml` for Podman compatibility (Vector service has permission issues with Podman socket).
+
+If you encounter issues:
+
+1. **Ensure Podman Machine is running** (for rootful Podman):
+   ```bash
+   podman machine start
+   ```
+   Socket location: `/var/run/docker.sock`
+
+2. **For rootless Podman**, ensure the socket is running:
+   ```bash
+   systemctl --user start podman.socket
+   ```
+   Socket location: `/run/user/$(id -u)/podman/podman.sock`
+
+3. **Use npm scripts** (recommended):
+   The npm scripts automatically detect and configure Podman:
+   ```bash
+   npm run db:start    # Automatically detects Podman and sets DOCKER_HOST
+   ```
+
+4. **Manual configuration** (if needed):
+   ```bash
+   export DOCKER_HOST=unix:///var/run/docker.sock  # for rootful Podman
+   supabase start
    ```
 
 ## Production Deployment
