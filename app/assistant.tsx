@@ -51,7 +51,7 @@ function AssistantContent() {
 
   return (
     <StreamingProvider>
-      <AssistantRuntimeProvider runtime={runtime}>
+      <AssistantRuntimeProvider key={activeSessionId || 'default'} runtime={runtime}>
         <SidebarProvider>
           <div className="flex h-dvh w-full pr-0.5">
             <ThreadListSidebar />
