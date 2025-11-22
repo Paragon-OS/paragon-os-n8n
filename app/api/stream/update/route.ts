@@ -14,7 +14,7 @@ export const runtime = "nodejs";
  * Get allowed CORS origins based on environment configuration
  * In production, restricts to specific origins. In development, allows localhost.
  */
-function getAllowedOrigins(request: NextRequest): string[] {
+function getAllowedOrigins(_request: NextRequest): string[] {
   const origins: string[] = [];
   
   // 1. Check for explicitly allowed origins from environment variable

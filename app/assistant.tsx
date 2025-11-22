@@ -25,9 +25,10 @@ import {
 import { StreamMonitor } from "@/components/assistant-ui/stream-monitor";
 import { StreamingProvider } from "@/components/assistant-ui/streaming-context";
 import { WebhookModeToggle } from "@/components/assistant-ui/webhook-mode-toggle";
+import { SupabaseTest } from "@/components/assistant-ui/supabase-test";
 
 export const Assistant = () => {
-  const [activeTab, setActiveTab] = useState<"chat" | "monitor">("chat");
+  const [activeTab, setActiveTab] = useState<"chat" | "monitor" | "supabase">("chat");
   
   const runtime = useChatRuntime({
     transport: new AssistantChatTransport({
@@ -83,12 +84,28 @@ export const Assistant = () => {
                         : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                     }`}
                   >
-                    Stream Monitor
+                    Monitor
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("supabase")}
+                    className={`px-3 py-1.5 text-sm rounded transition-colors ${
+                      activeTab === "supabase"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                    }`}
+                  >
+                    Supabase
                   </button>
                 </div>
               </header>
               <div className="flex-1 overflow-hidden">
-                {activeTab === "chat" ? <Thread /> : <StreamMonitor />}
+                {activeTab === "chat" ? (
+                  <Thread />
+                ) : activeTab === "monitor" ? (
+                  <StreamMonitor />
+                ) : (
+                  <SupabaseTest />
+                )}
               </div>
             </SidebarInset>
           </div>
