@@ -97,7 +97,7 @@ export function StreamMonitor({
             {isConnected && (
               <button
                 onClick={disconnect}
-                className="px-3 py-1 text-sm bg-destructive text-destructive-foreground rounded hover:bg-destructive/90"
+                className="px-3 py-1 text-sm bg-destructive text-destructive-foreground text-white rounded hover:bg-destructive/90"
               >
                 Disconnect
               </button>
