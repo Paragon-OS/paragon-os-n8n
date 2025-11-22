@@ -142,6 +142,48 @@ The application includes built-in real-time streaming for workflow execution mon
 
 See `app/api/stream/README.md` for complete API documentation.
 
+## Supabase Database Setup
+
+This project uses Supabase for database persistence. The stream events are automatically saved to Supabase.
+
+### Quick Setup
+
+1. **Install Supabase CLI** (if not already installed):
+   ```bash
+   npm run db:setup
+   ```
+
+2. **Start local Supabase**:
+   ```bash
+   npm run db:start
+   ```
+
+3. **Apply migrations automatically**:
+   Migrations are automatically applied when you run `supabase start`. If you need to reset:
+   ```bash
+   npm run db:migrate:apply
+   ```
+
+4. **Update your `.env.local`**:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon_key_from_supabase_start>
+   ```
+
+### Migration Management
+
+- **View migrations**: `npm run db:migrate`
+- **Apply migrations**: `npm run db:migrate:apply`
+- **Check status**: `npm run db:status`
+- **Start Supabase**: `npm run db:start`
+- **Stop Supabase**: `npm run db:stop`
+
+For detailed migration documentation, see [`supabase/README.md`](./supabase/README.md).
+
+### Automated Migration Application
+
+When using Supabase CLI locally, migrations in `supabase/migrations/` are automatically applied on `supabase start`. For production, use `supabase db push` to apply migrations to your remote Supabase project.
+
 ## Development
 
 Run the development server:

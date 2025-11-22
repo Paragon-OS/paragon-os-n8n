@@ -5,6 +5,7 @@
 
 import { createSupabaseClient } from "./supabase-config";
 import type { StreamUpdate } from "./n8n-client/types";
+import { checkStreamEventsTable, needsMigrations, logMigrationInstructions } from "./supabase-migrations";
 
 /**
  * Database row type for stream_events table
@@ -25,6 +26,10 @@ export interface StreamEventRow {
  * This function is non-blocking and will not throw errors to avoid affecting webhook performance
  * Errors are logged but do not propagate
  */
+// Cache for table existence check to avoid repeated queries
+let tableExistsCache: boolean | null = null;
+let tableCheckPerformed = false;
+
 export async function saveStreamEventToSupabase(
   update: StreamUpdate
 ): Promise<void> {
@@ -36,6 +41,26 @@ export async function saveStreamEventToSupabase(
       "[supabase-stream-events] Supabase not configured, skipping save",
       { executionId: update.executionId }
     );
+    return;
+  }
+
+  // Check if migrations have been applied (once per session)
+  if (!tableCheckPerformed) {
+    const needsMig = await needsMigrations();
+    tableExistsCache = !needsMig;
+    tableCheckPerformed = true;
+
+    if (needsMig) {
+      console.warn(
+        "[supabase-stream-events] Database migrations not applied. Events will not be saved."
+      );
+      logMigrationInstructions();
+      return;
+    }
+  }
+
+  // Use cached result
+  if (tableExistsCache === false) {
     return;
   }
 
