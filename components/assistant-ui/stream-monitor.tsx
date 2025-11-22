@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStreaming } from "./streaming-context";
 import { useExecutionStore } from "@/lib/execution-store";
 
@@ -11,13 +11,39 @@ interface StreamMonitorProps {
 export function StreamMonitor({
   executionIds = [],
 }: StreamMonitorProps) {
-  const { updates, isConnected, connect, disconnect, clearUpdates } = useStreaming();
+  const {
+    updates,
+    isConnected,
+    isLoading,
+    connect,
+    disconnect,
+    clearUpdates,
+    loadEventsFromSupabase,
+  } = useStreaming();
   const updatesEndRef = useRef<HTMLDivElement>(null);
+  const [hasLoadedFilteredEvents, setHasLoadedFilteredEvents] = useState(false);
   const getAllExecutions = useExecutionStore((state) => state.getAllExecutions);
   const getStats = useExecutionStore((state) => state.getStats);
   
   const executions = getAllExecutions();
   const stats = getStats();
+
+  // Load filtered events from Supabase when executionIds are provided
+  useEffect(() => {
+    if (executionIds.length > 0 && !hasLoadedFilteredEvents) {
+      console.log(
+        `[stream-monitor] Loading events for ${executionIds.length} execution(s) from Supabase`
+      );
+      loadEventsFromSupabase(executionIds).then(() => {
+        setHasLoadedFilteredEvents(true);
+      });
+    }
+  }, [executionIds, hasLoadedFilteredEvents, loadEventsFromSupabase]);
+
+  // Reset filtered events flag when executionIds change
+  useEffect(() => {
+    setHasLoadedFilteredEvents(false);
+  }, [executionIds.join(",")]); // Dependency on executionIds array
 
   // Auto-scroll to bottom when new updates arrive
   useEffect(() => {
@@ -131,7 +157,11 @@ export function StreamMonitor({
 
       {/* Updates List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
-        {filteredUpdates.length === 0 ? (
+        {isLoading && filteredUpdates.length === 0 ? (
+          <div className="text-center text-muted-foreground py-8">
+            Loading events from database...
+          </div>
+        ) : filteredUpdates.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
             {isConnected
               ? "Waiting for workflow updates..."

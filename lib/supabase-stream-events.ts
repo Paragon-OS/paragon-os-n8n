@@ -161,3 +161,64 @@ export async function getAllStreamEvents(
     return [];
   }
 }
+
+/**
+ * Convert a StreamEventRow from database to StreamUpdate format
+ */
+export function convertStreamEventRowToUpdate(row: StreamEventRow): StreamUpdate {
+  return {
+    executionId: row.execution_id,
+    stage: row.stage,
+    status: row.status as "in_progress" | "completed" | "error" | "info",
+    message: row.message,
+    timestamp: row.timestamp,
+    data: row.data || {},
+  };
+}
+
+/**
+ * Retrieve stream events for multiple execution IDs from Supabase
+ * Returns empty array if Supabase is not configured or on error
+ */
+export async function getStreamEventsByExecutionIds(
+  executionIds: string[]
+): Promise<StreamEventRow[]> {
+  const supabase = createSupabaseClient();
+  
+  if (!supabase) {
+    console.warn(
+      "[supabase-stream-events] Supabase not configured, cannot retrieve events"
+    );
+    return [];
+  }
+
+  if (executionIds.length === 0) {
+    return [];
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("stream_events")
+      .select("*")
+      .in("execution_id", executionIds)
+      .order("timestamp", { ascending: true });
+
+    if (error) {
+      console.error(
+        "[supabase-stream-events] Error retrieving stream events by execution IDs:",
+        error,
+        { executionIds }
+      );
+      return [];
+    }
+
+    return (data as StreamEventRow[]) || [];
+  } catch (error) {
+    console.error(
+      "[supabase-stream-events] Unexpected error retrieving stream events by execution IDs:",
+      error,
+      { executionIds }
+    );
+    return [];
+  }
+}
