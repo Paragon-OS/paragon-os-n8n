@@ -49,13 +49,6 @@ export const Assistant = () => {
                 <Breadcrumb>
                   <BreadcrumbList>
                     <BreadcrumbItem className="hidden md:block">
-                      <BreadcrumbLink
-                        href="https://paragonos.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Explore ParagonOS
-                      </BreadcrumbLink>
                     </BreadcrumbItem>
                     <BreadcrumbSeparator className="hidden md:block" />
                     <BreadcrumbItem>

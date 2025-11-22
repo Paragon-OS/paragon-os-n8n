@@ -7,6 +7,11 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 const DEFAULT_SUPABASE_URL = "http://127.0.0.1:54321";
 
+// Singleton client instance
+let supabaseClient: SupabaseClient | null = null;
+let clientUrl: string | null = null;
+let clientAnonKey: string | null = null;
+
 /**
  * Get the Supabase URL from environment variables
  */
@@ -22,8 +27,9 @@ export function getSupabaseAnonKey(): string | undefined {
 }
 
 /**
- * Create and return a Supabase client instance
+ * Get or create a singleton Supabase client instance
  * Returns null if the anon key is not configured
+ * Reuses the same client instance to avoid multiple GoTrueClient warnings
  */
 export function createSupabaseClient(): SupabaseClient | null {
   const url = getSupabaseUrl();
@@ -33,6 +39,16 @@ export function createSupabaseClient(): SupabaseClient | null {
     return null;
   }
 
-  return createClient(url, anonKey);
+  // Return existing client if URL and key haven't changed
+  if (supabaseClient && clientUrl === url && clientAnonKey === anonKey) {
+    return supabaseClient;
+  }
+
+  // Create new client if it doesn't exist or config has changed
+  supabaseClient = createClient(url, anonKey);
+  clientUrl = url;
+  clientAnonKey = anonKey;
+
+  return supabaseClient;
 }
 

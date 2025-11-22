@@ -27,7 +27,6 @@ export function WebhookModeToggle() {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-muted-foreground">Mode:</span>
       <button
         onClick={handleToggle}
         className={`px-3 py-1.5 text-xs rounded-md transition-colors font-medium ${
