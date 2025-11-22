@@ -88,8 +88,9 @@ export function ChatSessionLoader() {
       if (messages.length > 0) {
         console.log("[chat-session-loader] Loading", messages.length, "messages for session:", activeSessionId);
         
-        // Set flag to prevent reconnectToStream from triggering new executions
-        setIsLoadingHistoricalMessages(true);
+        // Mark session as historical BEFORE loading to prevent any reconnection attempts
+        // This ensures reconnectToStream is blocked even if called asynchronously during append
+        setIsLoadingHistoricalMessages(true, activeSessionId);
         
         try {
           // Load messages into the thread
@@ -107,12 +108,18 @@ export function ChatSessionLoader() {
         } catch (err) {
           console.error("[chat-session-loader] Error loading messages into thread:", err);
         } finally {
-          // Clear the flag after a short delay to allow any pending reconnectToStream calls to be blocked
-          // Use setTimeout to ensure this happens after any synchronous reconnectToStream calls
-          setTimeout(() => {
-            setIsLoadingHistoricalMessages(false);
-            console.log("[chat-session-loader] Cleared loading flag");
-          }, 100);
+          // Clear the loading flag but KEEP the session marked as historical
+          // This ensures reconnectToStream continues to be blocked for this session
+          // The session will only be unmarked when user sends a NEW message
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              setTimeout(() => {
+                // Pass the sessionId so it gets marked as historical
+                setIsLoadingHistoricalMessages(false, activeSessionId);
+                console.log("[chat-session-loader] Cleared loading flag, session marked as historical:", activeSessionId);
+              }, 1000); // Increased delay to catch all async reconnectToStream calls
+            });
+          });
         }
 
         lastLoadedSessionId.current = activeSessionId;
@@ -124,8 +131,12 @@ export function ChatSessionLoader() {
       }
     } catch (error) {
       console.error("[chat-session-loader] Error loading session:", error);
-      // Make sure to clear the flag on error
-      setIsLoadingHistoricalMessages(false);
+      // Make sure to clear the flag on error, but still mark as historical if we had messages
+      if (messages.length > 0 && activeSessionId) {
+        setIsLoadingHistoricalMessages(false, activeSessionId);
+      } else {
+        setIsLoadingHistoricalMessages(false, null);
+      }
     }
   }, [activeSessionId, isLoading, messages, runtime, currentMessages]);
 

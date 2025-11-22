@@ -5,9 +5,10 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { useChatSessions } from "@/lib/supabase/hooks/use-chat-sessions";
 import type { ChatSessionRow } from "@/lib/supabase/supabase-chat";
+import { markSessionAsNew } from "@/lib/chat-transport";
 
 interface ChatSessionsContextValue {
   sessions: ChatSessionRow[];
@@ -41,8 +42,22 @@ export function ChatSessionsProvider({
   const createNewSession = useCallback(() => {
     const newSessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     setActiveSessionId(newSessionId);
+    // Mark as new session (not historical) so it can reconnect normally
+    markSessionAsNew(newSessionId);
     return newSessionId;
   }, []);
+
+  // Mark active session as new when it changes (if it's not being loaded from history)
+  useEffect(() => {
+    if (activeSessionId) {
+      // Only mark as new if it's not in the sessions list (truly new)
+      // If it's in the list, it will be marked as historical when loaded
+      const isExistingSession = sessions.some(s => s.session_id === activeSessionId);
+      if (!isExistingSession) {
+        markSessionAsNew(activeSessionId);
+      }
+    }
+  }, [activeSessionId, sessions]);
 
   return (
     <ChatSessionsContext.Provider
