@@ -4,7 +4,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { getWebhookModeFromCookieHeader } from "@/lib/webhook-mode";
+import { getWebhookModeFromCookieHeader } from "@/lib/stores/webhook-mode";
 import { getWorkflowWebhookUrl } from "@/lib/n8n-config";
 
 export async function GET(req: Request) {

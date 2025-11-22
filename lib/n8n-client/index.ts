@@ -9,7 +9,7 @@ import { callWebhook } from "./webhook";
 import { callLocalApi } from "./api";
 import { getWebhookBaseUrl, getN8nBaseUrl } from "./config";
 import { getStreamingClient, createStreamingClient } from "./streaming";
-import { getWebhookPrefix, type WebhookMode } from "../webhook-mode";
+import { getWebhookPrefix, type WebhookMode } from "../stores/webhook-mode";
 
 /**
  * Main function to call an n8n workflow

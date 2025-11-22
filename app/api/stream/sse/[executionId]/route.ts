@@ -3,7 +3,7 @@
  * Allows clients to subscribe to real-time workflow execution updates
  */
 
-import { streamingStore } from "@/lib/streaming-store";
+import { streamingStore } from "@/lib/stores/streaming-store";
 import { NextRequest } from "next/server";
 
 export const runtime = "nodejs";

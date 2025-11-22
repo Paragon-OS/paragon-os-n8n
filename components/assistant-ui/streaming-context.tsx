@@ -2,12 +2,12 @@
 
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import type { StreamUpdate } from "@/lib/n8n-client/types";
-import { useExecutionStore } from "@/lib/execution-store";
+import { useExecutionStore } from "@/lib/stores/execution-store";
 import {
   getAllStreamEvents,
   getStreamEventsByExecutionIds,
   convertStreamEventRowToUpdate,
-} from "@/lib/supabase-stream-events";
+} from "@/lib/supabase/supabase-stream-events";
 
 interface StreamingContextType {
   updates: StreamUpdate[];

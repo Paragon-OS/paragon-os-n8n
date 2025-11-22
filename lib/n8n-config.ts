@@ -4,7 +4,7 @@
  */
 
 import { buildWebhookUrl } from "./n8n-client";
-import { type WebhookMode } from "./webhook-mode";
+import { type WebhookMode } from "./stores/webhook-mode";
 
 export interface WorkflowConfig {
   webhookPath?: string;

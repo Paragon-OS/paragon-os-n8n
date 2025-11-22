@@ -7,7 +7,7 @@
 import { readdir, readFile } from "fs/promises";
 import { join } from "path";
 import { createClient } from "@supabase/supabase-js";
-import { getSupabaseUrl, getSupabaseAnonKey } from "../lib/supabase-config";
+import { getSupabaseUrl, getSupabaseAnonKey } from "../lib/supabase/supabase-config";
 
 const MIGRATIONS_DIR = join(process.cwd(), "supabase", "migrations");
 const MIGRATIONS_TABLE = "schema_migrations";

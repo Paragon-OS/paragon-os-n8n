@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getWebhookMode, setWebhookMode, type WebhookMode } from "@/lib/webhook-mode";
+import { getWebhookMode, setWebhookMode, type WebhookMode } from "@/lib/stores/webhook-mode";
 
 export function WebhookModeToggle() {
   const [mode, setMode] = useState<WebhookMode>("test");

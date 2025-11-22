@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createSupabaseClient, getSupabaseUrl, getSupabaseAnonKey } from "@/lib/supabase-config";
+import { createSupabaseClient, getSupabaseUrl, getSupabaseAnonKey } from "@/lib/supabase/supabase-config";
 import { CheckCircle2, XCircle, Loader2, AlertCircle } from "lucide-react";
 
 type ConnectionStatus = "idle" | "connecting" | "connected" | "error";

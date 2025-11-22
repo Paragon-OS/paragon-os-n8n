@@ -20,7 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useStreaming } from "./streaming-context";
 import { extractExecutionId } from "@/lib/n8n-client/webhook-utils";
-import { useExecutionStore } from "@/lib/execution-store";
+import { useExecutionStore } from "@/lib/stores/execution-store";
 
 export const N8nToolCall: ToolCallMessagePartComponent = ({
   toolName,

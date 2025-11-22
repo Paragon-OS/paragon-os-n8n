@@ -8,7 +8,7 @@
 import { readFile } from "fs/promises";
 import { join } from "path";
 import { execSync } from "child_process";
-import { getSupabaseUrl } from "../lib/supabase-config";
+import { getSupabaseUrl } from "../lib/supabase/supabase-config";
 
 const MIGRATIONS_DIR = join(process.cwd(), "supabase", "migrations");
 

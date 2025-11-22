@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useStreaming } from "./streaming-context";
-import { useExecutionStore } from "@/lib/execution-store";
+import { useExecutionStore } from "@/lib/stores/execution-store";
 
 interface StreamMonitorProps {
   executionIds?: string[]; // Optional: filter to specific executions

@@ -4,7 +4,7 @@
  */
 
 import { create } from "zustand";
-import type { StreamUpdate } from "./n8n-client/types";
+import type { StreamUpdate } from "../n8n-client/types";
 
 // Type for SSE connection with encoder
 interface SSEConnection {

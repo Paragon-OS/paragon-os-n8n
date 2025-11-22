@@ -3,11 +3,11 @@
  * Receives updates from n8n workflows and broadcasts them to SSE clients
  */
 
-import { streamingStore } from "@/lib/streaming-store";
+import { streamingStore } from "@/lib/stores/streaming-store";
 import { NextRequest, NextResponse } from "next/server";
 import type { StreamUpdate } from "@/lib/n8n-client/types";
 import { getN8nBaseUrl, getWebhookBaseUrl } from "@/lib/n8n-client/config";
-import { saveStreamEventToSupabase } from "@/lib/supabase-stream-events";
+import { saveStreamEventToSupabase } from "@/lib/supabase/supabase-stream-events";
 
 export const runtime = "nodejs";
 

@@ -3,7 +3,7 @@ import { streamText, UIMessage, convertToModelMessages, tool } from "ai";
 import { z } from "zod";
 import { callN8nWorkflow } from "@/lib/n8n-client";
 import { getWorkflowWebhookUrl } from "@/lib/n8n-config";
-import { getWebhookModeFromCookieHeader } from "@/lib/webhook-mode";
+import { getWebhookModeFromCookieHeader } from "@/lib/stores/webhook-mode";
 import { getStreamingUpdateUrl } from "@/lib/n8n-client/config";
 import { NextResponse } from "next/server";
 

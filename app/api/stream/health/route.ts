@@ -3,7 +3,7 @@
  * Returns streaming server status and statistics
  */
 
-import { streamingStore } from "@/lib/streaming-store";
+import { streamingStore } from "@/lib/stores/streaming-store";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";

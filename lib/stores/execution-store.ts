@@ -5,7 +5,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { StreamUpdate } from "./n8n-client/types";
+import type { StreamUpdate } from "../n8n-client/types";
 
 export type ExecutionStatus = "pending" | "running" | "completed" | "error";
 
