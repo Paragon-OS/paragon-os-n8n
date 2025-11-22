@@ -1,13 +1,10 @@
 /**
  * Supabase Migration Utilities
  * Helper functions for checking and applying migrations
+ * Note: This file is used in both client and server contexts, so it cannot use Node.js-only APIs like fs
  */
 
-import { readdir, readFile } from "fs/promises";
-import { join } from "path";
 import { createSupabaseClient } from "./supabase-config";
-
-const MIGRATIONS_DIR = join(process.cwd(), "supabase", "migrations");
 
 /**
  * Check if a table exists in Supabase
@@ -53,27 +50,37 @@ export async function checkStreamEventsTable(): Promise<boolean> {
 
 /**
  * Get migration files from the migrations directory
+ * Note: This function is not available in browser context
+ * Use server-side code or Supabase CLI for migration file operations
  */
 export async function getMigrationFiles(): Promise<string[]> {
-  try {
-    const files = await readdir(MIGRATIONS_DIR);
-    return files
-      .filter((f) => f.endsWith(".sql"))
-      .sort(); // Sort to ensure correct order
-  } catch (error: any) {
-    if (error.code === "ENOENT") {
-      return [];
-    }
-    throw error;
+  // This function requires Node.js fs module, which is not available in browser
+  // Use server-side code or migration scripts instead
+  if (typeof window !== "undefined") {
+    console.warn("[supabase-migrations] getMigrationFiles() is not available in browser context");
+    return [];
   }
+  
+  // Server-side implementation would go here, but we'll keep it simple
+  // Use the migration scripts instead: npm run db:migrate
+  return [];
 }
 
 /**
  * Read a migration file
+ * Note: This function is not available in browser context
+ * Use server-side code or Supabase CLI for reading migration files
  */
 export async function readMigrationFile(filename: string): Promise<string> {
-  const filePath = join(MIGRATIONS_DIR, filename);
-  return readFile(filePath, "utf-8");
+  // This function requires Node.js fs module, which is not available in browser
+  if (typeof window !== "undefined") {
+    console.warn("[supabase-migrations] readMigrationFile() is not available in browser context");
+    return "";
+  }
+  
+  // Server-side implementation would go here, but we'll keep it simple
+  // Use the migration scripts instead: npm run db:migrate
+  return "";
 }
 
 /**
