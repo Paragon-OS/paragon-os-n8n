@@ -6,6 +6,14 @@
 import { AssistantChatTransport } from "@assistant-ui/react-ai-sdk";
 import type { HttpChatTransportInitOptions, UIMessage, ChatRequestOptions, UIMessageChunk } from "ai";
 
+// Global flag to track when we're loading historical messages
+// This prevents reconnectToStream from triggering new executions
+let isLoadingHistoricalMessages = false;
+
+export function setIsLoadingHistoricalMessages(value: boolean) {
+  isLoadingHistoricalMessages = value;
+}
+
 export class SessionAwareChatTransport<
   UI_MESSAGE extends UIMessage = UIMessage
 > extends AssistantChatTransport<UI_MESSAGE> {
@@ -59,6 +67,13 @@ export class SessionAwareChatTransport<
   override async reconnectToStream(options: {
     chatId: string;
   } & ChatRequestOptions): Promise<ReadableStream<UIMessageChunk> | null> {
+    // Prevent reconnection when loading historical messages
+    // This stops assistant-ui from automatically continuing past conversations
+    if (isLoadingHistoricalMessages) {
+      console.log("[chat-transport] Preventing reconnectToStream - loading historical messages");
+      return null;
+    }
+
     // Override fetch temporarily to add session ID header
     const originalFetch = this.fetch;
     if (!originalFetch) {

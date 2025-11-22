@@ -10,6 +10,7 @@ import { useChatMessages } from "@/lib/supabase/hooks/use-chat-messages";
 import { useChatSessionsContext } from "@/components/assistant-ui/chat-sessions-context";
 import { useAssistantRuntime, useAssistantState } from "@assistant-ui/react";
 import type { UIMessage } from "ai";
+import { setIsLoadingHistoricalMessages } from "@/lib/chat-transport";
 
 /**
  * Convert UIMessage to format expected by thread.append()
@@ -87,11 +88,12 @@ export function ChatSessionLoader() {
       if (messages.length > 0) {
         console.log("[chat-session-loader] Loading", messages.length, "messages for session:", activeSessionId);
         
-        // Load messages into the thread
-        // Note: We reset the thread first to ensure clean state and prevent resubmission
+        // Set flag to prevent reconnectToStream from triggering new executions
+        setIsLoadingHistoricalMessages(true);
+        
         try {
-          // Use append to add messages - since we reset first, this should load historical messages
-          // without triggering continuation
+          // Load messages into the thread
+          // Note: We reset the thread first to ensure clean state and prevent resubmission
           if (typeof thread.append === 'function') {
             // Convert and append each message - the reset above ensures we start fresh
             messages.forEach((message) => {
@@ -104,6 +106,13 @@ export function ChatSessionLoader() {
           }
         } catch (err) {
           console.error("[chat-session-loader] Error loading messages into thread:", err);
+        } finally {
+          // Clear the flag after a short delay to allow any pending reconnectToStream calls to be blocked
+          // Use setTimeout to ensure this happens after any synchronous reconnectToStream calls
+          setTimeout(() => {
+            setIsLoadingHistoricalMessages(false);
+            console.log("[chat-session-loader] Cleared loading flag");
+          }, 100);
         }
 
         lastLoadedSessionId.current = activeSessionId;
@@ -115,6 +124,8 @@ export function ChatSessionLoader() {
       }
     } catch (error) {
       console.error("[chat-session-loader] Error loading session:", error);
+      // Make sure to clear the flag on error
+      setIsLoadingHistoricalMessages(false);
     }
   }, [activeSessionId, isLoading, messages, runtime, currentMessages]);
 
