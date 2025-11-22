@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import React from "react";
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import {
   useChatRuntime,
-  AssistantChatTransport,
 } from "@assistant-ui/react-ai-sdk";
 import { Thread } from "@/components/assistant-ui/thread";
 import {
@@ -26,14 +26,27 @@ import { StreamMonitor } from "@/components/assistant-ui/stream-monitor";
 import { StreamingProvider } from "@/components/assistant-ui/streaming-context";
 import { WebhookModeToggle } from "@/components/assistant-ui/webhook-mode-toggle";
 import { SupabaseTest } from "@/components/assistant-ui/supabase-test";
+import { ChatSessionsProvider, useChatSessionsContext } from "@/components/assistant-ui/chat-sessions-context";
+import { SessionAwareChatTransport } from "@/lib/chat-transport";
 
-export const Assistant = () => {
+function AssistantContent() {
   const [activeTab, setActiveTab] = useState<"chat" | "monitor" | "supabase">("chat");
+  const { activeSessionId, createNewSession } = useChatSessionsContext();
+  
+  // Initialize session if none exists
+  React.useEffect(() => {
+    if (!activeSessionId) {
+      createNewSession();
+    }
+  }, [activeSessionId, createNewSession]);
   
   const runtime = useChatRuntime({
-    transport: new AssistantChatTransport({
-      api: "/api/chat",
-    }),
+    transport: new SessionAwareChatTransport(
+      {
+        api: "/api/chat",
+      },
+      () => activeSessionId
+    ),
   });
 
   return (
@@ -105,5 +118,13 @@ export const Assistant = () => {
         </SidebarProvider>
       </AssistantRuntimeProvider>
     </StreamingProvider>
+  );
+}
+
+export const Assistant = () => {
+  return (
+    <ChatSessionsProvider>
+      <AssistantContent />
+    </ChatSessionsProvider>
   );
 };

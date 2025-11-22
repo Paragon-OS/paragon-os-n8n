@@ -112,3 +112,7 @@ CREATE TRIGGER trigger_update_session_on_message
   FOR EACH ROW
   EXECUTE FUNCTION update_session_on_message_insert();
 
+-- Enable Realtime for chat tables
+ALTER PUBLICATION supabase_realtime ADD TABLE chat_sessions;
+ALTER PUBLICATION supabase_realtime ADD TABLE chat_messages;
+

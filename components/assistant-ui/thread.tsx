@@ -35,11 +35,13 @@ import {
 } from "@/components/assistant-ui/attachment";
 
 import { cn } from "@/lib/utils";
+import { ChatSessionLoader } from "@/components/assistant-ui/chat-session-loader";
 
 export const Thread: FC = () => {
   return (
     <LazyMotion features={domAnimation}>
       <MotionConfig reducedMotion="user">
+        <ChatSessionLoader />
         <ThreadPrimitive.Root
           className="aui-root aui-thread-root @container flex h-full flex-col bg-background"
           style={{
