@@ -7,6 +7,7 @@ import { streamingStore } from "@/lib/streaming-store";
 import { NextRequest, NextResponse } from "next/server";
 import type { StreamUpdate } from "@/lib/n8n-client/types";
 import { getN8nBaseUrl, getWebhookBaseUrl } from "@/lib/n8n-client/config";
+import { saveStreamEventToSupabase } from "@/lib/supabase-stream-events";
 
 export const runtime = "nodejs";
 
@@ -217,6 +218,13 @@ export async function POST(request: NextRequest) {
 
     // Broadcast to all connected clients
     streamingStore.broadcast(update);
+
+    // Save to Supabase (non-blocking, fire-and-forget)
+    // Errors are handled within the function and won't affect the webhook response
+    saveStreamEventToSupabase(update).catch((error) => {
+      // This catch is a safety net, but saveStreamEventToSupabase already handles errors internally
+      console.error("[update] Unexpected error in Supabase save:", error);
+    });
 
     return NextResponse.json({
       success: true,

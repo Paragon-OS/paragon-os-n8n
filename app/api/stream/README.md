@@ -347,16 +347,78 @@ function WorkflowMonitor() {
 - ✅ CORS support
 - ✅ Keep-alive pings
 - ✅ In-memory storage (100 updates per execution)
+- ✅ **Supabase persistence** (all events are saved to database)
+
+## Database Persistence
+
+All stream events are automatically saved to Supabase in the `stream_events` table. The persistence is non-blocking and won't affect webhook performance - errors are logged but won't fail the webhook request.
+
+### Database Schema
+
+See `schema/stream_events.sql` for the complete table schema. The table includes:
+
+- `id`: UUID primary key (auto-generated)
+- `execution_id`: n8n execution ID (indexed)
+- `stage`: Workflow stage
+- `status`: Event status (in_progress, completed, error, info)
+- `message`: Human-readable message
+- `timestamp`: Event timestamp from n8n workflow
+- `data`: Additional JSON data
+- `created_at`: Database record creation timestamp (auto-generated)
+
+### Setup
+
+1. Create the `stream_events` table in Supabase using the SQL schema file:
+   ```bash
+   # Run the migration in your Supabase SQL editor
+   # File: schema/stream_events.sql
+   ```
+
+2. Configure Supabase environment variables:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+3. Events will automatically start persisting once Supabase is configured.
+
+### Querying Events
+
+You can query events directly from Supabase:
+
+```sql
+-- Get all events for a specific execution
+SELECT * FROM stream_events 
+WHERE execution_id = 'your-execution-id' 
+ORDER BY timestamp ASC;
+
+-- Get recent events
+SELECT * FROM stream_events 
+ORDER BY timestamp DESC 
+LIMIT 100;
+
+-- Get events by status
+SELECT * FROM stream_events 
+WHERE status = 'completed' 
+ORDER BY timestamp DESC;
+```
+
+Or use the helper functions in `lib/supabase-stream-events.ts`:
+
+```typescript
+import { getStreamEventsByExecutionId } from '@/lib/supabase-stream-events';
+
+const events = await getStreamEventsByExecutionId('execution-id');
+```
 
 ## Limitations
 
-- Updates are stored in memory (lost on server restart)
-- Maximum 100 updates per execution (older updates are dropped)
+- In-memory storage: Maximum 100 updates per execution (older updates are dropped from memory, but all are persisted to Supabase)
 - SSE only (no WebSocket support in standard Next.js)
 
 For production use, consider:
-- Adding Redis for persistent storage
 - Implementing authentication
 - Adding rate limiting
 - Monitoring and logging
+- Configuring Supabase Row Level Security (RLS) policies
 
