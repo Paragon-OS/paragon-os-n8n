@@ -208,7 +208,6 @@ const ThreadSuggestions: FC = () => {
         >
           <ThreadPrimitive.Suggestion
             prompt={suggestedAction.action}
-            send
             asChild
           >
             <Button
