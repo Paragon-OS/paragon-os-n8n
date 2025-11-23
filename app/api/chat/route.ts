@@ -172,10 +172,16 @@ export async function POST(req: Request) {
       
       console.log("[paragonOS] Using chatInput (length:", chatInput.length, "):", chatInput.substring(0, 100));
       
-      // Extract messageId from the last user message
+      // Extract messageId from the last user message (the one that triggered this tool call)
       const userMessages = messages.filter(m => m.role === "user");
       const lastUserMessage = userMessages[userMessages.length - 1];
       const messageId = lastUserMessage?.id;
+      
+      if (messageId) {
+        console.log(`[paragonOS] Extracted messageId: ${messageId}`);
+      } else {
+        console.warn("[paragonOS] No messageId found in last user message. Available messages:", messages.map(m => ({ role: m.role, id: m.id })));
+      }
       
       // Get the stream URL for updates using unified URL construction
       const streamUrl = getStreamingUpdateUrl(req);
@@ -184,9 +190,11 @@ export async function POST(req: Request) {
       const payload = {
         chatInput: chatInput,
         sessionId: sessionId,
-        messageId: messageId,
+        messageId: messageId, // Always include messageId (may be undefined)
         streamUrl: streamUrl,
       };
+      
+      console.log(`[paragonOS] Sending payload to n8n with sessionId: ${sessionId}, messageId: ${messageId || 'undefined'}`);
       
       const webhookUrl = getWorkflowWebhookUrl("paragonOS", webhookMode);
       console.log(`[chat/route] 🎯 Webhook URL: ${webhookUrl}`);
