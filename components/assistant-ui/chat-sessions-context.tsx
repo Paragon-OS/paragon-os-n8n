@@ -48,20 +48,6 @@ export function ChatSessionsProvider({
     setActiveSession(sessionId, sessionTitle);
   }, [sessions, setActiveSession]);
 
-  // Sync session title when sessions are loaded/refetched and we have an active session
-  // This ensures the title stays in sync if sessions are updated
-  React.useEffect(() => {
-    if (activeSessionId && sessions.length > 0) {
-      const session = sessions.find((s) => s.session_id === activeSessionId);
-      const sessionTitle = session?.title || null;
-      // Only update if title changed to avoid unnecessary updates
-      const currentTitle = useSessionStore.getState().activeSessionTitle;
-      if (sessionTitle !== currentTitle) {
-        setActiveSession(activeSessionId, sessionTitle);
-      }
-    }
-  }, [activeSessionId, sessions, setActiveSession]);
-
   const createNewSession = useCallback(() => {
     const newSessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     setActiveSessionId(newSessionId);
