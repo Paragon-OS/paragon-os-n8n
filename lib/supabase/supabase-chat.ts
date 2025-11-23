@@ -153,10 +153,6 @@ async function ensureChatSession(
           error,
           { sessionId }
         );
-      } else {
-        console.log(
-          `[supabase-chat] Created new chat session: ${sessionId}`
-        );
       }
     }
   } catch (error) {
@@ -277,9 +273,6 @@ export async function saveChatMessagesToSupabase(
       console.warn(
         "[supabase-chat] Chat tables not found. Run migrations to enable chat persistence."
       );
-      console.log(
-        "[supabase-chat] Run: npm run db:migrate or apply migration: 20251123041748_create_chat_tables.sql"
-      );
       return;
     }
   }
@@ -316,10 +309,6 @@ export async function saveChatMessagesToSupabase(
       );
       return;
     }
-
-    console.log(
-      `[supabase-chat] Saved ${options.messages.length} message(s) for session: ${options.sessionId}`
-    );
   } catch (error) {
     // Catch any unexpected errors to prevent them from propagating
     console.error(
@@ -719,7 +708,6 @@ export async function updateChatSession(
       return false;
     }
 
-    console.log(`[supabase-chat] Updated chat session: ${sessionId}`);
     return true;
   } catch (error) {
     console.error(
@@ -760,7 +748,6 @@ export async function deleteChatSession(sessionId: string): Promise<boolean> {
       return false;
     }
 
-    console.log(`[supabase-chat] Deleted chat session: ${sessionId}`);
     return true;
   } catch (error) {
     console.error(

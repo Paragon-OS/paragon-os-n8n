@@ -28,7 +28,6 @@ export function WebhookModeToggle() {
     const newMode: WebhookMode = mode === "test" ? "production" : "test";
     setMode(newMode);
     setWebhookMode(newMode);
-    console.log(`[WebhookModeToggle] Switched to ${newMode} mode. Send a new message to use this mode.`);
   };
 
   if (isLoading) {

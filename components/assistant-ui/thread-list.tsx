@@ -47,7 +47,6 @@ const SupabaseThreadListItems: FC = () => {
   }
 
   const handleSessionClick = (sessionId: string) => {
-    console.log("[thread-list] Clicked session:", sessionId);
     setActiveSessionId(sessionId);
   };
 

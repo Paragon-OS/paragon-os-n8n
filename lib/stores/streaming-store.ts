@@ -83,7 +83,6 @@ function markExecutionCompleted(
   metadata.isCompleted = true;
   metadata.completedAt = Date.now();
   metadata.lastAccessTime = Date.now();
-  console.log(`[streaming-store] Marked execution as completed: ${executionId}`);
 }
 
 function removeExecution(
@@ -95,7 +94,6 @@ function removeExecution(
   connections.delete(executionId);
   updateHistory.delete(executionId);
   executionMetadata.delete(executionId);
-  console.log(`[streaming-store] Removed execution: ${executionId}`);
 }
 
 function getOldestExecutionAge(
@@ -130,13 +128,11 @@ function performCleanup(
       const completedAge = now - metadata.completedAt;
       if (completedAge > COMPLETED_EXECUTION_TTL_MS) {
         shouldRemove = true;
-        console.log(`[streaming-store] Removing completed execution (age: ${Math.round(completedAge / 1000)}s): ${executionId}`);
       }
     } else {
       // Remove active executions that haven't been accessed in a while
       if (age > ACTIVE_EXECUTION_TTL_MS) {
         shouldRemove = true;
-        console.log(`[streaming-store] Removing stale execution (age: ${Math.round(age / 1000)}s): ${executionId}`);
       }
     }
 
@@ -147,7 +143,6 @@ function performCleanup(
     
     if (!hasConnections && updateAge > COMPLETED_EXECUTION_TTL_MS) {
       shouldRemove = true;
-      console.log(`[streaming-store] Removing execution with no connections (last update: ${Math.round(updateAge / 1000)}s ago): ${executionId}`);
     }
 
     if (shouldRemove) {
@@ -158,10 +153,6 @@ function performCleanup(
   // Remove executions
   for (const executionId of executionsToRemove) {
     removeExecution(connections, updateHistory, executionMetadata, executionId);
-  }
-
-  if (executionsToRemove.length > 0) {
-    console.log(`[streaming-store] Cleanup removed ${executionsToRemove.length} execution(s)`);
   }
 }
 
@@ -188,7 +179,6 @@ const useStreamingStore = create<StreamingStoreState>((set, get) => ({
     }, CLEANUP_INTERVAL_MS);
 
     set({ cleanupTimer: timer });
-    console.log(`[streaming-store] Started periodic cleanup (every ${CLEANUP_INTERVAL_MS / 1000}s)`);
   },
 
   stopPeriodicCleanup: () => {
@@ -196,7 +186,6 @@ const useStreamingStore = create<StreamingStoreState>((set, get) => ({
     if (state.cleanupTimer) {
       clearInterval(state.cleanupTimer);
       set({ cleanupTimer: null });
-      console.log(`[streaming-store] Stopped periodic cleanup`);
     }
   },
 
@@ -218,9 +207,6 @@ const useStreamingStore = create<StreamingStoreState>((set, get) => ({
       connections: newConnections,
       executionMetadata: newMetadata,
     });
-    
-    console.log(`[streaming-store] Added connection for execution: ${executionId}`);
-    console.log(`[streaming-store] Total connections for ${executionId}: ${newConnections.get(executionId)!.size}`);
   },
 
   removeConnection: (executionId: string, connection: SSEConnection) => {
@@ -234,21 +220,11 @@ const useStreamingStore = create<StreamingStoreState>((set, get) => ({
       
       if (newSet.size === 0) {
         newConnections.delete(executionId);
-        console.log(`[streaming-store] No more connections for ${executionId}, removed from map`);
-        
-        // If execution is completed and has no connections, schedule cleanup
-        const metadata = state.executionMetadata.get(executionId);
-        if (metadata?.isCompleted) {
-          console.log(`[streaming-store] Execution ${executionId} is completed with no connections, will be cleaned up`);
-        }
       } else {
         newConnections.set(executionId, newSet);
       }
       
       set({ connections: newConnections });
-      
-      console.log(`[streaming-store] Removed connection for execution: ${executionId}`);
-      console.log(`[streaming-store] Remaining connections for ${executionId}: ${newSet.size}`);
     }
   },
 
@@ -301,9 +277,6 @@ const useStreamingStore = create<StreamingStoreState>((set, get) => ({
       updateHistory: newHistory,
       executionMetadata: newMetadata,
     });
-    
-    console.log(`[streaming-store] Added update for execution: ${executionId}, stage: ${update.stage}, status: ${update.status}`);
-    console.log(`[streaming-store] History size for ${executionId}: ${newHistoryArray.length}`);
   },
 
   getHistory: (executionId: string) => {
@@ -342,8 +315,6 @@ const useStreamingStore = create<StreamingStoreState>((set, get) => ({
     
     const allConnections = new Set([...execConnections, ...defaultConnections]);
     
-    console.log(`[streaming-store] Broadcasting update for ${executionId} to ${allConnections.size} connection(s)`);
-    
     const data = `data: ${JSON.stringify(update)}\n\n`;
     
     allConnections.forEach((connection) => {
@@ -361,7 +332,6 @@ const useStreamingStore = create<StreamingStoreState>((set, get) => ({
     const newHistory = new Map(state.updateHistory);
     newHistory.delete(executionId);
     set({ updateHistory: newHistory });
-    console.log(`[streaming-store] Cleared history for execution: ${executionId}`);
   },
 
   markCompleted: (executionId: string) => {
@@ -437,7 +407,6 @@ const useStreamingStore = create<StreamingStoreState>((set, get) => ({
       updateHistory: new Map(),
       executionMetadata: new Map(),
     });
-    console.log(`[streaming-store] Shutdown complete`);
   },
 }));
 

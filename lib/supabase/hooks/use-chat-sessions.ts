@@ -95,8 +95,6 @@ export function useChatSessions(
           table: "chat_sessions",
         },
         (payload) => {
-          console.log("[use-chat-sessions] Realtime event:", payload.eventType);
-
           if (payload.eventType === "INSERT") {
             const newSession = payload.new as ChatSessionRow;
             setSessions((prev) => {
@@ -136,9 +134,7 @@ export function useChatSessions(
           }
         }
       )
-      .subscribe((status) => {
-        console.log("[use-chat-sessions] Subscription status:", status);
-      });
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);

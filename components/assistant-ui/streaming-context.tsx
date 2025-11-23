@@ -44,13 +44,11 @@ export function StreamingProvider({ children }: StreamingProviderProps) {
   const connect = () => {
     // Clean up any existing connection
     if (eventSourceRef.current) {
-      console.log("[streaming-context] Closing existing connection");
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
 
     const sseUrl = `/api/stream/sse/default`;
-    console.log(`[streaming-context] Connecting to SSE: ${sseUrl}`);
 
     try {
       const eventSource = new EventSource(sseUrl);
@@ -58,7 +56,6 @@ export function StreamingProvider({ children }: StreamingProviderProps) {
 
       eventSource.onopen = () => {
         setIsConnected(true);
-        console.log("[streaming-context] ✅ SSE connected");
       };
 
       eventSource.onmessage = (event) => {
@@ -67,12 +64,10 @@ export function StreamingProvider({ children }: StreamingProviderProps) {
           
           // Skip connection messages
           if (data.type === "connected") {
-            console.log("[streaming-context] Connected to SSE stream");
             return;
           }
 
           const update: StreamUpdate = data;
-          console.log(`[streaming-context] 📨 Received update:`, update);
           
           // Track this event to avoid duplicate loading
           const key = `${update.executionId}-${update.timestamp}`;
@@ -84,7 +79,6 @@ export function StreamingProvider({ children }: StreamingProviderProps) {
               (u) => `${u.executionId}-${u.timestamp}` === key
             );
             if (exists) {
-              console.log("[streaming-context] Update already exists, skipping duplicate");
               return prev;
             }
             
@@ -107,7 +101,6 @@ export function StreamingProvider({ children }: StreamingProviderProps) {
         const state = eventSource.readyState;
         
         if (state === 2) {
-          console.log("[streaming-context] Connection closed");
           setIsConnected(false);
           eventSource.close();
           eventSourceRef.current = null;
@@ -121,7 +114,6 @@ export function StreamingProvider({ children }: StreamingProviderProps) {
 
   const disconnect = () => {
     if (eventSourceRef.current) {
-      console.log("[streaming-context] Manually disconnecting");
       const es = eventSourceRef.current;
       eventSourceRef.current = null;
       es.close();
@@ -144,20 +136,13 @@ export function StreamingProvider({ children }: StreamingProviderProps) {
       
       if (executionIds && executionIds.length > 0) {
         // Load events for specific execution IDs
-        console.log(
-          `[streaming-context] Loading events from Supabase for ${executionIds.length} execution(s)`
-        );
         eventRows = await getStreamEventsByExecutionIds(executionIds);
       } else {
         // Load all recent events
-        console.log(
-          `[streaming-context] Loading recent events from Supabase (limit: ${limit})`
-        );
         eventRows = await getAllStreamEvents(limit);
       }
 
       if (eventRows.length === 0) {
-        console.log("[streaming-context] No events found in Supabase");
         setIsLoading(false);
         return;
       }
@@ -194,9 +179,6 @@ export function StreamingProvider({ children }: StreamingProviderProps) {
           updateFromStreamUpdate(update);
         });
 
-        console.log(
-          `[streaming-context] Loaded ${loadedUpdates.length} event(s) from Supabase (${uniqueNewUpdates.length} unique, ${merged.length} total)`
-        );
         return merged;
       });
     } catch (error) {
@@ -208,8 +190,6 @@ export function StreamingProvider({ children }: StreamingProviderProps) {
 
   // Auto-connect on mount and load recent events from Supabase
   useEffect(() => {
-    console.log("[streaming-context] Provider mounted, connecting...");
-    
     // Load recent events from Supabase first
     loadEventsFromSupabase(undefined, 100);
     
@@ -217,7 +197,6 @@ export function StreamingProvider({ children }: StreamingProviderProps) {
     connect();
 
     return () => {
-      console.log("[streaming-context] Provider unmounting, disconnecting...");
       disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -228,7 +207,6 @@ export function StreamingProvider({ children }: StreamingProviderProps) {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === 's') {
         event.preventDefault();
-        console.log("[streaming-context] Prevented Cmd+S from closing connection");
       }
     };
 

@@ -33,9 +33,6 @@ export function StreamMonitor({
   // Load filtered events from Supabase when executionIds are provided
   useEffect(() => {
     if (executionIds.length > 0 && !hasLoadedFilteredEvents) {
-      console.log(
-        `[stream-monitor] Loading events for ${executionIds.length} execution(s) from Supabase`
-      );
       loadEventsFromSupabase(executionIds).then(() => {
         setHasLoadedFilteredEvents(true);
       });

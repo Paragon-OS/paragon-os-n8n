@@ -105,8 +105,6 @@ function getCorsHeaders(request: NextRequest): Record<string, string> {
 export async function POST(request: NextRequest) {
   // Check CORS origin
   if (!isOriginAllowed(request)) {
-    const origin = request.headers.get("origin");
-    console.warn(`[update] CORS: Rejected request from origin: ${origin}`);
     return NextResponse.json(
       {
         success: false,
@@ -121,11 +119,6 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-
-    // Log the received body for debugging
-    console.log("[update] Received request body:", JSON.stringify(body, null, 2));
-    console.log("[update] Query params:", Object.fromEntries(request.nextUrl.searchParams));
-    console.log("[update] Headers:", Object.fromEntries(request.headers.entries()));
 
     // Validate required fields - check for executionId in various possible locations
     // 1. Check request body first
@@ -217,11 +210,6 @@ export async function POST(request: NextRequest) {
       timestamp: body.timestamp || new Date().toISOString(),
       data: body.data || {},
     };
-
-    console.log(
-      `[update] Received update for execution: ${update.executionId}, stage: ${update.stage}, status: ${update.status}`
-    );
-    console.log(`[update] Message: ${update.message}`);
 
     // Store update in history
     streamingStore.addUpdate(update);

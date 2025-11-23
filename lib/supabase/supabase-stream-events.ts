@@ -88,10 +88,6 @@ export async function saveStreamEventToSupabase(
       );
       return;
     }
-
-    console.log(
-      `[supabase-stream-events] Saved stream event for execution: ${update.executionId}, stage: ${update.stage}`
-    );
   } catch (error) {
     // Catch any unexpected errors to prevent them from propagating
     console.error(

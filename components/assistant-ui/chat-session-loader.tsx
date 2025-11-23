@@ -34,7 +34,6 @@ export function ChatSessionLoader() {
       return;
     }
 
-    console.log("[chat-session-loader] Processing session:", activeSessionId, "messages:", messages.length);
 
     try {
       // Get the current thread from runtime
@@ -46,7 +45,6 @@ export function ChatSessionLoader() {
       }
 
       if (messages.length > 0) {
-        console.log("[chat-session-loader] Loading", messages.length, "messages for session:", activeSessionId);
         
         // Load messages into thread using runtime API
         const currentThreadMessages = currentMessages || [];
@@ -62,9 +60,6 @@ export function ChatSessionLoader() {
           // Load messages into thread using the thread's import or append method
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           try {
-            // Log raw messages for debugging
-            console.log("[chat-session-loader] Raw messages:", JSON.stringify(messages, null, 2));
-            
             // Validate and normalize messages before importing
             // Create a new array with only valid message objects
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -200,20 +195,15 @@ export function ChatSessionLoader() {
               // Ensure ID is not empty
               if (!validMsg.id || validMsg.id === "") {
                 validMsg.id = `msg-${activeSessionId}-${i}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-                console.warn("[chat-session-loader] Generated ID for message at index", i, ":", validMsg.id);
               }
               
               validMessages.push(validMsg);
             }
 
             if (validMessages.length === 0) {
-              console.warn("[chat-session-loader] No valid messages to load after validation");
               lastLoadedSessionId.current = activeSessionId;
               return;
             }
-
-            console.log("[chat-session-loader] Validated", validMessages.length, "messages out of", messages.length);
-            console.log("[chat-session-loader] Valid messages:", JSON.stringify(validMessages, null, 2));
             
             // Ensure we have a clean array with no undefined/null entries
             // Also filter out messages with empty content (assistant-ui may not handle these well)
@@ -236,19 +226,13 @@ export function ChatSessionLoader() {
               return hasContent || hasToolInvocations || hasToolCalls;
             });
             
-            if (cleanMessages.length !== validMessages.length) {
-              console.warn("[chat-session-loader] Filtered out", validMessages.length - cleanMessages.length, "invalid/empty messages after validation");
-            }
-            
             if (cleanMessages.length === 0) {
-              console.warn("[chat-session-loader] No clean messages to load after filtering");
               lastLoadedSessionId.current = activeSessionId;
               return;
             }
 
             // Clear existing messages first if switching sessions
             if (lastLoadedSessionId.current !== null && lastLoadedSessionId.current !== activeSessionId) {
-              console.log("[chat-session-loader] Resetting thread for new session");
               thread.reset();
             }
 
@@ -270,7 +254,6 @@ export function ChatSessionLoader() {
                   // Continue with next message instead of failing completely
                 }
               }
-              console.log("[chat-session-loader] Appended", successCount, "out of", cleanMessages.length, "messages to thread");
             }
             // Fallback to import() if append() doesn't exist
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -278,7 +261,6 @@ export function ChatSessionLoader() {
               try {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (thread as any).import({ messages: cleanMessages });
-                console.log("[chat-session-loader] Imported", cleanMessages.length, "messages into thread");
               } catch (importErr) {
                 console.error("[chat-session-loader] Error during import, trying append instead:", importErr);
                 // Try append as fallback
@@ -297,22 +279,17 @@ export function ChatSessionLoader() {
             }
             // Fallback: Log available methods for debugging
             else {
-              console.warn("[chat-session-loader] Could not find thread import/append methods");
-              console.log("[chat-session-loader] Thread methods:", Object.keys(thread || {}));
-              console.log("[chat-session-loader] Messages to load:", cleanMessages);
+              console.error("[chat-session-loader] Could not find thread import/append methods");
             }
           } catch (err) {
             console.error("[chat-session-loader] Error loading messages into thread:", err);
             console.error("[chat-session-loader] Messages that caused error:", messages);
           }
-        } else {
-          console.log("[chat-session-loader] Messages already loaded for session:", activeSessionId);
         }
 
         lastLoadedSessionId.current = activeSessionId;
       } else {
         // Even if no messages, mark this session as loaded
-        console.log("[chat-session-loader] No messages for session:", activeSessionId);
         lastLoadedSessionId.current = activeSessionId;
       }
     } catch (error) {

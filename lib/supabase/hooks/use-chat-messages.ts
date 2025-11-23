@@ -58,7 +58,6 @@ export function useChatMessages(
         offset,
       });
 
-      console.log("[use-chat-messages] Fetched", fetchedMessages.length, "messages for session:", sessionId);
       setMessages(fetchedMessages);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
@@ -76,7 +75,6 @@ export function useChatMessages(
       return;
     }
 
-    console.log("[use-chat-messages] Fetching messages for session:", sessionId);
     fetchMessages();
 
     const supabase = createSupabaseClient();
@@ -96,8 +94,6 @@ export function useChatMessages(
           filter: `session_id=eq.${sessionId}`,
         },
         (payload) => {
-          console.log("[use-chat-messages] Realtime event:", payload.eventType);
-
           if (payload.eventType === "INSERT") {
             const newMessage = convertRowToUIMessage(
               payload.new as Parameters<typeof convertRowToUIMessage>[0]
@@ -129,9 +125,7 @@ export function useChatMessages(
           }
         }
       )
-      .subscribe((status) => {
-        console.log("[use-chat-messages] Subscription status:", status);
-      });
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);

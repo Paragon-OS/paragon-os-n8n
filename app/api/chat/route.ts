@@ -29,23 +29,16 @@ const chatRequestSchema = z.object({
  */
 function extractChatInput(messages: UIMessage[]): string {
   if (!messages || messages.length === 0) {
-    console.warn("[extractChatInput] Empty messages array");
     return "";
   }
-
-  // Log messages for debugging
-  console.log("[extractChatInput] Processing", messages.length, "messages");
   
   // Try to find the last user message specifically
   const userMessages = messages.filter(m => m.role === "user");
   const lastUserMessage = userMessages[userMessages.length - 1];
 
   if (!lastUserMessage) {
-    console.warn("[extractChatInput] No user message found");
     return "";
   }
-
-  console.log("[extractChatInput] Last user message:", JSON.stringify(lastUserMessage, null, 2));
 
   // Extract content from the last user message
   // Handle both 'content' and 'parts' fields (different message formats)
@@ -82,7 +75,6 @@ function extractChatInput(messages: UIMessage[]): string {
   }
 
   if (content && content.trim() !== "") {
-    console.log("[extractChatInput] Successfully extracted:", content.substring(0, 100));
     return content;
   }
 
@@ -133,7 +125,6 @@ export async function POST(req: Request) {
   
   // Generate assistant message ID early (before streamText call)
   const assistantMessageId = randomUUID();
-  console.log(`[chat/route] Generated assistant message ID: ${assistantMessageId}`);
   
   // Save incoming messages to Supabase (non-blocking)
   // This runs in the background and won't affect the response
@@ -149,7 +140,6 @@ export async function POST(req: Request) {
   // Get webhook mode from cookies
   const cookieHeader = req.headers.get("cookie");
   const webhookMode = getWebhookModeFromCookieHeader(cookieHeader);
-  console.log(`[chat/route] 🔧 Webhook Mode: ${webhookMode}`);
 
   const paragonOS = tool({
     description: "ParagonOS is an intelligent messaging platform management assistant with sophisticated Discord and Telegram agent tools. Use this tool when the user wants to interact with Discord or Telegram (check messages, send DMs/messages, search conversations, manage contacts, etc.). The agents automatically handle context enrichment, AI planning with playbooks, sequential MCP tool execution, and result validation with retries. Pass the user's request in natural language - the agents will handle all planning and execution automatically.",
@@ -162,7 +152,6 @@ export async function POST(req: Request) {
       
       // Validate the provided prompt
       if (!chatInput || chatInput.trim() === "") {
-        console.warn("[paragonOS] Empty prompt parameter provided, attempting to extract from messages array");
         chatInput = extractChatInput(messages);
       }
       
@@ -174,18 +163,10 @@ export async function POST(req: Request) {
         };
       }
       
-      console.log("[paragonOS] Using chatInput (length:", chatInput.length, "):", chatInput.substring(0, 100));
-      
       // Extract messageId from the last user message (the one that triggered this tool call)
       const userMessages = messages.filter(m => m.role === "user");
       const lastUserMessage = userMessages[userMessages.length - 1];
       const messageId = lastUserMessage?.id;
-      
-      if (messageId) {
-        console.log(`[paragonOS] Extracted messageId: ${messageId}`);
-      } else {
-        console.warn("[paragonOS] No messageId found in last user message. Available messages:", messages.map(m => ({ role: m.role, id: m.id })));
-      }
       
       // Get the stream URL for updates using unified URL construction
       const streamUrl = getStreamingUpdateUrl(req);
@@ -200,10 +181,7 @@ export async function POST(req: Request) {
         },
       };
       
-      console.log(`[paragonOS] Sending payload to n8n with metadata:`, { sessionId, messageId: messageId || 'undefined', streamUrl });
-      
       const webhookUrl = getWorkflowWebhookUrl("paragonOS", webhookMode);
-      console.log(`[chat/route] 🎯 Webhook URL: ${webhookUrl}`);
       if (!webhookUrl) {
         return {
           success: false,

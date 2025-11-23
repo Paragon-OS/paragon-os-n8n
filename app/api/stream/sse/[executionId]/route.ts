@@ -16,8 +16,6 @@ export async function GET(
   const { executionId: paramExecutionId } = await params;
   const executionId = paramExecutionId || "default";
 
-  console.log(`[sse] New SSE connection request for execution: ${executionId}`);
-
   // Create a ReadableStream for SSE
   const stream = new ReadableStream({
     start(controller) {
@@ -37,7 +35,6 @@ export async function GET(
 
       // Send history of updates for this execution
       const history = streamingStore.getHistory(executionId);
-      console.log(`[sse] Sending ${history.length} historical updates to client`);
       
       history.forEach((update) => {
         const data = `data: ${JSON.stringify(update)}\n\n`;
@@ -47,7 +44,6 @@ export async function GET(
       // Also send history for 'default' if this is not already default
       if (executionId !== "default") {
         const defaultHistory = streamingStore.getHistory("default");
-        console.log(`[sse] Sending ${defaultHistory.length} default historical updates to client`);
         
         defaultHistory.forEach((update) => {
           const data = `data: ${JSON.stringify(update)}\n\n`;
@@ -57,7 +53,6 @@ export async function GET(
 
       // Handle client disconnect
       request.signal.addEventListener("abort", () => {
-        console.log(`[sse] Client disconnected from execution: ${executionId}`);
         streamingStore.removeConnection(executionId, connection);
       });
 
@@ -66,7 +61,6 @@ export async function GET(
         try {
           controller.enqueue(encoder.encode(": keep-alive\n\n"));
         } catch {
-          console.log(`[sse] Keep-alive failed, connection likely closed`);
           clearInterval(keepAliveInterval);
           streamingStore.removeConnection(executionId, connection);
         }
