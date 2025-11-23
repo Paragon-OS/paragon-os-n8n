@@ -199,8 +199,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Extract sessionId and messageId from request body
-    const sessionId = body.sessionId || undefined;
-    const messageId = body.messageId || undefined;
+    // Support both metadata object (new format) and top-level (backward compatibility)
+    const metadata = body.metadata || {};
+    const sessionId = metadata.sessionId || body.sessionId || undefined;
+    const messageId = metadata.messageId || body.messageId || undefined;
 
     // Create update object
     const update: StreamUpdate = {

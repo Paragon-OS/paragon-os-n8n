@@ -189,12 +189,14 @@ export async function POST(req: Request) {
       // Prepare payload in the format N8N webhook expects
       const payload = {
         chatInput: chatInput,
-        sessionId: sessionId,
-        messageId: messageId, // Always include messageId (may be undefined)
-        streamUrl: streamUrl,
+        metadata: {
+          sessionId: sessionId,
+          messageId: messageId, // Always include messageId (may be undefined)
+          streamUrl: streamUrl,
+        },
       };
       
-      console.log(`[paragonOS] Sending payload to n8n with sessionId: ${sessionId}, messageId: ${messageId || 'undefined'}`);
+      console.log(`[paragonOS] Sending payload to n8n with metadata:`, { sessionId, messageId: messageId || 'undefined', streamUrl });
       
       const webhookUrl = getWorkflowWebhookUrl("paragonOS", webhookMode);
       console.log(`[chat/route] 🎯 Webhook URL: ${webhookUrl}`);
