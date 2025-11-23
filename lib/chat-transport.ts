@@ -37,7 +37,7 @@ export function markSessionAsActive(sessionId: string) {
 export function setIsLoadingHistoricalMessages(value: boolean, sessionId?: string | null) {
   if (value && sessionId) {
     markSessionAsHistorical(sessionId);
-  }
+    }
 }
 
 /**

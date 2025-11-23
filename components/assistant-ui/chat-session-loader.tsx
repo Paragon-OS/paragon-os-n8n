@@ -52,20 +52,8 @@ export function ChatSessionLoader() {
   const lastLoadedMessageCount = useRef<number>(0);
 
   useEffect(() => {
-    console.log("[chat-session-loader] Effect triggered", {
-      activeSessionId,
-      isLoading,
-      messagesCount: messages.length,
-      lastLoaded: lastLoadedSessionId.current,
-      lastMessageCount: lastLoadedMessageCount.current,
-    });
-
     // Only load if we have a session and messages are loaded
     if (!activeSessionId || isLoading) {
-      console.log("[chat-session-loader] Skipping - no session or still loading", {
-        activeSessionId,
-        isLoading,
-      });
       return;
     }
 
@@ -73,11 +61,8 @@ export function ChatSessionLoader() {
     const isSameSession = lastLoadedSessionId.current === activeSessionId;
     const isSameMessageCount = lastLoadedMessageCount.current === messages.length;
     if (isSameSession && isSameMessageCount) {
-      console.log("[chat-session-loader] Skipping - already loaded this session with same message count");
       return;
     }
-
-    console.log("[chat-session-loader] Processing session:", activeSessionId, "messages:", messages.length);
 
     try {
       // Get the current thread from runtime
@@ -94,13 +79,6 @@ export function ChatSessionLoader() {
                           (previousSessionId !== activeSessionId || !isSameMessageCount);
       
       if (shouldReset) {
-        console.log("[chat-session-loader] Resetting thread", {
-          reason: previousSessionId !== activeSessionId ? "session switch" : "message count changed",
-          from: previousSessionId,
-          to: activeSessionId,
-          prevCount: lastLoadedMessageCount.current,
-          newCount: messages.length,
-        });
         try {
           if (typeof thread.reset === 'function') {
             thread.reset();
@@ -111,7 +89,6 @@ export function ChatSessionLoader() {
       }
 
       if (messages.length > 0) {
-        console.log("[chat-session-loader] Loading", messages.length, "messages for session:", activeSessionId);
         // Mark session as historical BEFORE loading to prevent reconnectToStream
         // This ensures reconnectToStream is blocked even if called during append
         markSessionAsHistorical(activeSessionId);
@@ -120,26 +97,21 @@ export function ChatSessionLoader() {
           // Load messages into the thread using append
           if (typeof thread.append === 'function') {
             // Convert and append each message
-            messages.forEach((message, index) => {
+            messages.forEach((message) => {
               const appendMessage = convertMessageForAppend(message);
-              console.log("[chat-session-loader] Appending message", index + 1, "of", messages.length, message.id);
               thread.append(appendMessage as Parameters<typeof thread.append>[0]);
             });
-            console.log("[chat-session-loader] Successfully appended all messages");
           } else {
             console.error("[chat-session-loader] thread.append is not available. Available methods:", Object.keys(thread));
           }
         } catch (err) {
           console.error("[chat-session-loader] Error loading messages into thread:", err);
         }
-      } else {
-        console.log("[chat-session-loader] No messages for session:", activeSessionId);
       }
 
       // Mark this session as loaded with the current message count
       lastLoadedSessionId.current = activeSessionId;
       lastLoadedMessageCount.current = messages.length;
-      console.log("[chat-session-loader] Marked session as loaded:", activeSessionId, "with", messages.length, "messages");
     } catch (error) {
       console.error("[chat-session-loader] Error loading session:", error);
     }
