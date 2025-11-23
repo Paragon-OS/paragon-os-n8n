@@ -165,7 +165,7 @@ This project uses Supabase for database persistence. The stream events are autom
 3. **Apply migrations automatically**:
    Migrations are automatically applied when you run `supabase start`. If you need to reset:
    ```bash
-   npm run db:migrate:apply
+   npm run db:migrate
    ```
 
 4. **Update your `.env.local`**:
@@ -202,8 +202,8 @@ npm run db:start    # Automatically configures Podman
 
 ### Migration Management
 
-- **View migrations**: `npm run db:migrate`
-- **Apply migrations**: `npm run db:migrate:apply`
+- **View migrations**: `npm run db:migrate:status`
+- **Apply migrations**: `npm run db:migrate`
 - **Check status**: `npm run db:status`
 - **Start Supabase**: `npm run db:start`
 - **Stop Supabase**: `npm run db:stop`

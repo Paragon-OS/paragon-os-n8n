@@ -4,6 +4,17 @@
  * Automatically applies pending migrations to Supabase (local or remote)
  */
 
+// Load environment variables from .env.local (Next.js convention)
+import { config } from "dotenv";
+import { resolve } from "path";
+
+// Load .env.local first (takes precedence), then .env
+const envLocalPath = resolve(process.cwd(), ".env.local");
+const envPath = resolve(process.cwd(), ".env");
+
+config({ path: envLocalPath });
+config({ path: envPath });
+
 import { readdir, readFile } from "fs/promises";
 import { join } from "path";
 import { createClient } from "@supabase/supabase-js";
@@ -249,7 +260,7 @@ async function runMigrations() {
     console.log("  Copy the SQL from migration files and run in Supabase SQL editor\n");
 
     console.log("Method 3: Use the provided npm scripts");
-    console.log("  npm run db:migrate  # Shows migration files\n");
+    console.log("  npm run db:migrate:status  # Shows migration files\n");
 
     console.log("\nMigration files found:");
     migrations.forEach((m) => {

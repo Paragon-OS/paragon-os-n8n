@@ -278,7 +278,7 @@ export async function saveChatMessagesToSupabase(
         "[supabase-chat] Chat tables not found. Run migrations to enable chat persistence."
       );
       console.log(
-        "[supabase-chat] Run: npm run db:migrate:apply or apply migration: 20251123041748_create_chat_tables.sql"
+        "[supabase-chat] Run: npm run db:migrate or apply migration: 20251123041748_create_chat_tables.sql"
       );
       return;
     }

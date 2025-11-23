@@ -62,7 +62,7 @@ export async function getMigrationFiles(): Promise<string[]> {
   }
   
   // Server-side implementation would go here, but we'll keep it simple
-  // Use the migration scripts instead: npm run db:migrate
+  // Use the migration scripts instead: npm run db:migrate:status
   return [];
 }
 
@@ -79,7 +79,7 @@ export async function readMigrationFile(_filename: string): Promise<string> {
   }
   
   // Server-side implementation would go here, but we'll keep it simple
-  // Use the migration scripts instead: npm run db:migrate
+  // Use the migration scripts instead: npm run db:migrate:status
   return "";
 }
 
@@ -106,7 +106,7 @@ export function logMigrationInstructions(): void {
   console.log("  2. Copy SQL from: supabase/migrations/20240120000000_create_stream_events.sql");
   console.log("  3. Paste and run the SQL\n");
   console.log("Method 3: Using Migration Scripts");
-  console.log("  npm run db:migrate   # View migration files\n");
+  console.log("  npm run db:migrate:status   # View migration files\n");
   console.log("See supabase/README.md for detailed instructions.\n");
 }
 

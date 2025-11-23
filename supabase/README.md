@@ -52,8 +52,8 @@ If you don't have Supabase CLI installed, you can apply migrations manually:
 
 ## Available Scripts
 
-- `npm run db:migrate` - List all migration files and show instructions
-- `npm run db:migrate:apply` - Apply migrations using Supabase CLI (`supabase db reset`)
+- `npm run db:migrate:status` - List all migration files and show instructions
+- `npm run db:migrate` - Apply migrations using Supabase CLI (`supabase db reset`)
 - `npm run db:status` - Check migration status using Supabase CLI
 - `npm run db:setup` - Initialize Supabase in the project
 - `npm run db:start` - Start local Supabase (auto-detects Podman/Docker)
@@ -118,7 +118,7 @@ For local development with Supabase:
 4. **Apply migrations**:
    Migrations are automatically applied when you run `supabase start`, but you can reset the database with:
    ```bash
-   npm run db:migrate:apply
+   npm run db:migrate
    # or directly:
    supabase db reset
    ```
