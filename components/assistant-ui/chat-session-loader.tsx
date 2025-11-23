@@ -120,6 +120,19 @@ export function ChatSessionLoader() {
                 }
               }
               
+              // Convert content to array format if it's a string (toCreateMessage expects array)
+              // This ensures compatibility with AI SDK's toCreateMessage function
+              if (validMsg.content !== undefined && validMsg.content !== null && validMsg.content !== "") {
+                if (typeof validMsg.content === "string") {
+                  // Convert string to array format: [{ type: "text", text: content }]
+                  validMsg.content = [{ type: "text", text: validMsg.content }];
+                } else if (!Array.isArray(validMsg.content) && typeof validMsg.content === "object") {
+                  // Wrap object in array
+                  validMsg.content = [validMsg.content];
+                }
+                // If already an array, keep it as is
+              }
+              
               // Handle parts - only include if it's an array (assistant-ui expects arrays, not strings)
               // Don't include parts if it's just a string duplicate of content
               if (msgAny.parts !== undefined && msgAny.parts !== null && msgAny.parts !== "") {
@@ -210,7 +223,12 @@ export function ChatSessionLoader() {
               }
               // Skip messages with empty content (they might cause issues in assistant-ui)
               // But allow messages with toolInvocations or toolCalls even if content is empty
-              const hasContent = msg.content && (typeof msg.content === "string" ? msg.content.trim() !== "" : true);
+              // Content is now always an array after conversion, so check array length
+              const hasContent = msg.content && (
+                Array.isArray(msg.content) 
+                  ? msg.content.length > 0 
+                  : (typeof msg.content === "string" ? msg.content.trim() !== "" : true)
+              );
               const hasToolInvocations = msg.toolInvocations && Array.isArray(msg.toolInvocations) && msg.toolInvocations.length > 0;
               const hasToolCalls = msg.toolCalls && Array.isArray(msg.toolCalls) && msg.toolCalls.length > 0;
               
