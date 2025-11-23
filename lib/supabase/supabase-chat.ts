@@ -355,6 +355,61 @@ export interface UpdateChatMessageOptions {
   contentParts?: unknown[];
   toolInvocations?: unknown[];
   metadata?: Record<string, unknown>;
+  appendContent?: string; // Append to existing content instead of replacing
+}
+
+/**
+ * Get a chat message by message_id
+ * Returns null if message not found or on error
+ */
+export async function getChatMessageByMessageId(
+  messageId: string,
+  sessionId?: string
+): Promise<ChatMessageRow | null> {
+  const supabase = createSupabaseClient();
+
+  if (!supabase) {
+    console.warn(
+      "[supabase-chat] Supabase not configured, cannot retrieve message"
+    );
+    return null;
+  }
+
+  try {
+    let query = supabase
+      .from("chat_messages")
+      .select("*")
+      .eq("message_id", messageId)
+      .single();
+
+    if (sessionId) {
+      query = query.eq("session_id", sessionId);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        // No rows returned
+        return null;
+      }
+      console.error(
+        "[supabase-chat] Error retrieving chat message:",
+        error,
+        { messageId, sessionId }
+      );
+      return null;
+    }
+
+    return data as ChatMessageRow;
+  } catch (error) {
+    console.error(
+      "[supabase-chat] Unexpected error retrieving chat message:",
+      error,
+      { messageId }
+    );
+    return null;
+  }
 }
 
 /**
@@ -396,21 +451,34 @@ export async function updateChatMessage(
   }
 
   try {
+    // If appendContent is provided, fetch current message first
+    let currentContent = "";
+    if (options.appendContent !== undefined) {
+      const currentMessage = await getChatMessageByMessageId(
+        options.messageId,
+        options.sessionId
+      );
+      if (currentMessage) {
+        currentContent = currentMessage.content || "";
+      }
+    }
+
     // Build update object with only provided fields
     const updateData: Partial<ChatMessageRow> = {};
 
-    if (options.content !== undefined) {
+    if (options.appendContent !== undefined) {
+      // Append to existing content
+      updateData.content = currentContent + options.appendContent;
+      updateData.content_parts = undefined;
+    } else if (options.content !== undefined) {
       updateData.content = options.content;
       // Clear content_parts if content is being set
-      // Use undefined instead of null for TypeScript compatibility
-      // Supabase will handle the null conversion if needed
       updateData.content_parts = undefined;
     }
 
     if (options.contentParts !== undefined) {
       updateData.content_parts = options.contentParts;
       // Clear content if content_parts is being set
-      // Use undefined instead of null for TypeScript compatibility
       updateData.content = undefined;
     }
 

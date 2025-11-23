@@ -237,16 +237,23 @@ export async function POST(request: NextRequest) {
     });
 
     // Update assistant message if messageId is provided in metadata
-    // This allows n8n workflow events to update the assistant message record
+    // This allows n8n workflow events to append event data to the assistant message record
     if (update.metadata?.messageId) {
       const messageId = update.metadata.messageId;
       const sessionId = update.metadata.sessionId;
 
-      // Update the message with event information
-      // We'll store event data in metadata and optionally append to content
+      // Format event data to append to message content
+      let eventText = `\n\n[${update.stage}] ${update.status}: ${update.message}`;
+      if (update.data && Object.keys(update.data).length > 0) {
+        const dataStr = JSON.stringify(update.data, null, 2);
+        eventText += `\nData: ${dataStr}`;
+      }
+
+      // Append event data to the message content
       updateChatMessage({
         messageId: messageId,
         sessionId: sessionId,
+        appendContent: eventText,
         metadata: {
           lastStreamEvent: {
             executionId: update.executionId,
@@ -256,7 +263,6 @@ export async function POST(request: NextRequest) {
             timestamp: update.timestamp,
             data: update.data,
           },
-          // Preserve existing metadata if needed
         },
       }).catch((error) => {
         // Log error but don't fail the webhook response
