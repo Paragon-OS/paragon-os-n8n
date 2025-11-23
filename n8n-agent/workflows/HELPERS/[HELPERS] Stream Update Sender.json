@@ -22,6 +22,9 @@
             },
             {
               "name": "message"
+            },
+            {
+              "name": "sessionId"
             }
           ]
         }
@@ -60,7 +63,7 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "={\n   \"eventBody\":   {\n    \"executionId\": {{ $execution.id.toJsonString() }},\n    \"stage\": {{ $json.stage.toJsonString() }},\n    \"status\": {{ $json.status.toJsonString() }},\n    \"message\": {{ $json.message.toJsonString() }},\n    \"data\": {{ $json.data?.toJsonString() }} ,\n    \"streamUrl\": \"http://localhost:3000/api/stream/update\"\n  } \n}",
+        "jsonOutput": "={\n   \"eventBody\":   {\n    \"executionId\": {{ $execution.id.toJsonString() }},\n    \"sessionId\": {{ $json.sessionId?.toJsonString() }},\n    \"stage\": {{ $json.stage.toJsonString() }},\n    \"status\": {{ $json.status.toJsonString() }},\n    \"message\": {{ $json.message.toJsonString() }},\n    \"data\": {{ $json.data?.toJsonString() }} ,\n    \"streamUrl\": \"http://localhost:3000/api/stream/update\"\n  } \n}",
         "options": {}
       },
       "type": "n8n-nodes-base.set",

@@ -198,9 +198,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Extract sessionId from body (can be at top level or in data object)
+    const sessionId = body.sessionId || body.data?.sessionId || undefined;
+
     // Create update object
     const update: StreamUpdate = {
       executionId: executionId,
+      sessionId: sessionId,
       stage: body.stage || "unknown",
       status: body.status || "info",
       message: body.message || "",

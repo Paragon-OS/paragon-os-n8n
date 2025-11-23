@@ -12,6 +12,9 @@
           "values": [
             {
               "name": "userPrompt"
+            },
+            {
+              "name": "sessionId"
             }
           ]
         }
@@ -460,7 +463,8 @@
             "data": "={{ \n   { telegramSeqInput: $json.userPrompt}\n}}",
             "stage": "telegram_collect_context",
             "status": "in_progress",
-            "message": "=Collecting context needed from telegram..."
+            "message": "=Collecting context needed from telegram...",
+            "sessionId": "={{ $('When Executed by Another Workflow').item.json.sessionId }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -497,6 +501,16 @@
             {
               "id": "message",
               "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -534,7 +548,8 @@
             "data": "={{ \n   {\n     toolRecommendations: $json.context.toolRecommendations?.map(tool=> tool.name),\n     matchingContacts: $json.context.matchingContacts?.map(contact => contact.name)\n   }\n}}",
             "stage": "telegram_collect_context",
             "status": "in_progress",
-            "message": "=Planning how to perform actions on telegram..."
+            "message": "=Planning how to perform actions on telegram...",
+            "sessionId": "={{ $('When Executed by Another Workflow').item.json.sessionId }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -571,6 +586,16 @@
             {
               "id": "message",
               "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -608,7 +633,8 @@
             "data": "={{ \n   {\n     executionSteps: $json.output.executionSteps\n   }\n}}",
             "stage": "telegram_execution_steps",
             "status": "in_progress",
-            "message": "=Planned execution steps on telegram!"
+            "message": "=Planned execution steps on telegram!",
+            "sessionId": "={{ $('When Executed by Another Workflow').item.json.sessionId }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -645,6 +671,16 @@
             {
               "id": "message",
               "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -682,7 +718,8 @@
             "data": "={{ \n   {\n  \"directAnswer\": $json.directAnswer,\n  \"refinedUserPrompt\": $json.refinedUserPrompt\n}\n}}",
             "stage": "telegram_sequence_end",
             "status": "in_progress",
-            "message": "=Telegram execution sequence was validated successfully!"
+            "message": "=Telegram execution sequence was validated successfully!",
+            "sessionId": "={{ $('When Executed by Another Workflow').item.json.sessionId }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -719,6 +756,16 @@
             {
               "id": "message",
               "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
               "required": false,
               "defaultMatch": false,
               "display": true,

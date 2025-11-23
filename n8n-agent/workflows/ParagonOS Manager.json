@@ -55,7 +55,8 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `Natural language request for Discord operations. Examples: 'Check for unreplied messages in wandrlust admin channel', 'DM sebastian about the meeting', 'What did people say about the launch in metarune-labs?', 'Reply to my pending DMs', 'List all members in the dev server'`, 'string') }}"
+            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `Natural language request for Discord operations. Examples: 'Check for unreplied messages in wandrlust admin channel', 'DM sebastian about the meeting', 'What did people say about the launch in metarune-labs?', 'Reply to my pending DMs', 'List all members in the dev server'`, 'string') }}",
+            "sessionId": "={{ $('Webhook').item.json.body.sessionId || $('Webhook').item.json.body.data.sessionId }}"
           },
           "matchingColumns": [
             "userPrompt"
@@ -64,6 +65,16 @@
             {
               "id": "userPrompt",
               "displayName": "userPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -161,7 +172,8 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `Natural language request for Telegram operations. Examples: 'Check for unreplied messages from sebastian', 'Message john about the meeting', 'What did people say about the launch in the dev group?', 'Reply to my pending chats', 'List all contacts', 'Search for messages about deployment in the team group'`, 'string') }}"
+            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `Natural language request for Telegram operations. Examples: 'Check for unreplied messages from sebastian', 'Message john about the meeting', 'What did people say about the launch in the dev group?', 'Reply to my pending chats', 'List all contacts', 'Search for messages about deployment in the team group'`, 'string') }}",
+            "sessionId": "={{ $('Webhook').item.json.body.sessionId || $('Webhook').item.json.body.data.sessionId }}"
           },
           "matchingColumns": [
             "userPrompt"
@@ -170,6 +182,15 @@
             {
               "id": "userPrompt",
               "displayName": "userPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -221,7 +242,8 @@
             "data": "={{ \n   {\"executionResult\": $json.output}\n}}",
             "stage": "manager_output",
             "status": "completed",
-            "message": "Workflow completed successfully!"
+            "message": "Workflow completed successfully!",
+            "sessionId": "={{ $('Webhook').item.json.body.sessionId || $('Webhook').item.json.body.data.sessionId }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -258,6 +280,16 @@
             {
               "id": "message",
               "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -295,7 +327,8 @@
             "data": "={{ \n   {\"executionResult\": $json.output}\n}}",
             "stage": "manager_input",
             "status": "in_progress",
-            "message": "=Workflow is starting with user prompt: {{ $json.body.data.chatInput?.toJsonString() }}"
+            "message": "=Workflow is starting with user prompt: {{ $json.body.data.chatInput?.toJsonString() }}",
+            "sessionId": "={{ $json.body.sessionId || $json.body.data.sessionId }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -332,6 +365,16 @@
             {
               "id": "message",
               "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
               "required": false,
               "defaultMatch": false,
               "display": true,
