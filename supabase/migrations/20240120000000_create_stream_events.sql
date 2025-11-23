@@ -38,3 +38,6 @@ COMMENT ON COLUMN stream_events.timestamp IS 'Timestamp when the event occurred 
 COMMENT ON COLUMN stream_events.data IS 'Additional event data as JSON (optional)';
 COMMENT ON COLUMN stream_events.created_at IS 'Timestamp when the record was created in the database (auto-generated)';
 
+-- Enable Realtime for stream_events table
+ALTER PUBLICATION supabase_realtime ADD TABLE stream_events;
+
