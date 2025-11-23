@@ -56,6 +56,15 @@ export function StreamMonitor({
       ? updates.filter((update) => executionIds.includes(update.executionId))
       : updates;
 
+  // Get unique session IDs from filtered updates
+  const uniqueSessionIds = Array.from(
+    new Set(
+      filteredUpdates
+        .map((update) => update.sessionId)
+        .filter((id): id is string => Boolean(id))
+    )
+  );
+
   const getStatusColor = (status: string): string => {
     switch (status) {
       case "completed":
@@ -175,10 +184,15 @@ export function StreamMonitor({
             >
               {/* Header */}
               <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-mono text-xs text-muted-foreground">
                     {update.executionId.slice(0, 8)}...
                   </span>
+                  {update.sessionId && (
+                    <span className="font-mono text-xs text-blue-400 bg-blue-950/30 px-2 py-0.5 rounded">
+                      Session: {update.sessionId.slice(0, 8)}...
+                    </span>
+                  )}
                   <span
                     className={`text-xs font-semibold uppercase ${getStatusTextColor(
                       update.status
@@ -218,20 +232,36 @@ export function StreamMonitor({
 
       {/* Footer */}
       <div className="border-t p-2">
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div>
-            {filteredUpdates.length} update{filteredUpdates.length !== 1 ? "s" : ""}{" "}
-            {executionIds.length > 0 ? "shown" : "received"}
-            {executionIds.length > 0 && (
-              <span> • Filtering {executionIds.length} execution(s)</span>
-            )}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div>
+              {filteredUpdates.length} update{filteredUpdates.length !== 1 ? "s" : ""}{" "}
+              {executionIds.length > 0 ? "shown" : "received"}
+              {executionIds.length > 0 && (
+                <span> • Filtering {executionIds.length} execution(s)</span>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <span>Executions: {stats.total}</span>
+              {stats.running > 0 && <span className="text-orange-400">Running: {stats.running}</span>}
+              {stats.completed > 0 && <span className="text-green-400">Completed: {stats.completed}</span>}
+              {stats.error > 0 && <span className="text-red-400">Errors: {stats.error}</span>}
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span>Executions: {stats.total}</span>
-            {stats.running > 0 && <span className="text-orange-400">Running: {stats.running}</span>}
-            {stats.completed > 0 && <span className="text-green-400">Completed: {stats.completed}</span>}
-            {stats.error > 0 && <span className="text-red-400">Errors: {stats.error}</span>}
-          </div>
+          {uniqueSessionIds.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap text-xs">
+              <span className="text-muted-foreground font-medium">Session IDs:</span>
+              {uniqueSessionIds.map((sessionId) => (
+                <span
+                  key={sessionId}
+                  className="font-mono text-blue-400 bg-blue-950/30 px-2 py-0.5 rounded"
+                  title={sessionId}
+                >
+                  {sessionId.slice(0, 8)}...
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

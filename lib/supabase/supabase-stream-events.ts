@@ -13,6 +13,7 @@ import { needsMigrations, logMigrationInstructions } from "./supabase-migrations
 export interface StreamEventRow {
   id?: string; // UUID, auto-generated
   execution_id: string;
+  session_id?: string;
   stage: string;
   status: string;
   message: string;
@@ -67,6 +68,7 @@ export async function saveStreamEventToSupabase(
   try {
     const eventRow: StreamEventRow = {
       execution_id: update.executionId,
+      session_id: update.sessionId,
       stage: update.stage,
       status: update.status,
       message: update.message,
@@ -193,6 +195,7 @@ export async function getAllStreamEvents(
 export function convertStreamEventRowToUpdate(row: StreamEventRow): StreamUpdate {
   return {
     executionId: row.execution_id,
+    sessionId: row.session_id,
     stage: row.stage,
     status: row.status as "in_progress" | "completed" | "error" | "info",
     message: row.message,

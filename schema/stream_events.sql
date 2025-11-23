@@ -5,6 +5,7 @@
 CREATE TABLE IF NOT EXISTS stream_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   execution_id TEXT NOT NULL,
+  session_id TEXT,
   stage TEXT NOT NULL,
   status TEXT NOT NULL,
   message TEXT NOT NULL,
@@ -15,6 +16,9 @@ CREATE TABLE IF NOT EXISTS stream_events (
 
 -- Create an index on execution_id for efficient querying by execution
 CREATE INDEX IF NOT EXISTS idx_stream_events_execution_id ON stream_events(execution_id);
+
+-- Create an index on session_id for efficient querying by session
+CREATE INDEX IF NOT EXISTS idx_stream_events_session_id ON stream_events(session_id);
 
 -- Create an index on timestamp for efficient time-based queries
 CREATE INDEX IF NOT EXISTS idx_stream_events_timestamp ON stream_events(timestamp DESC);
@@ -31,6 +35,7 @@ COMMENT ON TABLE stream_events IS 'Stores stream monitor events from n8n workflo
 -- Add comments to columns for documentation
 COMMENT ON COLUMN stream_events.id IS 'Unique identifier for the event (auto-generated UUID)';
 COMMENT ON COLUMN stream_events.execution_id IS 'n8n execution ID that this event belongs to';
+COMMENT ON COLUMN stream_events.session_id IS 'Chat session ID that this event belongs to';
 COMMENT ON COLUMN stream_events.stage IS 'Stage of the workflow execution (e.g., "setup", "processing", "cleanup")';
 COMMENT ON COLUMN stream_events.status IS 'Status of the event (in_progress, completed, error, info)';
 COMMENT ON COLUMN stream_events.message IS 'Human-readable message describing the event';
