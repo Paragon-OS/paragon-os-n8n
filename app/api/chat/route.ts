@@ -177,12 +177,8 @@ export async function POST(req: Request) {
       
       // Prepare payload in the format N8N webhook expects
       const payload = {
-        stage: "context_enrichment",
-        status: "in_progress",
-        message: "Processing request...",
-        data: {
-          chatInput: chatInput,
-        },
+        chatInput: chatInput,
+        sessionId: sessionId,
         streamUrl: streamUrl,
       };
       
