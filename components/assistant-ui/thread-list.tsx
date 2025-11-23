@@ -4,10 +4,11 @@ import {
   ThreadListPrimitive,
   useAssistantState,
 } from "@assistant-ui/react";
-import { ArchiveIcon, PlusIcon } from "lucide-react";
+import { ArchiveIcon, PlusIcon, InfoIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useChatSessionsContext } from "@/components/assistant-ui/chat-sessions-context";
 
@@ -70,6 +71,27 @@ const SupabaseThreadListItems: FC = () => {
               </span>
             )}
           </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="mr-3 ml-auto size-6 p-0 text-foreground hover:text-primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              >
+                <InfoIcon className="size-4" />
+                <span className="sr-only">View session JSON</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent
+              side="right"
+              className="max-w-lg font-mono text-xs whitespace-pre-wrap break-words"
+            >
+              {JSON.stringify(session, null, 2)}
+            </TooltipContent>
+          </Tooltip>
         </div>
       ))}
     </>
