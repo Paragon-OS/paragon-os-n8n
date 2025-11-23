@@ -5,6 +5,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   CopyIcon,
+  InfoIcon,
   PencilIcon,
   RefreshCwIcon,
   Square,
@@ -17,6 +18,7 @@ import {
   ErrorPrimitive,
   MessagePrimitive,
   ThreadPrimitive,
+  useAssistantState,
 } from "@assistant-ui/react";
 
 import type { FC } from "react";
@@ -33,6 +35,8 @@ import {
   ComposerAttachments,
   UserMessageAttachments,
 } from "@/components/assistant-ui/attachment";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useChatSessionsContext } from "@/components/assistant-ui/chat-sessions-context";
 
 import { cn } from "@/lib/utils";
 import { ChatSessionLoader } from "@/components/assistant-ui/chat-session-loader";
@@ -291,6 +295,44 @@ const MessageError: FC = () => {
   );
 };
 
+const MessageMetadataIcon: FC = () => {
+  const messageId = useAssistantState((state) => {
+    const message = state.message;
+    return message?.id;
+  });
+  const { activeSessionId } = useChatSessionsContext();
+
+  if (!messageId && !activeSessionId) {
+    return null;
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors ml-1">
+          <InfoIcon className="w-3.5 h-3.5" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="right" className="max-w-xs">
+        <div className="space-y-1 text-xs">
+          {activeSessionId && (
+            <div>
+              <span className="font-semibold">Session ID:</span>
+              <div className="font-mono break-all">{activeSessionId}</div>
+            </div>
+          )}
+          {messageId && (
+            <div>
+              <span className="font-semibold">Message ID:</span>
+              <div className="font-mono break-all">{messageId}</div>
+            </div>
+          )}
+        </div>
+      </TooltipContent>
+    </Tooltip>
+  );
+};
+
 const AssistantMessage: FC = () => {
   return (
     <MessagePrimitive.Root asChild>
@@ -311,7 +353,8 @@ const AssistantMessage: FC = () => {
           <MessageError />
         </div>
 
-        <div className="aui-assistant-message-footer mt-2 ml-2 flex">
+        <div className="aui-assistant-message-footer mt-2 ml-2 flex items-center gap-1">
+          <MessageMetadataIcon />
           <BranchPicker />
           <AssistantActionBar />
         </div>
@@ -357,8 +400,9 @@ const UserMessage: FC = () => {
         <UserMessageAttachments />
 
         <div className="aui-user-message-content-wrapper relative col-start-2 min-w-0">
-          <div className="aui-user-message-content rounded-3xl bg-muted px-5 py-2.5 break-words text-foreground">
+          <div className="aui-user-message-content rounded-3xl bg-muted px-5 py-2.5 break-words text-foreground flex items-start gap-1">
             <MessagePrimitive.Parts />
+            <MessageMetadataIcon />
           </div>
           <div className="aui-user-action-bar-wrapper absolute top-1/2 left-0 -translate-x-full -translate-y-1/2 pr-2">
             <UserActionBar />

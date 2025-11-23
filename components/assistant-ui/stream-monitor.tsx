@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { InfoIcon } from "lucide-react";
 import { useStreaming } from "./streaming-context";
 import { useExecutionStore } from "@/lib/stores/execution-store";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface StreamMonitorProps {
   executionIds?: string[]; // Optional: filter to specific executions
@@ -188,10 +190,30 @@ export function StreamMonitor({
                   <span className="font-mono text-xs text-muted-foreground">
                     {update.executionId.slice(0, 8)}...
                   </span>
-                  {update.metadata?.sessionId && (
-                    <span className="font-mono text-xs text-blue-400 bg-blue-950/30 px-2 py-0.5 rounded">
-                      Session: {update.metadata.sessionId.slice(0, 8)}...
-                    </span>
+                  {(update.metadata?.sessionId || update.metadata?.messageId) && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors">
+                          <InfoIcon className="w-3.5 h-3.5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="max-w-xs">
+                        <div className="space-y-1 text-xs">
+                          {update.metadata?.sessionId && (
+                            <div>
+                              <span className="font-semibold">Session ID:</span>
+                              <div className="font-mono break-all">{update.metadata.sessionId}</div>
+                            </div>
+                          )}
+                          {update.metadata?.messageId && (
+                            <div>
+                              <span className="font-semibold">Message ID:</span>
+                              <div className="font-mono break-all">{update.metadata.messageId}</div>
+                            </div>
+                          )}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
                   )}
                   <span
                     className={`text-xs font-semibold uppercase ${getStatusTextColor(
