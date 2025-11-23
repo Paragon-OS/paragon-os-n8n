@@ -14,7 +14,8 @@
               "name": "userPrompt"
             },
             {
-              "name": "sessionId"
+              "name": "metadata",
+              "type": "object"
             }
           ]
         }
@@ -408,7 +409,7 @@
           "value": {
             "executionSteps": "={{ $json.output.executionSteps }}",
             "targetMcp": "TELEGRAM",
-            "sessionId": "={{ $('When Executed by Another Workflow').item.json.sessionId }}"
+            "metadata": "={{ $('When Executed by Another Workflow').item.json.metadata }}"
           },
           "matchingColumns": [
             "executionSteps"
@@ -435,13 +436,13 @@
               "removed": false
             },
             {
-              "id": "sessionId",
-              "displayName": "sessionId",
+              "id": "metadata",
+              "displayName": "metadata",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
-              "type": "string",
+              "type": "object",
               "removed": false
             }
           ],
@@ -475,7 +476,7 @@
             "stage": "telegram_collect_context",
             "status": "in_progress",
             "message": "=Collecting context needed from telegram...",
-            "sessionId": "={{ $json.sessionId }}"
+            "metadata": "={{ $json.metadata }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -520,13 +521,13 @@
               "removed": false
             },
             {
-              "id": "sessionId",
-              "displayName": "sessionId",
+              "id": "metadata",
+              "displayName": "metadata",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
-              "type": "string",
+              "type": "object",
               "removed": false
             }
           ],
@@ -560,7 +561,7 @@
             "stage": "telegram_collect_context",
             "status": "in_progress",
             "message": "=Planning how to perform actions on telegram...",
-            "sessionId": "={{ $('When Executed by Another Workflow').item.json.sessionId }}"
+            "metadata": "={{ $('When Executed by Another Workflow').item.json.metadata }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -605,13 +606,13 @@
               "removed": false
             },
             {
-              "id": "sessionId",
-              "displayName": "sessionId",
+              "id": "metadata",
+              "displayName": "metadata",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
-              "type": "string",
+              "type": "object",
               "removed": false
             }
           ],
@@ -645,7 +646,7 @@
             "stage": "telegram_execution_steps",
             "status": "in_progress",
             "message": "=Planned execution steps on telegram!",
-            "sessionId": "={{ $('When Executed by Another Workflow').item.json.sessionId }}"
+            "metadata": "={{ $('When Executed by Another Workflow').item.json.metadata }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -690,13 +691,13 @@
               "removed": false
             },
             {
-              "id": "sessionId",
-              "displayName": "sessionId",
+              "id": "metadata",
+              "displayName": "metadata",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
-              "type": "string",
+              "type": "object",
               "removed": false
             }
           ],
@@ -730,7 +731,7 @@
             "stage": "telegram_sequence_end",
             "status": "in_progress",
             "message": "=Telegram execution sequence was validated successfully!",
-            "sessionId": "={{ $('When Executed by Another Workflow').item.json.sessionId }}"
+            "metadata": "={{ $('When Executed by Another Workflow').item.json.metadata }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -775,13 +776,13 @@
               "removed": false
             },
             {
-              "id": "sessionId",
-              "displayName": "sessionId",
+              "id": "metadata",
+              "displayName": "metadata",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
-              "type": "string",
+              "type": "object",
               "removed": false
             }
           ],
@@ -1012,7 +1013,11 @@
       {
         "json": {
           "userPrompt": "List last 5 messages with sebastian",
-          "sessionId": "sample-session-id-1"
+          "metadata": {
+            "sessionId": "sample-session-id-1",
+            "messageId": "sample-message-id-1",
+            "streamUrl": "http://localhost:3000/api/stream/update"
+          }
         }
       }
     ]

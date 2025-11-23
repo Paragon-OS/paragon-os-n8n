@@ -56,7 +56,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `Natural language request for Discord operations. Examples: 'Check for unreplied messages in wandrlust admin channel', 'DM sebastian about the meeting', 'What did people say about the launch in metarune-labs?', 'Reply to my pending DMs', 'List all members in the dev server'`, 'string') }}",
-            "sessionId": "={{ $json.body.sessionId }}"
+            "metadata": "={{ $json.body.metadata }}"
           },
           "matchingColumns": [
             "userPrompt"
@@ -73,13 +73,13 @@
               "removed": false
             },
             {
-              "id": "sessionId",
-              "displayName": "sessionId",
+              "id": "metadata",
+              "displayName": "metadata",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
-              "type": "string",
+              "type": "object",
               "removed": false
             }
           ],
@@ -173,7 +173,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `Natural language request for Telegram operations. Examples: 'Check for unreplied messages from sebastian', 'Message john about the meeting', 'What did people say about the launch in the dev group?', 'Reply to my pending chats', 'List all contacts', 'Search for messages about deployment in the team group'`, 'string') }}",
-            "sessionId": "={{ $json.body.sessionId }}"
+            "metadata": "={{ $json.body.metadata }}"
           },
           "matchingColumns": [
             "userPrompt"
@@ -189,13 +189,13 @@
               "type": "string"
             },
             {
-              "id": "sessionId",
-              "displayName": "sessionId",
+              "id": "metadata",
+              "displayName": "metadata",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
-              "type": "string",
+              "type": "object",
               "removed": false
             }
           ],
@@ -244,7 +244,7 @@
             "stage": "manager_output",
             "status": "completed",
             "message": "Workflow completed successfully!",
-            "sessionId": "={{ $('Webhook').item.json.body.sessionId }}"
+            "metadata": "={{ $('Webhook').item.json.body.metadata }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -289,13 +289,13 @@
               "removed": false
             },
             {
-              "id": "sessionId",
-              "displayName": "sessionId",
+              "id": "metadata",
+              "displayName": "metadata",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
-              "type": "string",
+              "type": "object",
               "removed": false
             }
           ],
@@ -329,7 +329,7 @@
             "stage": "manager_input",
             "status": "in_progress",
             "message": "=Workflow is starting with user prompt: {{ $json.body.chatInput?.toJsonString() }}",
-            "sessionId": "={{ $json.body.sessionId }}"
+            "metadata": "={{ $json.body.metadata }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -374,13 +374,13 @@
               "removed": false
             },
             {
-              "id": "sessionId",
-              "displayName": "sessionId",
+              "id": "metadata",
+              "displayName": "metadata",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
-              "type": "string",
+              "type": "object",
               "removed": false
             }
           ],
@@ -538,9 +538,11 @@
           "query": {},
           "body": {
             "chatInput": "Find Cody on Telegram",
-            "sessionId": "session-53c624e2-2e75-4dfd-a960-4995c5139ff1",
-            "messageId": "sf0pr8ZZwql6igKt",
-            "streamUrl": "http://localhost:3000/api/stream/update"
+            "metadata": {
+              "sessionId": "session-53c624e2-2e75-4dfd-a960-4995c5139ff1",
+              "messageId": "sf0pr8ZZwql6igKt",
+              "streamUrl": "http://localhost:3000/api/stream/update"
+            }
           },
           "webhookUrl": "http://localhost:5678/webhook/paragon-os",
           "executionMode": "production"

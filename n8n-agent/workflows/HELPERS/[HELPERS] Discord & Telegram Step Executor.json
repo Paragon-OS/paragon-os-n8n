@@ -18,7 +18,8 @@
               "name": "targetMcp"
             },
             {
-              "name": "sessionId"
+              "name": "metadata",
+              "type": "object"
             }
           ]
         }
@@ -316,7 +317,7 @@
             "stage": "telegram_execution_steps",
             "status": "in_progress",
             "message": "=Executed step on telegram: {{ $json.stepResult.toolName }}",
-            "sessionId": "={{ $('When Executed by Another Workflow').item.json.sessionId }}"
+            "metadata": "={{ $('When Executed by Another Workflow').item.json.metadata }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -361,13 +362,13 @@
               "removed": false
             },
             {
-              "id": "sessionId",
-              "displayName": "sessionId",
+              "id": "metadata",
+              "displayName": "metadata",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
-              "type": "string",
+              "type": "object",
               "removed": false
             }
           ],
@@ -601,7 +602,11 @@
             }
           ],
           "targetMcp": "TELEGRAM",
-          "sessionId": "sample-session-id-1"
+          "metadata": {
+            "sessionId": "sample-session-id-1",
+            "messageId": "sample-message-id-1",
+            "streamUrl": "http://localhost:3000/api/stream/update"
+          }
         }
       }
     ]
