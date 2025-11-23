@@ -37,6 +37,7 @@ import {
 } from "@/components/assistant-ui/attachment";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useChatSessionsContext } from "@/components/assistant-ui/chat-sessions-context";
+import { useSessionStore } from "@/lib/stores/session-store";
 
 import { cn } from "@/lib/utils";
 import { ChatSessionLoader } from "@/components/assistant-ui/chat-session-loader";
@@ -300,7 +301,8 @@ const MessageMetadataIcon: FC = () => {
     const message = state.message;
     return message?.id;
   });
-  const { activeSessionId } = useChatSessionsContext();
+  // Use Zustand store as single source of truth
+  const activeSessionId = useSessionStore((state) => state.activeSessionId);
 
   if (!messageId && !activeSessionId) {
     return null;

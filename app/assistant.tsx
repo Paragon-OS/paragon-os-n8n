@@ -32,17 +32,16 @@ import { useSessionStore } from "@/lib/stores/session-store";
 
 function AssistantContent() {
   const [activeTab, setActiveTab] = useState<"chat" | "monitor" | "supabase">("chat");
-  const { activeSessionId, createNewSession } = useChatSessionsContext();
+  const { createNewSession } = useChatSessionsContext();
   const activeSessionTitle = useSessionStore((state) => state.activeSessionTitle);
-  const storeSessionId = useSessionStore((state) => state.activeSessionId);
-  const effectiveSessionId = storeSessionId || activeSessionId;
+  const effectiveSessionId = useSessionStore((state) => state.activeSessionId);
   
   // Initialize session if none exists
   React.useEffect(() => {
-    if (!activeSessionId) {
+    if (!effectiveSessionId) {
       createNewSession();
     }
-  }, [activeSessionId, createNewSession]);
+  }, [effectiveSessionId, createNewSession]);
   
   // Recreate runtime when session changes by using sessionId as key
   const runtime = useChatRuntime({

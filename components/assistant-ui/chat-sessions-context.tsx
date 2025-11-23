@@ -5,7 +5,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useCallback } from "react";
 import { useChatSessions } from "@/lib/supabase/hooks/use-chat-sessions";
 import type { ChatSessionRow } from "@/lib/supabase/supabase-chat";
 import { useSessionStore } from "@/lib/stores/session-store";
@@ -33,27 +33,32 @@ export function ChatSessionsProvider({
   children,
   userId,
 }: ChatSessionsProviderProps) {
-  const [activeSessionId, setActiveSessionIdState] = useState<string | null>(null);
+  // Read activeSessionId from Zustand store (single source of truth)
+  const activeSessionId = useSessionStore((state) => state.activeSessionId);
   const { sessions, isLoading, error, refetch } = useChatSessions({
     userId,
     enabled: true,
   });
   const setActiveSession = useSessionStore((state) => state.setActiveSession);
 
+  // Update Zustand store when session is set, syncing the title from sessions
   const setActiveSessionId = useCallback((sessionId: string | null) => {
-    setActiveSessionIdState(sessionId);
-    // Sync with Zustand store, finding the session title from sessions array
     const session = sessionId ? sessions.find((s) => s.session_id === sessionId) : null;
     const sessionTitle = session?.title || null;
     setActiveSession(sessionId, sessionTitle);
   }, [sessions, setActiveSession]);
 
-  // Sync store when sessions are loaded/refetched and we have an active session
+  // Sync session title when sessions are loaded/refetched and we have an active session
+  // This ensures the title stays in sync if sessions are updated
   React.useEffect(() => {
     if (activeSessionId && sessions.length > 0) {
       const session = sessions.find((s) => s.session_id === activeSessionId);
       const sessionTitle = session?.title || null;
-      setActiveSession(activeSessionId, sessionTitle);
+      // Only update if title changed to avoid unnecessary updates
+      const currentTitle = useSessionStore.getState().activeSessionTitle;
+      if (sessionTitle !== currentTitle) {
+        setActiveSession(activeSessionId, sessionTitle);
+      }
     }
   }, [activeSessionId, sessions, setActiveSession]);
 

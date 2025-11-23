@@ -7,14 +7,12 @@
 
 import { useEffect, useRef } from "react";
 import { useChatMessages } from "@/lib/supabase/hooks/use-chat-messages";
-import { useChatSessionsContext } from "@/components/assistant-ui/chat-sessions-context";
 import { useAssistantRuntime, useAssistantState } from "@assistant-ui/react";
 import { useSessionStore } from "@/lib/stores/session-store";
 
 export function ChatSessionLoader() {
-  // Watch both context and Zustand store - Zustand is source of truth
-  const { activeSessionId: contextSessionId } = useChatSessionsContext();
-  const activeSessionId = useSessionStore((state) => state.activeSessionId) || contextSessionId;
+  // Use Zustand store as single source of truth for activeSessionId
+  const activeSessionId = useSessionStore((state) => state.activeSessionId);
   const { messages, isLoading } = useChatMessages({
     sessionId: activeSessionId,
     enabled: !!activeSessionId,
