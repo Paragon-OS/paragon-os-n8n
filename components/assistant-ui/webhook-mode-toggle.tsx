@@ -4,10 +4,20 @@ import { useState, useEffect } from "react";
 import { getWebhookMode, setWebhookMode, type WebhookMode } from "@/lib/stores/webhook-mode";
 
 export function WebhookModeToggle() {
-  const [mode, setMode] = useState<WebhookMode>("test");
+  // Initialize by reading from cookies immediately and ensure cookie is set
+  // This ensures the initial state matches what the server will read
+  const [mode, setMode] = useState<WebhookMode>(() => {
+    if (typeof window !== "undefined") {
+      const currentMode = getWebhookMode();
+      // Ensure cookie is set immediately so server requests have the correct value
+      setWebhookMode(currentMode);
+      return currentMode;
+    }
+    return "test";
+  });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load mode from cookies on mount
+  // Sync state after mount (in case cookie was changed elsewhere)
   useEffect(() => {
     const currentMode = getWebhookMode();
     setMode(currentMode);
