@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-23T18:02:18.000Z",
+  "updatedAt": "2025-11-23T20:16:04.000Z",
   "createdAt": "2025-11-06T23:04:10.688Z",
   "id": "z1Ry4y4k5dGR0BqR",
   "name": "ParagonOS Manager",
@@ -532,23 +532,24 @@
             "sec-fetch-mode": "cors",
             "user-agent": "node",
             "accept-encoding": "gzip, deflate",
-            "content-length": "156"
+            "content-length": "181"
           },
           "params": {},
           "query": {},
           "body": {
-            "chatInput": "search for cody on telegram",
-            "sessionId": "session-2c404901-4c80-4022-8b83-16330201c086",
+            "chatInput": "Find Cody on Telegram",
+            "sessionId": "session-53c624e2-2e75-4dfd-a960-4995c5139ff1",
+            "messageId": "sf0pr8ZZwql6igKt",
             "streamUrl": "http://localhost:3000/api/stream/update"
           },
-          "webhookUrl": "http://localhost:5678/webhook-test/paragon-os",
-          "executionMode": "test"
+          "webhookUrl": "http://localhost:5678/webhook/paragon-os",
+          "executionMode": "production"
         }
       }
     ]
   },
-  "versionId": "5469be74-ad72-4ad5-826b-fbe966739557",
-  "versionCounter": 216,
+  "versionId": "b413700b-b3b6-4c67-a3b0-412516247d37",
+  "versionCounter": 218,
   "triggerCount": 1,
   "tags": [
     {
