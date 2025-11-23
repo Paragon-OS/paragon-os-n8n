@@ -34,6 +34,8 @@ function AssistantContent() {
   const [activeTab, setActiveTab] = useState<"chat" | "monitor" | "supabase">("chat");
   const { activeSessionId, createNewSession } = useChatSessionsContext();
   const activeSessionTitle = useSessionStore((state) => state.activeSessionTitle);
+  const storeSessionId = useSessionStore((state) => state.activeSessionId);
+  const effectiveSessionId = storeSessionId || activeSessionId;
   
   // Initialize session if none exists
   React.useEffect(() => {
@@ -42,18 +44,19 @@ function AssistantContent() {
     }
   }, [activeSessionId, createNewSession]);
   
+  // Recreate runtime when session changes by using sessionId as key
   const runtime = useChatRuntime({
     transport: new SessionAwareChatTransport(
       {
         api: "/api/chat",
       },
-      () => activeSessionId
+      () => effectiveSessionId
     ),
   });
 
   return (
     <StreamingProvider>
-      <AssistantRuntimeProvider runtime={runtime}>
+      <AssistantRuntimeProvider key={effectiveSessionId || "default"} runtime={runtime}>
         <SidebarProvider>
           <div className="flex h-dvh w-full pr-0.5">
             <ThreadListSidebar />
@@ -71,12 +74,12 @@ function AssistantContent() {
                         <BreadcrumbSeparator />
                         <BreadcrumbItem>
                           <BreadcrumbPage>{activeSessionTitle}</BreadcrumbPage>
-                        </BreadcrumbItem>
+                    </BreadcrumbItem>
                       </>
                     ) : (
-                      <BreadcrumbItem>
-                        <BreadcrumbPage>ParagonOS UI</BreadcrumbPage>
-                      </BreadcrumbItem>
+                    <BreadcrumbItem>
+                      <BreadcrumbPage>ParagonOS UI</BreadcrumbPage>
+                    </BreadcrumbItem>
                     )}
                   </BreadcrumbList>
                 </Breadcrumb>

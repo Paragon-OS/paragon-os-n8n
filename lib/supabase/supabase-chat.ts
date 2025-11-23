@@ -379,14 +379,13 @@ export async function getChatMessageByMessageId(
     let query = supabase
       .from("chat_messages")
       .select("*")
-      .eq("message_id", messageId)
-      .single();
+      .eq("message_id", messageId);
 
     if (sessionId) {
       query = query.eq("session_id", sessionId);
     }
 
-    const { data, error } = await query;
+    const { data, error } = await query.single();
 
     if (error) {
       if (error.code === "PGRST116") {
