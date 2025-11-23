@@ -28,10 +28,12 @@ import { WebhookModeToggle } from "@/components/assistant-ui/webhook-mode-toggle
 import { SupabaseTest } from "@/components/assistant-ui/supabase-test";
 import { ChatSessionsProvider, useChatSessionsContext } from "@/components/assistant-ui/chat-sessions-context";
 import { SessionAwareChatTransport } from "@/lib/chat-transport";
+import { useSessionStore } from "@/lib/stores/session-store";
 
 function AssistantContent() {
   const [activeTab, setActiveTab] = useState<"chat" | "monitor" | "supabase">("chat");
   const { activeSessionId, createNewSession } = useChatSessionsContext();
+  const activeSessionTitle = useSessionStore((state) => state.activeSessionTitle);
   
   // Initialize session if none exists
   React.useEffect(() => {
@@ -61,12 +63,21 @@ function AssistantContent() {
                 <Separator orientation="vertical" className="mr-2 h-4" />
                 <Breadcrumb>
                   <BreadcrumbList>
-                    <BreadcrumbItem className="hidden md:block">
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator className="hidden md:block" />
-                    <BreadcrumbItem>
-                      <BreadcrumbPage>ParagonOS UI</BreadcrumbPage>
-                    </BreadcrumbItem>
+                    {activeSessionTitle ? (
+                      <>
+                        <BreadcrumbItem>
+                          <BreadcrumbLink href="/">ParagonOS UI</BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                          <BreadcrumbPage>{activeSessionTitle}</BreadcrumbPage>
+                        </BreadcrumbItem>
+                      </>
+                    ) : (
+                      <BreadcrumbItem>
+                        <BreadcrumbPage>ParagonOS UI</BreadcrumbPage>
+                      </BreadcrumbItem>
+                    )}
                   </BreadcrumbList>
                 </Breadcrumb>
                 <div className="ml-auto flex gap-3 items-center">
