@@ -8,8 +8,11 @@
  */
 export interface StreamUpdate {
   executionId: string;
-  sessionId?: string;
-  messageId?: string;
+  metadata?: {
+    sessionId?: string;
+    messageId?: string;
+    streamUrl?: string;
+  };
   stage: string;
   status: "in_progress" | "completed" | "error" | "info";
   message: string;

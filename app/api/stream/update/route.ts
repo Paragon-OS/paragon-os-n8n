@@ -198,17 +198,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Extract sessionId and messageId from request body
+    // Extract metadata from request body
     // Support both metadata object (new format) and top-level (backward compatibility)
-    const metadata = body.metadata || {};
-    const sessionId = metadata.sessionId || body.sessionId || undefined;
-    const messageId = metadata.messageId || body.messageId || undefined;
+    const metadata = body.metadata || (body.sessionId || body.messageId || body.streamUrl ? {
+      sessionId: body.sessionId,
+      messageId: body.messageId,
+      streamUrl: body.streamUrl,
+    } : undefined);
 
     // Create update object
     const update: StreamUpdate = {
       executionId: executionId,
-      sessionId: sessionId,
-      messageId: messageId,
+      metadata: metadata,
       stage: body.stage || "unknown",
       status: body.status || "info",
       message: body.message || "",

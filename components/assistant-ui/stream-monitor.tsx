@@ -60,7 +60,7 @@ export function StreamMonitor({
   const uniqueSessionIds = Array.from(
     new Set(
       filteredUpdates
-        .map((update) => update.sessionId)
+        .map((update) => update.metadata?.sessionId)
         .filter((id): id is string => Boolean(id))
     )
   );
@@ -188,9 +188,9 @@ export function StreamMonitor({
                   <span className="font-mono text-xs text-muted-foreground">
                     {update.executionId.slice(0, 8)}...
                   </span>
-                  {update.sessionId && (
+                  {update.metadata?.sessionId && (
                     <span className="font-mono text-xs text-blue-400 bg-blue-950/30 px-2 py-0.5 rounded">
-                      Session: {update.sessionId.slice(0, 8)}...
+                      Session: {update.metadata.sessionId.slice(0, 8)}...
                     </span>
                   )}
                   <span
