@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-21T21:39:00.000Z",
+  "updatedAt": "2025-11-23T18:05:39.000Z",
   "createdAt": "2025-11-06T21:51:04.792Z",
   "id": "vfcxqLBDDMKL5lnG",
   "name": "Discord MCP Client Sequencer",
@@ -12,6 +12,9 @@
           "values": [
             {
               "name": "userPrompt"
+            },
+            {
+              "name": "sessionId"
             }
           ]
         }
@@ -164,7 +167,8 @@
           "mappingMode": "defineBelow",
           "value": {
             "executionSteps": "={{ $json.output.executionSteps }}",
-            "targetMcp": "DISCORD"
+            "targetMcp": "DISCORD",
+            "sessionId": "={{ $('When Executed by Another Workflow').item.json.sessionId }}"
           },
           "matchingColumns": [
             "executionSteps"
@@ -183,6 +187,16 @@
             {
               "id": "targetMcp",
               "displayName": "targetMcp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -692,7 +706,8 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "userPrompt": "List the last 10 messages in the Discord channel 'staryo-admin'"
+          "userPrompt": "List the last 10 messages in the Discord channel 'staryo-admin'",
+          "sessionId": "sample-session-id-1"
         }
       }
     ],
@@ -1032,8 +1047,8 @@
       }
     ]
   },
-  "versionId": "aea66294-6b05-4210-a46e-d9ecbb3f1e13",
-  "versionCounter": 263,
+  "versionId": "50d2d706-f419-4c94-843b-569bb1578195",
+  "versionCounter": 266,
   "triggerCount": 0,
   "tags": [
     {

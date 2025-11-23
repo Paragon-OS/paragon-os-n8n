@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-21T17:31:59.000Z",
+  "updatedAt": "2025-11-23T18:07:28.000Z",
   "createdAt": "2025-11-19T21:40:51.636Z",
   "id": "rjoIG01kPyzaQwcU",
   "name": "Telegram MCP Client Sequencer",
@@ -12,6 +12,9 @@
           "values": [
             {
               "name": "userPrompt"
+            },
+            {
+              "name": "sessionId"
             }
           ]
         }
@@ -20,7 +23,7 @@
       "typeVersion": 1.1,
       "position": [
         -400,
-        -1464
+        -1472
       ],
       "id": "06dfa42f-0829-4e09-ae87-71bfe7a55218",
       "name": "When Executed by Another Workflow",
@@ -89,7 +92,7 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        492,
+        496,
         -1296
       ],
       "id": "4b7d2922-7917-424c-be59-6c06a2dab261",
@@ -123,7 +126,7 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        124,
+        128,
         -1072
       ],
       "id": "015274c8-a347-4c29-acae-678ea039b442",
@@ -139,7 +142,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        120,
+        128,
         -864
       ],
       "id": "2bcf1b7e-6d08-40e6-9faf-459f9ea18ec9",
@@ -160,7 +163,7 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        1240,
+        1248,
         -1072
       ],
       "id": "68e0d78d-ef02-466a-84a9-2bacc276437b",
@@ -194,7 +197,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1608,
+        1616,
         -1296
       ],
       "id": "f0af5e49-7bce-41ec-94b5-3cfa2fcea60b",
@@ -211,7 +214,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        940,
+        944,
         -1296
       ],
       "id": "39029062-5166-486b-b4d9-08dac2144872",
@@ -229,7 +232,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3,
       "position": [
-        1164,
+        1168,
         -1296
       ],
       "id": "bffcb933-ef79-407a-a171-e88adc633ef3",
@@ -264,7 +267,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1832,
+        1840,
         -1344
       ],
       "id": "00fe64fa-b463-4f09-b207-1ad07804724a",
@@ -275,7 +278,7 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        2056,
+        2064,
         -1248
       ],
       "id": "92161848-9ba4-456a-8a70-c0d9c2c153f9",
@@ -290,7 +293,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        1236,
+        1248,
         -864
       ],
       "id": "93e15564-cda8-45c0-beed-904d92dc12da",
@@ -331,7 +334,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1832,
+        1840,
         -944
       ],
       "id": "c352df04-9252-45f7-a7c2-ab3c5fc8934b",
@@ -386,7 +389,7 @@
       "typeVersion": 1.3,
       "position": [
         -176,
-        -1368
+        -1376
       ],
       "id": "138c48d9-8bc7-4a5b-b11e-6e7f5562d1d3",
       "name": "Enrich With Telegram Context"
@@ -404,7 +407,8 @@
           "mappingMode": "defineBelow",
           "value": {
             "executionSteps": "={{ $json.output.executionSteps }}",
-            "targetMcp": "TELEGRAM"
+            "targetMcp": "TELEGRAM",
+            "sessionId": "={{ $('When Executed by Another Workflow').item.json.sessionId }}"
           },
           "matchingColumns": [
             "executionSteps"
@@ -429,6 +433,16 @@
               "canBeUsedToMatch": true,
               "type": "string",
               "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
             }
           ],
           "attemptToConvertTypes": true,
@@ -439,8 +453,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        716,
-        -1192
+        720,
+        -1200
       ],
       "id": "14c32d88-be47-4925-a9ef-7e265e9cd503",
       "name": "Call Telegram Step Executor"
@@ -460,7 +474,8 @@
             "data": "={{ \n   { telegramSeqInput: $json.userPrompt}\n}}",
             "stage": "telegram_collect_context",
             "status": "in_progress",
-            "message": "=Collecting context needed from telegram..."
+            "message": "=Collecting context needed from telegram...",
+            "sessionId": "={{ $json.sessionId }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -503,6 +518,16 @@
               "canBeUsedToMatch": true,
               "type": "string",
               "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -514,7 +539,7 @@
       "typeVersion": 1.3,
       "position": [
         -176,
-        -1560
+        -1568
       ],
       "id": "1c3ef404-9244-4146-bdc0-52a7be49caa9",
       "name": "Send Stream Update2"
@@ -534,7 +559,8 @@
             "data": "={{ \n   {\n     toolRecommendations: $json.context.toolRecommendations?.map(tool=> tool.name),\n     matchingContacts: $json.context.matchingContacts?.map(contact => contact.name)\n   }\n}}",
             "stage": "telegram_collect_context",
             "status": "in_progress",
-            "message": "=Planning how to perform actions on telegram..."
+            "message": "=Planning how to perform actions on telegram...",
+            "sessionId": "={{ $('When Executed by Another Workflow').item.json.sessionId }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -577,6 +603,16 @@
               "canBeUsedToMatch": true,
               "type": "string",
               "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -587,7 +623,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        158,
+        160,
         -1696
       ],
       "id": "7de77ae3-02ee-4310-8c44-a0953040571d",
@@ -608,7 +644,8 @@
             "data": "={{ \n   {\n     executionSteps: $json.output.executionSteps\n   }\n}}",
             "stage": "telegram_execution_steps",
             "status": "in_progress",
-            "message": "=Planned execution steps on telegram!"
+            "message": "=Planned execution steps on telegram!",
+            "sessionId": "={{ $('When Executed by Another Workflow').item.json.sessionId }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -651,6 +688,16 @@
               "canBeUsedToMatch": true,
               "type": "string",
               "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -661,8 +708,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        716,
-        -1512
+        720,
+        -1520
       ],
       "id": "fc222730-a4e8-4f9c-9425-7c4d56e86b44",
       "name": "Send Stream Update1"
@@ -682,7 +729,8 @@
             "data": "={{ \n   {\n  \"directAnswer\": $json.directAnswer,\n  \"refinedUserPrompt\": $json.refinedUserPrompt\n}\n}}",
             "stage": "telegram_sequence_end",
             "status": "in_progress",
-            "message": "=Telegram execution sequence was validated successfully!"
+            "message": "=Telegram execution sequence was validated successfully!",
+            "sessionId": "={{ $('When Executed by Another Workflow').item.json.sessionId }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -725,6 +773,16 @@
               "canBeUsedToMatch": true,
               "type": "string",
               "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -735,7 +793,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        2056,
+        2064,
         -1440
       ],
       "id": "a2ea841f-a678-48ac-ba7c-c36673f6ae5f",
@@ -953,2093 +1011,14 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "userPrompt": "List last 5 messages with sebastian"
-        }
-      }
-    ],
-    "Enrich With Telegram Context": [
-      {
-        "json": {
-          "userPrompt": "List the last 5 messages in the chat with the user \"Sebastian\" (user_id: 6051734492).",
-          "context": {
-            "telegramChannels": [
-              {
-                "id": 4000551178,
-                "name": "Metarune Management",
-                "kind": "group",
-                "unread": 0
-              },
-              {
-                "id": 4964947201,
-                "name": "Specialized Leads",
-                "kind": "group",
-                "unread": 0
-              },
-              {
-                "id": 4804388286,
-                "name": "Metarune BD & Operations",
-                "kind": "group",
-                "unread": 0
-              },
-              {
-                "id": 4844833988,
-                "name": "Project Management - Metarune",
-                "kind": "group",
-                "unread": 0
-              },
-              {
-                "id": 4198626061,
-                "name": "Standup Meeting Updates",
-                "kind": "group",
-                "unread": 0
-              },
-              {
-                "id": 4169734127,
-                "name": "CVs / Recruitement related",
-                "kind": "group",
-                "unread": 3
-              },
-              {
-                "id": 4214327750,
-                "name": "Metarune Admin Links",
-                "kind": "group",
-                "unread": 0
-              },
-              {
-                "id": 4573780820,
-                "name": "Leave Request Only - Metarune Labs",
-                "kind": "group",
-                "unread": 0
-              },
-              {
-                "id": 4672296305,
-                "name": "Administrative Discussion - Anushika RA",
-                "kind": "group",
-                "unread": 0
-              },
-              {
-                "id": 2863584619,
-                "name": "Ramm_AI | Official Chat",
-                "kind": "group",
-                "unread": 872
-              },
-              {
-                "id": 714725084,
-                "name": "Nishara Malli",
-                "kind": "user",
-                "unread": 0
-              },
-              {
-                "id": 4965025159,
-                "name": "AG Marketplace <Team> Discussion",
-                "kind": "group",
-                "unread": 1
-              },
-              {
-                "id": 4727175482,
-                "name": "Nirasha Admin Discussion Group",
-                "kind": "group",
-                "unread": 5
-              },
-              {
-                "id": 2163339770,
-                "name": "Staryo DEV (Messaging Platform)",
-                "kind": "group",
-                "unread": 9
-              },
-              {
-                "id": 4621844450,
-                "name": "With Nishara",
-                "kind": "group",
-                "unread": 0
-              },
-              {
-                "id": 1860048845,
-                "name": "TypeScript 💻",
-                "kind": "group",
-                "unread": 1
-              },
-              {
-                "id": 4183002663,
-                "name": "Staryo",
-                "kind": "group",
-                "unread": 32
-              },
-              {
-                "id": 2200914991,
-                "name": "Metarune - General",
-                "kind": "group",
-                "unread": 27
-              },
-              {
-                "id": 4988616199,
-                "name": "Kavindu: Internship Discussion",
-                "kind": "group",
-                "unread": 26
-              },
-              {
-                "id": 4914726498,
-                "name": "Anatomea - Admin Discussion",
-                "kind": "group",
-                "unread": 0
-              },
-              {
-                "id": 5026391000,
-                "name": "Business Development Discussion",
-                "kind": "group",
-                "unread": 16
-              },
-              {
-                "id": 8539645700,
-                "name": "Mr. Shammi Forbes",
-                "kind": "user",
-                "unread": 1
-              },
-              {
-                "id": 5166457578,
-                "name": "Bhathiya Dialog",
-                "kind": "user",
-                "unread": 0
-              },
-              {
-                "id": 348840761,
-                "name": "Clemens Ley",
-                "kind": "user",
-                "unread": 0
-              },
-              {
-                "id": 1525362528,
-                "name": "Amayuru Amarasinghe",
-                "kind": "user",
-                "unread": 1
-              },
-              {
-                "id": 4562201034,
-                "name": "Pump.fun / WeMeme DEV Group",
-                "kind": "group",
-                "unread": 1
-              },
-              {
-                "id": 5225880378,
-                "name": "Ian Anderson",
-                "kind": "user",
-                "unread": 1
-              },
-              {
-                "id": 936198127,
-                "name": "Pasindu",
-                "kind": "user",
-                "unread": 3
-              },
-              {
-                "id": 1249319918,
-                "name": "Raphael - DxSale Founder",
-                "kind": "user",
-                "unread": 0
-              },
-              {
-                "id": 1543386737,
-                "name": "Adin Zweigbaum",
-                "kind": "user",
-                "unread": 0
-              },
-              {
-                "id": 1026488792,
-                "name": "Andreas Nicolos | Access Protocol",
-                "kind": "user",
-                "unread": 0
-              },
-              {
-                "id": 8253865365,
-                "name": "Lowmarker",
-                "kind": "user",
-                "unread": 0
-              },
-              {
-                "id": 416852475,
-                "name": "Kratos (David) Dev | CL",
-                "kind": "user",
-                "unread": 0
-              },
-              {
-                "id": 5002192102,
-                "name": "Hey Stream",
-                "kind": "group",
-                "unread": 1
-              },
-              {
-                "id": 780339289,
-                "name": "Trimasha",
-                "kind": "user",
-                "unread": 0
-              },
-              {
-                "id": 2935877307,
-                "name": "Metarune Dev Feed",
-                "kind": "group",
-                "unread": 110
-              },
-              {
-                "id": 4774776836,
-                "name": "Design Related - Metarune",
-                "kind": "group",
-                "unread": 13
-              },
-              {
-                "id": 1366304779,
-                "name": "Le Goat",
-                "kind": "user",
-                "unread": 0
-              },
-              {
-                "id": 8218870680,
-                "name": "Thisum Jayaweera",
-                "kind": "user",
-                "unread": 0
-              },
-              {
-                "id": 1119827933,
-                "name": "Nawodya Ishan Whatsapp",
-                "kind": "user",
-                "unread": 0
-              }
-            ],
-            "telegramContacts": [
-              {
-                "id": 333000,
-                "displayName": "Kids",
-                "contactType": "user",
-                "phone": "333"
-              },
-              {
-                "id": 225850636,
-                "username": "zlatapaul",
-                "displayName": "Zlata Paul",
-                "contactType": "user",
-                "phone": "995599335201"
-              },
-              {
-                "id": 340351644,
-                "username": "SumanthNeppalli",
-                "displayName": "Sumanth | Polygon Ventures",
-                "contactType": "user"
-              },
-              {
-                "id": 348840761,
-                "username": "clemensley",
-                "displayName": "Clemens Ley",
-                "contactType": "user"
-              },
-              {
-                "id": 363128374,
-                "username": "Avihay_H",
-                "displayName": "Avihay",
-                "contactType": "user"
-              },
-              {
-                "id": 416852475,
-                "username": "devkratos",
-                "displayName": "Kratos (David) Dev | CL",
-                "contactType": "user"
-              },
-              {
-                "id": 520043278,
-                "username": "midasch",
-                "displayName": "MK | Matt",
-                "contactType": "user"
-              },
-              {
-                "id": 543100343,
-                "username": "dush88c",
-                "displayName": "Crypto - Dark",
-                "contactType": "user"
-              },
-              {
-                "id": 586558850,
-                "username": "johngvibes",
-                "displayName": "John Vibes",
-                "contactType": "user",
-                "phone": "14436190761"
-              },
-              {
-                "id": 587300333,
-                "username": "iCartic",
-                "displayName": "Cartic",
-                "contactType": "user",
-                "phone": "918197536227"
-              },
-              {
-                "id": 624165486,
-                "username": "vlkpthrna",
-                "displayName": "Venul",
-                "contactType": "user"
-              },
-              {
-                "id": 632108563,
-                "username": "chaingovernance",
-                "displayName": "Chaingovernance",
-                "contactType": "user"
-              },
-              {
-                "id": 649401202,
-                "username": "wholemealbread69",
-                "displayName": "Munchi",
-                "contactType": "user",
-                "phone": "94715852028"
-              },
-              {
-                "id": 664694900,
-                "username": "DonAnarchy",
-                "displayName": "Dulmina",
-                "contactType": "user",
-                "phone": "94763103710"
-              },
-              {
-                "id": 668597892,
-                "username": "SanSLR",
-                "displayName": "Janitha Metaroon",
-                "contactType": "user",
-                "phone": "94775527374"
-              },
-              {
-                "id": 678211632,
-                "username": "EmilyEmilyert6t4564e6",
-                "displayName": "Vajira",
-                "contactType": "user",
-                "phone": "94710413045"
-              },
-              {
-                "id": 696359483,
-                "username": "vivekst1",
-                "displayName": "vivek",
-                "contactType": "user"
-              },
-              {
-                "id": 714725084,
-                "username": "stoXmod",
-                "displayName": "Nishara Malli",
-                "contactType": "user",
-                "phone": "94775777956"
-              },
-              {
-                "id": 722369780,
-                "username": "dinukasal",
-                "displayName": "Dinuka Salwathura",
-                "contactType": "user",
-                "phone": "94714697757"
-              },
-              {
-                "id": 742595333,
-                "username": "Ruchira_s",
-                "displayName": "RUCHIRA SACHINTHANA",
-                "contactType": "user",
-                "phone": "94778072233"
-              },
-              {
-                "id": 780339289,
-                "username": "Trimasha21",
-                "displayName": "Trimasha",
-                "contactType": "user",
-                "phone": "94769083219"
-              },
-              {
-                "id": 822246157,
-                "username": "ahamedrikas",
-                "displayName": "Team - UCSC",
-                "contactType": "user",
-                "phone": "94756855515"
-              },
-              {
-                "id": 835380621,
-                "username": "nadeeshisu",
-                "displayName": "Nadeesh",
-                "contactType": "user"
-              },
-              {
-                "id": 837248846,
-                "username": "Aayush_Gupta_ji",
-                "displayName": "Aayush Gupta",
-                "contactType": "user"
-              },
-              {
-                "id": 847498752,
-                "username": "sandalu0",
-                "displayName": "sandalu 🏎 🐾Hivera",
-                "contactType": "user"
-              },
-              {
-                "id": 875774449,
-                "username": "SutYKP",
-                "displayName": "Kasun Alagiyawanna",
-                "contactType": "user"
-              },
-              {
-                "id": 883709109,
-                "username": "DNA1945",
-                "displayName": "Ayesh - Web3",
-                "contactType": "user",
-                "phone": "94779420892"
-              },
-              {
-                "id": 894565034,
-                "username": "rebeccaa_m",
-                "displayName": "Rebecca Meegahapola",
-                "contactType": "user"
-              },
-              {
-                "id": 899220754,
-                "username": "gabocarranza",
-                "displayName": "Gabriel Carranza",
-                "contactType": "user"
-              },
-              {
-                "id": 919776951,
-                "username": "dxshas",
-                "displayName": "Hash - co-founder dx.app",
-                "contactType": "user"
-              }
-            ],
-            "matchingContacts": [
-              {
-                "displayName": "Sebastian",
-                "username": "seunwoochan",
-                "id": 6051734492
-              }
-            ],
-            "toolRecommendations": [
-              {
-                "name": "telegram_list_messages",
-                "description": "Messages: List messages with filters and return JSON (limit<=50).",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "limit": {
-                      "type": "integer"
-                    },
-                    "search_query": {
-                      "type": "string"
-                    },
-                    "from_date": {
-                      "type": "string"
-                    },
-                    "to_date": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              }
-            ],
-            "playbookRecommendations": [
-              {
-                "name": "catch_up_on_chat_since_time",
-                "whenToUse": "User asks to see or summarize what they missed in a specific chat.",
-                "steps": [
-                  "Resolve chat name to chat_id using telegram_list_chats; if not found, call with appropriate chat_type filter and match by name.",
-                  "If user gives a time window, call telegram_list_messages with chat_id=<chatId> and from_date / to_date; otherwise use a recent limit (e.g. 50).",
-                  "Summarize important messages, mentions, and decisions for the user.",
-                  "Offer to draft replies and, if accepted, call telegram_reply_to_message or telegram_send_message as appropriate."
-                ]
-              }
-            ],
-            "allRelaventTools": [
-              {
-                "name": "telegram_get_chats",
-                "description": "List chats as JSON summaries (paged). Broadcast channels are excluded.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "page": {
-                      "type": "integer"
-                    },
-                    "page_size": {
-                      "type": "integer"
-                    }
-                  },
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_list_chats",
-                "description": "List recent chats as JSON summaries; optional kind filter accepting `user`, `group`, or `channel` (case-insensitive). Note: `group` includes both basic groups and supergroups. `channel` is an alias that returns both users and groups. Broadcast channels are excluded.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_type": {
-                      "type": "string"
-                    },
-                    "limit": {
-                      "type": "integer"
-                    }
-                  },
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_chat",
-                "description": "Get a chat by id as a JSON object with basic stats. Note: broadcast channels will have kind=null as they are not supported.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_read_channel",
-                "description": "Alias: read a group or user by id; delegates to get_chat. Broadcast channels are not supported.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {},
-                    "channelId": {},
-                    "limit": {}
-                  },
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_create_channel",
-                "description": "Create a group; set megagroup=True (recommended) to create a group with extended features; returns ok/message and id. Note: broadcast channels (megagroup=False) are not recommended for use with this MCP server.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "title": {
-                      "type": "string"
-                    },
-                    "about": {
-                      "type": "string"
-                    },
-                    "megagroup": {
-                      "type": "boolean"
-                    }
-                  },
-                  "required": [
-                    "title"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_edit_chat_title",
-                "description": "Edit chat title; returns ok/message.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "title": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "title"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_edit_chat_photo",
-                "description": "Set chat photo from local file; returns ok/message.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "file_path": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "file_path"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_delete_chat_photo",
-                "description": "Delete chat photo; returns ok/message.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_leave_chat",
-                "description": "Leave a group by id; returns ok/message. Broadcast channels are not supported.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_pending_chats",
-                "description": "List chats needing attention (unread or last inbound), with recent context as JSON.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "limit": {
-                      "type": "integer"
-                    },
-                    "context_messages": {
-                      "type": "integer"
-                    },
-                    "include_archived": {
-                      "type": "boolean"
-                    },
-                    "include_muted": {
-                      "type": "boolean"
-                    }
-                  },
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_direct_chat_by_contact",
-                "description": "Find direct chats for contacts matching a query; returns JSON list.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "contact_query": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "contact_query"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_contact_chats",
-                "description": "List direct chat and common groups for a contact as JSON.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "contact_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "contact_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_join_chat_by_link",
-                "description": "Join a chat by invite link; returns ok/message.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "link": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "link"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_export_chat_invite",
-                "description": "Alias: export chat invite; returns {link}.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_import_chat_invite",
-                "description": "Alias: join by invite hash; returns ok/message.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "hash": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "hash"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_invite_link",
-                "description": "Get an invite link for a chat; returns the link as string (JSON).",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_archive_chat",
-                "description": "Archive a chat; returns ok/message.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_unarchive_chat",
-                "description": "Unarchive a chat; returns ok/message.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_messages",
-                "description": "Messages: List messages (paged) from a chat and return JSON.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "page": {
-                      "type": "integer"
-                    },
-                    "page_size": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_list_messages",
-                "description": "Messages: List messages with filters and return JSON (limit<=50).",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "limit": {
-                      "type": "integer"
-                    },
-                    "search_query": {
-                      "type": "string"
-                    },
-                    "from_date": {
-                      "type": "string"
-                    },
-                    "to_date": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_send_message",
-                "description": "Messages: Send a message to a chat and return { ok, message }.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {},
-                    "message": {},
-                    "channelId": {},
-                    "content": {}
-                  },
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_reply_to_message",
-                "description": "Messages: Reply to a message and return { ok, message }.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "message_id": {
-                      "type": "integer"
-                    },
-                    "text": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "message_id",
-                    "text"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_edit_message",
-                "description": "Messages: Edit a message and return { ok, message }.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "message_id": {
-                      "type": "integer"
-                    },
-                    "new_text": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "message_id",
-                    "new_text"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_delete_message",
-                "description": "Messages: Delete a message and return { ok, message }.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "message_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "message_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_forward_message",
-                "description": "Messages: Forward a message and return { ok, message }.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "from_chat_id": {
-                      "type": "integer"
-                    },
-                    "message_id": {
-                      "type": "integer"
-                    },
-                    "to_chat_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "from_chat_id",
-                    "message_id",
-                    "to_chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_pin_message",
-                "description": "Messages: Pin a message and return { ok, message }.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "message_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "message_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_unpin_message",
-                "description": "Messages: Unpin a message and return { ok, message }.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "message_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "message_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_mark_as_read",
-                "description": "Messages: Mark chat as read and return { ok, message }.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_message_context",
-                "description": "Messages: Get message context around a message and return JSON.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "message_id": {
-                      "type": "integer"
-                    },
-                    "context_size": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "message_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_search_messages",
-                "description": "Messages: Search messages by text and return JSON (limit<=50).",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "query": {
-                      "type": "string"
-                    },
-                    "limit": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "query"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_history",
-                "description": "Messages: Deprecated alias; use list_messages (returns JSON).",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "limit": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_pinned_messages",
-                "description": "Messages: List pinned messages and return JSON.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_create_poll",
-                "description": "Messages: Create a poll in a chat and return { ok, message }.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "question": {
-                      "type": "string"
-                    },
-                    "options": {
-                      "type": "array"
-                    },
-                    "multiple_choice": {
-                      "type": "boolean"
-                    },
-                    "quiz_mode": {
-                      "type": "boolean"
-                    },
-                    "public_votes": {
-                      "type": "boolean"
-                    },
-                    "close_date": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "question",
-                    "options"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_react_to_message",
-                "description": "\nAdd a reaction to a message using a Unicode emoji.\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "message_id": {
-                      "type": "integer"
-                    },
-                    "emoji": {
-                      "type": "string"
-                    },
-                    "big": {
-                      "type": "boolean"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "message_id",
-                    "emoji"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_unreact_message",
-                "description": "\nRemove your own reaction(s) from a message.\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "message_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "message_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_message_reactions",
-                "description": "\nGet aggregated reaction counters for a message as JSON.\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "message_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "message_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_reactors",
-                "description": "\nList users who reacted to a message. Optionally filter by emoji.\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "message_id": {
-                      "type": "integer"
-                    },
-                    "emoji": {},
-                    "limit": {
-                      "type": "integer"
-                    },
-                    "offset": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "message_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_list_contacts",
-                "description": "Contacts: List contacts as compact JSON with pagination (limit≤50).",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "limit": {
-                      "type": "integer"
-                    },
-                    "offset": {
-                      "type": "integer"
-                    }
-                  },
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_search_contacts",
-                "description": "Contacts: Search contacts by name/username/phone (limit≤50).",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "query": {
-                      "type": "string"
-                    },
-                    "limit": {
-                      "type": "integer"
-                    },
-                    "offset": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "query"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_delete_contact",
-                "description": "Contacts: Delete a contact by user_id.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "user_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "user_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_block_user",
-                "description": "Contacts: Block a user by user_id.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "user_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "user_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_unblock_user",
-                "description": "Contacts: Unblock a user by user_id.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "user_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "user_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_blocked_users",
-                "description": "Contacts: List blocked users as JSON (limit≤50).",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "limit": {
-                      "type": "integer"
-                    },
-                    "offset": {
-                      "type": "integer"
-                    }
-                  },
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_import_contacts",
-                "description": "Contacts: Import contacts from a list of {phone, first_name, last_name}.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "contacts": {
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "contacts"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_export_contacts",
-                "description": "Contacts: Export contacts as JSON (limit≤50).",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "limit": {
-                      "type": "integer"
-                    },
-                    "offset": {
-                      "type": "integer"
-                    }
-                  },
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_last_interaction",
-                "description": "Contacts: Get recent messages with a user as JSON (limit≤50).",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "user_id": {
-                      "type": "integer"
-                    },
-                    "limit": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "user_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_download_media",
-                "description": "Download message media / attachments; returns JSON with mime_type, size, path, resource_uri. path can be used to OCR images",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "message_id": {
-                      "type": "integer"
-                    },
-                    "file_path": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "message_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_send_voice",
-                "description": "Send a .ogg/.opus voice note; returns ok/message.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "file_path": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "file_path"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_send_sticker",
-                "description": "Send a .webp sticker; returns ok/message.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "file_path": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "file_path"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_send_gif",
-                "description": "Send a GIF by Telegram document ID; returns ok/message.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "gif_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "gif_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_gif_search",
-                "description": "Search GIFs; returns JSON array of Telegram document IDs.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "query": {
-                      "type": "string"
-                    },
-                    "limit": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "query"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_media_info",
-                "description": "Get basic media info for a message; returns JSON.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "message_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "message_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_sticker_sets",
-                "description": "List available sticker sets (JSON titles).",
-                "schema": {
-                  "type": "object",
-                  "properties": {},
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_list_downloaded_media",
-                "description": "List downloaded media files in persistent storage as JSON.",
-                "schema": {
-                  "type": "object",
-                  "properties": {},
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_clear_downloaded_media",
-                "description": "Clear downloaded media cache; returns ok/message and counts.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "message_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_participants",
-                "description": "Admin: List chat participants as JSON (paginated).",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "limit": {
-                      "type": "integer"
-                    },
-                    "offset": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_invite_to_group",
-                "description": "Admin: Invite users to a chat by id.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "user_ids": {
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "user_ids"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_promote_admin",
-                "description": "Admin: Promote a user to admin.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "user_id": {
-                      "type": "integer"
-                    },
-                    "rights": {}
-                  },
-                  "required": [
-                    "chat_id",
-                    "user_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_demote_admin",
-                "description": "Admin: Demote a user from admin.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "user_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "user_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_ban_user",
-                "description": "Admin: Ban a user from a chat.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "user_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "user_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_unban_user",
-                "description": "Admin: Unban a user from a chat.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "user_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id",
-                    "user_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_admins",
-                "description": "Admin: List admins as JSON (paginated).",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "limit": {
-                      "type": "integer"
-                    },
-                    "offset": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_banned_users",
-                "description": "Admin: List banned users as JSON (paginated).",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "limit": {
-                      "type": "integer"
-                    },
-                    "offset": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_recent_actions",
-                "description": "Admin: List recent admin actions (paginated).",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "limit": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_me",
-                "description": "\nGet your own user information.\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {},
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_update_profile",
-                "description": "\nUpdate your profile information (name, bio).\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "first_name": {
-                      "type": "string"
-                    },
-                    "last_name": {
-                      "type": "string"
-                    },
-                    "about": {
-                      "type": "string"
-                    }
-                  },
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_set_profile_photo",
-                "description": "\nSet a new profile photo.\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "file_path": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "file_path"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_delete_profile_photo",
-                "description": "\nDelete your current profile photo.\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {},
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_privacy_settings",
-                "description": "\nGet your privacy settings for last seen status.\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {},
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_set_privacy_settings",
-                "description": "\nSet privacy settings (e.g., last seen, phone, etc.).\n\nArgs:\n    key: The privacy setting to modify ('status' for last seen, 'phone', 'profile_photo', etc.)\n    allow_users: List of user IDs to allow\n    disallow_users: List of user IDs to disallow\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "key": {
-                      "type": "string"
-                    },
-                    "allow_users": {
-                      "type": "array"
-                    },
-                    "disallow_users": {
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "key"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_user_photos",
-                "description": "\nGet profile photos of a user.\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "user_id": {
-                      "type": "integer"
-                    },
-                    "limit": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "user_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_user_status",
-                "description": "\nGet the online status of a user.\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "user_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "user_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_mute_chat",
-                "description": "\nMute notifications for a chat.\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_unmute_chat",
-                "description": "\nUnmute notifications for a chat.\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_search_public_chats",
-                "description": "\nSearch for public chats, channels, or bots by username or title.\n\nThis is a GLOBAL search across all public Telegram content.\nOnly use this tool when specifically asked to search for global or public chats.\nDo not use for searching within user's personal chats or conversations.\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "query": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "query"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_resolve_username",
-                "description": "\nResolve a username to a user or chat ID.\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "username": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "username"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_get_bot_info",
-                "description": "\nGet information about a bot by username.\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "bot_username": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "bot_username"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_set_bot_commands",
-                "description": "\nSet bot commands for a bot you own.\nNote: This function can only be used if the Telegram client is a bot account.\nRegular user accounts cannot set bot commands.\n\nArgs:\n    bot_username: The username of the bot to set commands for.\n    commands: List of command dictionaries with 'command' and 'description' keys.\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "bot_username": {
-                      "type": "string"
-                    },
-                    "commands": {
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "bot_username",
-                    "commands"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              },
-              {
-                "name": "telegram_list_topics",
-                "description": "\nRetrieve forum topics from a group with the forum feature enabled.\n\nNote for LLM: You can send a message to a selected topic via reply_to_message tool\nby using Topic ID as the message_id parameter.\n\nArgs:\n    chat_id: The ID of the forum-enabled chat (group).\n    limit: Maximum number of topics to retrieve.\n    offset_topic: Topic ID offset for pagination.\n    search_query: Optional query to filter topics by title.\n",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "chat_id": {
-                      "type": "integer"
-                    },
-                    "limit": {
-                      "type": "integer"
-                    },
-                    "offset_topic": {
-                      "type": "integer"
-                    },
-                    "search_query": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "chat_id"
-                  ],
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              }
-            ],
-            "myProfile": {
-              "id": 5008283745,
-              "name": "ParagonTheDev | CTO | metarunelabs.dev",
-              "type": "user",
-              "username": "paragonthedev",
-              "phone": "94718857105"
-            },
-            "previousAttempt": {}
-          }
-        }
-      }
-    ],
-    "Execution Planner AI Agent": [
-      {
-        "json": {
-          "output": {
-            "executionSteps": [
-              {
-                "toolName": "telegram_list_messages",
-                "callParams": {
-                  "chat_id": 6051734492,
-                  "limit": 5
-                }
-              }
-            ]
-          },
-          "intermediateSteps": []
-        }
-      }
-    ],
-    "Result Validator AI Agent": [
-      {
-        "json": {
-          "output": {
-            "shouldRetry": false,
-            "directAnswer": "Here are the last 5 messages in the chat with Sebastian:\n\n1. \"we noticed a message on slack saying staryo platform DevOps will be halt by IT-magic starting tomorrw. you might want to respond immediately to avoid any risks of them shutting down the site. an alternate option would be to let our AWS experts to take over and continue maintaining site along side platform improvements. let us know by tomorrow guys\" (2025-11-05)\n2. \"hey sebastian, just woke up.\" (2025-10-17)\n3. \"hey Paragon, are you available right now?\" (2025-10-16)\n4. \"https://meet.google.com/cbp-tttt-gvn\" (2025-10-16)\n5. \"lemme send a link\" (2025-10-16)"
-          }
+          "userPrompt": "List last 5 messages with sebastian",
+          "sessionId": "sample-session-id-1"
         }
       }
     ]
   },
-  "versionId": "b2b3b2d7-5e6a-49d8-a02c-a43dc47fa25d",
-  "versionCounter": 292,
+  "versionId": "0377f251-4a68-41f8-a14d-11d4a932645b",
+  "versionCounter": 297,
   "triggerCount": 0,
   "tags": [
     {

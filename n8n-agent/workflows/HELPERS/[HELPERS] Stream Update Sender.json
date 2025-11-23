@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-21T16:44:23.000Z",
+  "updatedAt": "2025-11-23T17:39:25.000Z",
   "createdAt": "2025-11-20T21:29:51.803Z",
   "id": "che6u5z0grJ4AoNr",
   "name": "[HELPERS] Stream Update Sender",
@@ -22,6 +22,9 @@
             },
             {
               "name": "message"
+            },
+            {
+              "name": "sessionId"
             }
           ]
         }
@@ -60,7 +63,7 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "={\n   \"eventBody\":   {\n    \"executionId\": {{ $execution.id.toJsonString() }},\n    \"stage\": {{ $json.stage.toJsonString() }},\n    \"status\": {{ $json.status.toJsonString() }},\n    \"message\": {{ $json.message.toJsonString() }},\n    \"data\": {{ $json.data?.toJsonString() }} ,\n    \"streamUrl\": \"http://localhost:3000/api/stream/update\"\n  } \n}",
+        "jsonOutput": "={\n   \"eventBody\":   {\n    \"executionId\": {{ $execution.id.toJsonString() }},\n    \"sessionId\": {{ ($json.sessionId ?? 'NO ID PROVIDED').toJsonString() }},\n    \"stage\": {{ $json.stage.toJsonString() }},\n    \"status\": {{ $json.status.toJsonString() }},\n    \"message\": {{ $json.message.toJsonString() }},\n    \"data\": {{ $json.data?.toJsonString() }} ,\n    \"streamUrl\": \"http://localhost:3000/api/stream/update\"\n  } \n}",
         "options": {}
       },
       "type": "n8n-nodes-base.set",
@@ -106,18 +109,17 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "stage": "context_enrichment",
+          "data": {},
+          "stage": "manager_input",
           "status": "in_progress",
-          "message": "Thinking about your prompt...",
-          "data": {
-            "sampleField": "sampleValue"
-          }
+          "message": "Workflow is starting with user prompt: \"search for cody on telegram\"",
+          "sessionId": null
         }
       }
     ]
   },
-  "versionId": "1cbb65e2-9179-4276-9221-f3a6c907ee06",
-  "versionCounter": 8,
+  "versionId": "8b61f27c-4976-427f-8604-de19747f58a7",
+  "versionCounter": 13,
   "triggerCount": 0,
   "tags": [],
   "shared": [

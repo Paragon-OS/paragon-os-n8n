@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2025-11-23T16:57:16.000Z",
+  "updatedAt": "2025-11-23T18:02:18.000Z",
   "createdAt": "2025-11-06T23:04:10.688Z",
   "id": "z1Ry4y4k5dGR0BqR",
   "name": "ParagonOS Manager",
-  "active": false,
+  "active": true,
   "isArchived": false,
   "nodes": [
     {
@@ -14,7 +14,7 @@
       "typeVersion": 1.3,
       "position": [
         -464,
-        -584
+        -592
       ],
       "id": "4077b1f3-df5a-4112-a949-a4a86c743d57",
       "name": "When chat message received",
@@ -31,7 +31,7 @@
       "typeVersion": 1,
       "position": [
         -240,
-        -552
+        -560
       ],
       "id": "4478f090-adaf-495e-8b71-37592aa93537",
       "name": "Google Gemini Chat Model",
@@ -55,7 +55,8 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `Natural language request for Discord operations. Examples: 'Check for unreplied messages in wandrlust admin channel', 'DM sebastian about the meeting', 'What did people say about the launch in metarune-labs?', 'Reply to my pending DMs', 'List all members in the dev server'`, 'string') }}"
+            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `Natural language request for Discord operations. Examples: 'Check for unreplied messages in wandrlust admin channel', 'DM sebastian about the meeting', 'What did people say about the launch in metarune-labs?', 'Reply to my pending DMs', 'List all members in the dev server'`, 'string') }}",
+            "sessionId": "={{ $json.body.sessionId }}"
           },
           "matchingColumns": [
             "userPrompt"
@@ -64,6 +65,16 @@
             {
               "id": "userPrompt",
               "displayName": "userPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -80,7 +91,7 @@
       "typeVersion": 2.2,
       "position": [
         16,
-        -552
+        -560
       ],
       "id": "a85ea5f0-1f3f-4d39-af49-35e27cade5b4",
       "name": "Discord Agent with Caching"
@@ -95,7 +106,7 @@
       "typeVersion": 1.3,
       "position": [
         -112,
-        -552
+        -560
       ],
       "id": "8b52e12c-7f0e-4129-8a64-80a18a1714b6",
       "name": "Conversation Memory"
@@ -131,7 +142,7 @@
       "typeVersion": 1.1,
       "position": [
         -464,
-        -776
+        -784
       ],
       "id": "c2a04407-3712-44aa-a758-a324f3b37a33",
       "name": "When Executed by Another Workflow",
@@ -143,7 +154,7 @@
       "typeVersion": 1,
       "position": [
         352,
-        -776
+        -784
       ],
       "id": "b435c3de-9724-4add-bbbe-a0f0eeea066e",
       "name": "No Operation, do nothing"
@@ -161,7 +172,8 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `Natural language request for Telegram operations. Examples: 'Check for unreplied messages from sebastian', 'Message john about the meeting', 'What did people say about the launch in the dev group?', 'Reply to my pending chats', 'List all contacts', 'Search for messages about deployment in the team group'`, 'string') }}"
+            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `Natural language request for Telegram operations. Examples: 'Check for unreplied messages from sebastian', 'Message john about the meeting', 'What did people say about the launch in the dev group?', 'Reply to my pending chats', 'List all contacts', 'Search for messages about deployment in the team group'`, 'string') }}",
+            "sessionId": "={{ $json.body.sessionId }}"
           },
           "matchingColumns": [
             "userPrompt"
@@ -175,6 +187,16 @@
               "display": true,
               "canBeUsedToMatch": true,
               "type": "string"
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -185,7 +207,7 @@
       "typeVersion": 2.2,
       "position": [
         144,
-        -552
+        -560
       ],
       "id": "77779f7b-6217-46a5-a355-4cb35d2e935a",
       "name": "Telegram Agent with Caching"
@@ -221,7 +243,8 @@
             "data": "={{ \n   {\"executionResult\": $json.output}\n}}",
             "stage": "manager_output",
             "status": "completed",
-            "message": "Workflow completed successfully!"
+            "message": "Workflow completed successfully!",
+            "sessionId": "={{ $('Webhook').item.json.body.sessionId }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -258,6 +281,16 @@
             {
               "id": "message",
               "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -275,7 +308,7 @@
       "typeVersion": 1.3,
       "position": [
         576,
-        -776
+        -784
       ],
       "id": "58df62ec-7247-42bc-a866-7972255129a9",
       "name": "Send Stream Update"
@@ -292,10 +325,11 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "data": "={{ \n   {\"executionResult\": $json.output}\n}}",
+            "data": "={{ \n   {}\n}}",
             "stage": "manager_input",
             "status": "in_progress",
-            "message": "=Workflow is starting with user prompt: {{ $json.body.data.chatInput?.toJsonString() }}"
+            "message": "=Workflow is starting with user prompt: {{ $json.body.chatInput?.toJsonString() }}",
+            "sessionId": "={{ $json.body.sessionId }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -338,6 +372,16 @@
               "canBeUsedToMatch": true,
               "type": "string",
               "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -348,7 +392,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -56,
+        -64,
         -1072
       ],
       "id": "31b38a67-1985-49e5-9693-cb1e2932ff35",
@@ -503,8 +547,8 @@
       }
     ]
   },
-  "versionId": "42a1114a-9ffd-40f7-aab7-e43841249a84",
-  "versionCounter": 206,
+  "versionId": "5469be74-ad72-4ad5-826b-fbe966739557",
+  "versionCounter": 216,
   "triggerCount": 1,
   "tags": [
     {

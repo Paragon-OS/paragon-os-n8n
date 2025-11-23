@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-22T14:16:04.000Z",
+  "updatedAt": "2025-11-23T18:03:57.000Z",
   "createdAt": "2025-11-17T13:03:59.561Z",
   "id": "uoYXevOl4ePWKeNx",
   "name": "[HELPERS] Discord & Telegram Step Executor",
@@ -16,6 +16,9 @@
             },
             {
               "name": "targetMcp"
+            },
+            {
+              "name": "sessionId"
             }
           ]
         }
@@ -24,7 +27,7 @@
       "typeVersion": 1.1,
       "position": [
         -1616,
-        520
+        528
       ],
       "id": "dd089a93-3eb3-466d-9dd8-efc4a57a9e0e",
       "name": "When Executed by Another Workflow",
@@ -67,7 +70,7 @@
       "typeVersion": 3.4,
       "position": [
         -1392,
-        520
+        528
       ],
       "id": "490cd53f-a549-4be3-888d-e9838dc053e8",
       "name": "Prepare Execution Steps"
@@ -83,7 +86,7 @@
       "typeVersion": 1,
       "position": [
         -1168,
-        520
+        528
       ],
       "id": "b996eb98-f301-4d48-9b5a-999e52135faa",
       "name": "Split Execution Steps"
@@ -113,7 +116,7 @@
       "typeVersion": 3,
       "position": [
         -944,
-        760
+        768
       ],
       "id": "cd5a8d92-5e4f-4164-af15-6861fe96b4c4",
       "name": "Loop Over Execution Steps"
@@ -292,7 +295,7 @@
       "typeVersion": 2,
       "position": [
         -272,
-        904
+        912
       ],
       "id": "070d5a92-aef4-4406-9c71-04252c3cd22a",
       "name": "Code in JavaScript"
@@ -312,7 +315,8 @@
             "data": "={{ \n   {\n     stepResult: $json.stepResult\n   }\n}}",
             "stage": "telegram_execution_steps",
             "status": "in_progress",
-            "message": "=Executed step on telegram: {{ $json.stepResult.toolName }}"
+            "message": "=Executed step on telegram: {{ $json.stepResult.toolName }}",
+            "sessionId": "={{ $('When Executed by Another Workflow').item.json.sessionId }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -349,6 +353,16 @@
             {
               "id": "message",
               "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -586,13 +600,14 @@
               }
             }
           ],
-          "targetMcp": "TELEGRAM"
+          "targetMcp": "TELEGRAM",
+          "sessionId": "sample-session-id-1"
         }
       }
     ]
   },
-  "versionId": "9fd409d3-06fd-4d07-8942-9375c80d338f",
-  "versionCounter": 86,
+  "versionId": "b9158924-b273-49cb-b2fd-9ea45ee7819e",
+  "versionCounter": 88,
   "triggerCount": 0,
   "tags": [
     {
