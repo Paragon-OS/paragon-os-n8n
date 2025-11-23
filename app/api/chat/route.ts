@@ -172,6 +172,11 @@ export async function POST(req: Request) {
       
       console.log("[paragonOS] Using chatInput (length:", chatInput.length, "):", chatInput.substring(0, 100));
       
+      // Extract messageId from the last user message
+      const userMessages = messages.filter(m => m.role === "user");
+      const lastUserMessage = userMessages[userMessages.length - 1];
+      const messageId = lastUserMessage?.id;
+      
       // Get the stream URL for updates using unified URL construction
       const streamUrl = getStreamingUpdateUrl(req);
       
@@ -179,6 +184,7 @@ export async function POST(req: Request) {
       const payload = {
         chatInput: chatInput,
         sessionId: sessionId,
+        messageId: messageId,
         streamUrl: streamUrl,
       };
       

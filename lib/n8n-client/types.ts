@@ -9,6 +9,7 @@
 export interface StreamUpdate {
   executionId: string;
   sessionId?: string;
+  messageId?: string;
   stage: string;
   status: "in_progress" | "completed" | "error" | "info";
   message: string;

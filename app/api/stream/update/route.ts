@@ -198,13 +198,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Extract sessionId from request body
+    // Extract sessionId and messageId from request body
     const sessionId = body.sessionId || undefined;
+    const messageId = body.messageId || undefined;
 
     // Create update object
     const update: StreamUpdate = {
       executionId: executionId,
       sessionId: sessionId,
+      messageId: messageId,
       stage: body.stage || "unknown",
       status: body.status || "info",
       message: body.message || "",

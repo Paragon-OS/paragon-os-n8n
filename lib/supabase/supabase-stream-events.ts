@@ -14,6 +14,7 @@ export interface StreamEventRow {
   id?: string; // UUID, auto-generated
   execution_id: string;
   session_id?: string;
+  message_id?: string;
   stage: string;
   status: string;
   message: string;
@@ -69,6 +70,7 @@ export async function saveStreamEventToSupabase(
     const eventRow: StreamEventRow = {
       execution_id: update.executionId,
       session_id: update.sessionId,
+      message_id: update.messageId,
       stage: update.stage,
       status: update.status,
       message: update.message,
@@ -196,6 +198,7 @@ export function convertStreamEventRowToUpdate(row: StreamEventRow): StreamUpdate
   return {
     executionId: row.execution_id,
     sessionId: row.session_id,
+    messageId: row.message_id,
     stage: row.stage,
     status: row.status as "in_progress" | "completed" | "error" | "info",
     message: row.message,
