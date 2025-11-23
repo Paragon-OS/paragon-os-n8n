@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { StreamUpdate } from "@/lib/n8n-client/types";
 import { getN8nBaseUrl, getWebhookBaseUrl } from "@/lib/n8n-client/config";
 import { saveStreamEventToSupabase } from "@/lib/supabase/supabase-stream-events";
+import { updateChatMessage } from "@/lib/supabase/supabase-chat";
 
 export const runtime = "nodejs";
 
@@ -234,6 +235,37 @@ export async function POST(request: NextRequest) {
       // This catch is a safety net, but saveStreamEventToSupabase already handles errors internally
       console.error("[update] Unexpected error in Supabase save:", error);
     });
+
+    // Update assistant message if messageId is provided in metadata
+    // This allows n8n workflow events to update the assistant message record
+    if (update.metadata?.messageId) {
+      const messageId = update.metadata.messageId;
+      const sessionId = update.metadata.sessionId;
+
+      // Update the message with event information
+      // We'll store event data in metadata and optionally append to content
+      updateChatMessage({
+        messageId: messageId,
+        sessionId: sessionId,
+        metadata: {
+          lastStreamEvent: {
+            executionId: update.executionId,
+            stage: update.stage,
+            status: update.status,
+            message: update.message,
+            timestamp: update.timestamp,
+            data: update.data,
+          },
+          // Preserve existing metadata if needed
+        },
+      }).catch((error) => {
+        // Log error but don't fail the webhook response
+        console.error("[update] Error updating assistant message from stream event:", error, {
+          messageId,
+          executionId: update.executionId,
+        });
+      });
+    }
 
     return NextResponse.json({
       success: true,

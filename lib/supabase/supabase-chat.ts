@@ -346,6 +346,126 @@ export async function saveChatMessageToSupabase(
 }
 
 /**
+ * Options for updating a chat message
+ */
+export interface UpdateChatMessageOptions {
+  messageId: string;
+  sessionId?: string;
+  content?: string;
+  contentParts?: unknown[];
+  toolInvocations?: unknown[];
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Update an existing chat message by message_id
+ * This function is non-blocking and will not throw errors to avoid affecting chat performance
+ * Errors are logged but do not propagate
+ */
+export async function updateChatMessage(
+  options: UpdateChatMessageOptions
+): Promise<void> {
+  const supabase = createSupabaseClient();
+
+  // If Supabase is not configured, silently skip
+  if (!supabase) {
+    console.warn(
+      "[supabase-chat] Supabase not configured, skipping update",
+      { messageId: options.messageId }
+    );
+    return;
+  }
+
+  // Check if migrations have been applied (once per session)
+  if (!chatTableCheckPerformed) {
+    const tablesExist = await checkChatTablesExist();
+    chatTablesExistCache = tablesExist;
+    chatTableCheckPerformed = true;
+
+    if (!tablesExist) {
+      console.warn(
+        "[supabase-chat] Chat tables not found. Run migrations to enable chat persistence."
+      );
+      return;
+    }
+  }
+
+  // Use cached result
+  if (chatTablesExistCache === false) {
+    return;
+  }
+
+  try {
+    // Build update object with only provided fields
+    const updateData: Partial<ChatMessageRow> = {};
+
+    if (options.content !== undefined) {
+      updateData.content = options.content;
+      // Clear content_parts if content is being set
+      // Use undefined instead of null for TypeScript compatibility
+      // Supabase will handle the null conversion if needed
+      updateData.content_parts = undefined;
+    }
+
+    if (options.contentParts !== undefined) {
+      updateData.content_parts = options.contentParts;
+      // Clear content if content_parts is being set
+      // Use undefined instead of null for TypeScript compatibility
+      updateData.content = undefined;
+    }
+
+    if (options.toolInvocations !== undefined) {
+      updateData.tool_invocations = options.toolInvocations;
+    }
+
+    if (options.metadata !== undefined) {
+      updateData.metadata = options.metadata;
+    }
+
+    // Build query - update by message_id
+    let query = supabase
+      .from("chat_messages")
+      .update(updateData)
+      .eq("message_id", options.messageId);
+
+    // Optionally filter by session_id if provided
+    if (options.sessionId) {
+      query = query.eq("session_id", options.sessionId);
+    }
+
+    const { error, data } = await query.select();
+
+    if (error) {
+      console.error(
+        "[supabase-chat] Error updating chat message:",
+        error,
+        { messageId: options.messageId, sessionId: options.sessionId }
+      );
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      console.warn(
+        `[supabase-chat] No message found to update with message_id: ${options.messageId}`,
+        { sessionId: options.sessionId }
+      );
+      return;
+    }
+
+    console.log(
+      `[supabase-chat] Updated message: ${options.messageId}`
+    );
+  } catch (error) {
+    // Catch any unexpected errors to prevent them from propagating
+    console.error(
+      "[supabase-chat] Unexpected error updating chat message:",
+      error,
+      { messageId: options.messageId }
+    );
+  }
+}
+
+/**
  * Retrieve chat messages for a specific session from Supabase
  * Returns empty array if Supabase is not configured or on error
  */

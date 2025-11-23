@@ -6,7 +6,7 @@ import { getWorkflowWebhookUrl } from "@/lib/n8n-config";
 import { getWebhookModeFromCookieHeader } from "@/lib/stores/webhook-mode";
 import { getStreamingUpdateUrl } from "@/lib/n8n-client/config";
 import { NextResponse } from "next/server";
-import { saveChatMessagesToSupabase } from "@/lib/supabase/supabase-chat";
+import { saveChatMessagesToSupabase, saveChatMessageToSupabase, updateChatMessage } from "@/lib/supabase/supabase-chat";
 import { randomUUID } from "crypto";
 
 /**
@@ -131,6 +131,10 @@ export async function POST(req: Request) {
   // In a real app, this would come from user session/authentication
   const sessionId = req.headers.get("x-session-id") || `session-${randomUUID()}`;
   
+  // Generate assistant message ID early (before streamText call)
+  const assistantMessageId = randomUUID();
+  console.log(`[chat/route] Generated assistant message ID: ${assistantMessageId}`);
+  
   // Save incoming messages to Supabase (non-blocking)
   // This runs in the background and won't affect the response
   saveChatMessagesToSupabase({
@@ -228,6 +232,20 @@ export async function POST(req: Request) {
     },
   });
 
+  // Create placeholder assistant message record before streamText call
+  // This ensures the message exists in the database before streaming starts
+  saveChatMessageToSupabase(
+    sessionId,
+    {
+      id: assistantMessageId,
+      role: "assistant",
+      content: "",
+    }
+  ).catch((error) => {
+    // Log error but don't fail the request
+    console.error("[chat/route] Error creating placeholder assistant message:", error);
+  });
+
   try {
     const result = streamText({
       model: google("models/gemini-2.5-pro"),
@@ -322,7 +340,90 @@ When a user's request involves messaging operations on Discord or Telegram, use 
       },
     });
 
-    return result.toUIMessageStreamResponse();
+    // Track text content from the streamText result
+    // We'll read from result.textStream in parallel to update the database
+    let accumulatedContent = "";
+    let updateDebounceTimer: NodeJS.Timeout | null = null;
+    const DEBOUNCE_MS = 500; // Update database every 500ms
+
+    // Start tracking text stream in parallel (non-blocking)
+    (async () => {
+      try {
+        for await (const textDelta of result.textStream) {
+          accumulatedContent += textDelta;
+
+          // Debounce database updates
+          if (updateDebounceTimer) {
+            clearTimeout(updateDebounceTimer);
+          }
+
+          updateDebounceTimer = setTimeout(() => {
+            if (accumulatedContent) {
+              updateChatMessage({
+                messageId: assistantMessageId,
+                sessionId: sessionId,
+                content: accumulatedContent,
+                metadata: {
+                  status: "streaming",
+                  updatedAt: new Date().toISOString(),
+                },
+              }).catch((error) => {
+                console.error("[chat/route] Error updating message during stream:", error);
+              });
+            }
+          }, DEBOUNCE_MS);
+        }
+
+        // Final update when stream completes
+        if (updateDebounceTimer) {
+          clearTimeout(updateDebounceTimer);
+        }
+
+        if (accumulatedContent) {
+          updateChatMessage({
+            messageId: assistantMessageId,
+            sessionId: sessionId,
+            content: accumulatedContent,
+            metadata: {
+              status: "completed",
+              updatedAt: new Date().toISOString(),
+            },
+          }).catch((error) => {
+            console.error("[chat/route] Error updating message on stream completion:", error);
+          });
+        }
+      } catch (error) {
+        // Update message with error status if stream fails
+        updateChatMessage({
+          messageId: assistantMessageId,
+          sessionId: sessionId,
+          metadata: {
+            status: "error",
+            error: error instanceof Error ? error.message : "Unknown error",
+            updatedAt: new Date().toISOString(),
+          },
+        }).catch((updateError) => {
+          console.error("[chat/route] Error updating message with error status:", updateError);
+        });
+        console.error("[chat/route] Error tracking text stream:", error);
+      }
+    })().catch((error) => {
+      console.error("[chat/route] Error in text stream tracking:", error);
+    });
+
+    // Return the UI message stream response (unchanged)
+    // The message ID is already in the database, so the client can query it
+    const response = result.toUIMessageStreamResponse();
+    
+    // Add message ID to response headers for client access
+    const headers = new Headers(response.headers);
+    headers.set("X-Assistant-Message-Id", assistantMessageId);
+    
+    return new Response(response.body, {
+      headers: headers,
+      status: response.status,
+      statusText: response.statusText,
+    });
   } catch (error) {
     console.error("[chat/route] Error processing chat request:", error);
     return NextResponse.json(
