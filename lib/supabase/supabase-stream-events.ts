@@ -69,8 +69,8 @@ export async function saveStreamEventToSupabase(
   try {
     const eventRow: StreamEventRow = {
       execution_id: update.executionId,
-      session_id: update.sessionId,
-      message_id: update.messageId,
+      session_id: update.metadata?.sessionId,
+      message_id: update.metadata?.messageId,
       stage: update.stage,
       status: update.status,
       message: update.message,
@@ -197,8 +197,11 @@ export async function getAllStreamEvents(
 export function convertStreamEventRowToUpdate(row: StreamEventRow): StreamUpdate {
   return {
     executionId: row.execution_id,
-    sessionId: row.session_id,
-    messageId: row.message_id,
+    metadata: row.session_id || row.message_id ? {
+      sessionId: row.session_id,
+      messageId: row.message_id,
+      streamUrl: undefined, // Not stored in DB
+    } : undefined,
     stage: row.stage,
     status: row.status as "in_progress" | "completed" | "error" | "info",
     message: row.message,
