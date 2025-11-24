@@ -40,16 +40,14 @@ function AssistantRuntimeWrapper({ transport, sessionId }: { transport: SessionA
   // Log when runtime is created
   React.useEffect(() => {
     console.log("[assistant] RuntimeWrapper - Runtime created with transport, sessionId:", sessionId);
-    console.log("[assistant] RuntimeWrapper - Runtime transport:", (runtime as any).transport);
+    // Runtime transport is internal, we don't need to log it
   }, [runtime, sessionId]);
   
   return <AssistantContentWithRuntime runtime={runtime} />;
 }
 
 function AssistantContent() {
-  const [activeTab, setActiveTab] = useState<"chat" | "monitor" | "supabase">("chat");
   const { createNewSession } = useChatSessionsContext();
-  const activeSessionTitle = useSessionStore((state) => state.activeSessionTitle);
   const effectiveSessionId = useSessionStore((state) => state.activeSessionId);
   
   // Log session ID changes

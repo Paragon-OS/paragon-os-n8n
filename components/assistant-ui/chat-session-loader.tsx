@@ -333,12 +333,80 @@ export function ChatSessionLoader() {
             }
 
             // Detect capability once and execute
-            // Use append as primary method since it's more reliable and handles errors better
+            // Use import() for initial historical load (doesn't trigger responses)
+            // Use append() only for incremental updates (new messages via realtime)
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const threadAny = thread as any;
 
-            if (typeof threadAny.append === "function") {
-              // Use append as primary method - it's more reliable and handles errors better
+            // Check if this is an initial load (empty thread or switching sessions)
+            const isInitialLoad = currentThreadMessages.length === 0 || 
+                                 (lastLoadedSessionId.current !== null && lastLoadedSessionId.current !== activeSessionId);
+
+            if (isInitialLoad && typeof threadAny.import === "function") {
+              // Use import() for initial historical load - this loads messages as history without triggering responses
+              try {
+                // Clear thread first if switching sessions
+                if (lastLoadedSessionId.current !== null && lastLoadedSessionId.current !== activeSessionId) {
+                  thread.reset();
+                }
+                
+                // Final validation: ensure all messages are valid objects with required fields
+                const importMessages = safeMessages.filter((msg): msg is NonNullable<typeof msg> => {
+                  if (!msg || typeof msg !== "object") {
+                    console.warn("[chat-session-loader] Filtering out invalid message for import:", msg);
+                    return false;
+                  }
+                  // Ensure message has required id field
+                  if (!msg.id || typeof msg.id !== "string" || msg.id.trim() === "") {
+                    console.warn("[chat-session-loader] Filtering out message without valid id for import:", msg);
+                    return false;
+                  }
+                  // Ensure message has required role field
+                  if (!msg.role || !["user", "assistant", "system", "tool"].includes(msg.role)) {
+                    console.warn("[chat-session-loader] Filtering out message without valid role for import:", msg);
+                    return false;
+                  }
+                  return true;
+                });
+                
+                if (importMessages.length === 0) {
+                  console.warn("[chat-session-loader] No valid messages to import after final validation");
+                  lastLoadedSessionId.current = activeSessionId;
+                  return;
+                }
+                
+                // Log message structure for debugging
+                console.log(`[chat-session-loader] Attempting to import ${importMessages.length} messages`);
+                console.log(`[chat-session-loader] Message IDs:`, importMessages.map(m => m?.id).filter(Boolean));
+                console.log(`[chat-session-loader] Message roles:`, importMessages.map(m => m?.role).filter(Boolean));
+                
+                // Import all messages at once - marks them as historical, won't trigger responses
+                threadAny.import({ messages: importMessages });
+                console.log(`[chat-session-loader] Successfully imported ${importMessages.length} historical messages (initial load)`);
+              } catch (importErr) {
+                console.error("[chat-session-loader] Error during batch import:", importErr);
+                console.error("[chat-session-loader] Messages count:", safeMessages.length);
+                console.error("[chat-session-loader] First few messages:", safeMessages.slice(0, 3));
+                // Fallback to append if import fails
+                // Note: append() will trigger responses for user messages, but it's better than not loading at all
+                console.warn("[chat-session-loader] Falling back to append() due to import() failure");
+                if (typeof threadAny.append === "function") {
+                  const existingIds = new Set((currentMessages || []).map((m) => m?.id).filter(Boolean));
+                  for (let i = 0; i < safeMessages.length; i++) {
+                    const message = safeMessages[i];
+                    if (message && message.id && !existingIds.has(message.id)) {
+                      try {
+                        threadAny.append(message);
+                      } catch (err) {
+                        console.error(`[chat-session-loader] Error appending message ${i} (fallback):`, err);
+                        console.error(`[chat-session-loader] Problematic message:`, JSON.stringify(message, null, 2));
+                      }
+                    }
+                  }
+                }
+              }
+            } else if (typeof threadAny.append === "function") {
+              // Use append() for incremental updates (new messages from realtime subscription)
               // IMPORTANT: Check existence before appending to avoid infinite loops and duplication
               const existingIds = new Set((currentMessages || []).map((m) => m?.id).filter(Boolean));
               
@@ -348,19 +416,12 @@ export function ChatSessionLoader() {
                 if (message && message.id && !existingIds.has(message.id)) {
                   try {
                     threadAny.append(message);
+                    console.log(`[chat-session-loader] Appended new message: ${message.id}`);
                   } catch (err) {
                     console.error(`[chat-session-loader] Error appending message ${i}:`, err);
                     console.error(`[chat-session-loader] Problematic message:`, JSON.stringify(message, null, 2));
                   }
                 }
-              }
-            } else if (typeof threadAny.import === "function") {
-              // Fallback to import if append doesn't exist
-              try {
-                threadAny.import({ messages: safeMessages });
-              } catch (importErr) {
-                console.error("[chat-session-loader] Error during batch import:", importErr);
-                console.error("[chat-session-loader] Messages count:", safeMessages.length);
               }
             } else {
               console.error("[chat-session-loader] Thread runtime does not support import or append.");
