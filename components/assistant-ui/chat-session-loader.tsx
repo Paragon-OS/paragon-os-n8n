@@ -19,6 +19,7 @@ export function ChatSessionLoader() {
   });
   const runtime = useAssistantRuntime();
   const lastLoadedSessionId = useRef<string | null>(null);
+  const isLoadingRef = useRef(false); // Track if we're currently loading to prevent concurrent loads
   const currentMessages = useAssistantState((state) => state.thread.messages);
 
   useEffect(() => {
@@ -29,6 +30,11 @@ export function ChatSessionLoader() {
 
     // If this is the same session we already loaded, skip
     if (lastLoadedSessionId.current === activeSessionId) {
+      return;
+    }
+
+    // If we're already loading, skip to prevent concurrent loads
+    if (isLoadingRef.current) {
       return;
     }
 
@@ -55,6 +61,9 @@ export function ChatSessionLoader() {
           );
 
         if (!messagesAlreadyLoaded) {
+          // Set loading flag to prevent concurrent loads
+          isLoadingRef.current = true;
+          
           // Load messages into thread using the thread's import or append method
           try {
             // Validate and normalize messages before importing
@@ -383,6 +392,9 @@ export function ChatSessionLoader() {
                 // Import all messages at once - marks them as historical, won't trigger responses
                 threadAny.import({ messages: importMessages });
                 console.log(`[chat-session-loader] Successfully imported ${importMessages.length} historical messages (initial load)`);
+                
+                // Mark session as loaded immediately after successful import
+                lastLoadedSessionId.current = activeSessionId;
               } catch (importErr) {
                 console.error("[chat-session-loader] Error during batch import:", importErr);
                 console.error("[chat-session-loader] Messages count:", safeMessages.length);
@@ -429,12 +441,18 @@ export function ChatSessionLoader() {
           } catch (err) {
             console.error("[chat-session-loader] Error loading messages into thread:", err);
             console.error("[chat-session-loader] Messages that caused error:", messages);
+          } finally {
+            // Always clear loading flag and mark session as loaded
+            isLoadingRef.current = false;
+            lastLoadedSessionId.current = activeSessionId;
           }
+        } else {
+          // Messages already loaded, just mark session as loaded
+          lastLoadedSessionId.current = activeSessionId;
         }
-
-        lastLoadedSessionId.current = activeSessionId;
       } else {
         // Even if no messages, mark this session as loaded
+        isLoadingRef.current = false;
         lastLoadedSessionId.current = activeSessionId;
       }
     } catch (error) {
@@ -446,6 +464,7 @@ export function ChatSessionLoader() {
   useEffect(() => {
     if (lastLoadedSessionId.current !== activeSessionId) {
       lastLoadedSessionId.current = null;
+      isLoadingRef.current = false;
     }
   }, [activeSessionId]);
 
