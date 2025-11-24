@@ -121,7 +121,17 @@ export async function POST(req: Request) {
   
   // Generate or extract session ID for chat persistence
   // In a real app, this would come from user session/authentication
-  const sessionId = req.headers.get("x-session-id") || `session-${randomUUID()}`;
+  const headerSessionId = req.headers.get("x-session-id");
+  const sessionId = headerSessionId || `session-${randomUUID()}`;
+  
+  console.log("[chat/route] POST request received");
+  console.log("[chat/route] x-session-id header:", headerSessionId);
+  console.log("[chat/route] Final sessionId:", sessionId);
+  console.log("[chat/route] Messages count:", messages.length);
+  console.log("[chat/route] First message role:", messages[0]?.role);
+  if (messages.length > 0) {
+    console.log("[chat/route] Last message role:", messages[messages.length - 1]?.role);
+  }
   
   // Generate assistant message ID early (before streamText call)
   const assistantMessageId = randomUUID();

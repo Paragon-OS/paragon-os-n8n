@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import React from "react";
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import {
@@ -30,32 +30,103 @@ import { ChatSessionsProvider, useChatSessionsContext } from "@/components/assis
 import { SessionAwareChatTransport } from "@/lib/chat-transport";
 import { useSessionStore } from "@/lib/stores/session-store";
 
+// Wrapper component that only renders when we have a transport
+function AssistantRuntimeWrapper({ transport, sessionId }: { transport: SessionAwareChatTransport, sessionId: string }) {
+  // This component only renders when transport exists, so runtime is always created with a valid transport
+  const runtime = useChatRuntime({
+    transport,
+  });
+  
+  // Log when runtime is created
+  React.useEffect(() => {
+    console.log("[assistant] RuntimeWrapper - Runtime created with transport, sessionId:", sessionId);
+    console.log("[assistant] RuntimeWrapper - Runtime transport:", (runtime as any).transport);
+  }, [runtime, sessionId]);
+  
+  return <AssistantContentWithRuntime runtime={runtime} />;
+}
+
 function AssistantContent() {
   const [activeTab, setActiveTab] = useState<"chat" | "monitor" | "supabase">("chat");
   const { createNewSession } = useChatSessionsContext();
   const activeSessionTitle = useSessionStore((state) => state.activeSessionTitle);
   const effectiveSessionId = useSessionStore((state) => state.activeSessionId);
   
+  // Log session ID changes
+  React.useEffect(() => {
+    console.log("[assistant] effectiveSessionId changed:", effectiveSessionId);
+  }, [effectiveSessionId]);
+  
   // Initialize session if none exists
   React.useEffect(() => {
+    console.log("[assistant] Checking session, effectiveSessionId:", effectiveSessionId);
     if (!effectiveSessionId) {
-      createNewSession();
+      console.log("[assistant] No session found, creating new session");
+      const newSessionId = createNewSession();
+      console.log("[assistant] Created new session:", newSessionId);
     }
   }, [effectiveSessionId, createNewSession]);
   
-  // Recreate runtime when session changes by using sessionId as key
-  const runtime = useChatRuntime({
-    transport: new SessionAwareChatTransport(
+  // Create transport with current session ID - use useMemo to recreate when sessionId changes
+  // Only create transport if we have a session ID to avoid capturing null
+  // IMPORTANT: The getSessionId function reads directly from the store to avoid closure issues
+  const transport = useMemo(() => {
+    if (!effectiveSessionId) {
+      console.log("[assistant] No session ID yet, skipping transport creation");
+      return null;
+    }
+    console.log("[assistant] Creating transport, effectiveSessionId:", effectiveSessionId);
+    return new SessionAwareChatTransport(
       {
         api: "/api/chat",
       },
-      () => effectiveSessionId
-    ),
-  });
+      () => {
+        // Always read fresh from the store, don't rely on closure
+        const currentSessionId = useSessionStore.getState().activeSessionId;
+        console.log("[assistant] Transport getSessionId called, returning:", currentSessionId);
+        return currentSessionId;
+      }
+    );
+  }, [effectiveSessionId]);
+  
+  // Log transport details
+  React.useEffect(() => {
+    if (transport) {
+      console.log("[assistant] Transport instance:", transport);
+      // Test calling getSessionId via public method
+      try {
+        const testSessionId = transport.getCurrentSessionId();
+        console.log("[assistant] Transport getCurrentSessionId test call result:", testSessionId);
+      } catch (e) {
+        console.error("[assistant] Error testing getCurrentSessionId:", e);
+      }
+    }
+  }, [transport]);
+
+  // Don't render the runtime provider until we have a session ID and transport
+  if (!effectiveSessionId || !transport) {
+    console.log("[assistant] Waiting for session ID before rendering runtime");
+    return (
+      <StreamingProvider>
+        <div className="flex h-dvh w-full items-center justify-center">
+          <div className="text-muted-foreground">Initializing session...</div>
+        </div>
+      </StreamingProvider>
+    );
+  }
+  
+  // Render wrapper that creates runtime with transport
+  return <AssistantRuntimeWrapper transport={transport} sessionId={effectiveSessionId} />;
+}
+
+function AssistantContentWithRuntime({ runtime }: { runtime: ReturnType<typeof useChatRuntime> }) {
+  const [activeTab, setActiveTab] = useState<"chat" | "monitor" | "supabase">("chat");
+  const activeSessionTitle = useSessionStore((state) => state.activeSessionTitle);
+  const effectiveSessionId = useSessionStore((state) => state.activeSessionId);
 
   return (
     <StreamingProvider>
-      <AssistantRuntimeProvider key={effectiveSessionId || "default"} runtime={runtime}>
+      <AssistantRuntimeProvider key={effectiveSessionId} runtime={runtime}>
         <SidebarProvider>
           <div className="flex h-dvh w-full pr-0.5">
             <ThreadListSidebar />

@@ -15,8 +15,39 @@ export class SessionAwareChatTransport<
     options: HttpChatTransportInitOptions<UI_MESSAGE>,
     getSessionId: () => string | null
   ) {
-    super(options);
+    // Create a custom fetch that includes the session ID header
+    const originalFetch = options.fetch || globalThis.fetch;
+    const sessionAwareFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const sessionId = getSessionId();
+      console.log("[chat-transport] Custom fetch called, sessionId:", sessionId);
+      
+      const headers = new Headers(init?.headers);
+      
+      if (sessionId) {
+        headers.set("x-session-id", sessionId);
+        console.log("[chat-transport] Added x-session-id header:", sessionId);
+      } else {
+        console.warn("[chat-transport] No sessionId available, request will create new session");
+      }
+      
+      return originalFetch(input, {
+        ...init,
+        headers,
+      });
+    };
+
+    super({
+      ...options,
+      fetch: sessionAwareFetch,
+    });
+    
     this.getSessionId = getSessionId;
+    console.log("[chat-transport] Constructor called, getSessionId function:", typeof getSessionId);
+  }
+  
+  // Expose getSessionId for debugging
+  public getCurrentSessionId(): string | null {
+    return this.getSessionId();
   }
 
   override async sendMessages(options: {
@@ -26,67 +57,19 @@ export class SessionAwareChatTransport<
     messages: UI_MESSAGE[];
     abortSignal: AbortSignal | undefined;
   } & ChatRequestOptions): Promise<ReadableStream<UIMessageChunk>> {
-    // Override fetch temporarily to add session ID header
-    const originalFetch = this.fetch;
-    if (!originalFetch) {
-      return super.sendMessages(options);
-    }
+    console.log("[chat-transport] sendMessages OVERRIDE CALLED!", "messages count:", options.messages.length, "trigger:", options.trigger);
     
-    const getSessionId = this.getSessionId;
-    
-    this.fetch = (async function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-      const sessionId = getSessionId();
-      const headers = new Headers(init?.headers);
-      
-      if (sessionId) {
-        headers.set("x-session-id", sessionId);
-      }
-      
-      return originalFetch(input, {
-        ...init,
-        headers,
-      });
-    }) as typeof fetch;
-
-    try {
-      return await super.sendMessages(options);
-    } finally {
-      // Restore original fetch
-      this.fetch = originalFetch;
-    }
+    // The fetch is already set up in the constructor with session ID support
+    // Just call super - the custom fetch will automatically add the header
+    return super.sendMessages(options);
   }
 
   override async reconnectToStream(options: {
     chatId: string;
   } & ChatRequestOptions): Promise<ReadableStream<UIMessageChunk> | null> {
-    // Override fetch temporarily to add session ID header
-    const originalFetch = this.fetch;
-    if (!originalFetch) {
-      return super.reconnectToStream(options);
-    }
-    
-    const getSessionId = this.getSessionId;
-    
-    this.fetch = (async function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-      const sessionId = getSessionId();
-      const headers = new Headers(init?.headers);
-      
-      if (sessionId) {
-        headers.set("x-session-id", sessionId);
-      }
-      
-      return originalFetch(input, {
-        ...init,
-        headers,
-      });
-    }) as typeof fetch;
-
-    try {
-      return await super.reconnectToStream(options);
-    } finally {
-      // Restore original fetch
-      this.fetch = originalFetch;
-    }
+    // The fetch is already set up in the constructor with session ID support
+    // Just call super - the custom fetch will automatically add the header
+    return super.reconnectToStream(options);
   }
 }
 

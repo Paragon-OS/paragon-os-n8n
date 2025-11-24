@@ -46,16 +46,22 @@ export function ChatSessionsProvider({
 
   // Update Zustand store when session is set, syncing the title from sessions
   const setActiveSessionId = useCallback((sessionId: string | null) => {
+    console.log("[chat-sessions-context] setActiveSessionId called with:", sessionId);
+    console.log("[chat-sessions-context] Current activeSessionId:", activeSessionId);
     const session = sessionId ? sessions.find((s) => s.session_id === sessionId) : null;
     const sessionTitle = session?.title || null;
+    console.log("[chat-sessions-context] Setting session:", sessionId, "title:", sessionTitle);
     setActiveSession(sessionId, sessionTitle);
-  }, [sessions, setActiveSession]);
+  }, [sessions, setActiveSession, activeSessionId]);
 
   const createNewSession = useCallback(() => {
     const newSessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.log("[chat-sessions-context] createNewSession called, creating:", newSessionId);
+    console.log("[chat-sessions-context] Current activeSessionId before creation:", activeSessionId);
     setActiveSessionId(newSessionId);
+    console.log("[chat-sessions-context] New session created and set:", newSessionId);
     return newSessionId;
-  }, [setActiveSessionId]);
+  }, [setActiveSessionId, activeSessionId]);
 
   const deleteSession = useCallback(async (sessionId: string): Promise<boolean> => {
     try {

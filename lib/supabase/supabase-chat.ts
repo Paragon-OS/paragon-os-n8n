@@ -79,6 +79,9 @@ export interface GetChatMessagesOptions {
 let chatTablesExistCache: boolean | null = null;
 let chatTableCheckPerformed = false;
 
+// Lock map to prevent concurrent session creation for the same session ID
+const sessionCreationLocks = new Map<string, Promise<void>>();
+
 /**
  * Check if chat tables exist in the database
  */
@@ -114,6 +117,7 @@ async function checkChatTablesExist(): Promise<boolean> {
 
 /**
  * Ensure chat session exists, create if it doesn't
+ * Uses a lock mechanism to prevent concurrent creation of the same session
  */
 async function ensureChatSession(
   sessionId: string,
@@ -126,42 +130,79 @@ async function ensureChatSession(
     return;
   }
 
-  try {
-    // Check if session exists
-    const { data: existingSession } = await supabase
-      .from("chat_sessions")
-      .select("session_id")
-      .eq("session_id", sessionId)
-      .single();
-
-    if (!existingSession) {
-      // Create new session
-      const sessionRow: ChatSessionRow = {
-        session_id: sessionId,
-        user_id: userId,
-        title: title,
-        metadata: metadata || {},
-      };
-
-      const { error } = await supabase
-        .from("chat_sessions")
-        .insert(sessionRow);
-
-      if (error) {
-        console.error(
-          "[supabase-chat] Error creating chat session:",
-          error,
-          { sessionId }
-        );
-      }
-    }
-  } catch (error) {
-    console.error(
-      "[supabase-chat] Unexpected error ensuring chat session:",
-      error,
-      { sessionId }
-    );
+  // Check if there's already a pending creation for this session
+  const existingLock = sessionCreationLocks.get(sessionId);
+  if (existingLock) {
+    console.log("[supabase-chat] Waiting for existing session creation lock:", sessionId);
+    await existingLock;
+    return;
   }
+
+  // Create a new lock promise
+  const creationPromise = (async () => {
+    try {
+      console.log("[supabase-chat] ensureChatSession called for:", sessionId, "title:", title);
+      // Check if session exists
+      const { data: existingSession, error: checkError } = await supabase
+        .from("chat_sessions")
+        .select("session_id")
+        .eq("session_id", sessionId)
+        .single();
+
+      if (checkError && checkError.code !== "PGRST116") {
+        console.error("[supabase-chat] Error checking session existence:", checkError);
+      }
+
+      console.log("[supabase-chat] Session check result:", existingSession ? "EXISTS" : "NOT FOUND", "sessionId:", sessionId);
+
+      if (!existingSession) {
+        // Create new session
+        console.log("[supabase-chat] Creating new session:", sessionId);
+        const sessionRow: ChatSessionRow = {
+          session_id: sessionId,
+          user_id: userId,
+          title: title,
+          metadata: metadata || {},
+        };
+
+        const { error } = await supabase
+          .from("chat_sessions")
+          .insert(sessionRow);
+
+        if (error) {
+          // If it's a duplicate key error, that's okay - another request created it first
+          if (error.code === "23505") {
+            console.log("[supabase-chat] Session already exists (created by concurrent request):", sessionId);
+          } else {
+            console.error(
+              "[supabase-chat] Error creating chat session:",
+              error,
+              { sessionId }
+            );
+          }
+        } else {
+          console.log("[supabase-chat] Successfully created session:", sessionId);
+        }
+      } else {
+        console.log("[supabase-chat] Session already exists, skipping creation:", sessionId);
+      }
+    } catch (error) {
+      console.error(
+        "[supabase-chat] Unexpected error ensuring chat session:",
+        error,
+        { sessionId }
+      );
+    } finally {
+      // Remove the lock when done
+      sessionCreationLocks.delete(sessionId);
+    }
+  })();
+
+  // Store the lock promise
+  sessionCreationLocks.set(sessionId, creationPromise);
+  
+  // Wait for the creation to complete
+  await creationPromise;
 }
 
 /**
