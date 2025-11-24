@@ -2,7 +2,7 @@
  * React hook for fetching and syncing chat messages with Supabase Realtime
  */
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { createSupabaseClient } from "../supabase-config";
 import {
   getChatMessagesBySessionId,
@@ -40,17 +40,27 @@ export function useChatMessages(
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  
+  // Track if component is mounted to prevent state updates after unmount
+  const isMountedRef = useRef(true);
+  
+  // Use ref to store latest fetch function to avoid dependency issues
+  const fetchMessagesRef = useRef<(() => Promise<void>) | undefined>(undefined);
 
   const fetchMessages = useCallback(async () => {
     if (!sessionId) {
-      setMessages([]);
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setMessages([]);
+        setIsLoading(false);
+      }
       return;
     }
 
     try {
-      setIsLoading(true);
-      setError(null);
+      if (isMountedRef.current) {
+        setIsLoading(true);
+        setError(null);
+      }
 
       const fetchedMessages = await getChatMessagesBySessionId({
         sessionId,
@@ -58,24 +68,39 @@ export function useChatMessages(
         offset,
       });
 
-      setMessages(fetchedMessages);
+      if (isMountedRef.current) {
+        setMessages(fetchedMessages);
+      }
     } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      setError(error);
-      console.error("[use-chat-messages] Error fetching messages:", error);
+      if (isMountedRef.current) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        setError(error);
+        console.error("[use-chat-messages] Error fetching messages:", error);
+      }
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   }, [sessionId, limit, offset]);
 
+  // Update ref whenever fetchMessages changes
+  fetchMessagesRef.current = fetchMessages;
+
   useEffect(() => {
+    // Reset mounted flag on mount
+    isMountedRef.current = true;
+
     if (!enabled || !sessionId) {
-      setIsLoading(false);
-      setMessages([]);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+        setMessages([]);
+      }
       return;
     }
 
-    fetchMessages();
+    // Fetch messages using ref to avoid dependency issues
+    fetchMessagesRef.current?.();
 
     const supabase = createSupabaseClient();
     if (!supabase) {
@@ -94,6 +119,9 @@ export function useChatMessages(
           filter: `session_id=eq.${sessionId}`,
         },
         (payload) => {
+          // Guard against state updates after unmount
+          if (!isMountedRef.current) return;
+
           if (payload.eventType === "INSERT") {
             const newMessage = convertRowToUIMessage(
               payload.new as Parameters<typeof convertRowToUIMessage>[0]
@@ -128,9 +156,11 @@ export function useChatMessages(
       .subscribe();
 
     return () => {
+      // Mark as unmounted and clean up subscription
+      isMountedRef.current = false;
       supabase.removeChannel(channel);
     };
-  }, [enabled, sessionId, fetchMessages]);
+  }, [enabled, sessionId]); // Removed fetchMessages from dependencies
 
   return {
     messages,
