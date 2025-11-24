@@ -313,31 +313,39 @@ export function ChatSessionLoader() {
               return;
             }
 
+            // Final safety check: ensure no undefined/null values in array
+            const safeMessages = finalMessages.filter((msg): msg is NonNullable<typeof msg> => {
+              if (!msg || typeof msg !== "object") {
+                console.warn("[chat-session-loader] Filtering out invalid message:", msg);
+                return false;
+              }
+              if (!msg.id || typeof msg.id !== "string") {
+                console.warn("[chat-session-loader] Filtering out message without valid ID:", msg);
+                return false;
+              }
+              return true;
+            });
+
+            if (safeMessages.length === 0) {
+              console.warn("[chat-session-loader] No safe messages to load after final validation");
+              lastLoadedSessionId.current = activeSessionId;
+              return;
+            }
+
             // Detect capability once and execute
+            // Use append as primary method since it's more reliable and handles errors better
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const threadAny = thread as any;
 
-            if (typeof threadAny.import === "function") {
-              try {
-                threadAny.import({ messages: finalMessages });
-              } catch (importErr) {
-                console.error("[chat-session-loader] Error during batch import:", importErr);
-                console.error("[chat-session-loader] Messages count:", finalMessages.length);
-                console.error("[chat-session-loader] First few message IDs:", finalMessages.slice(0, 3).map(m => m.id));
-                // Only log full messages in development
-                if (process.env.NODE_ENV === "development") {
-                  console.error("[chat-session-loader] Messages that caused error:", JSON.stringify(finalMessages, null, 2));
-                }
-              }
-            } else if (typeof threadAny.append === "function") {
-              // Fallback to sequential append
+            if (typeof threadAny.append === "function") {
+              // Use append as primary method - it's more reliable and handles errors better
               // IMPORTANT: Check existence before appending to avoid infinite loops and duplication
-              const existingIds = new Set((currentMessages || []).map((m) => m.id).filter(Boolean));
+              const existingIds = new Set((currentMessages || []).map((m) => m?.id).filter(Boolean));
               
-              for (let i = 0; i < finalMessages.length; i++) {
-                const message = finalMessages[i];
+              for (let i = 0; i < safeMessages.length; i++) {
+                const message = safeMessages[i];
                 // Only append if message ID doesn't exist in current thread
-                if (message.id && !existingIds.has(message.id)) {
+                if (message && message.id && !existingIds.has(message.id)) {
                   try {
                     threadAny.append(message);
                   } catch (err) {
@@ -345,6 +353,14 @@ export function ChatSessionLoader() {
                     console.error(`[chat-session-loader] Problematic message:`, JSON.stringify(message, null, 2));
                   }
                 }
+              }
+            } else if (typeof threadAny.import === "function") {
+              // Fallback to import if append doesn't exist
+              try {
+                threadAny.import({ messages: safeMessages });
+              } catch (importErr) {
+                console.error("[chat-session-loader] Error during batch import:", importErr);
+                console.error("[chat-session-loader] Messages count:", safeMessages.length);
               }
             } else {
               console.error("[chat-session-loader] Thread runtime does not support import or append.");

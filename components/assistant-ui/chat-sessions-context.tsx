@@ -8,6 +8,7 @@
 import React, { createContext, useContext, useCallback } from "react";
 import { useChatSessions } from "@/lib/supabase/hooks/use-chat-sessions";
 import type { ChatSessionRow } from "@/lib/supabase/supabase-chat";
+import { deleteChatSession } from "@/lib/supabase/supabase-chat";
 import { useSessionStore } from "@/lib/stores/session-store";
 
 interface ChatSessionsContextValue {
@@ -17,6 +18,7 @@ interface ChatSessionsContextValue {
   activeSessionId: string | null;
   setActiveSessionId: (sessionId: string | null) => void;
   createNewSession: () => string;
+  deleteSession: (sessionId: string) => Promise<boolean>;
   refetch: () => Promise<void>;
 }
 
@@ -40,6 +42,7 @@ export function ChatSessionsProvider({
     enabled: true,
   });
   const setActiveSession = useSessionStore((state) => state.setActiveSession);
+  const clearActiveSession = useSessionStore((state) => state.clearActiveSession);
 
   // Update Zustand store when session is set, syncing the title from sessions
   const setActiveSessionId = useCallback((sessionId: string | null) => {
@@ -54,6 +57,30 @@ export function ChatSessionsProvider({
     return newSessionId;
   }, [setActiveSessionId]);
 
+  const deleteSession = useCallback(async (sessionId: string): Promise<boolean> => {
+    try {
+      // Delete the session (messages and stream_events will be cascade deleted)
+      const success = await deleteChatSession(sessionId);
+      
+      if (!success) {
+        return false;
+      }
+
+      // Clear active session if it's the one being deleted
+      if (activeSessionId === sessionId) {
+        clearActiveSession();
+      }
+
+      // Refetch sessions to update the list
+      await refetch();
+
+      return true;
+    } catch (error) {
+      console.error("[chat-sessions-context] Error deleting session:", error);
+      return false;
+    }
+  }, [activeSessionId, clearActiveSession, refetch]);
+
   return (
     <ChatSessionsContext.Provider
       value={{
@@ -63,6 +90,7 @@ export function ChatSessionsProvider({
         activeSessionId,
         setActiveSessionId,
         createNewSession,
+        deleteSession,
         refetch,
       }}
     >

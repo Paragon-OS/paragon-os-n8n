@@ -1,15 +1,24 @@
 import type { FC } from "react";
+import { useState } from "react";
 import {
   ThreadListItemPrimitive,
   ThreadListPrimitive,
   useAssistantState,
 } from "@assistant-ui/react";
-import { ArchiveIcon, PlusIcon, InfoIcon } from "lucide-react";
+import { ArchiveIcon, PlusIcon, InfoIcon, TrashIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useChatSessionsContext } from "@/components/assistant-ui/chat-sessions-context";
 
 export const ThreadList: FC = () => {
@@ -36,7 +45,11 @@ const SupabaseThreadListItems: FC = () => {
     isLoading,
     activeSessionId,
     setActiveSessionId,
+    deleteSession,
   } = useChatSessionsContext();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   if (isLoading) {
     return <ThreadListSkeleton />;
@@ -50,6 +63,36 @@ const SupabaseThreadListItems: FC = () => {
     setActiveSessionId(sessionId);
   };
 
+  const handleDeleteClick = (e: React.MouseEvent, sessionId: string) => {
+    e.stopPropagation();
+    setSessionToDelete(sessionId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!sessionToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteSession(sessionToDelete);
+      setDeleteDialogOpen(false);
+      setSessionToDelete(null);
+    } catch (error) {
+      console.error("Error deleting session:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setSessionToDelete(null);
+  };
+
+  const sessionToDeleteData = sessionToDelete
+    ? sessions.find((s) => s.session_id === sessionToDelete)
+    : null;
+
   return (
     <>
       {sessions.map((session) => (
@@ -60,12 +103,12 @@ const SupabaseThreadListItems: FC = () => {
           }`}
           onClick={() => handleSessionClick(session.session_id)}
         >
-          <div className="flex-grow px-3 py-2 text-start">
+          <div className="flex-grow min-w-0 px-3 py-2 text-start">
             <span className="aui-thread-list-item-title text-sm block truncate">
               {session.title || "Untitled Chat"}
             </span>
             {session.updated_at && (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground block truncate">
                 {new Date(session.updated_at).toLocaleDateString()}
               </span>
             )}
@@ -75,7 +118,7 @@ const SupabaseThreadListItems: FC = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="mr-3 ml-auto size-6 p-0 text-foreground hover:text-primary"
+                className="size-6 p-0 text-foreground hover:text-primary"
                 onClick={(e) => {
                   e.stopPropagation();
                 }}
@@ -91,8 +134,52 @@ const SupabaseThreadListItems: FC = () => {
               {JSON.stringify(session, null, 2)}
             </TooltipContent>
           </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="mr-3 size-6 p-0 text-foreground hover:text-destructive"
+                onClick={(e) => handleDeleteClick(e, session.session_id)}
+              >
+                <TrashIcon className="size-4" />
+                <span className="sr-only">Delete session</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              Delete session
+            </TooltipContent>
+          </Tooltip>
         </div>
       ))}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Session</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete &ldquo;{sessionToDeleteData?.title || "Untitled Chat"}&rdquo;? 
+              This will permanently delete the session, all messages, and associated stream events. 
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleCancelDelete}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

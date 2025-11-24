@@ -720,7 +720,10 @@ export async function updateChatSession(
 }
 
 /**
- * Delete a chat session and all its messages
+ * Delete a chat session and all its messages and stream events
+ * Messages are cascade deleted via foreign key constraint
+ * Stream events are cascade deleted via foreign key constraint (if migration applied)
+ * This function also manually deletes stream_events as a fallback if migration hasn't run
  */
 export async function deleteChatSession(sessionId: string): Promise<boolean> {
   const supabase = createSupabaseClient();
@@ -733,7 +736,25 @@ export async function deleteChatSession(sessionId: string): Promise<boolean> {
   }
 
   try {
+    // Delete stream_events manually as a fallback (in case migration hasn't run)
+    // If foreign key constraint exists, this is redundant but harmless
+    // If constraint doesn't exist yet, this ensures events are cleaned up
+    const { error: streamEventsError } = await supabase
+      .from("stream_events")
+      .delete()
+      .eq("session_id", sessionId);
+
+    if (streamEventsError) {
+      // Log but don't fail - constraint might already handle this
+      console.warn(
+        "[supabase-chat] Warning deleting stream events (may be handled by cascade):",
+        streamEventsError,
+        { sessionId }
+      );
+    }
+
     // Delete session (messages will be cascade deleted due to foreign key)
+    // Stream events will also be cascade deleted if foreign key constraint exists
     const { error } = await supabase
       .from("chat_sessions")
       .delete()
