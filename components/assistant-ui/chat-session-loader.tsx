@@ -79,9 +79,15 @@ export function ChatSessionLoader() {
               const msgAny = msg as any;
               
               // Start with minimal required fields - initialize arrays to prevent undefined errors
+              // Ensure ID is always a valid non-empty string
+              let messageId = msg.id;
+              if (!messageId || typeof messageId !== "string" || messageId.trim() === "") {
+                messageId = `msg-${activeSessionId}-${i}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+              }
+              
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const validMsg: any = {
-                id: msg.id || `msg-${activeSessionId}-${i}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                id: messageId,
                 role: ["user", "assistant", "system", "tool"].includes(msg.role) ? msg.role : "user",
                 // Always initialize arrays to prevent "cannot read id of undefined" errors
                 toolInvocations: [],
@@ -190,11 +196,7 @@ export function ChatSessionLoader() {
               // Don't copy metadata properties directly to message - they might confuse assistant-ui
               // If we need metadata, it should be stored separately, not mixed into the message object
               
-              // Ensure ID is not empty
-              if (!validMsg.id || validMsg.id === "") {
-                validMsg.id = `msg-${activeSessionId}-${i}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-              }
-              
+              // ID is already validated and set above, so we can safely push
               validMessages.push(validMsg);
             }
 
@@ -234,25 +236,44 @@ export function ChatSessionLoader() {
               thread.reset();
             }
 
+            // Final validation: Ensure all messages have valid, non-empty string IDs
+            // This prevents "Cannot read properties of undefined (reading 'id')" errors
+            const finalMessages = cleanMessages.filter(msg => {
+              const hasValidId = msg && 
+                                msg.id && 
+                                typeof msg.id === "string" && 
+                                msg.id.trim() !== "";
+              if (!hasValidId) {
+                console.warn("[chat-session-loader] Filtering out message with invalid ID:", msg);
+              }
+              return hasValidId;
+            });
+
+            if (finalMessages.length === 0) {
+              console.warn("[chat-session-loader] No valid messages to load after ID validation");
+              lastLoadedSessionId.current = activeSessionId;
+              return;
+            }
+
             // Detect capability once and execute
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const threadAny = thread as any;
 
             if (typeof threadAny.import === "function") {
               try {
-                threadAny.import({ messages: cleanMessages });
+                threadAny.import({ messages: finalMessages });
               } catch (importErr) {
                 console.error("[chat-session-loader] Error during batch import:", importErr);
               }
             } else if (typeof threadAny.append === "function") {
               // Fallback to sequential append
               // IMPORTANT: Check existence before appending to avoid infinite loops and duplication
-              const existingIds = new Set((currentMessages || []).map((m) => m.id));
+              const existingIds = new Set((currentMessages || []).map((m) => m.id).filter(Boolean));
               
-              for (let i = 0; i < cleanMessages.length; i++) {
-                const message = cleanMessages[i];
+              for (let i = 0; i < finalMessages.length; i++) {
+                const message = finalMessages[i];
                 // Only append if message ID doesn't exist in current thread
-                if (!existingIds.has(message.id)) {
+                if (message.id && !existingIds.has(message.id)) {
                   try {
                     threadAny.append(message);
                   } catch (err) {
