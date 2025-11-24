@@ -234,50 +234,35 @@ export function ChatSessionLoader() {
               thread.reset();
             }
 
-            // Try using append() instead of import() - append processes messages one at a time
-            // which might help identify which message is causing the issue
+            // Detect capability once and execute
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if (typeof (thread as any).append === "function") {
-              // Append each message one at a time with error handling
-              let successCount = 0;
+            const threadAny = thread as any;
+
+            if (typeof threadAny.import === "function") {
+              try {
+                threadAny.import({ messages: cleanMessages });
+              } catch (importErr) {
+                console.error("[chat-session-loader] Error during batch import:", importErr);
+              }
+            } else if (typeof threadAny.append === "function") {
+              // Fallback to sequential append
+              // IMPORTANT: Check existence before appending to avoid infinite loops and duplication
+              const existingIds = new Set((currentMessages || []).map((m) => m.id));
+              
               for (let i = 0; i < cleanMessages.length; i++) {
                 const message = cleanMessages[i];
-                try {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  (thread as any).append(message);
-                  successCount++;
-                } catch (err) {
-                  console.error(`[chat-session-loader] Error appending message ${i}:`, err);
-                  console.error(`[chat-session-loader] Problematic message:`, JSON.stringify(message, null, 2));
-                  // Continue with next message instead of failing completely
-                }
-              }
-            }
-            // Fallback to import() if append() doesn't exist
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            else if (typeof (thread as any).import === "function") {
-              try {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (thread as any).import({ messages: cleanMessages });
-              } catch (importErr) {
-                console.error("[chat-session-loader] Error during import, trying append instead:", importErr);
-                // Try append as fallback
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                if (typeof (thread as any).append === "function") {
-                  for (const message of cleanMessages) {
-                    try {
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      (thread as any).append(message);
-                    } catch (appendErr) {
-                      console.error("[chat-session-loader] Error appending message:", appendErr, message);
-                    }
+                // Only append if message ID doesn't exist in current thread
+                if (!existingIds.has(message.id)) {
+                  try {
+                    threadAny.append(message);
+                  } catch (err) {
+                    console.error(`[chat-session-loader] Error appending message ${i}:`, err);
+                    console.error(`[chat-session-loader] Problematic message:`, JSON.stringify(message, null, 2));
                   }
                 }
               }
-            }
-            // Fallback: Log available methods for debugging
-            else {
-              console.error("[chat-session-loader] Could not find thread import/append methods");
+            } else {
+              console.error("[chat-session-loader] Thread runtime does not support import or append.");
             }
           } catch (err) {
             console.error("[chat-session-loader] Error loading messages into thread:", err);
