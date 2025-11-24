@@ -242,8 +242,16 @@ function convertUIMessageToRow(
       : [toolInvocations];
   }
 
+  // Handle tool calls
+  const toolCalls = messageRecord.toolCalls;
+  if (toolCalls) {
+    row.tool_calls = Array.isArray(toolCalls) 
+      ? toolCalls 
+      : [toolCalls];
+  }
+
   // Store any additional properties in metadata
-  const knownKeys = ["id", "role", "content", "parts", "toolInvocations"];
+  const knownKeys = ["id", "role", "content", "parts", "toolInvocations", "toolCalls"];
   Object.keys(messageRecord).forEach((key) => {
     if (!knownKeys.includes(key)) {
       row.metadata![key] = messageRecord[key];
@@ -257,6 +265,23 @@ function convertUIMessageToRow(
  * Convert ChatMessageRow from database to UIMessage format
  */
 export function convertRowToUIMessage(row: ChatMessageRow): UIMessage {
+  // Validate required fields
+  if (!row) {
+    throw new Error("convertRowToUIMessage: row is null or undefined");
+  }
+  
+  if (!row.role || !["user", "assistant", "system", "tool"].includes(row.role)) {
+    throw new Error(`convertRowToUIMessage: invalid role: ${row.role}`);
+  }
+
+  // Ensure message ID is valid - generate one if missing
+  let messageId = row.message_id || row.id;
+  if (!messageId || typeof messageId !== "string" || messageId.trim() === "") {
+    // Generate a fallback ID if missing
+    messageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.warn("[supabase-chat] Message missing valid ID, generated fallback:", messageId);
+  }
+
   // Reconstruct content from either content or content_parts
   let content: string | unknown[] | Record<string, unknown> = "";
   if (row.content) {
@@ -266,20 +291,54 @@ export function convertRowToUIMessage(row: ChatMessageRow): UIMessage {
   }
 
   const messageData: Record<string, unknown> = {
-    id: row.message_id || row.id || "",
+    id: messageId,
     role: row.role,
     content,
     parts: content, // AI SDK may expect parts property
   };
 
-  // Add tool invocations if present
+  // Add tool invocations if present - validate and filter out invalid entries
   if (row.tool_invocations) {
-    messageData.toolInvocations = row.tool_invocations;
+    if (Array.isArray(row.tool_invocations)) {
+      // Filter out null/undefined entries and ensure each has an id
+      const validInvocations = row.tool_invocations.filter((inv: unknown) => {
+        if (!inv || typeof inv !== "object" || Array.isArray(inv)) {
+          return false;
+        }
+        const invObj = inv as Record<string, unknown>;
+        return invObj.id !== undefined && invObj.id !== null && typeof invObj.id === "string";
+      });
+      if (validInvocations.length > 0) {
+        messageData.toolInvocations = validInvocations;
+      }
+    }
   }
 
-  // Restore metadata properties
+  // Add tool calls if present - validate and filter out invalid entries
+  if (row.tool_calls) {
+    if (Array.isArray(row.tool_calls)) {
+      // Filter out null/undefined entries and ensure each has an id
+      const validCalls = row.tool_calls.filter((call: unknown) => {
+        if (!call || typeof call !== "object" || Array.isArray(call)) {
+          return false;
+        }
+        const callObj = call as Record<string, unknown>;
+        return callObj.id !== undefined && callObj.id !== null && typeof callObj.id === "string";
+      });
+      if (validCalls.length > 0) {
+        messageData.toolCalls = validCalls;
+      }
+    }
+  }
+
+  // Restore metadata properties, but don't overwrite critical fields
   if (row.metadata) {
-    Object.assign(messageData, row.metadata);
+    const criticalFields = ["id", "role", "content", "parts", "toolInvocations", "toolCalls"];
+    Object.keys(row.metadata).forEach((key) => {
+      if (!criticalFields.includes(key)) {
+        messageData[key] = row.metadata![key];
+      }
+    });
   }
 
   return messageData as unknown as UIMessage;

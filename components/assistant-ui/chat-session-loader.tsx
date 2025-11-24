@@ -23,13 +23,8 @@ export function ChatSessionLoader() {
   const currentMessages = useAssistantState((state) => state.thread.messages);
 
   useEffect(() => {
-    // Only load if we have a session, messages are loaded, and it's a different session
+    // Only load if we have a session and messages are loaded
     if (!activeSessionId || isLoading) {
-      return;
-    }
-
-    // If this is the same session we already loaded, skip
-    if (lastLoadedSessionId.current === activeSessionId) {
       return;
     }
 
@@ -37,6 +32,35 @@ export function ChatSessionLoader() {
     if (isLoadingRef.current) {
       return;
     }
+
+    // Check if this is a session switch (different session) or new messages in same session
+    const isSessionSwitch = lastLoadedSessionId.current !== null && lastLoadedSessionId.current !== activeSessionId;
+    const isSameSession = lastLoadedSessionId.current === activeSessionId;
+    const isFirstLoad = lastLoadedSessionId.current === null;
+    
+    // If same session (not first load, not switching), check if there are new messages
+    if (isSameSession && messages.length > 0) {
+      const currentMessageIds = new Set((currentMessages || []).map((m) => m?.id).filter(Boolean));
+      const newMessageIds = new Set(messages.map((m) => m?.id).filter(Boolean));
+      
+      // Check if all messages are already loaded
+      const allMessagesLoaded = newMessageIds.size === currentMessageIds.size && 
+                                Array.from(newMessageIds).every(id => currentMessageIds.has(id));
+      
+      if (allMessagesLoaded) {
+        // All messages already loaded, skip
+        return;
+      }
+      
+      // There are new messages, continue to import them
+      console.log(`[chat-session-loader] Same session but ${newMessageIds.size - currentMessageIds.size} new message(s) detected, will import`);
+    } else if (isSameSession && messages.length === 0) {
+      // Same session, no messages - skip
+      return;
+    }
+    
+    // For first load or session switch, continue to load messages
+    // (isFirstLoad || isSessionSwitch cases fall through)
 
 
     try {
@@ -64,7 +88,8 @@ export function ChatSessionLoader() {
           // Set loading flag to prevent concurrent loads
           isLoadingRef.current = true;
           
-          // Load messages into thread using the thread's import or append method
+          // Load messages into thread using import() - this is the ONLY safe method for historical messages
+          // import() marks messages as historical and does NOT trigger responses
           try {
             // Validate and normalize messages before importing
             // Create a new array with only valid message objects
@@ -341,102 +366,335 @@ export function ChatSessionLoader() {
               return;
             }
 
-            // Detect capability once and execute
-            // Use import() for initial historical load (doesn't trigger responses)
-            // Use append() only for incremental updates (new messages via realtime)
+            // CRITICAL: Always use import() for ALL messages from Supabase
+            // All messages from Supabase are historical and should NOT trigger responses
+            // Never use append() as it will trigger responses for historical messages
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const threadAny = thread as any;
 
-            // Check if this is an initial load (empty thread or switching sessions)
-            const isInitialLoad = currentThreadMessages.length === 0 || 
-                                 (lastLoadedSessionId.current !== null && lastLoadedSessionId.current !== activeSessionId);
+            // Check if thread supports import() - this is the only safe way to load historical messages
+            if (typeof threadAny.import !== "function") {
+              console.error("[chat-session-loader] Thread runtime does not support import(). Cannot load historical messages safely.");
+              lastLoadedSessionId.current = activeSessionId;
+              return;
+            }
 
-            if (isInitialLoad && typeof threadAny.import === "function") {
-              // Use import() for initial historical load - this loads messages as history without triggering responses
+            // Clear thread first if switching sessions
+            if (lastLoadedSessionId.current !== null && lastLoadedSessionId.current !== activeSessionId) {
+              console.log(`[chat-session-loader] Switching sessions, resetting thread. Old: ${lastLoadedSessionId.current}, New: ${activeSessionId}`);
+              thread.reset();
+            }
+            
+            // Final validation: ensure all messages are valid objects with required fields
+            const importMessages = safeMessages.filter((msg): msg is NonNullable<typeof msg> => {
+              if (!msg || typeof msg !== "object") {
+                console.warn("[chat-session-loader] Filtering out invalid message for import:", msg);
+                return false;
+              }
+              // Ensure message has required id field
+              if (!msg.id || typeof msg.id !== "string" || msg.id.trim() === "") {
+                console.warn("[chat-session-loader] Filtering out message without valid id for import:", msg);
+                return false;
+              }
+              // Ensure message has required role field
+              if (!msg.role || !["user", "assistant", "system", "tool"].includes(msg.role)) {
+                console.warn("[chat-session-loader] Filtering out message without valid role for import:", msg);
+                return false;
+              }
+              return true;
+            });
+            
+            if (importMessages.length === 0) {
+              console.warn("[chat-session-loader] No valid messages to import after final validation");
+              lastLoadedSessionId.current = activeSessionId;
+              return;
+            }
+            
+            // Check if we're reloading the same messages (avoid unnecessary re-import)
+            const currentMessageIds = new Set((currentMessages || []).map((m) => m?.id).filter(Boolean));
+            const importMessageIds = new Set(importMessages.map((m) => m?.id).filter(Boolean));
+            
+            // If all messages are already loaded, skip import
+            if (importMessageIds.size === currentMessageIds.size && 
+                Array.from(importMessageIds).every(id => currentMessageIds.has(id))) {
+              console.log(`[chat-session-loader] All ${importMessages.length} messages already loaded, skipping import`);
+              lastLoadedSessionId.current = activeSessionId;
+              return;
+            }
+            
+            // Final validation: Deep check each message before import
+            const validatedImportMessages = importMessages.filter((msg, index): msg is NonNullable<typeof msg> => {
               try {
-                // Clear thread first if switching sessions
-                if (lastLoadedSessionId.current !== null && lastLoadedSessionId.current !== activeSessionId) {
-                  thread.reset();
+                if (!msg || typeof msg !== "object") {
+                  console.error(`[chat-session-loader] Message at index ${index} is invalid:`, msg);
+                  return false;
                 }
                 
-                // Final validation: ensure all messages are valid objects with required fields
-                const importMessages = safeMessages.filter((msg): msg is NonNullable<typeof msg> => {
-                  if (!msg || typeof msg !== "object") {
-                    console.warn("[chat-session-loader] Filtering out invalid message for import:", msg);
-                    return false;
-                  }
-                  // Ensure message has required id field
-                  if (!msg.id || typeof msg.id !== "string" || msg.id.trim() === "") {
-                    console.warn("[chat-session-loader] Filtering out message without valid id for import:", msg);
-                    return false;
-                  }
-                  // Ensure message has required role field
-                  if (!msg.role || !["user", "assistant", "system", "tool"].includes(msg.role)) {
-                    console.warn("[chat-session-loader] Filtering out message without valid role for import:", msg);
-                    return false;
-                  }
-                  return true;
-                });
-                
-                if (importMessages.length === 0) {
-                  console.warn("[chat-session-loader] No valid messages to import after final validation");
-                  lastLoadedSessionId.current = activeSessionId;
-                  return;
+                if (!msg.id || typeof msg.id !== "string" || msg.id.trim() === "") {
+                  console.error(`[chat-session-loader] Message at index ${index} has invalid ID:`, msg);
+                  return false;
                 }
                 
-                // Log message structure for debugging
-                console.log(`[chat-session-loader] Attempting to import ${importMessages.length} messages`);
-                console.log(`[chat-session-loader] Message IDs:`, importMessages.map(m => m?.id).filter(Boolean));
-                console.log(`[chat-session-loader] Message roles:`, importMessages.map(m => m?.role).filter(Boolean));
+                if (!msg.role || !["user", "assistant", "system", "tool"].includes(msg.role)) {
+                  console.error(`[chat-session-loader] Message at index ${index} has invalid role:`, msg);
+                  return false;
+                }
                 
-                // Import all messages at once - marks them as historical, won't trigger responses
-                threadAny.import({ messages: importMessages });
-                console.log(`[chat-session-loader] Successfully imported ${importMessages.length} historical messages (initial load)`);
-                
-                // Mark session as loaded immediately after successful import
-                lastLoadedSessionId.current = activeSessionId;
-              } catch (importErr) {
-                console.error("[chat-session-loader] Error during batch import:", importErr);
-                console.error("[chat-session-loader] Messages count:", safeMessages.length);
-                console.error("[chat-session-loader] First few messages:", safeMessages.slice(0, 3));
-                // Fallback to append if import fails
-                // Note: append() will trigger responses for user messages, but it's better than not loading at all
-                console.warn("[chat-session-loader] Falling back to append() due to import() failure");
-                if (typeof threadAny.append === "function") {
-                  const existingIds = new Set((currentMessages || []).map((m) => m?.id).filter(Boolean));
-                  for (let i = 0; i < safeMessages.length; i++) {
-                    const message = safeMessages[i];
-                    if (message && message.id && !existingIds.has(message.id)) {
-                      try {
-                        threadAny.append(message);
-                      } catch (err) {
-                        console.error(`[chat-session-loader] Error appending message ${i} (fallback):`, err);
-                        console.error(`[chat-session-loader] Problematic message:`, JSON.stringify(message, null, 2));
-                      }
+                // Validate toolInvocations array if present
+                if (msg.toolInvocations) {
+                  if (!Array.isArray(msg.toolInvocations)) {
+                    console.error(`[chat-session-loader] Message at index ${index} has non-array toolInvocations:`, msg);
+                    return false;
+                  }
+                  // Check each invocation has valid id
+                  for (let i = 0; i < msg.toolInvocations.length; i++) {
+                    const inv = msg.toolInvocations[i];
+                    if (!inv || typeof inv !== "object" || Array.isArray(inv)) {
+                      console.error(`[chat-session-loader] Message at index ${index}, toolInvocation at ${i} is invalid:`, inv);
+                      return false;
+                    }
+                    const invObj = inv as Record<string, unknown>;
+                    if (!invObj.id || typeof invObj.id !== "string" || invObj.id.trim() === "") {
+                      console.error(`[chat-session-loader] Message at index ${index}, toolInvocation at ${i} has invalid id:`, inv);
+                      return false;
                     }
                   }
                 }
-              }
-            } else if (typeof threadAny.append === "function") {
-              // Use append() for incremental updates (new messages from realtime subscription)
-              // IMPORTANT: Check existence before appending to avoid infinite loops and duplication
-              const existingIds = new Set((currentMessages || []).map((m) => m?.id).filter(Boolean));
-              
-              for (let i = 0; i < safeMessages.length; i++) {
-                const message = safeMessages[i];
-                // Only append if message ID doesn't exist in current thread
-                if (message && message.id && !existingIds.has(message.id)) {
-                  try {
-                    threadAny.append(message);
-                    console.log(`[chat-session-loader] Appended new message: ${message.id}`);
-                  } catch (err) {
-                    console.error(`[chat-session-loader] Error appending message ${i}:`, err);
-                    console.error(`[chat-session-loader] Problematic message:`, JSON.stringify(message, null, 2));
+                
+                // Validate toolCalls array if present
+                if (msg.toolCalls) {
+                  if (!Array.isArray(msg.toolCalls)) {
+                    console.error(`[chat-session-loader] Message at index ${index} has non-array toolCalls:`, msg);
+                    return false;
+                  }
+                  // Check each call has valid id
+                  for (let i = 0; i < msg.toolCalls.length; i++) {
+                    const call = msg.toolCalls[i];
+                    if (!call || typeof call !== "object" || Array.isArray(call)) {
+                      console.error(`[chat-session-loader] Message at index ${index}, toolCall at ${i} is invalid:`, call);
+                      return false;
+                    }
+                    const callObj = call as Record<string, unknown>;
+                    if (!callObj.id || typeof callObj.id !== "string" || callObj.id.trim() === "") {
+                      console.error(`[chat-session-loader] Message at index ${index}, toolCall at ${i} has invalid id:`, call);
+                      return false;
+                    }
                   }
                 }
+                
+                return true;
+              } catch (validationErr) {
+                console.error(`[chat-session-loader] Error validating message at index ${index}:`, validationErr, msg);
+                return false;
               }
-            } else {
-              console.error("[chat-session-loader] Thread runtime does not support import or append.");
+            });
+            
+            if (validatedImportMessages.length === 0) {
+              console.error("[chat-session-loader] All messages failed validation, cannot import");
+              isLoadingRef.current = false;
+              return;
+            }
+            
+            if (validatedImportMessages.length !== importMessages.length) {
+              console.warn(`[chat-session-loader] Filtered out ${importMessages.length - validatedImportMessages.length} invalid messages before import`);
+            }
+            
+            // Log message structure for debugging - with detailed content/parts inspection
+            console.log(`[chat-session-loader] Importing ${validatedImportMessages.length} validated historical messages using import()`);
+            console.log(`[chat-session-loader] Message IDs:`, validatedImportMessages.map(m => m?.id).filter(Boolean));
+            console.log(`[chat-session-loader] Message roles:`, validatedImportMessages.map(m => m?.role).filter(Boolean));
+            
+            // Deep log content and parts for each message
+            validatedImportMessages.forEach((msg, idx) => {
+              console.log(`[chat-session-loader] Message ${idx} (ID: ${msg?.id}):`, {
+                id: msg?.id,
+                role: msg?.role,
+                contentType: Array.isArray(msg?.content) ? 'array' : typeof msg?.content,
+                contentLength: Array.isArray(msg?.content) ? msg.content.length : 'N/A',
+                partsType: Array.isArray(msg?.parts) ? 'array' : typeof msg?.parts,
+                partsLength: Array.isArray(msg?.parts) ? msg.parts.length : 'N/A',
+                hasToolInvocations: Array.isArray(msg?.toolInvocations) && msg.toolInvocations.length > 0,
+                hasToolCalls: Array.isArray(msg?.toolCalls) && msg.toolCalls.length > 0,
+              });
+              
+              // Log content array structure in detail
+              if (Array.isArray(msg?.content)) {
+                console.log(`[chat-session-loader] Message ${idx} content array:`, JSON.stringify(msg.content, null, 2));
+                msg.content.forEach((part: unknown, partIdx: number) => {
+                  console.log(`[chat-session-loader] Message ${idx} content[${partIdx}]:`, {
+                    type: typeof part,
+                    isNull: part === null,
+                    isUndefined: part === undefined,
+                    isObject: typeof part === 'object' && part !== null,
+                    hasId: typeof part === 'object' && part !== null && 'id' in (part as Record<string, unknown>),
+                    value: part,
+                  });
+                });
+              } else {
+                console.log(`[chat-session-loader] Message ${idx} content (non-array):`, JSON.stringify(msg?.content));
+              }
+              
+              // Log parts array structure in detail
+              if (Array.isArray(msg?.parts)) {
+                console.log(`[chat-session-loader] Message ${idx} parts array:`, JSON.stringify(msg.parts, null, 2));
+                msg.parts.forEach((part: unknown, partIdx: number) => {
+                  console.log(`[chat-session-loader] Message ${idx} parts[${partIdx}]:`, {
+                    type: typeof part,
+                    isNull: part === null,
+                    isUndefined: part === undefined,
+                    isObject: typeof part === 'object' && part !== null,
+                    hasId: typeof part === 'object' && part !== null && 'id' in (part as Record<string, unknown>),
+                    value: part,
+                  });
+                });
+              } else if (msg?.parts !== undefined) {
+                console.log(`[chat-session-loader] Message ${idx} parts (non-array):`, JSON.stringify(msg.parts));
+              }
+            });
+            
+            // Final validation: Clean content/parts arrays to remove null/undefined and ensure proper structure
+            const finalCleanedMessages = validatedImportMessages.map((msg, idx) => {
+              // Create a copy to avoid mutations
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const cleanedMsg: any = {
+                id: msg.id,
+                role: msg.role,
+              };
+              
+              // Clean content array if present
+              if (msg.content !== undefined) {
+                if (Array.isArray(msg.content)) {
+                  // Filter out null/undefined and ensure each element is valid
+                  const cleanedContent = msg.content
+                    .filter((part: unknown) => part !== null && part !== undefined)
+                    .map((part: unknown) => {
+                      // If part is an object without an id, ensure it's properly structured
+                      if (typeof part === 'object' && part !== null && !Array.isArray(part)) {
+                        const partObj = part as Record<string, unknown>;
+                        // If it's a text part object, ensure it has the right structure
+                        if (partObj.type === 'text' && typeof partObj.text === 'string') {
+                          return part; // Already properly structured
+                        }
+                        // If it's a string, wrap it in a text part object
+                        if (typeof part === 'string') {
+                          return { type: 'text', text: part };
+                        }
+                        // Otherwise, return as-is (might be an attachment or other part type)
+                        return part;
+                      }
+                      // If part is a string, wrap it in a text part object
+                      if (typeof part === 'string') {
+                        return { type: 'text', text: part };
+                      }
+                      return part;
+                    });
+                  
+                  if (cleanedContent.length > 0) {
+                    cleanedMsg.content = cleanedContent;
+                  } else {
+                    // If all content was filtered out, set to empty array
+                    cleanedMsg.content = [];
+                  }
+                } else if (typeof msg.content === 'string' && msg.content.trim() !== '') {
+                  // Convert string content to array format
+                  cleanedMsg.content = [{ type: 'text', text: msg.content }];
+                } else {
+                  // Keep non-array content as-is
+                  cleanedMsg.content = msg.content;
+                }
+              }
+              
+              // Clean parts array if present (similar to content)
+              if (msg.parts !== undefined) {
+                if (Array.isArray(msg.parts)) {
+                  const cleanedParts = msg.parts
+                    .filter((part: unknown) => part !== null && part !== undefined)
+                    .map((part: unknown) => {
+                      if (typeof part === 'object' && part !== null && !Array.isArray(part)) {
+                        const partObj = part as Record<string, unknown>;
+                        if (partObj.type === 'text' && typeof partObj.text === 'string') {
+                          return part;
+                        }
+                        if (typeof part === 'string') {
+                          return { type: 'text', text: part };
+                        }
+                        return part;
+                      }
+                      if (typeof part === 'string') {
+                        return { type: 'text', text: part };
+                      }
+                      return part;
+                    });
+                  
+                  if (cleanedParts.length > 0) {
+                    cleanedMsg.parts = cleanedParts;
+                  } else {
+                    cleanedMsg.parts = [];
+                  }
+                } else if (typeof msg.parts === 'string' && msg.parts.trim() !== '') {
+                  cleanedMsg.parts = [{ type: 'text', text: msg.parts }];
+                } else {
+                  cleanedMsg.parts = msg.parts;
+                }
+              }
+              
+              // Copy toolInvocations and toolCalls if present (already validated)
+              if (Array.isArray(msg.toolInvocations) && msg.toolInvocations.length > 0) {
+                cleanedMsg.toolInvocations = msg.toolInvocations;
+              }
+              if (Array.isArray(msg.toolCalls) && msg.toolCalls.length > 0) {
+                cleanedMsg.toolCalls = msg.toolCalls;
+              }
+              
+              return cleanedMsg;
+            });
+            
+            // Log cleaned messages structure
+            console.log(`[chat-session-loader] Final cleaned messages count:`, finalCleanedMessages.length);
+            finalCleanedMessages.forEach((msg, idx) => {
+              console.log(`[chat-session-loader] Cleaned message ${idx}:`, {
+                id: msg?.id,
+                role: msg?.role,
+                contentLength: Array.isArray(msg?.content) ? msg.content.length : 'N/A',
+                partsLength: Array.isArray(msg?.parts) ? msg.parts.length : 'N/A',
+              });
+            });
+            
+            try {
+              // Import all messages at once - marks them as historical, won't trigger responses
+              // This is the ONLY safe way to load historical messages from Supabase
+              threadAny.import({ messages: finalCleanedMessages });
+              console.log(`[chat-session-loader] Successfully imported ${finalCleanedMessages.length} historical messages (no responses triggered)`);
+              
+              // Mark session as loaded immediately after successful import
+              lastLoadedSessionId.current = activeSessionId;
+            } catch (importErr) {
+              // CRITICAL: Do NOT fallback to append() - it will trigger responses for historical messages
+              // If import() fails, log error and skip loading rather than risking duplicate responses
+              console.error("[chat-session-loader] CRITICAL: Error during import() - NOT falling back to append() to prevent duplicate responses");
+              console.error("[chat-session-loader] Error details:", importErr);
+              console.error("[chat-session-loader] Error type:", importErr instanceof Error ? importErr.constructor.name : typeof importErr);
+              console.error("[chat-session-loader] Error message:", importErr instanceof Error ? importErr.message : String(importErr));
+              console.error("[chat-session-loader] Error stack:", importErr instanceof Error ? importErr.stack : "N/A");
+              console.error("[chat-session-loader] Messages count:", finalCleanedMessages.length);
+              console.error("[chat-session-loader] First message:", finalCleanedMessages[0]);
+              console.error("[chat-session-loader] Last message:", finalCleanedMessages[finalCleanedMessages.length - 1]);
+              console.error("[chat-session-loader] First message content:", JSON.stringify(finalCleanedMessages[0]?.content, null, 2));
+              console.error("[chat-session-loader] First message parts:", JSON.stringify(finalCleanedMessages[0]?.parts, null, 2));
+              console.error("[chat-session-loader] Last message content:", JSON.stringify(finalCleanedMessages[finalCleanedMessages.length - 1]?.content, null, 2));
+              console.error("[chat-session-loader] Last message parts:", JSON.stringify(finalCleanedMessages[finalCleanedMessages.length - 1]?.parts, null, 2));
+              // Log each message individually to identify the problematic one
+              finalCleanedMessages.forEach((msg, idx) => {
+                try {
+                  // Try to serialize each message to catch any serialization issues
+                  JSON.stringify(msg);
+                } catch (serializeErr) {
+                  console.error(`[chat-session-loader] Message at index ${idx} cannot be serialized:`, serializeErr, msg);
+                }
+              });
+              // Don't mark as loaded so we can retry on next effect run
+              // But clear loading flag to allow retry
+              isLoadingRef.current = false;
             }
           } catch (err) {
             console.error("[chat-session-loader] Error loading messages into thread:", err);

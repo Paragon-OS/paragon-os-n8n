@@ -46,6 +46,9 @@ export function useChatMessages(
   
   // Use ref to store latest fetch function to avoid dependency issues
   const fetchMessagesRef = useRef<(() => Promise<void>) | undefined>(undefined);
+  
+  // Ref to store debounce timeout for realtime events
+  const refetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchMessages = useCallback(async () => {
     if (!sessionId) {
@@ -108,6 +111,9 @@ export function useChatMessages(
     }
 
     // Set up realtime subscription for chat_messages
+    // CRITICAL: Instead of updating state directly, refetch from DB to ensure consistency
+    // This prevents race conditions and ensures messages are loaded in correct order
+    // The ChatSessionLoader will handle importing new messages safely using import()
     const channel = supabase
       .channel(`chat_messages_${sessionId}`)
       .on(
@@ -122,35 +128,28 @@ export function useChatMessages(
           // Guard against state updates after unmount
           if (!isMountedRef.current) return;
 
-          if (payload.eventType === "INSERT") {
-            const newMessage = convertRowToUIMessage(
-              payload.new as Parameters<typeof convertRowToUIMessage>[0]
-            );
-            setMessages((prev) => {
-              // Avoid duplicates
-              if (prev.some((m) => m.id === newMessage.id)) {
-                return prev;
-              }
-              // Add to end and sort by timestamp (assuming created_at order)
-              return [...prev, newMessage].sort((a, b) => {
-                // Try to maintain order - new messages go to end
-                return prev.indexOf(a) - prev.indexOf(b);
-              });
-            });
-          } else if (payload.eventType === "UPDATE") {
-            const updatedMessage = convertRowToUIMessage(
-              payload.new as Parameters<typeof convertRowToUIMessage>[0]
-            );
-            setMessages((prev) =>
-              prev.map((m) => (m.id === updatedMessage.id ? updatedMessage : m))
-            );
-          } else if (payload.eventType === "DELETE") {
-            const deletedMessage = payload.old as { message_id?: string; id?: string };
-            const messageId = deletedMessage.message_id || deletedMessage.id;
-            if (messageId) {
-              setMessages((prev) => prev.filter((m) => m.id !== messageId));
-            }
+          // CRITICAL FIX: Instead of updating state directly, refetch from DB
+          // This ensures:
+          // 1. Messages are in correct order (sorted by created_at)
+          // 2. No duplicate messages
+          // 3. ChatSessionLoader will handle import safely (now always uses import())
+          // 4. Prevents race conditions between realtime updates and loader
+          console.log(`[use-chat-messages] Realtime event: ${payload.eventType}, scheduling refetch from DB`);
+          
+          // Clear any pending refetch timeout
+          if (refetchTimeoutRef.current) {
+            clearTimeout(refetchTimeoutRef.current);
           }
+          
+          // Debounce refetch to avoid too many requests if multiple events come quickly
+          // Use a small delay to batch multiple rapid updates
+          refetchTimeoutRef.current = setTimeout(() => {
+            if (isMountedRef.current && fetchMessagesRef.current) {
+              console.log(`[use-chat-messages] Executing debounced refetch after realtime event`);
+              fetchMessagesRef.current();
+            }
+            refetchTimeoutRef.current = null;
+          }, 100); // 100ms debounce
         }
       )
       .subscribe();
@@ -158,6 +157,13 @@ export function useChatMessages(
     return () => {
       // Mark as unmounted and clean up subscription
       isMountedRef.current = false;
+      
+      // Clear any pending refetch timeout
+      if (refetchTimeoutRef.current) {
+        clearTimeout(refetchTimeoutRef.current);
+        refetchTimeoutRef.current = null;
+      }
+      
       supabase.removeChannel(channel);
     };
   }, [enabled, sessionId]); // Removed fetchMessages from dependencies
