@@ -56,14 +56,12 @@ export function ChatSessionLoader() {
 
         if (!messagesAlreadyLoaded) {
           // Load messages into thread using the thread's import or append method
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           try {
             // Validate and normalize messages before importing
             // Create a new array with only valid message objects
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const validMessages: any[] = [];
             
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             for (let i = 0; i < messages.length; i++) {
               const msg = messages[i];
               
@@ -237,17 +235,77 @@ export function ChatSessionLoader() {
             }
 
             // Final validation: Ensure all messages have valid, non-empty string IDs
-            // This prevents "Cannot read properties of undefined (reading 'id')" errors
-            const finalMessages = cleanMessages.filter(msg => {
-              const hasValidId = msg && 
-                                msg.id && 
-                                typeof msg.id === "string" && 
-                                msg.id.trim() !== "";
-              if (!hasValidId) {
-                console.warn("[chat-session-loader] Filtering out message with invalid ID:", msg);
-              }
-              return hasValidId;
-            });
+            // Also validate nested structures (toolInvocations, toolCalls) to prevent undefined id errors
+            const finalMessages = cleanMessages
+              .map(msg => {
+                // Skip null/undefined messages
+                if (!msg || typeof msg !== "object") {
+                  console.warn("[chat-session-loader] Skipping invalid message object:", msg);
+                  return null;
+                }
+                
+                // Create validated message object with only safe properties
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const validatedMsg: any = {
+                  id: msg.id,
+                  role: msg.role,
+                };
+                
+                // Ensure message has valid ID
+                if (!validatedMsg.id || typeof validatedMsg.id !== "string" || validatedMsg.id.trim() === "") {
+                  console.warn("[chat-session-loader] Message missing valid ID, skipping:", msg);
+                  return null;
+                }
+                
+                // Copy content if present
+                if (msg.content !== undefined) {
+                  validatedMsg.content = msg.content;
+                }
+                
+                // Copy parts if present
+                if (msg.parts !== undefined) {
+                  validatedMsg.parts = msg.parts;
+                }
+                
+                // Validate and clean toolInvocations if present
+                if (Array.isArray(msg.toolInvocations) && msg.toolInvocations.length > 0) {
+                  const validInvocations = msg.toolInvocations.filter((inv: unknown) => {
+                    if (!inv || typeof inv !== "object" || Array.isArray(inv)) {
+                      return false;
+                    }
+                    const invObj = inv as Record<string, unknown>;
+                    const hasValidId = invObj.id && typeof invObj.id === "string" && invObj.id.trim() !== "";
+                    if (!hasValidId) {
+                      console.warn("[chat-session-loader] Filtering toolInvocation with invalid ID:", inv);
+                    }
+                    return hasValidId;
+                  });
+                  if (validInvocations.length > 0) {
+                    validatedMsg.toolInvocations = validInvocations;
+                  }
+                }
+                
+                // Validate and clean toolCalls if present
+                if (Array.isArray(msg.toolCalls) && msg.toolCalls.length > 0) {
+                  const validCalls = msg.toolCalls.filter((call: unknown) => {
+                    if (!call || typeof call !== "object" || Array.isArray(call)) {
+                      return false;
+                    }
+                    const callObj = call as Record<string, unknown>;
+                    const hasValidId = callObj.id && typeof callObj.id === "string" && callObj.id.trim() !== "";
+                    if (!hasValidId) {
+                      console.warn("[chat-session-loader] Filtering toolCall with invalid ID:", call);
+                    }
+                    return hasValidId;
+                  });
+                  if (validCalls.length > 0) {
+                    validatedMsg.toolCalls = validCalls;
+                  }
+                }
+                
+                return validatedMsg;
+              })
+              .filter((msg): msg is NonNullable<typeof msg> => msg !== null);
 
             if (finalMessages.length === 0) {
               console.warn("[chat-session-loader] No valid messages to load after ID validation");
@@ -264,6 +322,12 @@ export function ChatSessionLoader() {
                 threadAny.import({ messages: finalMessages });
               } catch (importErr) {
                 console.error("[chat-session-loader] Error during batch import:", importErr);
+                console.error("[chat-session-loader] Messages count:", finalMessages.length);
+                console.error("[chat-session-loader] First few message IDs:", finalMessages.slice(0, 3).map(m => m.id));
+                // Only log full messages in development
+                if (process.env.NODE_ENV === "development") {
+                  console.error("[chat-session-loader] Messages that caused error:", JSON.stringify(finalMessages, null, 2));
+                }
               }
             } else if (typeof threadAny.append === "function") {
               // Fallback to sequential append
