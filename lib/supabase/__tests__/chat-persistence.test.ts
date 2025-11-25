@@ -10,7 +10,7 @@
  * - Environment variables must be set
  */
 
-import { describe, it, expect, beforeAll } from "@jest/globals";
+import { describe, it, expect, beforeAll } from "vitest";
 import {
   saveChatMessagesToSupabase,
   getChatMessagesBySessionId,

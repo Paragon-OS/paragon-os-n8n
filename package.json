@@ -14,7 +14,11 @@
     "db:status": "bash scripts/supabase-wrapper.sh migration list || echo 'Supabase CLI not found. Run: npm run db:setup'",
     "db:setup": "bash scripts/setup-supabase.sh",
     "db:start": "bash scripts/supabase-wrapper.sh start || echo 'Supabase CLI not found. Run: npm run db:setup'",
-    "db:stop": "bash scripts/supabase-wrapper.sh stop || echo 'Supabase CLI not found'"
+    "db:stop": "bash scripts/supabase-wrapper.sh stop || echo 'Supabase CLI not found'",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "prettier": {
     "plugins": [
@@ -57,13 +61,17 @@
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.0.13",
+    "@vitest/ui": "^4.0.13",
     "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
+    "jsdom": "^27.2.0",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.6.14",
     "tailwindcss": "^4",
     "tsx": "^4.19.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.13"
   }
 }
