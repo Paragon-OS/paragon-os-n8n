@@ -143,13 +143,14 @@ export async function ensureChatSession(
     try {
       console.log("[supabase-chat] ensureChatSession called for:", sessionId, "title:", title);
       // Check if session exists
+      // Use maybeSingle() instead of single() to avoid 406 error when session doesn't exist
       const { data: existingSession, error: checkError } = await supabase
         .from("chat_sessions")
         .select("session_id")
         .eq("session_id", sessionId)
-        .single();
+        .maybeSingle();
 
-      if (checkError && checkError.code !== "PGRST116") {
+      if (checkError) {
         console.error("[supabase-chat] Error checking session existence:", checkError);
       }
 
@@ -474,13 +475,10 @@ export async function getChatMessageByMessageId(
       query = query.eq("session_id", sessionId);
     }
 
-    const { data, error } = await query.single();
+    // Use maybeSingle() to avoid 406 error when message doesn't exist
+    const { data, error } = await query.maybeSingle();
 
     if (error) {
-      if (error.code === "PGRST116") {
-        // No rows returned
-        return null;
-      }
       console.error(
         "[supabase-chat] Error retrieving chat message:",
         error,
@@ -744,17 +742,14 @@ export async function getChatSessionById(
   }
 
   try {
+    // Use maybeSingle() to avoid 406 error when session doesn't exist
     const { data, error } = await supabase
       .from("chat_sessions")
       .select("*")
       .eq("session_id", sessionId)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      if (error.code === "PGRST116") {
-        // No rows returned
-        return null;
-      }
       console.error(
         "[supabase-chat] Error retrieving chat session:",
         error,

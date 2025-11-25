@@ -49,6 +49,7 @@ function AssistantRuntimeWrapper({ transport, sessionId }: { transport: SessionA
 function AssistantContent() {
   const { createNewSession } = useChatSessionsContext();
   const effectiveSessionId = useSessionStore((state) => state.activeSessionId);
+  const isCreatingSessionRef = React.useRef(false);
   
   // Log session ID changes
   React.useEffect(() => {
@@ -58,14 +59,17 @@ function AssistantContent() {
   // Initialize session if none exists
   React.useEffect(() => {
     console.log("[assistant] Checking session, effectiveSessionId:", effectiveSessionId);
-    if (!effectiveSessionId) {
+    if (!effectiveSessionId && !isCreatingSessionRef.current) {
       console.log("[assistant] No session found, creating new session");
+      isCreatingSessionRef.current = true;
       createNewSession()
         .then((newSessionId) => {
           console.log("[assistant] Created new session:", newSessionId);
+          isCreatingSessionRef.current = false;
         })
         .catch((error) => {
           console.error("[assistant] Error creating new session:", error);
+          isCreatingSessionRef.current = false;
         });
     }
   }, [effectiveSessionId, createNewSession]);
