@@ -4,8 +4,6 @@
  * Extracted from chat-session-loader for testability
  */
 
-import type { UIMessage } from "ai";
-
 /**
  * Validated message type - ensures all required fields are present
  */
@@ -37,8 +35,8 @@ export interface ValidateMessageOptions {
  * Compares message IDs to detect duplicates
  */
 export function checkMessagesAlreadyLoaded(
-  current: UIMessage[],
-  incoming: UIMessage[]
+  current: ReadonlyArray<{ id?: string | null }>,
+  incoming: ReadonlyArray<{ id?: string | null }>
 ): boolean {
   if (current.length !== incoming.length) {
     return false;
@@ -346,8 +344,7 @@ export function cleanMessages(
  * More strict validation for final import step
  */
 export function validateMessageStructure(
-  msg: unknown,
-  index: number
+  msg: unknown
 ): msg is ValidatedMessage {
   try {
     if (!msg || typeof msg !== "object" || Array.isArray(msg)) {

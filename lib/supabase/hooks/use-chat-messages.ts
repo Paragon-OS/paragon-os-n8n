@@ -6,7 +6,6 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { createSupabaseClient } from "../supabase-config";
 import {
   getChatMessagesBySessionId,
-  convertRowToUIMessage,
   type UIMessage,
 } from "../supabase-chat";
 

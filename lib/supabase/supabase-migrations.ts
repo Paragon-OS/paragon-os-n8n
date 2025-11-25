@@ -71,7 +71,7 @@ export async function getMigrationFiles(): Promise<string[]> {
  * Note: This function is not available in browser context
  * Use server-side code or Supabase CLI for reading migration files
  */
-export async function readMigrationFile(_filename: string): Promise<string> {
+export async function readMigrationFile(): Promise<string> {
   // This function requires Node.js fs module, which is not available in browser
   if (typeof window !== "undefined") {
     console.warn("[supabase-migrations] readMigrationFile() is not available in browser context");

@@ -29,7 +29,7 @@ export function ChatSessionLoader() {
   const lastLoadedSessionId = useRef<string | null>(null);
   const isLoadingRef = useRef(false); // Track if we're currently loading to prevent concurrent loads
   const currentMessages = useAssistantState((state) => state.thread.messages);
-  const messageLoader = new MessageLoaderService();
+  const messageLoaderRef = useRef(new MessageLoaderService());
 
   useEffect(() => {
     // Only load if we have a session and messages are loaded
@@ -43,9 +43,7 @@ export function ChatSessionLoader() {
     }
 
     // Check if this is a session switch (different session) or new messages in same session
-    const isSessionSwitch = lastLoadedSessionId.current !== null && lastLoadedSessionId.current !== activeSessionId;
     const isSameSession = lastLoadedSessionId.current === activeSessionId;
-    const isFirstLoad = lastLoadedSessionId.current === null;
     
     // If same session (not first load, not switching), check if there are new messages
     if (isSameSession && messages.length > 0) {
@@ -124,8 +122,8 @@ export function ChatSessionLoader() {
             }
 
             // Final validation: Deep check each message before import
-            const validatedImportMessages = validatedMessages.filter((msg, index): msg is ValidatedMessage => {
-              return validateMessageStructure(msg, index);
+            const validatedImportMessages = validatedMessages.filter((msg): msg is ValidatedMessage => {
+              return validateMessageStructure(msg);
             });
             
             if (validatedImportMessages.length === 0) {
@@ -145,10 +143,10 @@ export function ChatSessionLoader() {
             (async () => {
               try {
                 // Use MessageLoaderService to load messages into thread
-                await messageLoader.loadMessagesIntoThread(
+                await messageLoaderRef.current.loadMessagesIntoThread(
                   thread,
                   finalCleanedMessages,
-                  currentThreadMessages as ValidatedMessage[],
+                  currentThreadMessages,
                   lastLoadedSessionId.current,
                   activeSessionId
                 );

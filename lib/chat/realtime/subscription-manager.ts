@@ -7,15 +7,15 @@
 import { createSupabaseClient } from "@/lib/supabase/supabase-config";
 import type { UIMessage } from "ai";
 import type { ChatSessionRow } from "@/lib/supabase/supabase-chat";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 /**
  * Realtime Subscription Manager
  * Manages Supabase Realtime subscriptions with debouncing
  */
 export class RealtimeSubscriptionManager {
-  private messageChannels: Map<string, ReturnType<typeof createSupabaseClient>["channel"]> =
-    new Map();
-  private sessionsChannel: ReturnType<typeof createSupabaseClient>["channel"] | null = null;
+  private messageChannels: Map<string, RealtimeChannel> = new Map();
+  private sessionsChannel: RealtimeChannel | null = null;
   private refetchTimeouts: Map<string, NodeJS.Timeout> = new Map();
 
   /**

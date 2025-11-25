@@ -24,10 +24,8 @@ export function StreamMonitor({
   } = useStreaming();
   const updatesEndRef = useRef<HTMLDivElement>(null);
   const [hasLoadedFilteredEvents, setHasLoadedFilteredEvents] = useState(false);
-  const getAllExecutions = useExecutionStore((state) => state.getAllExecutions);
   const getStats = useExecutionStore((state) => state.getStats);
   
-  const executions = getAllExecutions();
   const stats = getStats();
 
   // Load filtered events from Supabase when executionIds are provided
@@ -40,9 +38,10 @@ export function StreamMonitor({
   }, [executionIds, hasLoadedFilteredEvents, loadEventsFromSupabase]);
 
   // Reset filtered events flag when executionIds change
+  const executionIdsKey = executionIds.join(",");
   useEffect(() => {
     setHasLoadedFilteredEvents(false);
-  }, [executionIds.join(",")]); // Dependency on executionIds array
+  }, [executionIdsKey]);
 
   // Auto-scroll to bottom when new updates arrive
   useEffect(() => {

@@ -33,7 +33,6 @@ export const N8nToolCall: ToolCallMessagePartComponent = ({
   const [isUpdatesExpanded, setIsUpdatesExpanded] = useState(false);
   const { updates } = useStreaming();
   const registerExecution = useExecutionStore((state) => state.registerExecution);
-  const getExecution = useExecutionStore((state) => state.getExecution);
 
   // Parse arguments
   let args: Record<string, unknown> = {};
@@ -85,9 +84,6 @@ export const N8nToolCall: ToolCallMessagePartComponent = ({
       });
     }
   }, [executionId, resultData, resultSuccess, registerExecution]);
-
-  // Get execution metadata from store
-  const executionMetadata = executionId ? getExecution(executionId) : undefined;
 
   // Filter updates by executionId
   const filteredUpdates = useMemo(() => {

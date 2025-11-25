@@ -128,7 +128,6 @@ export const useExecutionStore = create<ExecutionStore>()(
 
         const existing = get().executions[executionId];
         const status = getStatusFromStreamUpdate(update);
-        const now = Date.now();
 
         if (!existing) {
           // Register new execution from stream update
@@ -167,7 +166,8 @@ export const useExecutionStore = create<ExecutionStore>()(
 
       clearExecution: (executionId) => {
         set((state) => {
-          const { [executionId]: removed, ...rest } = state.executions;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { [executionId]: _removed, ...rest } = state.executions;
           return { executions: rest };
         });
       },

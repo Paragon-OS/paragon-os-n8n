@@ -5,7 +5,6 @@
  */
 
 import type { ChatRepository, SessionMetadata } from "../repositories/chat-repository.interface";
-import type { ChatSessionRow } from "@/lib/supabase/supabase-chat";
 
 /**
  * Interface for session store operations

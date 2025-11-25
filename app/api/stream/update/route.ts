@@ -16,7 +16,7 @@ export const runtime = "nodejs";
  * Get allowed CORS origins based on environment configuration
  * In production, restricts to specific origins. In development, allows localhost.
  */
-function getAllowedOrigins(_request: NextRequest): string[] {
+function getAllowedOrigins(): string[] {
   const origins: string[] = [];
   
   // 1. Check for explicitly allowed origins from environment variable
@@ -76,7 +76,7 @@ function isOriginAllowed(request: NextRequest): boolean {
     return true;
   }
   
-  const allowedOrigins = getAllowedOrigins(request);
+  const allowedOrigins = getAllowedOrigins();
   return allowedOrigins.includes(origin);
 }
 
@@ -85,7 +85,7 @@ function isOriginAllowed(request: NextRequest): boolean {
  */
 function getCorsHeaders(request: NextRequest): Record<string, string> {
   const origin = request.headers.get("origin");
-  const allowedOrigins = getAllowedOrigins(request);
+  const allowedOrigins = getAllowedOrigins();
   
   // If origin is provided and allowed, use it. Otherwise, use first allowed origin or deny
   const allowOrigin = origin && allowedOrigins.includes(origin) 

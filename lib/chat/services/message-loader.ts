@@ -8,10 +8,11 @@ import type { ValidatedMessage } from "../message-validation";
 
 /**
  * Thread interface (matching Assistant UI thread API)
+ * Using a flexible type to match the actual runtime API
  */
 export interface Thread {
   reset: () => void;
-  import: (options: { messages: ValidatedMessage[] }) => void;
+  import: (repository: unknown) => void;
 }
 
 /**
@@ -66,14 +67,15 @@ export class MessageLoaderService {
    * Handles thread reset and import logic
    */
   async loadMessagesIntoThread(
-    thread: Thread,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    thread: any,
     messages: ValidatedMessage[],
-    currentMessages: ValidatedMessage[],
+    currentMessages: ReadonlyArray<{ id?: string | null }>,
     lastSessionId: string | null,
     currentSessionId: string
   ): Promise<void> {
     // Check if thread supports import()
-    if (typeof (thread as any).import !== "function") {
+    if (typeof thread.import !== "function") {
       throw new Error(
         "Thread runtime does not support import(). Cannot load historical messages safely."
       );
@@ -102,7 +104,8 @@ export class MessageLoaderService {
     }
 
     // Import messages (marks them as historical, won't trigger responses)
-    (thread as any).import({ messages });
+    // Use type assertion to match the actual runtime API
+    thread.import({ messages });
     console.log(
       `[message-loader] Successfully imported ${messages.length} historical messages (no responses triggered)`
     );
