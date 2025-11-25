@@ -60,8 +60,13 @@ function AssistantContent() {
     console.log("[assistant] Checking session, effectiveSessionId:", effectiveSessionId);
     if (!effectiveSessionId) {
       console.log("[assistant] No session found, creating new session");
-      const newSessionId = createNewSession();
-      console.log("[assistant] Created new session:", newSessionId);
+      createNewSession()
+        .then((newSessionId) => {
+          console.log("[assistant] Created new session:", newSessionId);
+        })
+        .catch((error) => {
+          console.error("[assistant] Error creating new session:", error);
+        });
     }
   }, [effectiveSessionId, createNewSession]);
   

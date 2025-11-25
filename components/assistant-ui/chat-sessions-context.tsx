@@ -5,11 +5,12 @@
 
 "use client";
 
-import React, { createContext, useContext, useCallback } from "react";
+import React, { createContext, useContext, useCallback, useMemo } from "react";
 import { useChatSessions } from "@/lib/supabase/hooks/use-chat-sessions";
 import type { ChatSessionRow } from "@/lib/supabase/supabase-chat";
-import { deleteChatSession } from "@/lib/supabase/supabase-chat";
 import { useSessionStore } from "@/lib/stores/session-store";
+import { SessionManager } from "@/lib/chat/services/session-manager";
+import { SupabaseChatRepository } from "@/lib/chat/repositories/supabase-chat-repository";
 
 interface ChatSessionsContextValue {
   sessions: ChatSessionRow[];
@@ -17,7 +18,7 @@ interface ChatSessionsContextValue {
   error: Error | null;
   activeSessionId: string | null;
   setActiveSessionId: (sessionId: string | null) => void;
-  createNewSession: () => string;
+  createNewSession: () => Promise<string>;
   deleteSession: (sessionId: string) => Promise<boolean>;
   refetch: () => Promise<void>;
 }
@@ -44,48 +45,58 @@ export function ChatSessionsProvider({
   const setActiveSession = useSessionStore((state) => state.setActiveSession);
   const clearActiveSession = useSessionStore((state) => state.clearActiveSession);
 
+  // Create session manager with repository and store adapter
+  const sessionManager = useMemo(() => {
+    const repository = new SupabaseChatRepository();
+    const storeAdapter: SessionManager["store"] = {
+      getActiveSessionId: () => useSessionStore.getState().activeSessionId,
+      setActiveSession: (sessionId, title) => setActiveSession(sessionId, title),
+      clearActiveSession: () => clearActiveSession(),
+    };
+    return new SessionManager(repository, storeAdapter);
+  }, [setActiveSession, clearActiveSession]);
+
   // Update Zustand store when session is set, syncing the title from sessions
-  const setActiveSessionId = useCallback((sessionId: string | null) => {
-    console.log("[chat-sessions-context] setActiveSessionId called with:", sessionId);
-    console.log("[chat-sessions-context] Current activeSessionId:", activeSessionId);
-    const session = sessionId ? sessions.find((s) => s.session_id === sessionId) : null;
-    const sessionTitle = session?.title || null;
-    console.log("[chat-sessions-context] Setting session:", sessionId, "title:", sessionTitle);
-    setActiveSession(sessionId, sessionTitle);
-  }, [sessions, setActiveSession, activeSessionId]);
-
-  const createNewSession = useCallback(() => {
-    const newSessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    console.log("[chat-sessions-context] createNewSession called, creating:", newSessionId);
-    console.log("[chat-sessions-context] Current activeSessionId before creation:", activeSessionId);
-    setActiveSessionId(newSessionId);
-    console.log("[chat-sessions-context] New session created and set:", newSessionId);
-    return newSessionId;
-  }, [setActiveSessionId, activeSessionId]);
-
-  const deleteSession = useCallback(async (sessionId: string): Promise<boolean> => {
-    try {
-      // Delete the session (messages and stream_events will be cascade deleted)
-      const success = await deleteChatSession(sessionId);
-      
-      if (!success) {
-        return false;
-      }
-
-      // Clear active session if it's the one being deleted
-      if (activeSessionId === sessionId) {
+  const setActiveSessionId = useCallback(
+    async (sessionId: string | null) => {
+      console.log("[chat-sessions-context] setActiveSessionId called with:", sessionId);
+      console.log("[chat-sessions-context] Current activeSessionId:", activeSessionId);
+      if (sessionId) {
+        await sessionManager.switchSession(sessionId);
+      } else {
         clearActiveSession();
       }
+    },
+    [sessionManager, activeSessionId, clearActiveSession]
+  );
 
-      // Refetch sessions to update the list
-      await refetch();
+  const createNewSession = useCallback(async () => {
+    console.log("[chat-sessions-context] createNewSession called");
+    const newSessionId = await sessionManager.createNewSession({
+      userId,
+    });
+    console.log("[chat-sessions-context] New session created and set:", newSessionId);
+    // Refetch to update the sessions list
+    await refetch();
+    return newSessionId;
+  }, [sessionManager, userId, refetch]);
 
-      return true;
-    } catch (error) {
-      console.error("[chat-sessions-context] Error deleting session:", error);
-      return false;
-    }
-  }, [activeSessionId, clearActiveSession, refetch]);
+  const deleteSession = useCallback(
+    async (sessionId: string): Promise<boolean> => {
+      try {
+        const success = await sessionManager.deleteSession(sessionId);
+        if (success) {
+          // Refetch sessions to update the list
+          await refetch();
+        }
+        return success;
+      } catch (error) {
+        console.error("[chat-sessions-context] Error deleting session:", error);
+        return false;
+      }
+    },
+    [sessionManager, refetch]
+  );
 
   return (
     <ChatSessionsContext.Provider

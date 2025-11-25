@@ -119,7 +119,7 @@ async function checkChatTablesExist(): Promise<boolean> {
  * Ensure chat session exists, create if it doesn't
  * Uses a lock mechanism to prevent concurrent creation of the same session
  */
-async function ensureChatSession(
+export async function ensureChatSession(
   sessionId: string,
   userId?: string,
   title?: string,
