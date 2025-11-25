@@ -28,7 +28,7 @@ import { WebhookModeToggle } from "@/components/assistant-ui/webhook-mode-toggle
 import { SupabaseTest } from "@/components/assistant-ui/supabase-test";
 import { ChatSessionsProvider, useChatSessionsContext } from "@/components/assistant-ui/chat-sessions-context";
 import { SessionAwareChatTransport } from "@/lib/chat-transport";
-import { useSessionStore } from "@/lib/stores/session-store";
+import { useSessionStore, useSessionStoreHydrated } from "@/lib/stores/session-store";
 
 // Wrapper component that only renders when we have a transport
 function AssistantRuntimeWrapper({ transport, sessionId }: { transport: SessionAwareChatTransport, sessionId: string }) {
@@ -49,6 +49,7 @@ function AssistantRuntimeWrapper({ transport, sessionId }: { transport: SessionA
 function AssistantContent() {
   const { createNewSession } = useChatSessionsContext();
   const effectiveSessionId = useSessionStore((state) => state.activeSessionId);
+  const hasHydrated = useSessionStoreHydrated();
   const isCreatingSessionRef = React.useRef(false);
   
   // Log session ID changes
@@ -56,11 +57,17 @@ function AssistantContent() {
     console.log("[assistant] effectiveSessionId changed:", effectiveSessionId);
   }, [effectiveSessionId]);
   
-  // Initialize session if none exists
+  // Initialize session if none exists - but ONLY after store has hydrated
   React.useEffect(() => {
-    console.log("[assistant] Checking session, effectiveSessionId:", effectiveSessionId);
+    // Wait for store to hydrate before checking for session
+    if (!hasHydrated) {
+      console.log("[assistant] Waiting for store hydration...");
+      return;
+    }
+    
+    console.log("[assistant] Store hydrated, checking session, effectiveSessionId:", effectiveSessionId);
     if (!effectiveSessionId && !isCreatingSessionRef.current) {
-      console.log("[assistant] No session found, creating new session");
+      console.log("[assistant] No session found after hydration, creating new session");
       isCreatingSessionRef.current = true;
       createNewSession()
         .then((newSessionId) => {
@@ -72,7 +79,7 @@ function AssistantContent() {
           isCreatingSessionRef.current = false;
         });
     }
-  }, [effectiveSessionId, createNewSession]);
+  }, [effectiveSessionId, createNewSession, hasHydrated]);
   
   // Create transport with current session ID - use useMemo to recreate when sessionId changes
   // Only create transport if we have a session ID to avoid capturing null
@@ -110,13 +117,15 @@ function AssistantContent() {
     }
   }, [transport]);
 
-  // Don't render the runtime provider until we have a session ID and transport
-  if (!effectiveSessionId || !transport) {
-    console.log("[assistant] Waiting for session ID before rendering runtime");
+  // Don't render the runtime provider until store has hydrated and we have a session ID and transport
+  if (!hasHydrated || !effectiveSessionId || !transport) {
+    console.log("[assistant] Waiting for hydration/session ID before rendering runtime", { hasHydrated, effectiveSessionId, hasTransport: !!transport });
     return (
       <StreamingProvider>
         <div className="flex h-dvh w-full items-center justify-center">
-          <div className="text-muted-foreground">Initializing session...</div>
+          <div className="text-muted-foreground">
+            {!hasHydrated ? "Loading session..." : "Initializing session..."}
+          </div>
         </div>
       </StreamingProvider>
     );
