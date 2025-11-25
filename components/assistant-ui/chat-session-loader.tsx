@@ -141,19 +141,21 @@ export function ChatSessionLoader() {
             // Final validation: Clean content/parts arrays to remove null/undefined and ensure proper structure
             const finalCleanedMessages = validatedImportMessages.map((msg) => cleanMessageContent(msg));
             
-            try {
-              // Use MessageLoaderService to load messages into thread
-              await messageLoader.loadMessagesIntoThread(
-                thread,
-                finalCleanedMessages,
-                currentThreadMessages as ValidatedMessage[],
-                lastLoadedSessionId.current,
-                activeSessionId
-              );
-              
-              // Mark session as loaded immediately after successful import
-              lastLoadedSessionId.current = activeSessionId;
-            } catch (importErr) {
+            // Use async IIFE to handle await in useEffect
+            (async () => {
+              try {
+                // Use MessageLoaderService to load messages into thread
+                await messageLoader.loadMessagesIntoThread(
+                  thread,
+                  finalCleanedMessages,
+                  currentThreadMessages as ValidatedMessage[],
+                  lastLoadedSessionId.current,
+                  activeSessionId
+                );
+                
+                // Mark session as loaded immediately after successful import
+                lastLoadedSessionId.current = activeSessionId;
+              } catch (importErr) {
               // CRITICAL: Do NOT fallback to append() - it will trigger responses for historical messages
               // If import() fails, log error and skip loading rather than risking duplicate responses
               console.error("[chat-session-loader] CRITICAL: Error during import() - NOT falling back to append() to prevent duplicate responses");
@@ -177,10 +179,11 @@ export function ChatSessionLoader() {
                   console.error(`[chat-session-loader] Message at index ${idx} cannot be serialized:`, serializeErr, msg);
                 }
               });
-              // Don't mark as loaded so we can retry on next effect run
-              // But clear loading flag to allow retry
-              isLoadingRef.current = false;
-            }
+                // Don't mark as loaded so we can retry on next effect run
+                // But clear loading flag to allow retry
+                isLoadingRef.current = false;
+              }
+            })();
           } catch (err) {
             console.error("[chat-session-loader] Error loading messages into thread:", err);
             console.error("[chat-session-loader] Messages that caused error:", messages);

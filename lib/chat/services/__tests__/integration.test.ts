@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { MessageLoaderService } from '../message-loader';
+import { MessageLoaderService, type Thread } from '../message-loader';
 import { SessionManager } from '../session-manager';
 import { MockChatRepository } from '../../repositories/mock-chat-repository';
 import type { SessionStoreOperations } from '../session-manager';
@@ -66,11 +66,12 @@ describe('Chat Services Integration', () => {
       ];
 
       // Mock thread
-      const thread = {
+      const importFn: Thread['import'] = vi.fn().mockImplementation((options: { messages: ValidatedMessage[] }) => {
+        expect(options.messages).toEqual(messages);
+      });
+      const thread: Thread = {
         reset: () => {},
-        import: (options: { messages: ValidatedMessage[] }) => {
-          expect(options.messages).toEqual(messages);
-        },
+        import: importFn,
       };
 
       // Load messages
@@ -83,7 +84,7 @@ describe('Chat Services Integration', () => {
       expect(shouldLoad).toBe(true);
 
       await messageLoader.loadMessagesIntoThread(
-        thread as any,
+        thread,
         messages,
         [],
         null,
@@ -101,14 +102,15 @@ describe('Chat Services Integration', () => {
         { id: 'msg-1', role: 'user', content: 'Message 1' },
       ];
 
-      const thread = {
+      const importFn: Thread['import'] = vi.fn();
+      const thread: Thread = {
         reset: () => {},
-        import: vi.fn(),
+        import: importFn,
       };
 
       // Load messages for session 1
       await messageLoader.loadMessagesIntoThread(
-        thread as any,
+        thread,
         messages1,
         [],
         null,
@@ -131,10 +133,14 @@ describe('Chat Services Integration', () => {
 
       // Load messages for session 2 (should reset thread)
       const resetSpy = vi.fn();
-      thread.reset = resetSpy;
+      const importFn2: Thread['import'] = vi.fn();
+      const thread2: Thread = {
+        reset: resetSpy,
+        import: importFn2,
+      };
 
       await messageLoader.loadMessagesIntoThread(
-        thread as any,
+        thread2,
         messages2,
         messages1,
         session1,
@@ -142,7 +148,7 @@ describe('Chat Services Integration', () => {
       );
 
       expect(resetSpy).toHaveBeenCalled();
-      expect(thread.import).toHaveBeenCalledWith({ messages: messages2 });
+      expect(thread2.import).toHaveBeenCalledWith({ messages: messages2 });
     });
 
     it('should prevent duplicate message loading', async () => {
@@ -153,14 +159,15 @@ describe('Chat Services Integration', () => {
         { id: 'msg-2', role: 'assistant', content: 'Response 1' },
       ];
 
-      const thread = {
+      const importFn: Thread['import'] = vi.fn();
+      const thread: Thread = {
         reset: () => {},
-        import: vi.fn(),
+        import: importFn,
       };
 
       // First load
       await messageLoader.loadMessagesIntoThread(
-        thread as any,
+        thread,
         messages,
         [],
         null,
@@ -179,7 +186,7 @@ describe('Chat Services Integration', () => {
       expect(shouldLoad).toBe(false);
 
       await messageLoader.loadMessagesIntoThread(
-        thread as any,
+        thread,
         messages,
         messages,
         sessionId,
@@ -249,11 +256,11 @@ describe('Chat Services Integration', () => {
 
       // Switch between sessions
       await sessionManager.switchSession(session1);
-      let messages1 = await repository.getMessages(session1);
+      const messages1 = await repository.getMessages(session1);
       expect(messages1.length).toBe(1);
 
       await sessionManager.switchSession(session2);
-      let messages2 = await repository.getMessages(session2);
+      const messages2 = await repository.getMessages(session2);
       expect(messages2.length).toBe(1);
 
       // Verify isolation
@@ -269,14 +276,15 @@ describe('Chat Services Integration', () => {
         { id: 'msg-1', role: 'user', content: 'Test' },
       ];
 
-      const invalidThread = {
+      // Create a thread without import method to test error handling
+      const invalidThread: Partial<Thread> = {
         reset: () => {},
         // Missing import method
       };
 
       await expect(
         messageLoader.loadMessagesIntoThread(
-          invalidThread as any,
+          invalidThread as Thread,
           messages,
           [],
           null,

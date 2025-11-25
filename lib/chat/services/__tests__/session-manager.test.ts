@@ -7,7 +7,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SessionManager } from '../session-manager';
 import type { ChatRepository, SessionMetadata } from '../../repositories/chat-repository.interface';
 import type { SessionStoreOperations } from '../session-manager';
-import type { ChatSessionRow } from '@/lib/supabase/supabase-chat';
 import { MockChatRepository } from '../../repositories/mock-chat-repository';
 
 describe('SessionManager', () => {
@@ -75,7 +74,6 @@ describe('SessionManager', () => {
 
       await manager.switchSession(sessionId);
 
-      const session = await mockRepository.getSessionById(sessionId);
       expect(setActiveSessionSpy).toHaveBeenCalledWith(sessionId, sessionTitle);
     });
   });

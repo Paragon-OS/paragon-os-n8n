@@ -1,5 +1,14 @@
 import { defineConfig } from 'vitest/config';
 import path from 'path';
+import { config } from 'dotenv';
+import { resolve } from 'path';
+
+// Load environment variables from .env.local (Next.js convention)
+const envLocalPath = resolve(process.cwd(), '.env.local');
+const envPath = resolve(process.cwd(), '.env');
+
+config({ path: envLocalPath });
+config({ path: envPath });
 
 export default defineConfig({
   test: {
@@ -19,7 +28,7 @@ export default defineConfig({
       ],
     },
     include: ['**/*.test.ts', '**/*.test.tsx', '**/__tests__/**/*.ts'],
-    exclude: ['node_modules', 'dist', '.next'],
+    exclude: ['node_modules', 'dist', '.next', '**/__tests__/**/test-helpers.ts', '**/__tests__/**/*.helper.ts'],
   },
   resolve: {
     alias: {
