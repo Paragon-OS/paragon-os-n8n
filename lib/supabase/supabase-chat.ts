@@ -133,6 +133,10 @@ function convertUIMessageToRow(
  * Maps database content back to UIMessage.parts
  */
 export function convertRowToUIMessage(row: ChatMessageRow): UIMessage {
+  console.log(`[supabase-chat] Converting row to UIMessage, id: ${row.id}, role: ${row.role}`);
+  console.log(`[supabase-chat] Row content type: ${typeof row.content}, isArray: ${Array.isArray(row.content)}`);
+  console.log(`[supabase-chat] Row content:`, JSON.stringify(row.content));
+  
   // UIMessage requires 'parts', not 'content'
   // Our database stores parts as content, so map it back
   
@@ -140,11 +144,15 @@ export function convertRowToUIMessage(row: ChatMessageRow): UIMessage {
   // Map 'tool' to 'assistant' for compatibility
   const role = row.role === 'tool' ? 'assistant' : row.role;
   
-  return {
+  const uiMessage = {
     id: row.id,
     role: role as 'user' | 'assistant' | 'system',
     parts: row.content as any[], // Content is stored as parts array
   };
+  
+  console.log(`[supabase-chat] Converted UIMessage:`, JSON.stringify(uiMessage));
+  
+  return uiMessage;
 }
 
 /**
@@ -287,10 +295,13 @@ export async function getChatMessagesBySessionId(
 ): Promise<UIMessage[]> {
   const supabase = createSupabaseClient();
   if (!supabase) {
+    console.log("[supabase-chat] No supabase client available");
     return [];
   }
 
   try {
+    console.log(`[supabase-chat] Fetching messages for session: ${options.sessionId}`);
+    
     let query = supabase
       .from("chat_messages")
       .select("*")
@@ -315,7 +326,21 @@ export async function getChatMessagesBySessionId(
       return [];
     }
 
-    return (data as ChatMessageRow[]).map(convertRowToUIMessage);
+    console.log(`[supabase-chat] Retrieved ${data?.length || 0} raw messages from database`);
+    
+    if (data && data.length > 0) {
+      console.log("[supabase-chat] First raw message from DB:", JSON.stringify(data[0]));
+    }
+
+    const uiMessages = (data as ChatMessageRow[]).map(convertRowToUIMessage);
+    
+    console.log(`[supabase-chat] Converted to ${uiMessages.length} UI messages`);
+    
+    if (uiMessages.length > 0) {
+      console.log("[supabase-chat] First converted UI message:", JSON.stringify(uiMessages[0]));
+    }
+
+    return uiMessages;
   } catch (error) {
     console.error("[supabase-chat] Error retrieving messages:", error);
     return [];

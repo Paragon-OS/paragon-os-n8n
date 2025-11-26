@@ -26,8 +26,21 @@ export function ChatSessionLoader() {
 
   // Handle session switching and message loading
   useEffect(() => {
+    console.log(`[chat-session-loader] Effect triggered - activeSessionId: ${activeSessionId}, isLoading: ${isLoading}, runtime: ${!!runtime}, messages: ${messages.length}`);
+    
     // Early returns for invalid states
-    if (isNil(activeSessionId) || isLoading || isNil(runtime)) {
+    if (isNil(activeSessionId)) {
+      console.log("[chat-session-loader] No active session ID, skipping");
+      return;
+    }
+    
+    if (isLoading) {
+      console.log("[chat-session-loader] Still loading messages, skipping");
+      return;
+    }
+    
+    if (isNil(runtime)) {
+      console.log("[chat-session-loader] No runtime available, skipping");
       return;
     }
 
@@ -41,6 +54,10 @@ export function ChatSessionLoader() {
     }
 
     console.log(`[chat-session-loader] Loading ${messages.length} messages for session: ${activeSessionId}`);
+    
+    if (messages.length > 0) {
+      console.log("[chat-session-loader] First message to load:", JSON.stringify(messages[0]));
+    }
     
     // Load messages into thread
     loadMessagesIntoThread({

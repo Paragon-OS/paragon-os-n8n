@@ -51,6 +51,7 @@ export function useChatMessages(
 
   const fetchMessages = useCallback(async () => {
     if (!sessionId) {
+      console.log("[use-chat-messages] No sessionId, clearing messages");
       if (isMountedRef.current) {
         setMessages([]);
         setIsLoading(false);
@@ -59,6 +60,8 @@ export function useChatMessages(
     }
 
     try {
+      console.log(`[use-chat-messages] Starting fetch for session: ${sessionId}`);
+      
       if (isMountedRef.current) {
         setIsLoading(true);
         setError(null);
@@ -70,8 +73,15 @@ export function useChatMessages(
         offset,
       });
 
+      console.log(`[use-chat-messages] Fetched ${fetchedMessages.length} messages for session ${sessionId}`);
+      
+      if (fetchedMessages.length > 0) {
+        console.log("[use-chat-messages] First fetched message:", JSON.stringify(fetchedMessages[0]));
+      }
+
       if (isMountedRef.current) {
         setMessages(fetchedMessages);
+        console.log(`[use-chat-messages] Set ${fetchedMessages.length} messages in state`);
       }
     } catch (err) {
       if (isMountedRef.current) {
@@ -82,6 +92,7 @@ export function useChatMessages(
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false);
+        console.log(`[use-chat-messages] Fetch complete, isLoading set to false`);
       }
     }
   }, [sessionId, limit, offset]);

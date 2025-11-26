@@ -44,12 +44,17 @@ export const useThreadLoaderStore = create<ThreadLoaderState>((set, get) => ({
         throw new Error("Thread does not support reset()");
       }
 
+      console.log(`[thread-loader] Resetting thread for session: ${sessionId}`);
       thread.reset();
       
+      // IMPORTANT: Set lastLoadedSessionId to null so the next load is treated as fresh
+      // This ensures messages will be imported after reset
       set({
-        lastLoadedSessionId: sessionId,
+        lastLoadedSessionId: null,
         lastError: null,
       });
+      
+      console.log("[thread-loader] Thread reset complete, ready for new messages");
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error("[thread-loader] Error resetting thread:", err);
@@ -60,7 +65,18 @@ export const useThreadLoaderStore = create<ThreadLoaderState>((set, get) => ({
   loadMessagesIntoThread: ({ sessionId, messages, runtime }) => {
     const state = get();
     
+    console.log(`[thread-loader] loadMessagesIntoThread called for session: ${sessionId}, messages: ${messages.length}`);
+    console.log(`[thread-loader] Current lastLoadedSessionId: ${state.lastLoadedSessionId}`);
+    
+    // Skip if already importing
     if (state.isImporting) {
+      console.log("[thread-loader] Already importing, skipping");
+      return;
+    }
+
+    // Skip if this exact session is already loaded with the same messages
+    if (state.lastLoadedSessionId === sessionId && messages.length > 0) {
+      console.log("[thread-loader] Session already loaded, skipping duplicate import");
       return;
     }
 
@@ -74,15 +90,27 @@ export const useThreadLoaderStore = create<ThreadLoaderState>((set, get) => ({
       }
 
       if (messages.length === 0) {
-        set({ isImporting: false });
+        console.log("[thread-loader] No messages to import");
+        set({ 
+          isImporting: false,
+          lastLoadedSessionId: sessionId 
+        });
         return;
       }
+
+      console.log("[thread-loader] First message before validation:", JSON.stringify(messages[0]));
 
       // Validate messages
       const validatedMessages = validateMessages(messages);
       
+      console.log(`[thread-loader] Validated ${validatedMessages.length} out of ${messages.length} messages`);
+      
       if (validatedMessages.length === 0) {
-        set({ isImporting: false });
+        console.log("[thread-loader] No valid messages after validation");
+        set({ 
+          isImporting: false,
+          lastLoadedSessionId: sessionId 
+        });
         return;
       }
 
@@ -92,7 +120,12 @@ export const useThreadLoaderStore = create<ThreadLoaderState>((set, get) => ({
         parentId: idx > 0 ? validatedMessages[idx - 1].id : null,
       }));
       
+      console.log("[thread-loader] Importing messages into thread:", exportedMessages.length);
+      console.log("[thread-loader] First exported message:", JSON.stringify(exportedMessages[0]));
+      
       thread.import({ messages: exportedMessages });
+
+      console.log("[thread-loader] Successfully imported messages");
 
       set({
         lastLoadedSessionId: sessionId,
@@ -102,6 +135,7 @@ export const useThreadLoaderStore = create<ThreadLoaderState>((set, get) => ({
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error("[thread-loader] Error importing messages:", err);
+      console.error("[thread-loader] Error stack:", err.stack);
       
       set({
         isImporting: false,
