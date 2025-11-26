@@ -199,7 +199,6 @@ export function StreamingProvider({ children }: StreamingProviderProps) {
     return () => {
       disconnect();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Prevent Cmd+S / Ctrl+S from triggering browser save (which closes connection)

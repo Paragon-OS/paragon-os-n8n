@@ -166,7 +166,6 @@ export const useExecutionStore = create<ExecutionStore>()(
 
       clearExecution: (executionId) => {
         set((state) => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { [executionId]: _removed, ...rest } = state.executions;
           return { executions: rest };
         });

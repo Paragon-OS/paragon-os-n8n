@@ -67,7 +67,6 @@ export class MessageLoaderService {
    * Handles thread reset and import logic
    */
   async loadMessagesIntoThread(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     thread: any,
     messages: UIMessage[],
     currentMessages: ReadonlyArray<{ id?: string | null }>,

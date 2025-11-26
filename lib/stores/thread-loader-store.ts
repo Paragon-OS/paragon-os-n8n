@@ -8,7 +8,6 @@ import { validateMessages } from "@/lib/chat/message-validation";
 import type { UIMessage } from "ai";
 
 // Use a flexible type that matches the actual runtime
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ThreadRuntime = any;
 
 interface ThreadLoaderState {

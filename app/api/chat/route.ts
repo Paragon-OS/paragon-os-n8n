@@ -339,7 +339,7 @@ When a user's request involves messaging operations on Discord or Telegram, use 
     });
 
     // Return the streaming response directly
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error("[chat/route] Error processing chat request:", error);
     return NextResponse.json(
