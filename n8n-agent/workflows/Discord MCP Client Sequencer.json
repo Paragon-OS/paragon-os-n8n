@@ -1,8 +1,9 @@
 {
-  "updatedAt": "2025-11-23T18:05:39.000Z",
+  "updatedAt": "2025-11-26T20:12:38.000Z",
   "createdAt": "2025-11-06T21:51:04.792Z",
   "id": "vfcxqLBDDMKL5lnG",
   "name": "Discord MCP Client Sequencer",
+  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -93,7 +94,7 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        832,
+        840,
         -1408
       ],
       "id": "762a6c3b-ecaf-4984-8d41-fe9c43813e40",
@@ -127,7 +128,7 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        256,
+        248,
         -1184
       ],
       "id": "fc946901-08ae-4ac6-b072-a8d59798086f",
@@ -143,7 +144,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        192,
+        180,
         -976
       ],
       "id": "c79482a2-0b52-475c-a1d5-8f92e6b322e2",
@@ -214,8 +215,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        1056,
-        -1312
+        1064,
+        -1304
       ],
       "id": "06e27531-aa79-4d3c-aa37-748e1b322840",
       "name": "Call Discord Step Executor"
@@ -283,7 +284,7 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        1584,
+        1588,
         -1184
       ],
       "id": "538e65bd-9cdf-4ccb-aee3-900717e59667",
@@ -317,7 +318,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1952,
+        1956,
         -1408
       ],
       "id": "a9a10da9-6271-473d-a015-5c866fee05c0",
@@ -334,7 +335,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1280,
+        1288,
         -1408
       ],
       "id": "116b33a8-d590-4a79-b13b-74d5fa60c436",
@@ -352,7 +353,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3,
       "position": [
-        1504,
+        1512,
         -1408
       ],
       "id": "eefe7dfc-4226-4cd7-90bf-fde29a23adbf",
@@ -387,7 +388,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2176,
+        2180,
         -1456
       ],
       "id": "b145076c-014e-42a5-aee7-cc476819044f",
@@ -398,7 +399,7 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        2400,
+        2404,
         -1456
       ],
       "id": "22e4bd83-b3fb-43c4-b545-01b7936d30de",
@@ -413,7 +414,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        1568,
+        1584,
         -976
       ],
       "id": "7853e358-9903-400b-bd72-b17ee43c2e02",
@@ -434,7 +435,7 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
-        128,
+        120,
         -1184
       ],
       "id": "7b08e3df-3525-412b-8563-ff32b122f63b",
@@ -463,7 +464,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2176,
+        2180,
         -1104
       ],
       "id": "79bf2852-a5b3-42af-b671-6a220ba9bf75",
@@ -487,7 +488,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        400,
+        616,
         -1408
       ],
       "id": "b659088c-b9c5-4975-bfc0-925c0a041339",
@@ -1052,8 +1053,8 @@
       }
     ]
   },
-  "versionId": "50d2d706-f419-4c94-843b-569bb1578195",
-  "versionCounter": 266,
+  "versionId": "0e0de147-46bb-4c6b-8625-2ce371617dcc",
+  "versionCounter": 268,
   "triggerCount": 0,
   "tags": [
     {

@@ -1,0 +1,109 @@
+{
+  "updatedAt": "2025-11-26T20:11:40.000Z",
+  "createdAt": "2025-11-26T05:17:31.999Z",
+  "id": "kbdWHcsSbJUgODWD",
+  "name": "[LAB] MCP Server",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "paragon-mcp"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        -192
+      ],
+      "id": "13320121-e051-4ff0-be75-39197f6e7f6b",
+      "name": "MCP Server Trigger",
+      "webhookId": "bc2d8676-e649-4066-abd0-5bd393e46174"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to use paragonOS",
+        "workflowId": {
+          "__rl": true,
+          "value": "z1Ry4y4k5dGR0BqR",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/z1Ry4y4k5dGR0BqR",
+          "cachedResultName": "ParagonOS Manager"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chatInput": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('chatInput', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "chatInput"
+          ],
+          "schema": [
+            {
+              "id": "chatInput",
+              "displayName": "chatInput",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -272,
+        16
+      ],
+      "id": "8012ebfb-095c-480e-9c5d-8f61175a0fbc",
+      "name": "Call 'ParagonOS Manager'"
+    }
+  ],
+  "connections": {
+    "Call 'ParagonOS Manager'": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "4f888528-285b-48f2-bfa9-d1a1509437fa",
+  "versionCounter": 9,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-11-26T05:17:32.006Z",
+      "createdAt": "2025-11-26T05:17:32.006Z",
+      "role": "workflow:owner",
+      "workflowId": "kbdWHcsSbJUgODWD",
+      "projectId": "GEUEn6ArNROzJ5FY",
+      "project": {
+        "updatedAt": "2025-10-28T15:11:59.092Z",
+        "createdAt": "2025-10-28T15:08:17.462Z",
+        "id": "GEUEn6ArNROzJ5FY",
+        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null
+      }
+    }
+  ]
+}

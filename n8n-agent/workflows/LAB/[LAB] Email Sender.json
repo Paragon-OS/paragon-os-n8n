@@ -3,6 +3,7 @@
   "createdAt": "2025-10-30T13:48:22.976Z",
   "id": "D3bRHwEfpCwLk8zy",
   "name": "[LAB] Email Sender",
+  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [

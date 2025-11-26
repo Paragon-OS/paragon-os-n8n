@@ -3,6 +3,7 @@
   "createdAt": "2025-11-02T22:17:24.090Z",
   "id": "N0Mzuo45IL7Gmk0I",
   "name": "[LAB] Demo: RAG in n8n",
+  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [

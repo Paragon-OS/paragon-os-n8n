@@ -1,8 +1,9 @@
 {
-  "updatedAt": "2025-11-23T18:03:57.000Z",
+  "updatedAt": "2025-11-26T20:12:56.000Z",
   "createdAt": "2025-11-17T13:03:59.561Z",
   "id": "uoYXevOl4ePWKeNx",
   "name": "[HELPERS] Discord & Telegram Step Executor",
+  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -28,7 +29,7 @@
       "typeVersion": 1.1,
       "position": [
         -1616,
-        528
+        520
       ],
       "id": "dd089a93-3eb3-466d-9dd8-efc4a57a9e0e",
       "name": "When Executed by Another Workflow",
@@ -71,7 +72,7 @@
       "typeVersion": 3.4,
       "position": [
         -1392,
-        528
+        520
       ],
       "id": "490cd53f-a549-4be3-888d-e9838dc053e8",
       "name": "Prepare Execution Steps"
@@ -87,7 +88,7 @@
       "typeVersion": 1,
       "position": [
         -1168,
-        528
+        520
       ],
       "id": "b996eb98-f301-4d48-9b5a-999e52135faa",
       "name": "Split Execution Steps"
@@ -117,7 +118,7 @@
       "typeVersion": 3,
       "position": [
         -944,
-        768
+        760
       ],
       "id": "cd5a8d92-5e4f-4164-af15-6861fe96b4c4",
       "name": "Loop Over Execution Steps"
@@ -296,7 +297,7 @@
       "typeVersion": 2,
       "position": [
         -272,
-        912
+        904
       ],
       "id": "070d5a92-aef4-4406-9c71-04252c3cd22a",
       "name": "Code in JavaScript"
@@ -611,8 +612,8 @@
       }
     ]
   },
-  "versionId": "b9158924-b273-49cb-b2fd-9ea45ee7819e",
-  "versionCounter": 88,
+  "versionId": "833ff12b-a693-47d9-8fd2-c953fe66b6cf",
+  "versionCounter": 90,
   "triggerCount": 0,
   "tags": [
     {

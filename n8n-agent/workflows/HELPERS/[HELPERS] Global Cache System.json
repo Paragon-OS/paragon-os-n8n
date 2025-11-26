@@ -1,8 +1,9 @@
 {
-  "updatedAt": "2025-11-21T00:07:04.000Z",
+  "updatedAt": "2025-11-26T20:13:12.000Z",
   "createdAt": "2025-11-06T21:54:34.704Z",
   "id": "HTXqB729RFNozetP",
   "name": "[HELPERS] Global Cache System",
+  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -196,7 +197,7 @@
       "type": "n8n-nodes-base.if",
       "position": [
         1424,
-        256
+        248
       ],
       "typeVersion": 2.2
     },
@@ -303,7 +304,7 @@
       "type": "n8n-nodes-base.set",
       "position": [
         1648,
-        304
+        296
       ],
       "typeVersion": 3.4
     },
@@ -322,7 +323,7 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "position": [
         304,
-        528
+        520
       ],
       "typeVersion": 1.2
     },
@@ -354,7 +355,7 @@
       "type": "n8n-nodes-base.dataTable",
       "position": [
         528,
-        528
+        520
       ],
       "typeVersion": 1
     }
@@ -499,8 +500,8 @@
       }
     ]
   },
-  "versionId": "2de8b652-009b-455f-9934-3e4fe5b32589",
-  "versionCounter": 13,
+  "versionId": "1150c5d4-9082-4eb0-b455-9737222300b2",
+  "versionCounter": 14,
   "triggerCount": 0,
   "tags": [],
   "shared": [

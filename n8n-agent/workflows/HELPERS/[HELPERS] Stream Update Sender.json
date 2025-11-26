@@ -3,6 +3,7 @@
   "createdAt": "2025-11-20T21:29:51.803Z",
   "id": "che6u5z0grJ4AoNr",
   "name": "[HELPERS] Stream Update Sender",
+  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -124,7 +125,7 @@
     ]
   },
   "versionId": "8b61f27c-4976-427f-8604-de19747f58a7",
-  "versionCounter": 13,
+  "versionCounter": 14,
   "triggerCount": 0,
   "tags": [],
   "shared": [
