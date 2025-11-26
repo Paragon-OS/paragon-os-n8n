@@ -88,7 +88,9 @@ export const useThreadLoaderStore = create<ThreadLoaderState>((set, get) => ({
       }
 
       // Normalize messages with lodash safety checks
+      console.log(`[thread-loader] Normalizing ${messages.length} messages for session: ${sessionId}`);
       const normalizedMessages = normalizeMessages(messages, sessionId);
+      console.log(`[thread-loader] Normalized to ${normalizedMessages.length} valid messages`);
       
       // Double-check all messages have IDs (defensive programming)
       const invalidMessages = normalizedMessages.filter(msg => isNil(msg?.id));
@@ -107,13 +109,45 @@ export const useThreadLoaderStore = create<ThreadLoaderState>((set, get) => ({
       // The assistant-ui thread.import expects ExportedMessageRepository format:
       // { messages: Array<{ message: ThreadMessage, parentId: string | null }> }
       // Each message needs to reference its parent (previous message in the conversation)
-      const exportedMessages = normalizedMessages.map((msg, idx) => ({
-        message: msg,
-        parentId: idx > 0 ? normalizedMessages[idx - 1].id : null,
-      }));
+      const exportedMessages = normalizedMessages.map((msg, idx) => {
+        // Log what properties are on the normalized message
+        const msgKeys = Object.keys(msg as unknown as Record<string, unknown>);
+        console.log(`[thread-loader] Message ${idx} normalized keys: [${msgKeys.join(", ")}]`);
+        
+        // Create a clean message object without undefined properties
+        const cleanMessage: Record<string, unknown> = {
+          id: msg.id,
+          role: msg.role,
+        };
+        
+        // Only add defined properties
+        if (msg.content !== undefined) {
+          cleanMessage.content = msg.content;
+        }
+        if (msg.toolInvocations !== undefined) {
+          cleanMessage.toolInvocations = msg.toolInvocations;
+        }
+        if (msg.toolCalls !== undefined) {
+          cleanMessage.toolCalls = msg.toolCalls;
+        }
+        
+        console.log(`[thread-loader] Message ${idx} clean keys: [${Object.keys(cleanMessage).join(", ")}]`);
+        
+        return {
+          message: cleanMessage,
+          parentId: idx > 0 ? normalizedMessages[idx - 1].id : null,
+        };
+      });
       
       console.log(`[thread-loader] Importing ${normalizedMessages.length} messages for session: ${sessionId}`);
-      thread.import({ messages: exportedMessages });
+      
+      try {
+        thread.import({ messages: exportedMessages });
+        console.log(`[thread-loader] ✓ Successfully imported messages`);
+      } catch (importError) {
+        console.error(`[thread-loader] ✗ Error during thread.import():`, importError);
+        throw importError;
+      }
 
       set({
         lastLoadedSessionId: sessionId,

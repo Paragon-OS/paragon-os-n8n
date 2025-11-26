@@ -35,10 +35,13 @@ export function ChatSessionLoader() {
     const isSessionSwitch = lastLoadedSessionId !== activeSessionId;
     
     if (isSessionSwitch) {
+      console.log(`[chat-session-loader] Session switch: ${lastLoadedSessionId} → ${activeSessionId}`);
       // Reset thread for new session
       resetThread({ sessionId: activeSessionId, runtime });
     }
 
+    console.log(`[chat-session-loader] Loading ${messages.length} messages for session: ${activeSessionId}`);
+    
     // Load messages into thread
     loadMessagesIntoThread({
       sessionId: activeSessionId,

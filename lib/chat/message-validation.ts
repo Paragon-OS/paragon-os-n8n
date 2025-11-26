@@ -29,12 +29,14 @@ export function normalizeMessage(
     content?: unknown;
     toolInvocations?: Array<{ id: string; [key: string]: unknown }>;
     toolCalls?: Array<{ id: string; [key: string]: unknown }>;
+    [key: string]: unknown; // Allow extra properties on input
   },
   index: number,
   sessionId: string
 ): ValidatedMessage | null {
   // Skip invalid messages using lodash
   if (isNil(msg) || typeof msg !== "object") {
+    console.warn(`[message-validation] Skipping invalid message at index ${index}`);
     return null;
   }
 
@@ -81,7 +83,8 @@ export function normalizeMessage(
     return null;
   }
 
-  // Build normalized message - ID is guaranteed to be defined
+  // Build normalized message - ONLY include ValidatedMessage properties
+  // This explicitly strips out any extra properties like 'parts', 'status', 'updatedAt', 'submittedFeedback', etc.
   const normalized: ValidatedMessage = {
     id,
     role: role as "user" | "assistant" | "system" | "tool",
@@ -99,7 +102,8 @@ export function normalizeMessage(
     normalized.toolCalls = msg.toolCalls;
   }
 
-  return normalized;
+  // Explicitly return only the normalized object with no extra properties
+  return { ...normalized };
 }
 
 /**

@@ -265,6 +265,8 @@ function convertUIMessageToRow(
  * Convert ChatMessageRow from database to UIMessage format
  */
 export function convertRowToUIMessage(row: ChatMessageRow): UIMessage {
+  console.log("[supabase-chat] convertRowToUIMessage - message_id:", row.message_id, "role:", row.role);
+  
   // Validate required fields
   if (!row) {
     throw new Error("convertRowToUIMessage: row is null or undefined");
@@ -332,15 +334,25 @@ export function convertRowToUIMessage(row: ChatMessageRow): UIMessage {
   }
 
   // Restore metadata properties, but don't overwrite critical fields
+  // Also ensure all values are properly defined (not undefined)
   if (row.metadata) {
+    const metadataKeys = Object.keys(row.metadata);
+    console.log("[supabase-chat] Processing metadata keys:", metadataKeys.join(", "));
     const criticalFields = ["id", "role", "content", "parts", "toolInvocations", "toolCalls"];
     Object.keys(row.metadata).forEach((key) => {
       if (!criticalFields.includes(key)) {
-        messageData[key] = row.metadata![key];
+        const value = row.metadata![key];
+        // Only add metadata if it's not undefined/null
+        if (value !== undefined && value !== null) {
+          messageData[key] = value;
+        } else {
+          console.warn(`[supabase-chat] Skipped undefined/null metadata key: ${key}`);
+        }
       }
     });
   }
 
+  console.log("[supabase-chat] Output message id:", messageData.id, "keys:", Object.keys(messageData).join(", "));
   return messageData as unknown as UIMessage;
 }
 
