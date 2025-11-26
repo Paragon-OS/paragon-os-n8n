@@ -20,7 +20,6 @@ export interface GetMessagesOptions {
 export interface SessionMetadata {
   userId?: string;
   title?: string;
-  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -28,7 +27,6 @@ export interface SessionMetadata {
  */
 export interface SessionUpdates {
   title?: string;
-  metadata?: Record<string, unknown>;
 }
 
 /**

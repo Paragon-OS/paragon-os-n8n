@@ -5,71 +5,37 @@
 
 import { createSupabaseClient } from "./supabase-config";
 import type { StreamUpdate } from "../n8n-client/types";
-import { needsMigrations, logMigrationInstructions } from "./supabase-migrations";
 
 /**
- * Database row type for stream_events table
+ * Database row type for stream_events table (refactored schema)
  */
 export interface StreamEventRow {
-  id?: string; // UUID, auto-generated
+  id: string; // UUID primary key
   execution_id: string;
-  session_id?: string;
-  message_id?: string;
+  message_id?: string; // UUID foreign key to chat_messages
   stage: string;
   status: string;
   message: string;
   timestamp: string;
   data?: Record<string, unknown>;
-  created_at?: string; // Auto-generated
+  created_at: string;
 }
 
 /**
  * Save a StreamUpdate event to Supabase
- * This function is non-blocking and will not throw errors to avoid affecting webhook performance
- * Errors are logged but do not propagate
+ * Simplified: No table checks, just save
  */
-// Cache for table existence check to avoid repeated queries
-let tableExistsCache: boolean | null = null;
-let tableCheckPerformed = false;
-
 export async function saveStreamEventToSupabase(
   update: StreamUpdate
 ): Promise<void> {
   const supabase = createSupabaseClient();
-  
-  // If Supabase is not configured, silently skip
   if (!supabase) {
-    console.warn(
-      "[supabase-stream-events] Supabase not configured, skipping save",
-      { executionId: update.executionId }
-    );
-    return;
-  }
-
-  // Check if migrations have been applied (once per session)
-  if (!tableCheckPerformed) {
-    const needsMig = await needsMigrations();
-    tableExistsCache = !needsMig;
-    tableCheckPerformed = true;
-
-    if (needsMig) {
-      console.warn(
-        "[supabase-stream-events] Database migrations not applied. Events will not be saved."
-      );
-      logMigrationInstructions();
-      return;
-    }
-  }
-
-  // Use cached result
-  if (tableExistsCache === false) {
     return;
   }
 
   try {
-    const eventRow: StreamEventRow = {
+    const eventRow: Partial<StreamEventRow> = {
       execution_id: update.executionId,
-      session_id: update.metadata?.sessionId,
       message_id: update.metadata?.messageId,
       stage: update.stage,
       status: update.status,
@@ -81,36 +47,21 @@ export async function saveStreamEventToSupabase(
     const { error } = await supabase.from("stream_events").insert(eventRow);
 
     if (error) {
-      console.error(
-        "[supabase-stream-events] Error saving stream event:",
-        error,
-        { executionId: update.executionId, stage: update.stage }
-      );
-      return;
+      console.error("[supabase-stream-events] Error saving event:", error);
     }
   } catch (error) {
-    // Catch any unexpected errors to prevent them from propagating
-    console.error(
-      "[supabase-stream-events] Unexpected error saving stream event:",
-      error,
-      { executionId: update.executionId }
-    );
+    console.error("[supabase-stream-events] Error saving event:", error);
   }
 }
 
 /**
- * Retrieve stream events for a specific execution from Supabase
- * Returns empty array if Supabase is not configured or on error
+ * Retrieve stream events for a specific execution
  */
 export async function getStreamEventsByExecutionId(
   executionId: string
 ): Promise<StreamEventRow[]> {
   const supabase = createSupabaseClient();
-  
   if (!supabase) {
-    console.warn(
-      "[supabase-stream-events] Supabase not configured, cannot retrieve events"
-    );
     return [];
   }
 
@@ -122,38 +73,25 @@ export async function getStreamEventsByExecutionId(
       .order("timestamp", { ascending: true });
 
     if (error) {
-      console.error(
-        "[supabase-stream-events] Error retrieving stream events:",
-        error,
-        { executionId }
-      );
+      console.error("[supabase-stream-events] Error retrieving events:", error);
       return [];
     }
 
     return (data as StreamEventRow[]) || [];
   } catch (error) {
-    console.error(
-      "[supabase-stream-events] Unexpected error retrieving stream events:",
-      error,
-      { executionId }
-    );
+    console.error("[supabase-stream-events] Error retrieving events:", error);
     return [];
   }
 }
 
 /**
- * Retrieve all stream events from Supabase (with optional limit)
- * Returns empty array if Supabase is not configured or on error
+ * Retrieve all stream events (with optional limit)
  */
 export async function getAllStreamEvents(
   limit?: number
 ): Promise<StreamEventRow[]> {
   const supabase = createSupabaseClient();
-  
   if (!supabase) {
-    console.warn(
-      "[supabase-stream-events] Supabase not configured, cannot retrieve events"
-    );
     return [];
   }
 
@@ -170,19 +108,13 @@ export async function getAllStreamEvents(
     const { data, error } = await query;
 
     if (error) {
-      console.error(
-        "[supabase-stream-events] Error retrieving all stream events:",
-        error
-      );
+      console.error("[supabase-stream-events] Error retrieving events:", error);
       return [];
     }
 
     return (data as StreamEventRow[]) || [];
   } catch (error) {
-    console.error(
-      "[supabase-stream-events] Unexpected error retrieving all stream events:",
-      error
-    );
+    console.error("[supabase-stream-events] Error retrieving events:", error);
     return [];
   }
 }
@@ -193,8 +125,7 @@ export async function getAllStreamEvents(
 export function convertStreamEventRowToUpdate(row: StreamEventRow): StreamUpdate {
   return {
     executionId: row.execution_id,
-    metadata: row.session_id || row.message_id ? {
-      sessionId: row.session_id,
+    metadata: row.message_id ? {
       messageId: row.message_id,
       streamUrl: undefined, // Not stored in DB
     } : undefined,
@@ -207,22 +138,13 @@ export function convertStreamEventRowToUpdate(row: StreamEventRow): StreamUpdate
 }
 
 /**
- * Retrieve stream events for multiple execution IDs from Supabase
- * Returns empty array if Supabase is not configured or on error
+ * Retrieve stream events for multiple execution IDs
  */
 export async function getStreamEventsByExecutionIds(
   executionIds: string[]
 ): Promise<StreamEventRow[]> {
   const supabase = createSupabaseClient();
-  
-  if (!supabase) {
-    console.warn(
-      "[supabase-stream-events] Supabase not configured, cannot retrieve events"
-    );
-    return [];
-  }
-
-  if (executionIds.length === 0) {
+  if (!supabase || executionIds.length === 0) {
     return [];
   }
 
@@ -234,21 +156,13 @@ export async function getStreamEventsByExecutionIds(
       .order("timestamp", { ascending: true });
 
     if (error) {
-      console.error(
-        "[supabase-stream-events] Error retrieving stream events by execution IDs:",
-        error,
-        { executionIds }
-      );
+      console.error("[supabase-stream-events] Error retrieving events:", error);
       return [];
     }
 
     return (data as StreamEventRow[]) || [];
   } catch (error) {
-    console.error(
-      "[supabase-stream-events] Unexpected error retrieving stream events by execution IDs:",
-      error,
-      { executionIds }
-    );
+    console.error("[supabase-stream-events] Error retrieving events:", error);
     return [];
   }
 }

@@ -49,8 +49,7 @@ export class SupabaseChatRepository implements ChatRepository {
     return ensureChatSession(
       sessionId,
       metadata?.userId,
-      metadata?.title,
-      metadata?.metadata
+      metadata?.title
     );
   }
 

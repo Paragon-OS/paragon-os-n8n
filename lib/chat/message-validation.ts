@@ -1,127 +1,71 @@
 /**
  * Message Validation and Normalization
- * Simple utilities for validating and normalizing chat messages
- * Enhanced with lodash for safer operations
+ * Single source of truth for message validation
  */
 
-import { isNil, isEmpty, isString, isArray, compact } from "lodash";
+import type { UIMessage } from "ai";
 
 /**
- * Validated message type
+ * Validate and normalize a single message
+ * Returns the message if valid, null otherwise
  */
-export interface ValidatedMessage {
-  id: string;
-  role: "user" | "assistant" | "system" | "tool";
-  content?: unknown[] | string;
-  toolInvocations?: Array<{ id: string; [key: string]: unknown }>;
-  toolCalls?: Array<{ id: string; [key: string]: unknown }>;
-}
-
-/**
- * Normalize a single message
- * Returns null if message is invalid
- * Enhanced with lodash for safer null/undefined handling
- */
-export function normalizeMessage(
-  msg: {
-    id?: string;
-    role?: string;
-    content?: unknown;
-    toolInvocations?: Array<{ id: string; [key: string]: unknown }>;
-    toolCalls?: Array<{ id: string; [key: string]: unknown }>;
-    [key: string]: unknown; // Allow extra properties on input
-  },
-  index: number,
-  sessionId: string
-): ValidatedMessage | null {
-  // Skip invalid messages using lodash
-  if (isNil(msg) || typeof msg !== "object") {
-    console.warn(`[message-validation] Skipping invalid message at index ${index}`);
+export function validateMessage(msg: unknown): UIMessage | null {
+  if (!msg || typeof msg !== "object") {
     return null;
   }
 
-  // Generate ID if missing - ensure it's never undefined
-  const id = msg.id || `msg-${sessionId}-${index}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  
-  // CRITICAL: Ensure ID is a valid string
-  if (!id || typeof id !== "string" || id.trim() === "") {
-    console.error(`[message-validation] Generated invalid ID for message at index ${index}`);
+  const record = msg as Record<string, unknown>;
+
+  // Validate required fields
+  if (!record.id || typeof record.id !== "string") {
     return null;
   }
 
-  // Validate role with lodash
-  const role = msg.role;
-  if (isNil(role) || !["user", "assistant", "system", "tool"].includes(role)) {
+  const role = record.role;
+  if (!role || !["user", "assistant", "system", "tool"].includes(role as string)) {
     return null;
   }
 
-  // Normalize content with lodash utilities
-  let content: unknown[] | string | undefined = msg.content as unknown[] | string | undefined;
-  
-  if (isString(content)) {
-    // Convert string to array format
-    content = [{ type: "text", text: content }];
-  } else if (isArray(content)) {
-    // Filter out nulls and normalize parts using lodash
-    content = compact(
-      content.map((part: unknown) => {
-        if (isNil(part)) return null;
-        if (isString(part)) {
-          return { type: "text", text: part };
-        }
-        return part;
-      })
-    );
+  // Normalize content to array format
+  let content: unknown[] = [];
+  if (typeof record.content === "string") {
+    content = [{ type: "text", text: record.content }];
+  } else if (Array.isArray(record.content)) {
+    content = record.content;
   }
 
-  // Check if message has any valid data using lodash
-  const hasContent = !isNil(content) && (!isArray(content) || !isEmpty(content));
-  const hasToolInvocations = isArray(msg.toolInvocations) && !isEmpty(msg.toolInvocations);
-  const hasToolCalls = isArray(msg.toolCalls) && !isEmpty(msg.toolCalls);
+  // Check if message has any data
+  const hasContent = content.length > 0;
+  const hasTools = record.toolInvocations || record.toolCalls;
 
-  if (!hasContent && !hasToolInvocations && !hasToolCalls) {
+  if (!hasContent && !hasTools) {
     return null;
   }
 
-  // Build normalized message - ONLY include ValidatedMessage properties
-  // This explicitly strips out any extra properties like 'parts', 'status', 'updatedAt', 'submittedFeedback', etc.
-  const normalized: ValidatedMessage = {
-    id,
-    role: role as "user" | "assistant" | "system" | "tool",
+  // Build validated message
+  const validated: Record<string, unknown> = {
+    id: record.id,
+    role: record.role,
+    content,
+    parts: content, // UIMessage requires parts property
   };
 
-  if (hasContent) {
-    normalized.content = content;
+  if (record.toolInvocations) {
+    validated.toolInvocations = record.toolInvocations;
   }
 
-  if (hasToolInvocations) {
-    normalized.toolInvocations = msg.toolInvocations;
+  if (record.toolCalls) {
+    validated.toolCalls = record.toolCalls;
   }
 
-  if (hasToolCalls) {
-    normalized.toolCalls = msg.toolCalls;
-  }
-
-  // Explicitly return only the normalized object with no extra properties
-  return { ...normalized };
+  return validated as unknown as UIMessage;
 }
 
 /**
- * Normalize multiple messages
- * Uses lodash compact to safely filter out null results
+ * Validate multiple messages
  */
-export function normalizeMessages(
-  messages: Array<{
-    id?: string;
-    role?: string;
-    content?: unknown;
-    toolInvocations?: Array<{ id: string; [key: string]: unknown }>;
-    toolCalls?: Array<{ id: string; [key: string]: unknown }>;
-  }>,
-  sessionId: string
-): ValidatedMessage[] {
-  // Use lodash compact to remove null/undefined values
-  return compact(
-    messages.map((msg, idx) => normalizeMessage(msg, idx, sessionId))
-  );
+export function validateMessages(messages: unknown[]): UIMessage[] {
+  return messages
+    .map(validateMessage)
+    .filter((msg): msg is UIMessage => msg !== null);
 }

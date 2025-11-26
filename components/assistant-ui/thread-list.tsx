@@ -86,18 +86,18 @@ const SupabaseThreadListItems: FC = () => {
   };
 
   const sessionToDeleteData = sessionToDelete
-    ? sessions.find((s) => s.session_id === sessionToDelete)
+    ? sessions.find((s) => s.id === sessionToDelete)
     : null;
 
   return (
     <>
       {sessions.map((session) => (
         <div
-          key={session.session_id}
+          key={session.id}
           className={`aui-thread-list-item flex items-center gap-2 rounded-lg transition-all hover:bg-muted focus-visible:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none cursor-pointer ${
-            activeSessionId === session.session_id ? "bg-muted" : ""
+            activeSessionId === session.id ? "bg-muted" : ""
           }`}
-          onClick={() => handleSessionClick(session.session_id)}
+          onClick={() => handleSessionClick(session.id)}
         >
           <div className="flex-grow min-w-0 px-3 py-2 text-start">
             <span className="aui-thread-list-item-title text-sm block truncate">
@@ -136,7 +136,7 @@ const SupabaseThreadListItems: FC = () => {
                 variant="ghost"
                 size="icon"
                 className="mr-3 size-6 p-0 text-foreground hover:text-destructive"
-                onClick={(e) => handleDeleteClick(e, session.session_id)}
+                onClick={(e) => handleDeleteClick(e, session.id)}
               >
                 <TrashIcon className="size-4" />
                 <span className="sr-only">Delete session</span>

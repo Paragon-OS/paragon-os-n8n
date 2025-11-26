@@ -265,13 +265,15 @@ export async function POST(req: Request) {
 
   // Create placeholder assistant message record before streamText call
   // This ensures the message exists in the database before streaming starts
+  const placeholderContent = [{ type: "text", text: "" }];
   saveChatMessageToSupabase(
     sessionId,
     {
       id: assistantMessageId,
       role: "assistant",
-      content: "",
-    }
+      content: placeholderContent,
+      parts: placeholderContent,
+    } as unknown as UIMessage
   ).catch((error) => {
     // Log error but don't fail the request
     console.error("[chat/route] Error creating placeholder assistant message:", error);
@@ -392,12 +394,7 @@ When a user's request involves messaging operations on Discord or Telegram, use 
             if (accumulatedContent) {
               updateChatMessage({
                 messageId: assistantMessageId,
-                sessionId: sessionId,
-                content: accumulatedContent,
-                metadata: {
-                  status: "streaming",
-                  updatedAt: new Date().toISOString(),
-                },
+                content: [{ type: "text", text: accumulatedContent }],
               }).catch((error) => {
                 console.error("[chat/route] Error updating message during stream:", error);
               });
@@ -413,29 +410,14 @@ When a user's request involves messaging operations on Discord or Telegram, use 
         if (accumulatedContent) {
           updateChatMessage({
             messageId: assistantMessageId,
-            sessionId: sessionId,
-            content: accumulatedContent,
-            metadata: {
-              status: "completed",
-              updatedAt: new Date().toISOString(),
-            },
+            content: [{ type: "text", text: accumulatedContent }],
           }).catch((error) => {
             console.error("[chat/route] Error updating message on stream completion:", error);
           });
         }
       } catch (error) {
-        // Update message with error status if stream fails
-        updateChatMessage({
-          messageId: assistantMessageId,
-          sessionId: sessionId,
-          metadata: {
-            status: "error",
-            error: error instanceof Error ? error.message : "Unknown error",
-            updatedAt: new Date().toISOString(),
-          },
-        }).catch((updateError) => {
-          console.error("[chat/route] Error updating message with error status:", updateError);
-        });
+        // Log stream error but don't update message (content may be partial)
+        console.error("[chat/route] Stream error:", error);
         console.error("[chat/route] Error tracking text stream:", error);
       }
     })().catch((error) => {

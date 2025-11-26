@@ -76,10 +76,9 @@ export class MockChatRepository implements ChatRepository {
     
     const now = new Date().toISOString();
     const session: ChatSessionRow = {
-      session_id: sessionId,
+      id: sessionId,
       user_id: metadata?.userId,
       title: metadata?.title,
-      metadata: metadata?.metadata || {},
       created_at: now,
       updated_at: now,
     };

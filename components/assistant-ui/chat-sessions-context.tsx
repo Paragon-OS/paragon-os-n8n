@@ -48,7 +48,7 @@ export function ChatSessionsProvider({
     (sessionId: string | null) => {
       if (sessionId) {
         // Find session title from sessions list
-        const session = sessions.find((s) => s.session_id === sessionId);
+        const session = sessions.find((s) => s.id === sessionId);
         setActiveSession(sessionId, session?.title || null);
       } else {
         clearActiveSession();
@@ -70,10 +70,9 @@ export function ChatSessionsProvider({
     const { error: insertError } = await supabase
       .from("chat_sessions")
       .insert({
-        session_id: newSessionId,
+        id: newSessionId,
         user_id: userId || null,
         title: "New Chat",
-        metadata: {},
       });
 
     if (insertError) {
@@ -102,7 +101,7 @@ export function ChatSessionsProvider({
         const { error: deleteError } = await supabase
           .from("chat_sessions")
           .delete()
-          .eq("session_id", sessionId);
+          .eq("id", sessionId);
 
         if (deleteError) {
           console.error("[chat-sessions-context] Error deleting session:", deleteError);

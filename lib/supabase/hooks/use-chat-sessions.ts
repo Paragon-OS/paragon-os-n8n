@@ -99,15 +99,15 @@ export function useChatSessions(
             const newSession = payload.new as ChatSessionRow;
             setSessions((prev) => {
               // Avoid duplicates
-              if (prev.some((s) => s.session_id === newSession.session_id)) {
+              if (prev.some((s) => s.id === newSession.id)) {
                 return prev;
               }
               // Add to beginning and sort by updated_at
               return [newSession, ...prev]
                 .sort(
                   (a, b) =>
-                    new Date(b.updated_at || 0).getTime() -
-                    new Date(a.updated_at || 0).getTime()
+                    new Date(b.updated_at).getTime() -
+                    new Date(a.updated_at).getTime()
                 )
                 .slice(0, limit);
             });
@@ -116,20 +116,20 @@ export function useChatSessions(
             setSessions((prev) =>
               prev
                 .map((s) =>
-                  s.session_id === updatedSession.session_id
+                  s.id === updatedSession.id
                     ? updatedSession
                     : s
                 )
                 .sort(
                   (a, b) =>
-                    new Date(b.updated_at || 0).getTime() -
-                    new Date(a.updated_at || 0).getTime()
+                    new Date(b.updated_at).getTime() -
+                    new Date(a.updated_at).getTime()
                 )
             );
           } else if (payload.eventType === "DELETE") {
             const deletedSession = payload.old as ChatSessionRow;
             setSessions((prev) =>
-              prev.filter((s) => s.session_id !== deletedSession.session_id)
+              prev.filter((s) => s.id !== deletedSession.id)
             );
           }
         }

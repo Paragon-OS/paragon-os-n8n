@@ -4,7 +4,7 @@
  * Extracted for testability
  */
 
-import type { ValidatedMessage } from "../message-validation";
+import type { UIMessage } from "ai";
 
 /**
  * Thread interface (matching Assistant UI thread API)
@@ -25,8 +25,8 @@ export class MessageLoaderService {
    * Determines if loading is needed based on current state
    */
   shouldLoadMessages(
-    current: ValidatedMessage[],
-    incoming: ValidatedMessage[],
+    current: UIMessage[],
+    incoming: UIMessage[],
     lastSessionId: string | null,
     currentSessionId: string
   ): boolean {
@@ -69,7 +69,7 @@ export class MessageLoaderService {
   async loadMessagesIntoThread(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     thread: any,
-    messages: ValidatedMessage[],
+    messages: UIMessage[],
     currentMessages: ReadonlyArray<{ id?: string | null }>,
     lastSessionId: string | null,
     currentSessionId: string

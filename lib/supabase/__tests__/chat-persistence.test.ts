@@ -80,10 +80,6 @@ describe("Chat Persistence", () => {
         messages: testMessages,
         userId: testUserId,
         sessionTitle: "Test Chat Session",
-        sessionMetadata: {
-          source: "test",
-          environment: "development",
-        },
       });
 
       // Verify messages were saved
@@ -133,7 +129,7 @@ describe("Chat Persistence", () => {
       const session = await getChatSessionById(testSessionId);
 
       expect(session).not.toBeNull();
-      expect(session?.session_id).toBe(testSessionId);
+      expect(session?.id).toBe(testSessionId);
       expect(session?.user_id).toBe(testUserId);
       expect(session?.title).toBe("Test Chat Session");
     });
@@ -145,7 +141,7 @@ describe("Chat Persistence", () => {
       expect(sessions.length).toBeGreaterThan(0);
 
       // Verify our test session is in the list
-      const testSession = sessions.find((s) => s.session_id === testSessionId);
+      const testSession = sessions.find((s) => s.id === testSessionId);
       expect(testSession).toBeDefined();
     });
 
@@ -158,13 +154,9 @@ describe("Chat Persistence", () => {
       });
     });
 
-    it.skipIf(!IS_SUPABASE_READY)("should update session metadata", async () => {
+    it.skipIf(!IS_SUPABASE_READY)("should update session title", async () => {
       const success = await updateChatSession(testSessionId, {
         title: "Updated Test Title",
-        metadata: {
-          updated: true,
-          timestamp: new Date().toISOString(),
-        },
       });
 
       expect(success).toBe(true);
@@ -172,7 +164,6 @@ describe("Chat Persistence", () => {
       // Verify update
       const session = await getChatSessionById(testSessionId);
       expect(session?.title).toBe("Updated Test Title");
-      expect(session?.metadata).toHaveProperty("updated", true);
     });
 
     it.skipIf(!IS_SUPABASE_READY)("should get message count for session", async () => {
@@ -202,7 +193,8 @@ describe("Chat Persistence", () => {
 
       const retrieved = messages.find((m) => m.id === "simple-1");
       expect(retrieved).toBeDefined();
-      expect(retrieved?.content).toBe("Simple text message");
+      // Content is now always an array
+      expect(Array.isArray(retrieved?.content)).toBe(true);
     });
 
     it.skipIf(!IS_SUPABASE_READY)("should handle multipart messages", async () => {

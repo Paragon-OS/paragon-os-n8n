@@ -238,27 +238,41 @@ export async function POST(request: NextRequest) {
       }
 
       // Append event data to the message content
-      updateChatMessage({
-        messageId: messageId,
-        sessionId: sessionId,
-        appendContent: eventText,
-        metadata: {
-          lastStreamEvent: {
+      // Note: This is a simplified update - we just append the event text
+      // In the new schema, we fetch the current message and append to it
+      (async () => {
+        try {
+          const { getChatMessageById } = await import("@/lib/supabase/supabase-chat");
+          const currentMessage = await getChatMessageById(messageId);
+          
+          if (currentMessage) {
+            // Get current content text
+            let currentText = "";
+            if (Array.isArray(currentMessage.content)) {
+              for (const part of currentMessage.content) {
+                if (part && typeof part === "object" && "text" in part) {
+                  currentText += (part as { text: string }).text;
+                }
+              }
+            }
+            
+            // Append new event text
+            const updatedText = currentText + eventText;
+            
+            // Update message with appended content
+            await updateChatMessage({
+              messageId: messageId,
+              content: [{ type: "text", text: updatedText }],
+            });
+          }
+        } catch (error) {
+          // Log error but don't fail the webhook response
+          console.error("[update] Error updating assistant message from stream event:", error, {
+            messageId,
             executionId: update.executionId,
-            stage: update.stage,
-            status: update.status,
-            message: update.message,
-            timestamp: update.timestamp,
-            data: update.data,
-          },
-        },
-      }).catch((error) => {
-        // Log error but don't fail the webhook response
-        console.error("[update] Error updating assistant message from stream event:", error, {
-          messageId,
-          executionId: update.executionId,
-        });
-      });
+          });
+        }
+      })();
     }
 
     return NextResponse.json({
