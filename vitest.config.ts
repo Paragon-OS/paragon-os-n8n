@@ -27,7 +27,7 @@ export default defineConfig({
         '**/mock-*.ts',
       ],
     },
-    include: ['**/*.test.ts', '**/*.test.tsx', '**/__tests__/**/*.ts'],
+    include: ['**/*.test.ts', '**/*.test.tsx', '**/__tests__/**/*.ts', '**/__tests__/**/*.tsx'],
     exclude: ['node_modules', 'dist', '.next', '**/__tests__/**/test-helpers.ts', '**/__tests__/**/*.helper.ts'],
   },
   resolve: {
