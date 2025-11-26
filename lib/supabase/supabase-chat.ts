@@ -5,6 +5,7 @@
  */
 
 import type { UIMessage } from "ai";
+import { randomUUID } from "crypto";
 import { createSupabaseClient } from "./supabase-config";
 
 /**
@@ -102,7 +103,6 @@ function convertUIMessageToRow(
   executionId?: string
 ): ChatMessageRow {
   // Generate UUID for database (AI SDK message IDs are not UUIDs)
-  const { randomUUID } = require("crypto");
   const messageId = randomUUID();
   
   // UIMessage.parts is the canonical field (not 'content')
@@ -137,9 +137,14 @@ function convertUIMessageToRow(
 export function convertRowToUIMessage(row: ChatMessageRow): UIMessage {
   // UIMessage requires 'parts', not 'content'
   // Our database stores parts as content, so map it back
+  
+  // UIMessage only supports 'user' | 'assistant' | 'system'
+  // Map 'tool' to 'assistant' for compatibility
+  const role = row.role === 'tool' ? 'assistant' : row.role;
+  
   return {
     id: row.id,
-    role: row.role,
+    role: role as 'user' | 'assistant' | 'system',
     parts: row.content as any[], // Content is stored as parts array
   };
 }
