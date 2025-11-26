@@ -44,9 +44,10 @@ export class SessionManager {
    * Generates a new session ID and ensures it exists in the repository
    */
   async createNewSession(metadata?: SessionMetadata): Promise<string> {
-    const newSessionId = `session-${Date.now()}-${Math.random()
-      .toString(36)
-      .substr(2, 9)}`;
+    // Generate UUID - works in both browser and Node.js
+    const newSessionId = typeof crypto !== 'undefined' && crypto.randomUUID 
+      ? crypto.randomUUID() 
+      : `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     // Ensure session exists in repository (will create if it doesn't)
     await this.repository.createSession(newSessionId, metadata);

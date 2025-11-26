@@ -165,7 +165,7 @@ export async function POST(req: Request) {
   // Generate or extract session ID for chat persistence
   // In a real app, this would come from user session/authentication
   const headerSessionId = req.headers.get("x-session-id");
-  const sessionId = headerSessionId || `session-${randomUUID()}`;
+  const sessionId = headerSessionId || randomUUID();
   
   console.log("[chat/route] POST request received");
   console.log("[chat/route] x-session-id header:", headerSessionId);

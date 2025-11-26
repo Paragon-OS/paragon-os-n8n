@@ -63,8 +63,8 @@ export function ChatSessionsProvider({
       throw new Error("Supabase client not available");
     }
 
-    // Generate new session ID
-    const newSessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Generate new session ID (UUID) - browser-compatible
+    const newSessionId = crypto.randomUUID();
     
     // Create session in database
     const { error: insertError } = await supabase
