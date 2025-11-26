@@ -5,12 +5,11 @@
 
 "use client";
 
-import React, { createContext, useContext, useCallback, useMemo } from "react";
+import React, { createContext, useContext, useCallback } from "react";
 import { useChatSessions } from "@/lib/supabase/hooks/use-chat-sessions";
 import type { ChatSessionRow } from "@/lib/supabase/supabase-chat";
 import { useSessionStore } from "@/lib/stores/session-store";
-import { SessionManager } from "@/lib/chat/services/session-manager";
-import { SupabaseChatRepository } from "@/lib/chat/repositories/supabase-chat-repository";
+import { createSupabaseClient } from "@/lib/supabase/supabase-config";
 
 interface ChatSessionsContextValue {
   sessions: ChatSessionRow[];
@@ -36,66 +35,95 @@ export function ChatSessionsProvider({
   children,
   userId,
 }: ChatSessionsProviderProps) {
-  // Read activeSessionId from Zustand store (single source of truth)
   const activeSessionId = useSessionStore((state) => state.activeSessionId);
+  const setActiveSession = useSessionStore((state) => state.setActiveSession);
+  const clearActiveSession = useSessionStore((state) => state.clearActiveSession);
+  
   const { sessions, isLoading, error, refetch } = useChatSessions({
     userId,
     enabled: true,
   });
-  const setActiveSession = useSessionStore((state) => state.setActiveSession);
-  const clearActiveSession = useSessionStore((state) => state.clearActiveSession);
 
-  // Create session manager with repository and store adapter
-  const sessionManager = useMemo(() => {
-    const repository = new SupabaseChatRepository();
-    const storeAdapter: SessionManager["store"] = {
-      getActiveSessionId: () => useSessionStore.getState().activeSessionId,
-      setActiveSession: (sessionId, title) => setActiveSession(sessionId, title),
-      clearActiveSession: () => clearActiveSession(),
-    };
-    return new SessionManager(repository, storeAdapter);
-  }, [setActiveSession, clearActiveSession]);
-
-  // Update Zustand store when session is set, syncing the title from sessions
   const setActiveSessionId = useCallback(
-    async (sessionId: string | null) => {
-      console.log("[chat-sessions-context] setActiveSessionId called with:", sessionId);
-      console.log("[chat-sessions-context] Current activeSessionId:", activeSessionId);
+    (sessionId: string | null) => {
       if (sessionId) {
-        await sessionManager.switchSession(sessionId);
+        // Find session title from sessions list
+        const session = sessions.find((s) => s.session_id === sessionId);
+        setActiveSession(sessionId, session?.title || null);
       } else {
         clearActiveSession();
       }
     },
-    [sessionManager, activeSessionId, clearActiveSession]
+    [sessions, setActiveSession, clearActiveSession]
   );
 
   const createNewSession = useCallback(async () => {
-    console.log("[chat-sessions-context] createNewSession called");
-    const newSessionId = await sessionManager.createNewSession({
-      userId,
-    });
-    console.log("[chat-sessions-context] New session created and set:", newSessionId);
+    const supabase = createSupabaseClient();
+    if (!supabase) {
+      throw new Error("Supabase client not available");
+    }
+
+    // Generate new session ID
+    const newSessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Create session in database
+    const { error: insertError } = await supabase
+      .from("chat_sessions")
+      .insert({
+        session_id: newSessionId,
+        user_id: userId || null,
+        title: "New Chat",
+        metadata: {},
+      });
+
+    if (insertError) {
+      console.error("[chat-sessions-context] Error creating session:", insertError);
+      throw insertError;
+    }
+
+    // Set as active session
+    setActiveSession(newSessionId, "New Chat");
+    
     // Refetch to update the sessions list
     await refetch();
+    
     return newSessionId;
-  }, [sessionManager, userId, refetch]);
+  }, [userId, setActiveSession, refetch]);
 
   const deleteSession = useCallback(
     async (sessionId: string): Promise<boolean> => {
+      const supabase = createSupabaseClient();
+      if (!supabase) {
+        return false;
+      }
+
       try {
-        const success = await sessionManager.deleteSession(sessionId);
-        if (success) {
-          // Refetch sessions to update the list
-          await refetch();
+        // Delete from database
+        const { error: deleteError } = await supabase
+          .from("chat_sessions")
+          .delete()
+          .eq("session_id", sessionId);
+
+        if (deleteError) {
+          console.error("[chat-sessions-context] Error deleting session:", deleteError);
+          return false;
         }
-        return success;
+
+        // Clear active session if it's the one being deleted
+        if (activeSessionId === sessionId) {
+          clearActiveSession();
+        }
+
+        // Refetch sessions
+        await refetch();
+        
+        return true;
       } catch (error) {
         console.error("[chat-sessions-context] Error deleting session:", error);
         return false;
       }
     },
-    [sessionManager, refetch]
+    [activeSessionId, clearActiveSession, refetch]
   );
 
   return (
