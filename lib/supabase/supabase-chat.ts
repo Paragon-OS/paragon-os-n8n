@@ -94,36 +94,33 @@ export async function ensureChatSession(
 
 /**
  * Convert UIMessage to ChatMessageRow for database storage
- * Simplified: Direct mapping with minimal transformation
+ * UIMessage uses 'parts' array - we store it directly as content
  */
 function convertUIMessageToRow(
   message: UIMessage,
   sessionId: string,
   executionId?: string
 ): ChatMessageRow {
-  const messageRecord = message as unknown as Record<string, unknown>;
+  // Generate UUID for database (AI SDK message IDs are not UUIDs)
+  const { randomUUID } = require("crypto");
+  const messageId = randomUUID();
   
-  // Normalize content to array format
-  let content: unknown[] = [];
-  const rawContent = messageRecord.content;
+  // UIMessage.parts is the canonical field (not 'content')
+  // Store parts directly as content in the database
+  const content = message.parts || [];
   
-  if (typeof rawContent === "string") {
-    content = [{ type: "text", text: rawContent }];
-  } else if (Array.isArray(rawContent)) {
-    content = rawContent;
-  }
-
-  // Build tools object if tool data exists
-  const tools: { calls?: unknown[]; invocations?: unknown[] } | undefined =
-    messageRecord.toolCalls || messageRecord.toolInvocations
-      ? {
-          calls: messageRecord.toolCalls as unknown[] | undefined,
-          invocations: messageRecord.toolInvocations as unknown[] | undefined,
-        }
-      : undefined;
+  console.log("[convertUIMessageToRow] role:", message.role, "parts count:", content.length);
+  
+  // Extract tool data from parts if present
+  // Tool invocations are stored as parts with type 'tool-invocation'
+  const toolParts = content.filter((part: any) => 
+    part.type === 'tool-invocation' || part.type === 'tool-result'
+  );
+  
+  const tools = toolParts.length > 0 ? { invocations: toolParts } : undefined;
 
   return {
-    id: message.id,
+    id: messageId,
     session_id: sessionId,
     role: message.role,
     content,
@@ -135,26 +132,16 @@ function convertUIMessageToRow(
 
 /**
  * Convert ChatMessageRow from database to UIMessage format
- * Simplified: Direct mapping with minimal transformation
+ * Maps database content back to UIMessage.parts
  */
 export function convertRowToUIMessage(row: ChatMessageRow): UIMessage {
-  const messageData: Record<string, unknown> = {
+  // UIMessage requires 'parts', not 'content'
+  // Our database stores parts as content, so map it back
+  return {
     id: row.id,
     role: row.role,
-    content: row.content,
+    parts: row.content as any[], // Content is stored as parts array
   };
-
-  // Add tool data if present
-  if (row.tools) {
-    if (row.tools.calls) {
-      messageData.toolCalls = row.tools.calls;
-    }
-    if (row.tools.invocations) {
-      messageData.toolInvocations = row.tools.invocations;
-    }
-  }
-
-  return messageData as unknown as UIMessage;
 }
 
 /**
@@ -182,12 +169,15 @@ export async function saveChatMessagesToSupabase(
       convertUIMessageToRow(msg, options.sessionId)
     );
 
+    console.log("[supabase-chat] Inserting message rows:", JSON.stringify(messageRows, null, 2));
+
     const { error } = await supabase
       .from("chat_messages")
       .insert(messageRows);
 
     if (error) {
       console.error("[supabase-chat] Error saving messages:", error);
+      console.error("[supabase-chat] Attempted to insert:", messageRows);
     }
   } catch (error) {
     console.error("[supabase-chat] Error saving messages:", error);

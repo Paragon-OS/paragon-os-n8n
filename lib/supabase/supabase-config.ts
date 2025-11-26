@@ -39,13 +39,13 @@ export function createSupabaseClient(): SupabaseClient | null {
     return null;
   }
 
-  // Return existing client if URL and key haven't changed
-  if (supabaseClient && clientUrl === url && clientAnonKey === anonKey) {
-    return supabaseClient;
-  }
-
-  // Create new client if it doesn't exist or config has changed
-  supabaseClient = createClient(url, anonKey);
+  // ALWAYS create a new client to avoid schema caching issues
+  // TODO: Optimize this after schema is stable
+  supabaseClient = createClient(url, anonKey, {
+    db: {
+      schema: 'public'
+    }
+  });
   clientUrl = url;
   clientAnonKey = anonKey;
 

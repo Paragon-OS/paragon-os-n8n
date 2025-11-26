@@ -32,7 +32,7 @@ function extractChatInput(messages: UIMessage[]): string {
     return "";
   }
   
-  // Try to find the last user message specifically
+  // Find the last user message
   const userMessages = messages.filter(m => m.role === "user");
   const lastUserMessage = userMessages[userMessages.length - 1];
 
@@ -40,48 +40,20 @@ function extractChatInput(messages: UIMessage[]): string {
     return "";
   }
 
-  // Extract content from the last user message
-  // Handle both 'content' and 'parts' fields (different message formats)
-  const messageRecord = lastUserMessage as unknown as Record<string, unknown>;
-  const messageData = messageRecord.parts || messageRecord.content;
+  // UIMessage uses 'parts' array - extract text from text parts
+  const textParts = lastUserMessage.parts
+    .filter((part: any) => part.type === "text")
+    .map((part: any) => part.text)
+    .filter(Boolean);
   
-  let content = "";
-  if (typeof messageData === "string") {
-    content = messageData;
-  } else if (Array.isArray(messageData)) {
-    content = messageData
-      .map((part: unknown) => {
-        if (typeof part === "string") return part;
-        // Handle various object structures for text parts
-        if (part && typeof part === "object") {
-          const partObj = part as Record<string, unknown>;
-          if (partObj.type === "text" && typeof partObj.text === "string") return partObj.text;
-          if (typeof partObj.text === "string") return partObj.text;
-          // Fallback for other structures
-          return JSON.stringify(part);
-        }
-        return "";
-      })
-      .filter(Boolean)
-      .join("");
-  } else if (messageData && typeof messageData === "object") {
-    // Handle case where content/parts is a single object (not array)
-    const contentObj = messageData as Record<string, unknown>;
-    if (typeof contentObj.text === "string") {
-      content = contentObj.text;
-    } else {
-      content = JSON.stringify(contentObj);
-    }
-  }
+  const content = textParts.join("");
 
   if (content && content.trim() !== "") {
     return content;
   }
 
-  console.error("[extractChatInput] Failed to extract text from last user message, using raw content");
-  return typeof messageData === "string" 
-    ? messageData 
-    : JSON.stringify(messageData);
+  console.error("[extractChatInput] Failed to extract text from last user message");
+  return "";
 }
 
 export async function POST(req: Request) {
@@ -174,6 +146,7 @@ export async function POST(req: Request) {
   console.log("[chat/route] First message role:", messages[0]?.role);
   if (messages.length > 0) {
     console.log("[chat/route] Last message role:", messages[messages.length - 1]?.role);
+    console.log("[chat/route] Last message content:", JSON.stringify(messages[messages.length - 1]));
   }
   
   // Generate assistant message ID early (before streamText call)
@@ -265,16 +238,13 @@ export async function POST(req: Request) {
 
   // Create placeholder assistant message record before streamText call
   // This ensures the message exists in the database before streaming starts
-  const placeholderContent = [{ type: "text", text: "" }];
-  saveChatMessageToSupabase(
-    sessionId,
-    {
-      id: assistantMessageId,
-      role: "assistant",
-      content: placeholderContent,
-      parts: placeholderContent,
-    } as unknown as UIMessage
-  ).catch((error) => {
+  const placeholderMessage: UIMessage = {
+    id: assistantMessageId,
+    role: "assistant",
+    parts: [{ type: "text", text: "" }],
+  };
+  
+  saveChatMessageToSupabase(sessionId, placeholderMessage).catch((error) => {
     // Log error but don't fail the request
     console.error("[chat/route] Error creating placeholder assistant message:", error);
   });

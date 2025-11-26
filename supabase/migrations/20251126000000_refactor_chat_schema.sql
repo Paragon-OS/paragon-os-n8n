@@ -218,8 +218,16 @@ WHERE message_id IS NOT NULL;
 -- STEP 8: Update triggers and functions
 -- ============================================================================
 
--- Triggers should still work as they reference table names, not column names
--- But let's verify they exist and are correct
+-- Update the trigger function to use the new column names
+CREATE OR REPLACE FUNCTION update_session_on_message_insert()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE chat_sessions
+  SET updated_at = NOW()
+  WHERE id = NEW.session_id;  -- Changed from session_id = NEW.session_id
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Ensure update trigger exists for chat_sessions
 DROP TRIGGER IF EXISTS trigger_update_chat_sessions_updated_at ON chat_sessions;
