@@ -14,6 +14,7 @@ import { useThreadLoaderStore } from "@/lib/stores/thread-loader-store";
 import { isNil } from "lodash";
 
 export function ChatSessionLoader() {
+  // IMPORTANT: Use selector function to extract activeSessionId from Zustand store
   const activeSessionId = useSessionStore((state) => state.activeSessionId);
   const { messages, isLoading } = useChatMessages({
     sessionId: activeSessionId,

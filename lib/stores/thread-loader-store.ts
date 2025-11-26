@@ -114,18 +114,33 @@ export const useThreadLoaderStore = create<ThreadLoaderState>((set, get) => ({
         return;
       }
 
-      // Build export format for assistant-ui
-      const exportedMessages = validatedMessages.map((msg, idx) => ({
-        message: msg,
-        parentId: idx > 0 ? validatedMessages[idx - 1].id : null,
-      }));
+      console.log("[thread-loader] Importing messages into thread:", validatedMessages.length);
+      console.log("[thread-loader] First validated message:", JSON.stringify(validatedMessages[0]));
       
-      console.log("[thread-loader] Importing messages into thread:", exportedMessages.length);
-      console.log("[thread-loader] First exported message:", JSON.stringify(exportedMessages[0]));
+      // Build the correct format for assistant-ui thread.import()
+      // The format should be an array of { message: UIMessage, parentId: string | null }
+      const threadMessages = validatedMessages.map((msg, idx) => {
+        const threadMsg = {
+          message: {
+            id: msg.id,
+            role: msg.role,
+            content: msg.content || msg.parts,
+          },
+          parentId: idx > 0 ? validatedMessages[idx - 1].id : null,
+        };
+        console.log(`[thread-loader] Built thread message ${idx}:`, JSON.stringify(threadMsg));
+        return threadMsg;
+      });
       
-      thread.import({ messages: exportedMessages });
-
-      console.log("[thread-loader] Successfully imported messages");
+      console.log("[thread-loader] Calling thread.import with", threadMessages.length, "messages");
+      
+      try {
+        thread.import({ messages: threadMessages });
+        console.log("[thread-loader] Import call completed successfully");
+      } catch (err) {
+        console.error("[thread-loader] Import failed:", err);
+        throw err;
+      }
 
       set({
         lastLoadedSessionId: sessionId,
