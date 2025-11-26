@@ -47,10 +47,8 @@ export const useThreadLoaderStore = create<ThreadLoaderState>((set, get) => ({
       console.log(`[thread-loader] Resetting thread for session: ${sessionId}`);
       thread.reset();
       
-      // IMPORTANT: Set lastLoadedSessionId to null so the next load is treated as fresh
-      // This ensures messages will be imported after reset
+      // Don't clear lastLoadedSessionId here - let loadMessagesIntoThread set it
       set({
-        lastLoadedSessionId: null,
         lastError: null,
       });
       

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sidebar";
 import { ThreadListSidebar } from "@/components/assistant-ui/threadlist-sidebar";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -29,6 +30,101 @@ import { SupabaseTest } from "@/components/assistant-ui/supabase-test";
 import { ChatSessionsProvider, useChatSessionsContext } from "@/components/assistant-ui/chat-sessions-context";
 import { SessionAwareChatTransport } from "@/lib/chat-transport";
 import { useSessionStore } from "@/lib/stores/session-store";
+
+// Empty state sidebar without AssistantProvider dependencies
+function EmptyStateSidebar() {
+  const { sessions, isLoading, activeSessionId, setActiveSessionId, createNewSession } = useChatSessionsContext();
+
+  const handleNewThread = () => {
+    createNewSession();
+  };
+
+  const handleSessionClick = (sessionId: string) => {
+    setActiveSessionId(sessionId);
+  };
+
+  return (
+    <StreamingProvider>
+      <SidebarProvider>
+        <div className="flex h-dvh w-full pr-0.5">
+          <div className="flex h-full w-[--sidebar-width] flex-col border-r bg-sidebar text-sidebar-foreground">
+            <div className="mb-2 border-b p-4">
+              <div className="flex items-center gap-2">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                  <span className="text-sm font-semibold">P</span>
+                </div>
+                <span className="font-semibold">ParagonOS UI</span>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto px-2">
+              <div className="flex flex-col gap-1.5">
+                <Button
+                  className="flex items-center justify-start gap-1 rounded-lg px-2.5 py-2 text-start hover:bg-muted"
+                  variant="ghost"
+                  onClick={handleNewThread}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                    <path d="M5 12h14" />
+                    <path d="M12 5v14" />
+                  </svg>
+                  New Thread
+                </Button>
+                {!isLoading && sessions.map((session) => (
+                  <div
+                    key={session.id}
+                    className={`flex items-center gap-2 rounded-lg px-3 py-2 transition-all hover:bg-muted cursor-pointer ${
+                      activeSessionId === session.id ? "bg-muted" : ""
+                    }`}
+                    onClick={() => handleSessionClick(session.id)}
+                  >
+                    <div className="flex-grow min-w-0">
+                      <span className="text-sm block truncate">
+                        {session.title || "Untitled Chat"}
+                      </span>
+                      {session.updated_at && (
+                        <span className="text-xs text-muted-foreground block truncate">
+                          {new Date(session.updated_at).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <SidebarInset>
+            <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+              <SidebarTrigger />
+              <Separator orientation="vertical" className="mr-2 h-4" />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>ParagonOS UI</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </header>
+            <div className="flex h-full w-full items-center justify-center">
+              <div className="text-center space-y-4">
+                <div className="text-2xl font-semibold text-muted-foreground">
+                  No chat selected
+                </div>
+                <div className="text-sm text-muted-foreground/70">
+                  Click on a chat from the sidebar or create a new one
+                </div>
+              </div>
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    </StreamingProvider>
+  );
+}
+
+// Empty state view when no session is selected
+function EmptyStateView() {
+  return <EmptyStateSidebar />;
+}
 
 // Wrapper component that only renders when we have a transport
 function AssistantRuntimeWrapper({ transport, sessionId }: { transport: SessionAwareChatTransport, sessionId: string }) {
@@ -47,35 +143,12 @@ function AssistantRuntimeWrapper({ transport, sessionId }: { transport: SessionA
 }
 
 function AssistantContent() {
-  const { createNewSession } = useChatSessionsContext();
   const effectiveSessionId = useSessionStore((state) => state.activeSessionId);
-  const hasHydrated = useSessionStore((state) => state._hasHydrated);
   
   // Log session ID changes
   React.useEffect(() => {
     console.log("[assistant] effectiveSessionId changed:", effectiveSessionId);
   }, [effectiveSessionId]);
-  
-  // Initialize session if none exists - but only after store has hydrated from localStorage
-  React.useEffect(() => {
-    // Wait for store to hydrate from localStorage before checking
-    if (!hasHydrated) {
-      console.log("[assistant] Store not hydrated yet, waiting...");
-      return;
-    }
-    
-    console.log("[assistant] Store hydrated, checking session. effectiveSessionId:", effectiveSessionId);
-    if (!effectiveSessionId) {
-      console.log("[assistant] No session found after hydration, creating new session");
-      createNewSession()
-        .then((newSessionId) => {
-          console.log("[assistant] Created new session:", newSessionId);
-        })
-        .catch((error) => {
-          console.error("[assistant] Error creating new session:", error);
-        });
-    }
-  }, [effectiveSessionId, createNewSession, hasHydrated]);
   
   // Create transport with current session ID - use useMemo to recreate when sessionId changes
   // Only create transport if we have a session ID to avoid capturing null
@@ -115,14 +188,8 @@ function AssistantContent() {
 
   // Don't render the runtime provider until we have a session ID and transport
   if (!effectiveSessionId || !transport) {
-    console.log("[assistant] Waiting for session ID before rendering runtime");
-    return (
-      <StreamingProvider>
-        <div className="flex h-dvh w-full items-center justify-center">
-          <div className="text-muted-foreground">Initializing session...</div>
-        </div>
-      </StreamingProvider>
-    );
+    console.log("[assistant] No session selected, showing empty state");
+    return <EmptyStateView />;
   }
   
   // Render wrapper that creates runtime with transport
@@ -136,7 +203,7 @@ function AssistantContentWithRuntime({ runtime }: { runtime: ReturnType<typeof u
 
   return (
     <StreamingProvider>
-      <AssistantRuntimeProvider key={effectiveSessionId} runtime={runtime}>
+      <AssistantRuntimeProvider runtime={runtime}>
         <SidebarProvider>
           <div className="flex h-dvh w-full pr-0.5">
             <ThreadListSidebar />

@@ -55,8 +55,8 @@ export function ChatSessionLoader() {
     
     if (isSessionSwitch) {
       console.log(`😎 [chat-session-loader] 🔄 Session switch detected: ${lastLoadedSessionId} → ${activeSessionId}`);
-      // Reset thread for new session
-      resetThread({ sessionId: activeSessionId, runtime });
+      // DON'T reset the thread - the import will handle replacing messages
+      // resetThread({ sessionId: activeSessionId, runtime });
     } else {
       console.log(`😎 [chat-session-loader] ✅ Same session: ${activeSessionId}`);
     }
