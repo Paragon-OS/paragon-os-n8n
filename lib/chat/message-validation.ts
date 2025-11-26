@@ -1,7 +1,10 @@
 /**
  * Message Validation and Normalization
  * Simple utilities for validating and normalizing chat messages
+ * Enhanced with lodash for safer operations
  */
+
+import { isNil, isEmpty, isString, isArray, compact } from "lodash";
 
 /**
  * Validated message type
@@ -17,6 +20,7 @@ export interface ValidatedMessage {
 /**
  * Normalize a single message
  * Returns null if message is invalid
+ * Enhanced with lodash for safer null/undefined handling
  */
 export function normalizeMessage(
   msg: {
@@ -29,53 +33,61 @@ export function normalizeMessage(
   index: number,
   sessionId: string
 ): ValidatedMessage | null {
-  // Skip invalid messages
-  if (!msg || typeof msg !== "object") {
+  // Skip invalid messages using lodash
+  if (isNil(msg) || typeof msg !== "object") {
     return null;
   }
 
-  // Generate ID if missing
+  // Generate ID if missing - ensure it's never undefined
   const id = msg.id || `msg-${sessionId}-${index}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-  // Validate role
-  const role = msg.role;
-  if (!role || !["user", "assistant", "system", "tool"].includes(role)) {
+  
+  // CRITICAL: Ensure ID is a valid string
+  if (!id || typeof id !== "string" || id.trim() === "") {
+    console.error(`[message-validation] Generated invalid ID for message at index ${index}`);
     return null;
   }
 
-  // Normalize content
+  // Validate role with lodash
+  const role = msg.role;
+  if (isNil(role) || !["user", "assistant", "system", "tool"].includes(role)) {
+    return null;
+  }
+
+  // Normalize content with lodash utilities
   let content: unknown[] | string | undefined = msg.content as unknown[] | string | undefined;
-  if (typeof content === "string") {
+  
+  if (isString(content)) {
     // Convert string to array format
     content = [{ type: "text", text: content }];
-  } else if (Array.isArray(content)) {
-    // Filter out nulls and normalize parts
-    content = content
-      .filter((part: unknown) => part != null)
-      .map((part: unknown) => {
-        if (typeof part === "string") {
+  } else if (isArray(content)) {
+    // Filter out nulls and normalize parts using lodash
+    content = compact(
+      content.map((part: unknown) => {
+        if (isNil(part)) return null;
+        if (isString(part)) {
           return { type: "text", text: part };
         }
         return part;
-      });
+      })
+    );
   }
 
-  // Skip messages without content (unless they have tool invocations/calls)
-  const hasContent = content && (Array.isArray(content) ? content.length > 0 : true);
-  const hasToolInvocations = Array.isArray(msg.toolInvocations) && msg.toolInvocations.length > 0;
-  const hasToolCalls = Array.isArray(msg.toolCalls) && msg.toolCalls.length > 0;
+  // Check if message has any valid data using lodash
+  const hasContent = !isNil(content) && (!isArray(content) || !isEmpty(content));
+  const hasToolInvocations = isArray(msg.toolInvocations) && !isEmpty(msg.toolInvocations);
+  const hasToolCalls = isArray(msg.toolCalls) && !isEmpty(msg.toolCalls);
 
   if (!hasContent && !hasToolInvocations && !hasToolCalls) {
     return null;
   }
 
-  // Build normalized message
+  // Build normalized message - ID is guaranteed to be defined
   const normalized: ValidatedMessage = {
     id,
     role: role as "user" | "assistant" | "system" | "tool",
   };
 
-  if (content) {
+  if (hasContent) {
     normalized.content = content;
   }
 
@@ -92,6 +104,7 @@ export function normalizeMessage(
 
 /**
  * Normalize multiple messages
+ * Uses lodash compact to safely filter out null results
  */
 export function normalizeMessages(
   messages: Array<{
@@ -103,7 +116,8 @@ export function normalizeMessages(
   }>,
   sessionId: string
 ): ValidatedMessage[] {
-  return messages
-    .map((msg, idx) => normalizeMessage(msg, idx, sessionId))
-    .filter((msg): msg is ValidatedMessage => msg !== null);
+  // Use lodash compact to remove null/undefined values
+  return compact(
+    messages.map((msg, idx) => normalizeMessage(msg, idx, sessionId))
+  );
 }
