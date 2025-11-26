@@ -178,6 +178,13 @@ describe('MessageLoaderService', () => {
       content: `Message ${id}`,
     });
 
+    // Helper to convert messages to the format expected by thread.import()
+    const toThreadMessages = (messages: ValidatedMessage[]) => 
+      messages.map((msg, idx) => ({
+        message: msg,
+        parentId: idx > 0 ? messages[idx - 1].id : null,
+      }));
+
     it('should throw error if thread does not support import', async () => {
       const invalidThread = {
         reset: vi.fn(),
@@ -207,7 +214,7 @@ describe('MessageLoaderService', () => {
       );
 
       expect(resetSpy).toHaveBeenCalledTimes(1);
-      expect(importSpy).toHaveBeenCalledWith({ messages: incoming });
+      expect(importSpy).toHaveBeenCalledWith({ messages: toThreadMessages(incoming) });
     });
 
     it('should not reset thread when same session', async () => {
@@ -223,7 +230,7 @@ describe('MessageLoaderService', () => {
       );
 
       expect(resetSpy).not.toHaveBeenCalled();
-      expect(importSpy).toHaveBeenCalledWith({ messages: incoming });
+      expect(importSpy).toHaveBeenCalledWith({ messages: toThreadMessages(incoming) });
     });
 
     it('should not reset thread on first load (null session)', async () => {
@@ -239,7 +246,7 @@ describe('MessageLoaderService', () => {
       );
 
       expect(resetSpy).not.toHaveBeenCalled();
-      expect(importSpy).toHaveBeenCalledWith({ messages: incoming });
+      expect(importSpy).toHaveBeenCalledWith({ messages: toThreadMessages(incoming) });
     });
 
     it('should skip import if all messages already loaded', async () => {
@@ -278,7 +285,7 @@ describe('MessageLoaderService', () => {
         'session-1'
       );
 
-      expect(importSpy).toHaveBeenCalledWith({ messages: incoming });
+      expect(importSpy).toHaveBeenCalledWith({ messages: toThreadMessages(incoming) });
     });
 
     it('should import all messages on first load', async () => {
@@ -296,7 +303,7 @@ describe('MessageLoaderService', () => {
         'session-1'
       );
 
-      expect(importSpy).toHaveBeenCalledWith({ messages: incoming });
+      expect(importSpy).toHaveBeenCalledWith({ messages: toThreadMessages(incoming) });
     });
 
     it('should handle empty messages array', async () => {
@@ -342,7 +349,7 @@ describe('MessageLoaderService', () => {
         'session-1'
       );
 
-      expect(importSpy).toHaveBeenCalledWith({ messages });
+      expect(importSpy).toHaveBeenCalledWith({ messages: toThreadMessages(messages) });
     });
 
     it('should handle messages with tool invocations', async () => {
@@ -369,7 +376,7 @@ describe('MessageLoaderService', () => {
         'session-1'
       );
 
-      expect(importSpy).toHaveBeenCalledWith({ messages });
+      expect(importSpy).toHaveBeenCalledWith({ messages: toThreadMessages(messages) });
     });
 
     it('should correctly compare message IDs when checking if already loaded', async () => {
@@ -391,7 +398,7 @@ describe('MessageLoaderService', () => {
         'session-1'
       );
 
-      expect(importSpy).toHaveBeenCalledWith({ messages: incoming });
+      expect(importSpy).toHaveBeenCalledWith({ messages: toThreadMessages(incoming) });
     });
   });
 });

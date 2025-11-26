@@ -8,9 +8,12 @@ import type { UIMessage } from "ai";
 /**
  * Validate and normalize a single message
  * Returns the message if valid, null otherwise
+ * 
+ * UIMessage format uses 'parts' as the canonical field (not 'content')
+ * Parts is an array of content segments: [{ type: 'text', text: '...' }, ...]
  */
 export function validateMessage(msg: unknown): UIMessage | null {
-  console.log("[message-validation] Validating message:", JSON.stringify(msg));
+  console.log("😎 [message-validation] 🔍 Validating message:", JSON.stringify(msg));
   
   if (!msg || typeof msg !== "object") {
     console.log("[message-validation] Message is not an object, rejecting");
@@ -31,24 +34,24 @@ export function validateMessage(msg: unknown): UIMessage | null {
     return null;
   }
 
-  // Normalize content to array format
-  // Check for 'parts' first (UIMessage format), then 'content'
-  let content: unknown[] = [];
+  // Normalize to 'parts' array (UIMessage canonical format)
+  // Priority: parts > content array > content string
+  let parts: unknown[] = [];
   if (Array.isArray(record.parts)) {
-    console.log("[message-validation] Using 'parts' field");
-    content = record.parts;
+    console.log("[message-validation] Using 'parts' field (canonical)");
+    parts = record.parts;
+  } else if (Array.isArray(record.content)) {
+    console.log("[message-validation] Converting 'content' array to parts");
+    parts = record.content;
   } else if (typeof record.content === "string") {
     console.log("[message-validation] Converting string content to parts array");
-    content = [{ type: "text", text: record.content }];
-  } else if (Array.isArray(record.content)) {
-    console.log("[message-validation] Using 'content' array");
-    content = record.content;
+    parts = [{ type: "text", text: record.content }];
   }
 
-  console.log(`[message-validation] Content array length: ${content.length}`);
+  console.log(`[message-validation] Parts array length: ${parts.length}`);
 
   // Check if message has any data
-  const hasContent = content.length > 0;
+  const hasContent = parts.length > 0;
   const hasTools = record.toolInvocations || record.toolCalls;
 
   if (!hasContent && !hasTools) {
@@ -56,12 +59,11 @@ export function validateMessage(msg: unknown): UIMessage | null {
     return null;
   }
 
-  // Build validated message
+  // Build validated message with ONLY 'parts' (no duplicate 'content' field)
   const validated: Record<string, unknown> = {
     id: record.id,
     role: record.role,
-    content,
-    parts: content, // UIMessage requires parts property
+    parts, // UIMessage canonical field
   };
 
   if (record.toolInvocations) {
@@ -72,7 +74,7 @@ export function validateMessage(msg: unknown): UIMessage | null {
     validated.toolCalls = record.toolCalls;
   }
 
-  console.log("[message-validation] Message validated successfully:", JSON.stringify(validated));
+  console.log("😎 [message-validation] ✅ Message validated successfully:", JSON.stringify(validated));
 
   return validated as unknown as UIMessage;
 }

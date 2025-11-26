@@ -10,6 +10,13 @@ import { MockChatRepository } from '../../repositories/mock-chat-repository';
 import type { SessionStoreOperations } from '../session-manager';
 import type { ValidatedMessage } from '../../message-validation';
 
+// Helper to convert messages to the format expected by thread.import()
+const toThreadMessages = (messages: ValidatedMessage[]) => 
+  messages.map((msg, idx) => ({
+    message: msg,
+    parentId: idx > 0 ? messages[idx - 1].id : null,
+  }));
+
 describe('Chat Services Integration', () => {
   let messageLoader: MessageLoaderService;
   let sessionManager: SessionManager;
@@ -66,8 +73,8 @@ describe('Chat Services Integration', () => {
       ];
 
       // Mock thread
-      const importFn: Thread['import'] = vi.fn().mockImplementation((options: { messages: ValidatedMessage[] }) => {
-        expect(options.messages).toEqual(messages);
+      const importFn: Thread['import'] = vi.fn().mockImplementation((options: { messages: any[] }) => {
+        expect(options.messages).toEqual(toThreadMessages(messages));
       });
       const thread: Thread = {
         reset: () => {},
@@ -117,7 +124,7 @@ describe('Chat Services Integration', () => {
         session1
       );
 
-      expect(thread.import).toHaveBeenCalledWith({ messages: messages1 });
+      expect(thread.import).toHaveBeenCalledWith({ messages: toThreadMessages(messages1) });
 
       // Create and switch to second session
       const session2 = await sessionManager.createNewSession({
@@ -148,7 +155,7 @@ describe('Chat Services Integration', () => {
       );
 
       expect(resetSpy).toHaveBeenCalled();
-      expect(thread2.import).toHaveBeenCalledWith({ messages: messages2 });
+      expect(thread2.import).toHaveBeenCalledWith({ messages: toThreadMessages(messages2) });
     });
 
     it('should prevent duplicate message loading', async () => {

@@ -65,32 +65,38 @@ export const useThreadLoaderStore = create<ThreadLoaderState>((set, get) => ({
   loadMessagesIntoThread: ({ sessionId, messages, runtime }) => {
     const state = get();
     
-    console.log(`[thread-loader] loadMessagesIntoThread called for session: ${sessionId}, messages: ${messages.length}`);
-    console.log(`[thread-loader] Current lastLoadedSessionId: ${state.lastLoadedSessionId}`);
+    console.log(`😎 [thread-loader] loadMessagesIntoThread called for session: ${sessionId}, messages: ${messages.length}`);
+    console.log(`😎 [thread-loader] Current lastLoadedSessionId: ${state.lastLoadedSessionId}`);
+    console.log(`😎 [thread-loader] isImporting: ${state.isImporting}`);
+    console.log(`😎 [thread-loader] runtime exists: ${!!runtime}`);
+    console.log(`😎 [thread-loader] runtime.thread exists: ${!!runtime?.thread}`);
     
     // Skip if already importing
     if (state.isImporting) {
-      console.log("[thread-loader] Already importing, skipping");
+      console.log("😎 [thread-loader] ⚠️ Already importing, skipping");
       return;
     }
 
-    // Skip if this exact session is already loaded with the same messages
-    if (state.lastLoadedSessionId === sessionId && messages.length > 0) {
-      console.log("[thread-loader] Session already loaded, skipping duplicate import");
-      return;
-    }
+    // REMOVED: The aggressive duplicate check was blocking legitimate imports
+    // The thread.import() method itself handles duplicates properly
+    // We only need to prevent concurrent imports (checked above with isImporting)
+    console.log("😎 [thread-loader] ✅ Proceeding with import (no duplicate check blocking)");
 
     set({ isImporting: true, lastError: null });
+    console.log("😎 [thread-loader] ✅ Starting import process...");
 
     try {
       const thread = runtime?.thread;
 
       if (!thread || typeof thread.import !== "function") {
+        console.log("😎 [thread-loader] ❌ Thread does not support import()!");
         throw new Error("Thread does not support import()");
       }
 
+      console.log("😎 [thread-loader] ✅ Thread supports import()");
+
       if (messages.length === 0) {
-        console.log("[thread-loader] No messages to import");
+        console.log("😎 [thread-loader] ⚠️ No messages to import");
         set({ 
           isImporting: false,
           lastLoadedSessionId: sessionId 
@@ -98,15 +104,16 @@ export const useThreadLoaderStore = create<ThreadLoaderState>((set, get) => ({
         return;
       }
 
-      console.log("[thread-loader] First message before validation:", JSON.stringify(messages[0]));
+      console.log(`😎 [thread-loader] 📝 Processing ${messages.length} messages...`);
+      console.log("😎 [thread-loader] First message before validation:", JSON.stringify(messages[0]));
 
       // Validate messages
       const validatedMessages = validateMessages(messages);
       
-      console.log(`[thread-loader] Validated ${validatedMessages.length} out of ${messages.length} messages`);
+      console.log(`😎 [thread-loader] ✅ Validated ${validatedMessages.length} out of ${messages.length} messages`);
       
       if (validatedMessages.length === 0) {
-        console.log("[thread-loader] No valid messages after validation");
+        console.log("😎 [thread-loader] ❌ No valid messages after validation!");
         set({ 
           isImporting: false,
           lastLoadedSessionId: sessionId 
@@ -114,31 +121,27 @@ export const useThreadLoaderStore = create<ThreadLoaderState>((set, get) => ({
         return;
       }
 
-      console.log("[thread-loader] Importing messages into thread:", validatedMessages.length);
-      console.log("[thread-loader] First validated message:", JSON.stringify(validatedMessages[0]));
+      console.log(`😎 [thread-loader] 🚀 Importing ${validatedMessages.length} messages into thread...`);
+      console.log("😎 [thread-loader] First validated message:", JSON.stringify(validatedMessages[0]));
       
-      // Build the correct format for assistant-ui thread.import()
-      // The format should be an array of { message: UIMessage, parentId: string | null }
-      const threadMessages = validatedMessages.map((msg, idx) => {
-        const threadMsg = {
-          message: {
-            id: msg.id,
-            role: msg.role,
-            content: msg.content || msg.parts,
-          },
-          parentId: idx > 0 ? validatedMessages[idx - 1].id : null,
-        };
-        console.log(`[thread-loader] Built thread message ${idx}:`, JSON.stringify(threadMsg));
-        return threadMsg;
-      });
+      // assistant-ui thread.import() expects ExportedMessageRepository format:
+      // { messages: Array<{ message: ThreadMessage, parentId: string | null }> }
+      // Build parent-child relationships based on message order
+      const threadMessages = validatedMessages.map((msg, idx) => ({
+        message: msg,
+        parentId: idx > 0 ? validatedMessages[idx - 1].id : null,
+      }));
       
-      console.log("[thread-loader] Calling thread.import with", threadMessages.length, "messages");
+      console.log(`😎 [thread-loader] 📦 Built ${threadMessages.length} thread messages with parent relationships`);
+      console.log("😎 [thread-loader] First thread message:", JSON.stringify(threadMessages[0]));
       
       try {
+        console.log("😎 [thread-loader] 🎯 Calling thread.import()...");
         thread.import({ messages: threadMessages });
-        console.log("[thread-loader] Import call completed successfully");
+        console.log("😎 [thread-loader] ✅ Import call completed successfully!");
+        console.log("😎 [thread-loader] 🎉 Messages should now be visible in UI!");
       } catch (err) {
-        console.error("[thread-loader] Import failed:", err);
+        console.error("😎 [thread-loader] ❌ Import failed:", err);
         throw err;
       }
 
@@ -147,10 +150,11 @@ export const useThreadLoaderStore = create<ThreadLoaderState>((set, get) => ({
         isImporting: false,
         lastError: null,
       });
+      console.log(`😎 [thread-loader] ✅ State updated - lastLoadedSessionId: ${sessionId}`);
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
-      console.error("[thread-loader] Error importing messages:", err);
-      console.error("[thread-loader] Error stack:", err.stack);
+      console.error("😎 [thread-loader] ❌❌❌ Error importing messages:", err);
+      console.error("😎 [thread-loader] Error stack:", err.stack);
       
       set({
         isImporting: false,

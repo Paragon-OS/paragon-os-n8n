@@ -2,6 +2,9 @@
  * Message Loader Service
  * Handles loading messages into Assistant UI thread
  * Extracted for testability
+ * 
+ * @deprecated This service is deprecated in favor of useThreadLoaderStore
+ * It's kept only for backward compatibility with existing tests
  */
 
 import type { UIMessage } from "ai";
@@ -18,6 +21,8 @@ export interface Thread {
 /**
  * Message Loader Service
  * Handles the logic of loading messages into a thread
+ * 
+ * @deprecated Use useThreadLoaderStore instead for production code
  */
 export class MessageLoaderService {
   /**
@@ -103,8 +108,13 @@ export class MessageLoaderService {
     }
 
     // Import messages (marks them as historical, won't trigger responses)
-    // Use type assertion to match the actual runtime API
-    thread.import({ messages });
+    // assistant-ui thread.import() expects ExportedMessageRepository format:
+    // { messages: Array<{ message: ThreadMessage, parentId: string | null }> }
+    const threadMessages = messages.map((msg, idx) => ({
+      message: msg,
+      parentId: idx > 0 ? messages[idx - 1].id : null,
+    }));
+    thread.import({ messages: threadMessages });
     console.log(
       `[message-loader] Successfully imported ${messages.length} historical messages (no responses triggered)`
     );
