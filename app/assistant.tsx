@@ -49,17 +49,24 @@ function AssistantRuntimeWrapper({ transport, sessionId }: { transport: SessionA
 function AssistantContent() {
   const { createNewSession } = useChatSessionsContext();
   const effectiveSessionId = useSessionStore((state) => state.activeSessionId);
+  const hasHydrated = useSessionStore((state) => state._hasHydrated);
   
   // Log session ID changes
   React.useEffect(() => {
     console.log("[assistant] effectiveSessionId changed:", effectiveSessionId);
   }, [effectiveSessionId]);
   
-  // Initialize session if none exists
+  // Initialize session if none exists - but only after store has hydrated from localStorage
   React.useEffect(() => {
-    console.log("[assistant] Checking session, effectiveSessionId:", effectiveSessionId);
+    // Wait for store to hydrate from localStorage before checking
+    if (!hasHydrated) {
+      console.log("[assistant] Store not hydrated yet, waiting...");
+      return;
+    }
+    
+    console.log("[assistant] Store hydrated, checking session. effectiveSessionId:", effectiveSessionId);
     if (!effectiveSessionId) {
-      console.log("[assistant] No session found, creating new session");
+      console.log("[assistant] No session found after hydration, creating new session");
       createNewSession()
         .then((newSessionId) => {
           console.log("[assistant] Created new session:", newSessionId);
@@ -68,7 +75,7 @@ function AssistantContent() {
           console.error("[assistant] Error creating new session:", error);
         });
     }
-  }, [effectiveSessionId, createNewSession]);
+  }, [effectiveSessionId, createNewSession, hasHydrated]);
   
   // Create transport with current session ID - use useMemo to recreate when sessionId changes
   // Only create transport if we have a session ID to avoid capturing null
