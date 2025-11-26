@@ -6,7 +6,7 @@ import { getWorkflowWebhookUrl } from "@/lib/n8n-config";
 import { getWebhookModeFromCookieHeader } from "@/lib/stores/webhook-mode";
 import { getStreamingUpdateUrl } from "@/lib/n8n-client/config";
 import { NextResponse } from "next/server";
-import { saveChatMessagesToSupabase, saveChatMessageToSupabase } from "@/lib/supabase/supabase-chat";
+import { saveChatMessagesToSupabase } from "@/lib/supabase/supabase-chat";
 import { randomUUID } from "crypto";
 
 /**
@@ -143,17 +143,6 @@ export async function POST(req: Request) {
   console.log("[chat/route] x-session-id header:", headerSessionId);
   console.log("[chat/route] Final sessionId:", sessionId);
   console.log("[chat/route] Messages count:", messages.length);
-  
-  // Save incoming messages to Supabase (non-blocking)
-  // This runs in the background and won't affect the response
-  saveChatMessagesToSupabase({
-    sessionId,
-    messages,
-    sessionTitle: extractChatInput(messages).substring(0, 100), // Use first message as title
-  }).catch((error) => {
-    // Log error but don't fail the request
-    console.error("[chat/route] Error saving messages to Supabase:", error);
-  });
   
   // Get webhook mode from cookies
   const cookieHeader = req.headers.get("cookie");
@@ -320,8 +309,11 @@ When a user's request involves messaging operations on Discord or Telegram, use 
       tools: {
         paragonOS,
       },
-      onFinish: async ({ text, toolCalls, toolResults }) => {
-        // Save the complete assistant message once after streaming finishes
+      onFinish: async ({ text, toolCalls }) => {
+        // Save ALL messages (user + assistant) once after streaming finishes
+        // This ensures we save complete, validated data in a single transaction
+        
+        // Create the assistant message with the complete response
         const assistantMessage: UIMessage = {
           id: randomUUID(),
           role: "assistant",
@@ -333,9 +325,15 @@ When a user's request involves messaging operations on Discord or Telegram, use 
           (assistantMessage as any).toolCalls = toolCalls;
         }
 
-        // Save to database
-        await saveChatMessageToSupabase(sessionId, assistantMessage).catch((error) => {
-          console.error("[chat/route] Error saving assistant message:", error);
+        // Save both user messages and assistant response together
+        const allMessages = [...messages, assistantMessage];
+        
+        await saveChatMessagesToSupabase({
+          sessionId,
+          messages: allMessages,
+          sessionTitle: extractChatInput(messages).substring(0, 100),
+        }).catch((error) => {
+          console.error("[chat/route] Error saving messages:", error);
         });
       },
     });
