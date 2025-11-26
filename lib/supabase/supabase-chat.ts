@@ -109,8 +109,6 @@ function convertUIMessageToRow(
   // Store parts directly as content in the database
   const content = message.parts || [];
   
-  console.log("[convertUIMessageToRow] role:", message.role, "parts count:", content.length);
-  
   // Extract tool data from parts if present
   // Tool invocations are stored as parts with type 'tool-invocation'
   const toolParts = content.filter((part: any) => 
@@ -174,15 +172,12 @@ export async function saveChatMessagesToSupabase(
       convertUIMessageToRow(msg, options.sessionId)
     );
 
-    console.log("[supabase-chat] Inserting message rows:", JSON.stringify(messageRows, null, 2));
-
     const { error } = await supabase
       .from("chat_messages")
       .insert(messageRows);
 
     if (error) {
       console.error("[supabase-chat] Error saving messages:", error);
-      console.error("[supabase-chat] Attempted to insert:", messageRows);
     }
   } catch (error) {
     console.error("[supabase-chat] Error saving messages:", error);
