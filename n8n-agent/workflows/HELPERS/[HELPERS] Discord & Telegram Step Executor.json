@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-26T20:12:56.000Z",
+  "updatedAt": "2025-11-27T22:06:16.000Z",
   "createdAt": "2025-11-17T13:03:59.561Z",
   "id": "uoYXevOl4ePWKeNx",
   "name": "[HELPERS] Discord & Telegram Step Executor",
@@ -29,7 +29,7 @@
       "typeVersion": 1.1,
       "position": [
         -1616,
-        520
+        528
       ],
       "id": "dd089a93-3eb3-466d-9dd8-efc4a57a9e0e",
       "name": "When Executed by Another Workflow",
@@ -43,7 +43,7 @@
       "typeVersion": 1,
       "position": [
         176,
-        352
+        256
       ],
       "id": "90a8d7ee-6bb9-46b7-8e15-f8d8b17fd413",
       "name": "No Operation, do nothing"
@@ -72,7 +72,7 @@
       "typeVersion": 3.4,
       "position": [
         -1392,
-        520
+        528
       ],
       "id": "490cd53f-a549-4be3-888d-e9838dc053e8",
       "name": "Prepare Execution Steps"
@@ -88,7 +88,7 @@
       "typeVersion": 1,
       "position": [
         -1168,
-        520
+        528
       ],
       "id": "b996eb98-f301-4d48-9b5a-999e52135faa",
       "name": "Split Execution Steps"
@@ -118,7 +118,7 @@
       "typeVersion": 3,
       "position": [
         -944,
-        760
+        768
       ],
       "id": "cd5a8d92-5e4f-4164-af15-6861fe96b4c4",
       "name": "Loop Over Execution Steps"
@@ -297,95 +297,10 @@
       "typeVersion": 2,
       "position": [
         -272,
-        904
+        912
       ],
       "id": "070d5a92-aef4-4406-9c71-04252c3cd22a",
       "name": "Code in JavaScript"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "che6u5z0grJ4AoNr",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/che6u5z0grJ4AoNr",
-          "cachedResultName": "[HELPERS] Stream Update Sender"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "data": "={{ \n   {\n     stepResult: $json.stepResult\n   }\n}}",
-            "stage": "telegram_execution_steps",
-            "status": "in_progress",
-            "message": "=Executed step on telegram: {{ $json.stepResult.toolName }}",
-            "metadata": "={{ $('When Executed by Another Workflow').item.json.metadata }}"
-          },
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "data",
-              "displayName": "data",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "object",
-              "removed": false
-            },
-            {
-              "id": "stage",
-              "displayName": "stage",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "status",
-              "displayName": "status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "message",
-              "displayName": "message",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "metadata",
-              "displayName": "metadata",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "object",
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        -272,
-        448
-      ],
-      "id": "5fa75dc5-8188-40ad-97d9-3353ee08a8f6",
-      "name": "Send Stream Update1"
     },
     {
       "parameters": {
@@ -395,7 +310,7 @@
       "typeVersion": 3.2,
       "position": [
         -48,
-        352
+        256
       ],
       "id": "fcda4537-84f6-421c-ba62-724d289b661f",
       "name": "Merge"
@@ -474,11 +389,6 @@
         [
           {
             "node": "Aggregate Step Results",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Send Stream Update1",
             "type": "main",
             "index": 0
           }
@@ -561,17 +471,6 @@
         ]
       ]
     },
-    "Send Stream Update1": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
     "Merge": {
       "main": [
         [
@@ -612,8 +511,8 @@
       }
     ]
   },
-  "versionId": "833ff12b-a693-47d9-8fd2-c953fe66b6cf",
-  "versionCounter": 90,
+  "versionId": "b861ed25-df95-40bc-99d6-72d1803b94ef",
+  "versionCounter": 92,
   "triggerCount": 0,
   "tags": [
     {

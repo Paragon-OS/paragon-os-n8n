@@ -1,10 +1,10 @@
 {
-  "updatedAt": "2025-11-26T20:12:20.000Z",
+  "updatedAt": "2025-11-27T22:17:38.000Z",
   "createdAt": "2025-11-06T23:04:10.688Z",
   "id": "z1Ry4y4k5dGR0BqR",
   "name": "ParagonOS Manager",
   "description": null,
-  "active": false,
+  "active": true,
   "isArchived": false,
   "nodes": [
     {
@@ -14,7 +14,7 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.3,
       "position": [
-        -464,
+        -512,
         -584
       ],
       "id": "4077b1f3-df5a-4112-a949-a4a86c743d57",
@@ -31,7 +31,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        -240,
+        -288,
         -552
       ],
       "id": "4478f090-adaf-495e-8b71-37592aa93537",
@@ -91,7 +91,7 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        16,
+        -32,
         -552
       ],
       "id": "a85ea5f0-1f3f-4d39-af49-35e27cade5b4",
@@ -100,14 +100,14 @@
     {
       "parameters": {
         "sessionIdType": "customKey",
-        "sessionKey": "={{ $workflow.id }} v7.10",
+        "sessionKey": "={{ $workflow.id }} v7.11",
         "contextWindowLength": 10
       },
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
-        -112,
-        -552
+        -160,
+        -544
       ],
       "id": "8b52e12c-7f0e-4129-8a64-80a18a1714b6",
       "name": "Conversation Memory"
@@ -117,13 +117,14 @@
         "promptType": "define",
         "text": "={{ $json.chatInput || $json.body.chatInput }}",
         "options": {
-          "systemMessage": "=You are ParagonOS, an intelligent messaging platform management assistant supporting both Discord and Telegram.\n\n# Your Capabilities:\n\nYou have access to two sophisticated agent tools:\n\n**Discord Agent:**\n- Automatically enriches requests with cached context (contacts, guilds, channels, your profile)\n- Uses an AI planner with a playbook of common Discord workflows\n- Generates and executes sequential MCP tool operations\n- Validates results and retries with refined approaches if needed\n\n**Telegram Agent:**\n- Automatically enriches requests with cached context (contacts, chats, groups, your profile)\n- Uses an AI planner with a playbook of common Telegram workflows\n- Generates and executes sequential MCP tool operations\n- Validates results and retries with refined approaches if needed\n\n# How to Use the Agents:\n\n1. **Pass natural language requests directly** - The agents handle planning and execution automatically\n2. **Provide clear intent** - Be specific about what the user wants (check messages, send DM/message, search topics, etc.)\n3. **Include relevant context** - Mention channel/chat names, contact names, server/group names, time ranges, or specific topics\n4. **Specify the platform** - Clearly indicate whether the request is for Discord or Telegram (or both)\n5. **Trust the sub-workflows** - They will resolve names to IDs, plan multi-step operations, and handle retries\n\n# Good Examples:\n\n**Discord Examples:**\n- \"Check for unreplied messages in the wandrlust admin & dev channel\"\n- \"DM sebastian asking about the deployment status\"\n- \"What were the key points discussed about the token launch in metarune-labs?\"\n- \"Show me all pending DMs that need my attention\"\n- \"Find and list all messages from the past week in the dev-team channel\"\n\n**Telegram Examples:**\n- \"Check for unreplied messages from sebastian in Telegram\"\n- \"Message john about the meeting in Telegram\"\n- \"What did people say about the launch in the dev group on Telegram?\"\n- \"Show me all pending chats that need my attention in Telegram\"\n- \"Find and list all messages from the past week in the team group on Telegram\"\n\n**Cross-Platform Examples:**\n- \"Check for pending messages in both Discord and Telegram\"\n- \"Send a message to sebastian on both platforms about the meeting\"\n- \"What's new in my Discord DMs and Telegram chats?\"\n\n# Your Role:\n\n- Understand user intent and reformulate as clear, actionable requests\n- Determine which platform(s) the user wants to interact with (Discord, Telegram, or both)\n- Interpret the agent results and present them conversationally\n- Handle multi-turn conversations with context from memory\n- Ask clarifying questions if the user's request is ambiguous or doesn't specify a platform"
+          "systemMessage": "=You are ParagonOS, an intelligent messaging platform management assistant supporting both Discord and Telegram.\n\n# Your Capabilities:\n\nYou have access to two sophisticated agent tools:\n\n**Discord Agent:**\n- Automatically enriches requests with cached context (contacts, guilds, channels, your profile)\n- Uses an AI planner with a playbook of common Discord workflows\n- Generates and executes sequential MCP tool operations\n- Validates results and retries with refined approaches if needed\n\n**Telegram Agent:**\n- Automatically enriches requests with cached context (contacts, chats, groups, your profile)\n- Uses an AI planner with a playbook of common Telegram workflows\n- Generates and executes sequential MCP tool operations\n- Validates results and retries with refined approaches if needed\n\n# How to Use the Agents:\n\n1. **Pass natural language requests directly** - The agents handle planning and execution automatically\n2. **Provide clear intent** - Be specific about what the user wants (check messages, send DM/message, search topics, etc.)\n3. **Include relevant context** - Mention channel/chat names, contact names, server/group names, time ranges, or specific topics\n4. **Specify the platform** - Clearly indicate whether the request is for Discord or Telegram (or both)\n5. **Trust the sub-workflows** - They will resolve names to IDs, plan multi-step operations, and handle retries\n\n# Good Examples:\n\n**Discord Examples:**\n- \"Check for unreplied messages in the wandrlust admin & dev channel\"\n- \"DM sebastian asking about the deployment status\"\n- \"What were the key points discussed about the token launch in metarune-labs?\"\n- \"Show me all pending DMs that need my attention\"\n- \"Find and list all messages from the past week in the dev-team channel\"\n\n**Telegram Examples:**\n- \"Check for unreplied messages from sebastian in Telegram\"\n- \"Message john about the meeting in Telegram\"\n- \"What did people say about the launch in the dev group on Telegram?\"\n- \"Show me all pending chats that need my attention in Telegram\"\n- \"Find and list all messages from the past week in the team group on Telegram\"\n\n**Cross-Platform Examples:**\n- \"Check for pending messages in both Discord and Telegram\"\n- \"Send a message to sebastian on both platforms about the meeting\"\n- \"What's new in my Discord DMs and Telegram chats?\"\n\n# Your Role:\n\n- Understand user intent and reformulate as clear, actionable requests\n- Determine which platform(s) the user wants to interact with (Discord, Telegram, or both)\n- Interpret the agent results and present them conversationally\n- Handle multi-turn conversations with context from memory\n- Ask clarifying questions if the user's request is ambiguous or doesn't specify a platform",
+          "enableStreaming": true
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3,
       "position": [
-        -120,
+        -168,
         -776
       ],
       "id": "e572d52c-0585-473c-84aa-34fc1b8ee691",
@@ -142,18 +143,19 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -464,
+        -512,
         -776
       ],
       "id": "c2a04407-3712-44aa-a758-a324f3b37a33",
-      "name": "When Executed by Another Workflow"
+      "name": "When Executed by Another Workflow",
+      "disabled": true
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        352,
+        304,
         -776
       ],
       "id": "b435c3de-9724-4add-bbbe-a0f0eeea066e",
@@ -206,7 +208,7 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        144,
+        96,
         -552
       ],
       "id": "77779f7b-6217-46a5-a355-4cb35d2e935a",
@@ -216,188 +218,42 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "paragon-os",
+        "responseMode": "lastNode",
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -464,
+        -736,
         -1024
       ],
-      "id": "5091dc73-abf5-4f5a-aacc-a390f39111b4",
-      "name": "Webhook",
-      "webhookId": "33384794-47ae-48e6-aa7d-64e81c9e4358",
-      "disabled": true
+      "id": "4962cf25-a649-4af7-a44d-a551a8e8fb92",
+      "name": "Webhook1",
+      "webhookId": "33384794-47ae-48e6-aa7d-64e81c9e4358"
     },
     {
       "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "che6u5z0grJ4AoNr",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/che6u5z0grJ4AoNr",
-          "cachedResultName": "[HELPERS] Stream Update Sender"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "data": "={{ \n   {\"executionResult\": $json.output}\n}}",
-            "stage": "manager_output",
-            "status": "completed",
-            "message": "Workflow completed successfully!",
-            "metadata": "={{ $('Webhook').item.json.body.metadata }}"
-          },
-          "matchingColumns": [],
-          "schema": [
+        "assignments": {
+          "assignments": [
             {
-              "id": "data",
-              "displayName": "data",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "object",
-              "removed": false
-            },
-            {
-              "id": "stage",
-              "displayName": "stage",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "status",
-              "displayName": "status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "message",
-              "displayName": "message",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "metadata",
-              "displayName": "metadata",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "object",
-              "removed": false
+              "id": "a60f9067-0716-491c-9a57-1ebb8b8cfdb9",
+              "name": "body.metadata",
+              "value": "={{ $json.body.metadata ?? {\n  \"sessionId\": \"sample-session-id-1\",\n  \"messageId\": \"sample-message-id-1\",\n  \"streamUrl\": \"http://localhost:3000/api/stream/update\"\n} }}",
+              "type": "object"
             }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
+          ]
         },
+        "includeOtherFields": true,
         "options": {}
       },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
-        576,
-        -776
+        -512,
+        -1024
       ],
-      "id": "58df62ec-7247-42bc-a866-7972255129a9",
-      "name": "Send Stream Update"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "che6u5z0grJ4AoNr",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/che6u5z0grJ4AoNr",
-          "cachedResultName": "[HELPERS] Stream Update Sender"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "data": "={{ \n   {}\n}}",
-            "stage": "manager_input",
-            "status": "in_progress",
-            "message": "=Workflow is starting with user prompt: {{ $json.body.chatInput?.toJsonString() }}",
-            "metadata": "={{ $json.body.metadata }}"
-          },
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "data",
-              "displayName": "data",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "object",
-              "removed": false
-            },
-            {
-              "id": "stage",
-              "displayName": "stage",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "status",
-              "displayName": "status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "message",
-              "displayName": "message",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "metadata",
-              "displayName": "metadata",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "object",
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        -56,
-        -1072
-      ],
-      "id": "31b38a67-1985-49e5-9693-cb1e2932ff35",
-      "name": "Send Stream Update2"
+      "id": "83dc62cb-a639-4cf5-8b96-3e816bd771dc",
+      "name": "Edit Fields"
     }
   ],
   "connections": {
@@ -478,27 +334,27 @@
         ]
       ]
     },
-    "Webhook": {
+    "No Operation, do nothing": {
+      "main": [
+        []
+      ]
+    },
+    "Webhook1": {
       "main": [
         [
           {
-            "node": "Metarune Admin Chat Agent",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Send Stream Update2",
+            "node": "Edit Fields",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "No Operation, do nothing": {
+    "Edit Fields": {
       "main": [
         [
           {
-            "node": "Send Stream Update",
+            "node": "Metarune Admin Chat Agent",
             "type": "main",
             "index": 0
           }
@@ -520,10 +376,24 @@
           "chatInput": "find staryo admin only channel in metarune labs guild, then list messages"
         }
       }
+    ],
+    "Webhook1": [
+      {
+        "json": {
+          "body": {
+            "userPrompt": "List the last 10 messages in the Discord channel 'staryo-admin'",
+            "metadata": {
+              "sessionId": "sample-session-id-1",
+              "messageId": "sample-message-id-1",
+              "streamUrl": "http://localhost:3000/api/stream/update"
+            }
+          }
+        }
+      }
     ]
   },
-  "versionId": "efddb808-cd77-4981-812e-a886c218bc75",
-  "versionCounter": 228,
+  "versionId": "78d9503f-51f6-4e2f-9319-a8b4f4fe4d49",
+  "versionCounter": 246,
   "triggerCount": 1,
   "tags": [
     {
