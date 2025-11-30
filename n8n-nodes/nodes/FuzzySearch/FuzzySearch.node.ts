@@ -12,12 +12,12 @@ import {
 /** A node which allows you to perform fuzzy search on data. */
 export class FuzzySearch implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'FuzzySearch v1.3',
+		displayName: 'FuzzySearch',
 		name: 'fuzzySearch',
 		icon: 'file:FuzzySearch.svg',
 		group: ['transform'],
 		version: 1,
-		description: 'Perform fuzzy search on strings or objects',
+		description: 'Perform fuzzy search on strings or objects (v1.4)',
 		defaults: {
 			name: 'FuzzySearch',
 		},
@@ -40,7 +40,7 @@ export class FuzzySearch implements INodeType {
 						description: 'Search within an array field from incoming JSON',
 					},
 				],
-				default: 'searchAcrossItems',
+				default: 'searchInArray',
 				description: 'How to handle input data for searching',
 			},
 			{
@@ -50,7 +50,7 @@ export class FuzzySearch implements INodeType {
 				default: '',
 				required: true,
 				description: 'The search query text',
-				placeholder: 'Search term...',
+				placeholder: 'apple iphone',
 			},
 			{
 				displayName: 'Array Field',
@@ -63,8 +63,19 @@ export class FuzzySearch implements INodeType {
 				},
 				default: '',
 				required: true,
-				description: 'JSON path to the array field to search in (e.g., "items" or "data.products")',
+				description: 'JSON path to the array field to search in. Supports dot notation for nested fields.',
 				placeholder: 'items',
+			},
+			{
+				displayName: '💡 Tip: Use dot notation for nested arrays (e.g., "data.products")',
+				name: 'arrayFieldNotice',
+				type: 'notice',
+				displayOptions: {
+					show: {
+						searchMode: ['searchInArray'],
+					},
+				},
+				default: '',
 			},
 			{
 				displayName: 'Search Keys',
@@ -74,55 +85,90 @@ export class FuzzySearch implements INodeType {
 					rows: 4,
 				},
 				default: '',
-				description: 'Field names to search in, one per line. Leave empty to search entire string/object. Supports dot notation (e.g., "name", "user.email").',
+				description: 'Field names to search in. Supports dot notation for nested fields. Leave empty to search all fields.',
 				placeholder: 'name\ndescription\nuser.email',
 			},
-		{
-			displayName: 'Match Quality (%)',
-			name: 'matchQuality',
-			type: 'number',
-			typeOptions: {
-				minValue: 0,
-				maxValue: 100,
-				numberPrecision: 0,
+			{
+				displayName: 'Match Quality (%)',
+				name: 'matchQuality',
+				type: 'number',
+				typeOptions: {
+					minValue: 0,
+					maxValue: 100,
+					numberPrecision: 0,
+					numberStepSize: 10,
+				},
+				default: 70,
+				description: 'Minimum match quality threshold. Higher values = stricter matching.',
 			},
-			default: 70,
-			description: 'Minimum match quality percentage (0-100%). Higher = stricter. 100% = perfect match only, 90%+ = very strict, 70% = balanced, 50% = lenient, 0% = accept anything.',
-			placeholder: '70',
-		},
+			{
+				displayName: '💡 100% = perfect match only | 90%+ = very strict | 70% = balanced (recommended) | 50% = lenient | 0% = accept all',
+				name: 'matchQualityNotice',
+				type: 'notice',
+				default: '',
+			},
 			{
 				displayName: 'Limit',
 				name: 'limit',
+				type: 'options',
+				options: [
+					{ name: '10 Results', value: 10 },
+					{ name: '25 Results', value: 25 },
+					{ name: '50 Results', value: 50 },
+					{ name: '100 Results', value: 100 },
+					{ name: 'All Results', value: 0 },
+					{ name: 'Custom', value: -1 },
+				],
+				default: 50,
+				description: 'Maximum number of results to return',
+			},
+			{
+				displayName: 'Custom Limit',
+				name: 'customLimit',
 				type: 'number',
+				displayOptions: {
+					show: {
+						limit: [-1],
+					},
+				},
 				typeOptions: {
 					minValue: 1,
 				},
 				default: 50,
-				description: 'Max number of results to return',
+				description: 'Enter a custom limit value',
 			},
-		{
-			displayName: 'Keep Only Set',
-			name: 'keepOnlySet',
-			type: 'boolean',
-			default: false,
-			description: 'Whether only the values set on this node should be kept and all others removed',
-		},
-		{
-			displayName: 'Include Match Score',
-			name: 'includeScore',
-			type: 'boolean',
-			default: false,
-			description: 'Whether to include the match score in the results. Score ranges from 0 (worst) to 1 (perfect match). Higher scores indicate better matches.',
-		},
-		{
-			displayName: 'Match Individual Words',
-			name: 'matchIndividualWords',
-			type: 'boolean',
-			default: false,
-			description: 'Whether to split the query into individual words and match any of them. When enabled, "apple iphone" will match items containing either "apple" OR "iphone" or both. Results with more word matches rank higher.',
-		},
-	],
-};
+			{
+				displayName: 'Advanced Options',
+				name: 'advancedOptions',
+				type: 'collection',
+				placeholder: 'Add Option',
+				default: {},
+				options: [
+					{
+						displayName: 'Keep Only Set',
+						name: 'keepOnlySet',
+						type: 'boolean',
+						default: false,
+						description: 'Whether to keep only the values set on this node and remove all others',
+					},
+					{
+						displayName: 'Include Match Score',
+						name: 'includeScore',
+						type: 'boolean',
+						default: false,
+						description: 'Whether to add _fuzzyScore field to results (0-1 scale, higher = better match)',
+					},
+					{
+						displayName: 'Match Individual Words',
+						name: 'matchIndividualWords',
+						type: 'boolean',
+						default: false,
+						description: 'Whether to split query into words and match any of them (e.g., "apple iphone" matches items with "apple" OR "iphone")',
+					},
+				],
+			},
+		],
+	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
@@ -133,10 +179,18 @@ export class FuzzySearch implements INodeType {
 			const query = this.getNodeParameter('query', itemIndex) as string;
 			const searchKeysRaw = this.getNodeParameter('searchKeys', itemIndex, '') as string;
 			const matchQuality = this.getNodeParameter('matchQuality', itemIndex) as number;
-			const limit = this.getNodeParameter('limit', itemIndex) as number;
-			const keepOnlySet = this.getNodeParameter('keepOnlySet', itemIndex) as boolean;
-			const includeScore = this.getNodeParameter('includeScore', itemIndex) as boolean;
-			const matchIndividualWords = this.getNodeParameter('matchIndividualWords', itemIndex) as boolean;
+			
+			// Handle limit with custom option
+			let limit = this.getNodeParameter('limit', itemIndex) as number;
+			if (limit === -1) {
+				limit = this.getNodeParameter('customLimit', itemIndex) as number;
+			}
+			
+			// Get advanced options
+			const advancedOptions = this.getNodeParameter('advancedOptions', itemIndex, {}) as IDataObject;
+			const keepOnlySet = advancedOptions.keepOnlySet as boolean || false;
+			const includeScore = advancedOptions.includeScore as boolean || false;
+			const matchIndividualWords = advancedOptions.matchIndividualWords as boolean || false;
 
 			// Convert match quality percentage (0-100) to fuzzysort threshold (0.0 to 1.0)
 			// Fuzzysort uses positive decimal scores where 1.0 = perfect match

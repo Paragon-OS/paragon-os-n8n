@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-30T03:56:08.000Z",
+  "updatedAt": "2025-11-30T04:29:13.000Z",
   "createdAt": "2025-11-28T22:18:06.049Z",
   "id": "iaJ7xXs647QyMHGF",
   "name": "[LAB] Pinecone Embeddings",
@@ -170,12 +170,14 @@
     },
     {
       "parameters": {
-        "searchMode": "searchInArray",
         "query": "nish",
         "arrayField": "contacts",
-        "limit": 5,
-        "includeScore": true,
-        "matchIndividualWords": true
+        "matchQuality": 60,
+        "limit": 10,
+        "advancedOptions": {
+          "includeScore": true,
+          "matchIndividualWords": true
+        }
       },
       "type": "n8n-nodes-paragon-os.fuzzySearch",
       "typeVersion": 1,
@@ -262,8 +264,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "438dbae9-d18d-4676-93e5-32fda128ee6b",
-  "versionCounter": 104,
+  "versionId": "5f29a918-ed77-419f-8839-88deb22b00e6",
+  "versionCounter": 110,
   "triggerCount": 0,
   "tags": [],
   "shared": [
