@@ -177,7 +177,7 @@
         "includeScore": true,
         "matchIndividualWords": true
       },
-      "type": "n8n-nodes-text-manipulation.fuzzySearch",
+      "type": "n8n-nodes-paragon-os.fuzzySearch",
       "typeVersion": 1,
       "position": [
         -512,
