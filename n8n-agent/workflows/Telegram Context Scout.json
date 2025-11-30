@@ -1,0 +1,1337 @@
+{
+  "updatedAt": "2025-11-30T21:00:00.000Z",
+  "createdAt": "2025-11-30T21:00:00.000Z",
+  "id": "TelegramContextScout",
+  "name": "Telegram Context Scout",
+  "description": "This workflow provides a fast, consistent lookup system for Telegram data by combining MCP tools, structured normalization, caching, and fuzzy search.\n\nIt supports four entity types:\n\n**contact**\nRepresents a Telegram contact returned by the `telegram_list_contacts` MCP tool. The workflow normalizes each contact to include id, username, displayName, lastMessage, contactType, and phone.\n\n**chat**\nRepresents a Telegram chat (DM, group, channel) returned by the `telegram_list_chats` MCP tool. Each chat is normalized to include id, name, members, kind, and unread.\n\n**tool**\nRepresents an MCP tool exposed by the Telegram MCP server. Each item includes the tool name, description and the exact tool call schema.\n\n**self**\nRepresents current user's own Telegram profile. It's a single item including id, username, and other profile details. This entity ignores the `query` parameter.\n\n### What the workflow does\n\n**1. Retrieval**\nWhen an entity type is requested, the workflow fetches the relevant raw data from the appropriate MCP tool unless valid cached data is already available.\n\n**2. Normalization**\nFetched data is transformed into a predictable format for each entity category, enabling reliable fuzzy matching downstream.\n\n**3. Caching**\nAll data types are cached independently with a TTL to reduce repeated MCP calls and improve tool execution speed.\n\n**4. Query Processing**\nThe workflow accepts a search query along with an entity type, then performs fuzzy matching over the appropriate cached dataset and returns the most relevant matches along with match scores.\n\nUse this tool whenever a workflow needs structured Telegram data lookup for contacts, chats, or Telegram MCP tools.",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "query"
+            },
+            {
+              "name": "entity"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -704,
+        384
+      ],
+      "id": "telegram-trigger",
+      "name": "When Executed by Another Workflow",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "HTXqB729RFNozetP",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/HTXqB729RFNozetP",
+          "cachedResultName": "[HELPERS] Global Cache System"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cacheKey": "telegramContacts",
+            "trueToWrite": false,
+            "writeTTLms": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "trueToWrite",
+              "displayName": "trueToWrite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "cacheKey",
+              "displayName": "cacheKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "writeValue",
+              "displayName": "writeValue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "writeTTLms",
+              "displayName": "writeTTLms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -256,
+        -48
+      ],
+      "id": "check-telegram-contact-cache",
+      "name": "Check Contact Cache",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "=telegram_list_contacts",
+        "toolParameters": "={\n  \"limit\": 30\n}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        32
+      ],
+      "id": "list-telegram-contacts",
+      "name": "List Contacts",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "aiYCclLDUqob5iQ0",
+          "name": "Telegram MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\n// Generic helper function (inline)\nfunction simplifyMCPData(input, dataKey, mcpDataKey, mapper, errorMsg) {\n  let rawData = [];\n  try {\n    if (input.result?.content?.[0]) {\n      const parsed = JSON.parse(input.result.content[0].text);\n      rawData = parsed?.[mcpDataKey] || [];\n    } else if (input[dataKey]) {\n      rawData = Array.isArray(input[dataKey]) ? input[dataKey] : [];\n    } else if (input.output?.[dataKey]) {\n      rawData = Array.isArray(input.output[dataKey]) ? input.output[dataKey] : [];\n    }\n    \n    if (!Array.isArray(rawData) || rawData.length === 0) {\n      return { [dataKey]: [], error: errorMsg, shouldFetch: true };\n    }\n    \n    return { [dataKey]: rawData.map(mapper) };\n  } catch (error) {\n    return { [dataKey]: [], error: error.message, shouldFetch: true };\n  }\n}\n\n// Use it\nreturn simplifyMCPData(\n  input,\n  'contacts',\n  'contacts',\n  (c) => ({\n    id: c.id,\n    username: c.username,\n    displayName: c.name,\n    lastMessage: c.lastMessageAtRelative,\n    contactType: c.type,\n    phone: c.phone\n  }),\n  'No valid contacts found'\n);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        32
+      ],
+      "id": "telegram-contact-data-simplifier",
+      "name": "Contact Data Simplifier"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "HTXqB729RFNozetP",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/HTXqB729RFNozetP",
+          "cachedResultName": "[HELPERS] Global Cache System"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "writeTTLms": "={{ 30 * 60 * 1000 }}",
+            "cacheKey": "telegramContacts",
+            "writeValue": "={{ {telegramContacts: $json.contacts} }}",
+            "trueToWrite": true
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "trueToWrite",
+              "displayName": "trueToWrite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "cacheKey",
+              "displayName": "cacheKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "writeValue",
+              "displayName": "writeValue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "writeTTLms",
+              "displayName": "writeTTLms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        416,
+        32
+      ],
+      "id": "update-telegram-contact-cache",
+      "name": "Update Contact Cache"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        640,
+        -48
+      ],
+      "id": "all-telegram-contacts",
+      "name": "All Contacts"
+    },
+    {
+      "parameters": {
+        "query": "={{ $('When Executed by Another Workflow').item.json.query }}",
+        "arrayField": "telegramContacts",
+        "searchKeys": "username\ndisplayName\ncontactType\nphone",
+        "matchQuality": 60,
+        "limit": 10,
+        "advancedOptions": {
+          "includeScore": true,
+          "matchIndividualWords": false
+        }
+      },
+      "type": "n8n-nodes-paragon-os.fuzzySearch",
+      "typeVersion": 1,
+      "position": [
+        864,
+        -48
+      ],
+      "id": "telegram-fuzzy-contacts",
+      "name": "FuzzySearch (Contacts)"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "HTXqB729RFNozetP",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/HTXqB729RFNozetP",
+          "cachedResultName": "[HELPERS] Global Cache System"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cacheKey": "telegramChannels",
+            "trueToWrite": false,
+            "writeTTLms": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "trueToWrite",
+              "displayName": "trueToWrite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "cacheKey",
+              "displayName": "cacheKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "writeValue",
+              "displayName": "writeValue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "writeTTLms",
+              "displayName": "writeTTLms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -256,
+        240
+      ],
+      "id": "check-telegram-chat-cache",
+      "name": "Check Chat Cache",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "=telegram_list_chats",
+        "toolParameters": "={\n  \"limit\": 40\n}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        320
+      ],
+      "id": "list-telegram-chats",
+      "name": "List Chats",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "aiYCclLDUqob5iQ0",
+          "name": "Telegram MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\n// Generic helper function (inline)\nfunction simplifyMCPData(input, dataKey, mcpDataKey, mapper, errorMsg) {\n  let rawData = [];\n  try {\n    if (input.result?.content?.[0]) {\n      const parsed = JSON.parse(input.result.content[0].text);\n      rawData = parsed?.[mcpDataKey] || [];\n    } else if (input[dataKey]) {\n      rawData = Array.isArray(input[dataKey]) ? input[dataKey] : [];\n    } else if (input.output?.[dataKey]) {\n      rawData = Array.isArray(input.output[dataKey]) ? input.output[dataKey] : [];\n    }\n    \n    if (!Array.isArray(rawData) || rawData.length === 0) {\n      return { [dataKey]: [], error: errorMsg, shouldFetch: true };\n    }\n    \n    return { [dataKey]: rawData.map(mapper) };\n  } catch (error) {\n    return { [dataKey]: [], error: error.message, shouldFetch: true };\n  }\n}\n\n// Use it\nreturn simplifyMCPData(\n  input,\n  'channels',\n  'items',\n  (g) => ({\n    id: g.id,\n    name: g.name,\n    members: g.memberCount,\n    kind: g.kind,\n    unread: g.unread\n  }),\n  'No valid chats found'\n);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        320
+      ],
+      "id": "telegram-chat-data-simplifier",
+      "name": "Chat Data Simplifier"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "HTXqB729RFNozetP",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/HTXqB729RFNozetP",
+          "cachedResultName": "[HELPERS] Global Cache System"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "writeTTLms": "={{ 30 * 60 * 1000 }}",
+            "cacheKey": "telegramChannels",
+            "writeValue": "={{ {channels: $json.channels} }}",
+            "trueToWrite": true
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "trueToWrite",
+              "displayName": "trueToWrite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "cacheKey",
+              "displayName": "cacheKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "writeValue",
+              "displayName": "writeValue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "writeTTLms",
+              "displayName": "writeTTLms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        416,
+        320
+      ],
+      "id": "update-telegram-chat-cache",
+      "name": "Update Chat Cache"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        640,
+        240
+      ],
+      "id": "all-telegram-chats",
+      "name": "All Chats"
+    },
+    {
+      "parameters": {
+        "query": "={{ $('When Executed by Another Workflow').item.json.query }}",
+        "arrayField": "channels",
+        "searchKeys": "name\nkind",
+        "matchQuality": 50,
+        "limit": 10,
+        "advancedOptions": {
+          "includeScore": true,
+          "matchIndividualWords": false
+        }
+      },
+      "type": "n8n-nodes-paragon-os.fuzzySearch",
+      "typeVersion": 1,
+      "position": [
+        864,
+        240
+      ],
+      "id": "telegram-fuzzy-chats",
+      "name": "FuzzySearch (Chats)"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "HTXqB729RFNozetP",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/HTXqB729RFNozetP",
+          "cachedResultName": "[HELPERS] Global Cache System"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cacheKey": "telegramTools",
+            "trueToWrite": false,
+            "writeTTLms": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "trueToWrite",
+              "displayName": "trueToWrite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "cacheKey",
+              "displayName": "cacheKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "writeValue",
+              "displayName": "writeValue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "writeTTLms",
+              "displayName": "writeTTLms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -256,
+        528
+      ],
+      "id": "check-telegram-tool-cache",
+      "name": "Check Tool Cache",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        608
+      ],
+      "id": "list-telegram-tools",
+      "name": "List MCP Tools",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "aiYCclLDUqob5iQ0",
+          "name": "Telegram MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\n// Validate cache result - check if tools exist and is valid\nif (!input || !input.tools || (Array.isArray(input.tools) && input.tools.length === 0) || (typeof input.tools === 'object' && Object.keys(input.tools).length === 0)) {\n  // Invalid/empty cache - return error to trigger fetch\n  return {\n    error: 'Invalid or empty cache result',\n    shouldFetch: true,\n    output: { tools: [] }\n  };\n}\n\nreturn {\n  output: {\n    tools: input.tools\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        608
+      ],
+      "id": "telegram-tool-data-simplifier",
+      "name": "Tool Data Simplifier"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "HTXqB729RFNozetP",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/HTXqB729RFNozetP",
+          "cachedResultName": "[HELPERS] Global Cache System"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "writeTTLms": "={{ 30 * 60 * 1000 }}",
+            "cacheKey": "telegramTools",
+            "writeValue": "={{ $json.output }}",
+            "trueToWrite": true
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "trueToWrite",
+              "displayName": "trueToWrite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "cacheKey",
+              "displayName": "cacheKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "writeValue",
+              "displayName": "writeValue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "writeTTLms",
+              "displayName": "writeTTLms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        416,
+        608
+      ],
+      "id": "update-telegram-tool-cache",
+      "name": "Update Tool Cache"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        640,
+        528
+      ],
+      "id": "all-telegram-tools",
+      "name": "All Tools"
+    },
+    {
+      "parameters": {
+        "query": "={{ $('When Executed by Another Workflow').item.json.query }}",
+        "arrayField": "tools",
+        "searchKeys": "name\ndescription",
+        "matchQuality": 50,
+        "limit": 10,
+        "advancedOptions": {
+          "includeScore": true,
+          "matchIndividualWords": false
+        }
+      },
+      "type": "n8n-nodes-paragon-os.fuzzySearch",
+      "typeVersion": 1,
+      "position": [
+        864,
+        528
+      ],
+      "id": "telegram-fuzzy-tools",
+      "name": "FuzzySearch (Tools)"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "HTXqB729RFNozetP",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/HTXqB729RFNozetP",
+          "cachedResultName": "[HELPERS] Global Cache System"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cacheKey": "telegramProfile",
+            "trueToWrite": false,
+            "writeTTLms": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "trueToWrite",
+              "displayName": "trueToWrite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "cacheKey",
+              "displayName": "cacheKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "writeValue",
+              "displayName": "writeValue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "writeTTLms",
+              "displayName": "writeTTLms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -256,
+        848
+      ],
+      "id": "check-telegram-profile-cache",
+      "name": "Check Profile Cache",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "=telegram_get_me",
+        "toolParameters": "={}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        912
+      ],
+      "id": "get-telegram-profile",
+      "name": "Get My Profile",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "aiYCclLDUqob5iQ0",
+          "name": "Telegram MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  myProfile: JSON.parse($input.first().json.result.content[0].text)\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        912
+      ],
+      "id": "telegram-profile-simplifier",
+      "name": "User Profile Simplifier"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "HTXqB729RFNozetP",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/HTXqB729RFNozetP",
+          "cachedResultName": "[HELPERS] Global Cache System"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "writeTTLms": "={{ 30 * 60 * 1000 }}",
+            "cacheKey": "telegramProfile",
+            "writeValue": "={{ {myProfile: $json.myProfile} }}",
+            "trueToWrite": true
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "trueToWrite",
+              "displayName": "trueToWrite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "cacheKey",
+              "displayName": "cacheKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "writeValue",
+              "displayName": "writeValue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "writeTTLms",
+              "displayName": "writeTTLms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        416,
+        912
+      ],
+      "id": "update-telegram-profile-cache",
+      "name": "Update Profile Cache"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        848,
+        912
+      ],
+      "id": "all-telegram-profile",
+      "name": "My Profile"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.entity }}",
+                    "rightValue": "contact",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "telegram-switch-contact"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CONTACT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "telegram-switch-chat",
+                    "leftValue": "={{ $json.entity }}",
+                    "rightValue": "chat",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CHAT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "telegram-switch-tool",
+                    "leftValue": "={{ $json.entity }}",
+                    "rightValue": "tool",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TOOL"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "telegram-switch-self",
+                    "leftValue": "={{ $json.entity }}",
+                    "rightValue": "self",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "SELF"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -480,
+        352
+      ],
+      "id": "telegram-entity-switch",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1296,
+        352
+      ],
+      "id": "telegram-merge-results",
+      "name": "Merge"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Contact Cache": {
+      "main": [
+        [
+          {
+            "node": "All Contacts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "List Contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Contacts": {
+      "main": [
+        [
+          {
+            "node": "Contact Data Simplifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact Data Simplifier": {
+      "main": [
+        [
+          {
+            "node": "Update Contact Cache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Contact Cache": {
+      "main": [
+        [
+          {
+            "node": "All Contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "All Contacts": {
+      "main": [
+        [
+          {
+            "node": "FuzzySearch (Contacts)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FuzzySearch (Contacts)": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Chat Cache": {
+      "main": [
+        [
+          {
+            "node": "All Chats",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "List Chats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Chats": {
+      "main": [
+        [
+          {
+            "node": "Chat Data Simplifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Data Simplifier": {
+      "main": [
+        [
+          {
+            "node": "Update Chat Cache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Chat Cache": {
+      "main": [
+        [
+          {
+            "node": "All Chats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "All Chats": {
+      "main": [
+        [
+          {
+            "node": "FuzzySearch (Chats)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FuzzySearch (Chats)": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Check Tool Cache": {
+      "main": [
+        [
+          {
+            "node": "All Tools",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "List MCP Tools",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List MCP Tools": {
+      "main": [
+        [
+          {
+            "node": "Tool Data Simplifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool Data Simplifier": {
+      "main": [
+        [
+          {
+            "node": "Update Tool Cache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Tool Cache": {
+      "main": [
+        [
+          {
+            "node": "All Tools",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "All Tools": {
+      "main": [
+        [
+          {
+            "node": "FuzzySearch (Tools)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FuzzySearch (Tools)": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Check Profile Cache": {
+      "main": [
+        [
+          {
+            "node": "My Profile",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get My Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get My Profile": {
+      "main": [
+        [
+          {
+            "node": "User Profile Simplifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User Profile Simplifier": {
+      "main": [
+        [
+          {
+            "node": "Update Profile Cache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Profile Cache": {
+      "main": [
+        [
+          {
+            "node": "My Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "My Profile": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Check Contact Cache",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Chat Cache",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Tool Cache",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Profile Cache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "telegram-context-scout-v1",
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [
+    {
+      "updatedAt": "2025-11-30T21:00:00.000Z",
+      "createdAt": "2025-11-30T21:00:00.000Z",
+      "id": "telegram-tag",
+      "name": "Telegram"
+    },
+    {
+      "updatedAt": "2025-11-30T21:00:00.000Z",
+      "createdAt": "2025-11-30T21:00:00.000Z",
+      "id": "mcp-tag",
+      "name": "MCP"
+    }
+  ],
+  "shared": []
+}
+
+

@@ -1,0 +1,375 @@
+{
+  "updatedAt": "2025-11-30T21:05:00.000Z",
+  "createdAt": "2025-11-30T21:05:00.000Z",
+  "id": "TelegramSmartAgent",
+  "name": "Telegram Smart Agent",
+  "description": "High-level Telegram orchestration agent that uses a unified Telegram Context Scout search tool and a shared Step Executor to plan, execute, and answer user prompts involving Telegram chats, contacts, and media.",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "userPrompt"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1712,
+        112
+      ],
+      "id": "telegram-smart-trigger",
+      "name": "When Executed by Another Workflow",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "maxTries": 2
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1488,
+        112
+      ],
+      "id": "telegram-smart-noop-in",
+      "name": "No Operation, do nothing (In)"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"executionSteps\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"toolName\": {\n            \"type\": \"string\",\n            \"description\": \"The exact MCP tool name to execute (e.g., 'telegram_list_messages', 'telegram_send_message')\"\n          },\n          \"callParams\": {\n            \"type\": \"object\",\n            \"description\": \"The parameters object for the tool call with all required IDs and values\",\n            \"additionalProperties\": true\n          },\n          \"reasoning\": {\n            \"type\": \"string\",\n            \"description\": \"Brief explanation of why this step is needed\"\n          }\n        },\n        \"required\": [\"toolName\", \"callParams\"],\n        \"additionalProperties\": false\n      },\n      \"description\": \"Execution step array to achieve the user's goal\"\n    },\n    \"chatsUsed\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"id\": {\n            \"type\": \"string\"\n          },\n          \"name\": {\n            \"type\": \"string\"\n          },\n          \"kind\": {\n            \"type\": \"string\",\n            \"description\": \"Telegram chat kind, e.g. 'user', 'group', 'supergroup', 'channel'\"\n          },\n          \"unread\": {\n            \"type\": \"boolean\",\n            \"description\": \"Whether this chat currently has unread messages\"\n          }\n        }\n      },\n      \"description\": \"List of chat objects that were referenced when providing the answer to user prompt\"\n    },\n    \"contactsUsed\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"id\": {\n            \"type\": \"string\"\n          },\n          \"username\": {\n            \"type\": \"string\"\n          },\n          \"displayName\": {\n            \"type\": \"string\"\n          },\n          \"phone\": {\n            \"type\": \"string\"\n          }\n        }\n      },\n      \"description\": \"List of Telegram contacts that were referenced when providing the answer to user prompt\"\n    },\n    \"toolsUsed\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"name\": {\n            \"type\": \"string\"\n          },\n          \"description\": {\n            \"type\": \"string\"\n          },\n          \"inputSchema\": {\n            \"type\": \"object\"\n          }\n        }\n      },\n      \"description\": \"List of MCP tool specifications used in the executionStep execution\"\n    },\n    \"answerToUserPrompt\": {\n      \"type\": \"string\",\n      \"description\": \"Your answer to the user prompt after calling Telegram Context Scout & executing Telegram MCP calls for executionSteps. MUST be proper markdown formatted.\"\n    }\n  },\n  \"required\": [\n    \"executionSteps\",\n    \"chatsUsed\",\n    \"contactsUsed\",\n    \"toolsUsed\",\n    \"answerToUserPrompt\"\n  ],\n  \"additionalProperties\": false\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -1000,
+        336
+      ],
+      "id": "telegram-smart-output-parser",
+      "name": "Smart Agent Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=User Prompt: {{ $json.userPrompt.toJsonString() }}\n\nCurrent Date & Time: {{ $now.toString() }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=## Role\nYou are a high-reliability Telegram assistant. Your job is to answer the user’s prompt as accurately as possible by:\n- Searching for relevant Telegram contacts, chats, and MCP tools using the **Telegram Context Scout** tool.\n- Constructing a fully-resolved sequence of Telegram MCP tool calls (`executionSteps`).\n- Executing those steps via the **Step Executor** tool with `targetMcp = \"TELEGRAM\"`.\n- Returning a complete markdown answer and explicit provenance (which chats, contacts, and tools you used).\n\n---\n## Critical Telegram semantics\n- Telegram uses **chat_id** for all conversations (DMs, groups, channels).\n- Group/supergroup/channel IDs may be negative, but you must always use the exact ids returned from tools or the scout.\n- Do **not** invent or hallucinate `chat_id`, `user_id`, or tool names.\n- Every ID you use in `callParams` must come from:\n  - Telegram Context Scout results, or\n  - Previous Telegram MCP tool calls, or\n  - Explicitly provided metadata in the prompt (if it clearly contains a valid id).\n\n---\n## Tools you can use\n\n### 1. Telegram Context Scout (toolWorkflow)\nYou MUST use this tool anytime you need to:\n- Resolve a human-readable **contact name** to a concrete contact (for DM `chat_id`).\n- Resolve a human-readable **chat name** (group/channel) to a concrete chat with id and kind.\n- Discover which Telegram MCP tools exist and what their input schemas are.\n\nCall it with:\n- `query`: space separated keywords, e.g. `\"read messages\"`, `\"send dm sebastian\"`, `\"download attachments\"`.\n- `entity`:\n  - `\"contact\"` → search in Telegram contacts (username, displayName, contactType, phone).\n  - `\"chat\"` → search in chats (name, kind).\n  - `\"tool\"` → search in MCP tools (name, description) and inspect inputSchema.\n  - `\"self\"` → retrieve and inspect your own Telegram profile.\n\nYou may call the Scout **multiple times** with different queries and entities.\n\n### 2. Step Executor (toolWorkflow)\n- Call this tool with a **complete `executionSteps` array** and `targetMcp = \"TELEGRAM\"`.\n- It will execute your Telegram MCP sequence and return per-step results.\n- You MUST call Step Executor if you produce any `executionSteps`.\n\n---\n## ExecutionSteps construction rules\n- `executionSteps` is an ordered array. Each step:\n  - `toolName`: exact MCP tool name (e.g., `\"telegram_list_messages\"`, `\"telegram_send_message\"`, `\"telegram_search_messages\"`, `\"telegram_download_media\"`).\n  - `callParams`: full parameter object that exactly matches the tool schema (use `Telegram Context Scout` + tool schemas to populate this).\n  - `reasoning`: short explanation of why the step is needed.\n- Never use symbolic references like \"chat from step 1\". Always use concrete ids.\n- If you don't yet know a `chat_id` or other identifier, FIRST call the Scout (or an appropriate MCP tool) to find it, then build subsequent steps using those ids.\n\n---\n## When to use direct Telegram reads vs writes\nAlways use MCP tools (via executionSteps) for **any** Telegram data access:\n- Reading/list/get operations (list messages, pending chats, search messages, get profile info).\n- Writing/send operations (send message, reply, edit, delete, react, forward, download media).\n- Finding/searching operations (search messages, search public chats, etc.).\n\nExamples:\n- \"list my unread group chats\" → use tools like `telegram_get_pending_chats` / `telegram_list_chats` and then summarize.\n- \"send a DM to Sebastian\" → resolve contact name via Scout, then call `telegram_send_message` with concrete `chat_id`.\n- \"summarize what I missed in channel X since yesterday\" → resolve chat via Scout, then list/search messages with appropriate date filters, then summarize.\n\n---\n## Output requirements\nYou MUST return a valid JSON object matching the structured schema:\n- `executionSteps`: the exact array you passed to Step Executor.\n- `chatsUsed`: all chats whose ids or names you relied on when answering.\n- `contactsUsed`: all contacts you referenced or targeted in your plan.\n- `toolsUsed`: MCP tools (name, description, inputSchema) you actually executed.\n- `answerToUserPrompt`: final answer as user-facing markdown.\n\nIf the user prompt is purely informational and can be answered without Telegram access, you may still use the Scout to double-check context and then produce an empty `executionSteps` if genuinely no tool calls are needed, but this should be rare.\n\n---\n## Your own Telegram profile (if available)\nIf you need your own profile (e.g., to detect your own user id), call the Telegram Context Scout with `entity = \"self\"`.\n",
+          "returnIntermediateSteps": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -1264,
+        112
+      ],
+      "id": "telegram-smart-agent",
+      "name": "Telegram Smart Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1132,
+        544
+      ],
+      "id": "telegram-smart-gemini",
+      "name": "Gemini Model (Telegram Smart Agent)",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "telegram-smart-output-assignment",
+              "name": "output",
+              "value": "={{ $json.output }}",
+              "type": "object"
+            },
+            {
+              "id": "telegram-smart-userprompt-assignment",
+              "name": "userPrompt",
+              "value": "={{ $('When Executed by Another Workflow').item.json.userPrompt }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -632,
+        112
+      ],
+      "id": "telegram-smart-set-output",
+      "name": "Attach Final Output"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -408,
+        112
+      ],
+      "id": "telegram-smart-noop-out",
+      "name": "No Operation, do nothing (Out)"
+    },
+    {
+      "parameters": {
+        "description": "Unified Telegram Context Scout search tool for contacts, chats, tools, and self profile.",
+        "workflowId": {
+          "__rl": true,
+          "value": "TelegramContextScout",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/TelegramContextScout",
+          "cachedResultName": "Telegram Context Scout"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('query', `Space separated keywords used to search Telegram contacts, chats, or MCP tools. This query is fuzzily matched against the fields relevant to the selected entity type.`, 'string') }}",
+            "entity": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('entity', `Specifies which dataset to search. Must be one of the following:\\n\\n**contact** - Searches through Telegram contacts using username, display name, contact type, and phone.\\n**chat** - Searches through Telegram chats (DMs, groups, channels) using name and kind.\\n**tool** - Searches through MCP tools using tool name and description.\\n**self** - Returns your own Telegram profile; ignores the query string.`, 'string') }}"
+          },
+          "matchingColumns": [
+            "query"
+          ],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "entity",
+              "displayName": "entity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -1256,
+        336
+      ],
+      "id": "telegram-context-scout-tool",
+      "name": "Telegram Context Scout Tool"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool with a valid executionSteps array to execute a sequence of MCP calls and get results from Telegram or Discord.",
+        "workflowId": {
+          "__rl": true,
+          "value": "uoYXevOl4ePWKeNx",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/uoYXevOl4ePWKeNx",
+          "cachedResultName": "[HELPERS] Discord & Telegram Step Executor"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "executionSteps": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('executionSteps', ``, 'json') }}",
+            "targetMcp": "TELEGRAM"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "executionSteps",
+              "displayName": "executionSteps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "targetMcp",
+              "displayName": "targetMcp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -1128,
+        336
+      ],
+      "id": "telegram-step-executor-tool",
+      "name": "Step Executor (Telegram)"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing (In)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing (In)": {
+      "main": [
+        [
+          {
+            "node": "Telegram Smart Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Smart Agent Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Telegram Smart Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Smart Agent": {
+      "main": [
+        [
+          {
+            "node": "Attach Final Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Model (Telegram Smart Agent)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Telegram Smart Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Smart Agent Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Final Output": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing (Out)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Context Scout Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Telegram Smart Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step Executor (Telegram)": {
+      "ai_tool": [
+        [
+          {
+            "node": "Telegram Smart Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "userPrompt": "Catch me up on the last 20 messages in my most active startup group chat and tell me what I need to respond to."
+        }
+      }
+    ]
+  },
+  "versionId": "telegram-smart-agent-v1",
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [
+    {
+      "updatedAt": "2025-11-30T21:05:00.000Z",
+      "createdAt": "2025-11-30T21:05:00.000Z",
+      "id": "telegram-tag",
+      "name": "Telegram"
+    },
+    {
+      "updatedAt": "2025-11-30T21:05:00.000Z",
+      "createdAt": "2025-11-30T21:05:00.000Z",
+      "id": "mcp-tag",
+      "name": "MCP"
+    }
+  ],
+  "shared": []
+}
+
+
