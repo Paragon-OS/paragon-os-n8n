@@ -1,42 +1,142 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# ===================================
+# SECURITY & SECRETS
+# ===================================
+# Environment files
+.env
+.env.*
+.env*.local
+!.env.example
+!.env.template
+
+# API Keys & Credentials
+*credentials*.json
+*secrets*.json
+*secret*.txt
+*api-key*.txt
+*.key
+*.pem
+*.p12
+*.pfx
+*.cer
+
+# Documentation with sensitive info
+*Installation*.md
+*installation*.md
+*setup-notes*.md
+*config-notes*.md
+
+# Service account files
+service-account*.json
+*-credentials.json
+
+# ===================================
+# DEPENDENCIES
+# ===================================
 /node_modules
+node_modules/
 /.pnp
 .pnp.js
+package-lock.json.bak
+yarn.lock.bak
 
-# testing
+# ===================================
+# TESTING
+# ===================================
 /coverage
+*.coverage
+.nyc_output
+test-results/
+*.test.local.*
 
-# next.js
+# ===================================
+# NEXT.JS / REACT
+# ===================================
 /.next/
 /out/
+.next/
+out/
 
-# production
+# ===================================
+# BUILD / PRODUCTION
+# ===================================
 /build
+/dist
+build/
+dist/
 
-# misc
+# ===================================
+# MISC
+# ===================================
 .DS_Store
-*.pem
+.AppleDouble
+.LSOverride
+Thumbs.db
+Desktop.ini
 
-# debug
+# ===================================
+# LOGS & DEBUG
+# ===================================
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
+logs/
+*.log.*
 
-# local env files
-.env*.local
-.env
-
-# vercel
+# ===================================
+# VERCEL
+# ===================================
 .vercel
 
-# typescript
+# ===================================
+# TYPESCRIPT
+# ===================================
 *.tsbuildinfo
 next-env.d.ts
 
-# Supabase
+# ===================================
+# SUPABASE
+# ===================================
 /.supabase
 supabase/.temp
 supabase/.branches
-supabase/.temp
+
+# ===================================
+# DATABASES & BACKUPS
+# ===================================
+*.db
+*.sqlite
+*.sqlite3
+*.backup
+*.bak
+*.dump
+
+# ===================================
+# IDE & EDITORS
+# ===================================
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ===================================
+# APPLICATION SPECIFIC
+# ===================================
+# AnythingLLM data
+AnythingLLM-Installation.md
+anythingllm-*.md
+
+# n8n workflow backups with sensitive data
+*-backup-*.json.bak
+
+# Temporary files
+tmp/
+temp/
+*.tmp
