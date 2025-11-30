@@ -1,7 +1,7 @@
 {
-  "name": "n8n-nodes-text-manipulation",
+  "name": "n8n-nodes-paragon-os",
   "version": "1.4.2",
-  "description": "This node allows to modify texts.",
+  "description": "Custom n8n nodes for ParagonOS.",
   "keywords": [
     "n8n-community-node-package"
   ],
@@ -31,16 +31,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lublak/n8n-nodes-text-manipulation.git"
+    "url": "git+https://github.com/ParagonTheDev/n8n-nodes-paragon-os.git"
   },
   "author": {
-    "name": "lublak"
+    "name": "ParagonTheDev"
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/lublak/n8n-nodes-text-manipulation/issues"
+    "url": "https://github.com/ParagonTheDev/n8n-nodes-paragon-os/issues"
   },
-  "homepage": "https://github.com/lublak/n8n-nodes-text-manipulation#readme",
+  "homepage": "https://github.com/ParagonTheDev/n8n-nodes-paragon-os#readme",
   "devDependencies": {
     "@types/lodash": "^4.17.16",
     "@types/node": "^22.14.0",
