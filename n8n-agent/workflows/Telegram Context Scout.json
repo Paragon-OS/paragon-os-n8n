@@ -151,7 +151,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "writeTTLms": "={{ 30 * 60 * 1000 }}",
+            "writeTTLms": "={{ 6 * 60 * 60 * 1000 }}",
             "cacheKey": "telegramContacts",
             "writeValue": "={{ {telegramContacts: $json.contacts} }}",
             "trueToWrite": true
@@ -363,7 +363,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "writeTTLms": "={{ 30 * 60 * 1000 }}",
+            "writeTTLms": "={{ 6 * 60 * 60 * 1000 }}",
             "cacheKey": "telegramChannels",
             "writeValue": "={{ {channels: $json.channels} }}",
             "trueToWrite": true
@@ -571,7 +571,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "writeTTLms": "={{ 30 * 60 * 1000 }}",
+            "writeTTLms": "={{ 6 * 60 * 60 * 1000 }}",
             "cacheKey": "telegramTools",
             "writeValue": "={{ $json.output }}",
             "trueToWrite": true
@@ -783,7 +783,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "writeTTLms": "={{ 30 * 60 * 1000 }}",
+            "writeTTLms": "={{ 6 * 60 * 60 * 1000 }}",
             "cacheKey": "telegramProfile",
             "writeValue": "={{ {myProfile: $json.myProfile} }}",
             "trueToWrite": true

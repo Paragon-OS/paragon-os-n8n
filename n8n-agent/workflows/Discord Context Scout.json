@@ -126,7 +126,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "writeTTLms": "={{ 30 * 60 * 1000 }}",
+            "writeTTLms": "={{ 6 * 60 * 60 * 1000 }}",
             "cacheKey": "discordContacts",
             "writeValue": "={{ {discordContacts: $json.contacts} }}",
             "trueToWrite": true
@@ -326,7 +326,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "writeTTLms": "={{ 30 * 60 * 1000 }}",
+            "writeTTLms": "={{ 6 * 60 * 60 * 1000 }}",
             "cacheKey": "discordGuilds",
             "writeValue": "={{ {serversOrGuilds: $json.guilds} }}",
             "trueToWrite": true
@@ -681,7 +681,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "writeTTLms": "={{ 30 * 60 * 1000 }}",
+            "writeTTLms": "={{ 6 * 60 * 60 * 1000 }}",
             "cacheKey": "discordTools",
             "writeValue": "={{ $json.output }}",
             "trueToWrite": true
@@ -906,7 +906,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "writeTTLms": "={{ 30 * 60 * 1000 }}",
+            "writeTTLms": "={{ 6 * 60 * 60 * 1000 }}",
             "cacheKey": "discordProfile",
             "writeValue": "={{ {myProfile: $json.myProfile} }}",
             "trueToWrite": true
