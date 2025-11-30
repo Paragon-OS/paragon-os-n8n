@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-26T20:12:38.000Z",
+  "updatedAt": "2025-11-30T06:28:50.000Z",
   "createdAt": "2025-11-06T21:51:04.792Z",
   "id": "vfcxqLBDDMKL5lnG",
   "name": "Discord MCP Client Sequencer",
@@ -94,7 +94,7 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        840,
+        848,
         -1408
       ],
       "id": "762a6c3b-ecaf-4984-8d41-fe9c43813e40",
@@ -128,7 +128,7 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        248,
+        256,
         -1184
       ],
       "id": "fc946901-08ae-4ac6-b072-a8d59798086f",
@@ -144,7 +144,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        180,
+        192,
         -976
       ],
       "id": "c79482a2-0b52-475c-a1d5-8f92e6b322e2",
@@ -215,8 +215,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        1064,
-        -1304
+        1072,
+        -1312
       ],
       "id": "06e27531-aa79-4d3c-aa37-748e1b322840",
       "name": "Call Discord Step Executor"
@@ -284,7 +284,7 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        1588,
+        1600,
         -1184
       ],
       "id": "538e65bd-9cdf-4ccb-aee3-900717e59667",
@@ -318,7 +318,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1956,
+        1968,
         -1408
       ],
       "id": "a9a10da9-6271-473d-a015-5c866fee05c0",
@@ -335,7 +335,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1288,
+        1296,
         -1408
       ],
       "id": "116b33a8-d590-4a79-b13b-74d5fa60c436",
@@ -353,7 +353,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3,
       "position": [
-        1512,
+        1520,
         -1408
       ],
       "id": "eefe7dfc-4226-4cd7-90bf-fde29a23adbf",
@@ -388,7 +388,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2180,
+        2192,
         -1456
       ],
       "id": "b145076c-014e-42a5-aee7-cc476819044f",
@@ -399,7 +399,7 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        2404,
+        2416,
         -1456
       ],
       "id": "22e4bd83-b3fb-43c4-b545-01b7936d30de",
@@ -435,7 +435,7 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
-        120,
+        128,
         -1184
       ],
       "id": "7b08e3df-3525-412b-8563-ff32b122f63b",
@@ -464,7 +464,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2180,
+        2192,
         -1104
       ],
       "id": "79bf2852-a5b3-42af-b671-6a220ba9bf75",
@@ -488,7 +488,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        616,
+        624,
         -1408
       ],
       "id": "b659088c-b9c5-4975-bfc0-925c0a041339",
@@ -717,322 +717,29 @@
         }
       }
     ],
-    "Execution Planner AI Agent": [
+    "Enrich With Discord Context": [
       {
         "json": {
-          "output": {
-            "executionSteps": [
+          "userPrompt": "List the last 10 messages in the Discord channel 'staryo-admin-only' in the 'Metarune Labs' guild.",
+          "context": {
+            "serversOrGuilds": [
               {
-                "toolName": "discord_read_channel",
-                "callParams": {
+                "name": "Metarune Labs",
+                "channels": {
+                  "1277593921886883850": "staryo-admin-only"
+                },
+                "id": "1277590071574401084"
+              }
+            ],
+            "discordContacts": [],
+            "toolRecommendations": {
+              "discord_read_channel": {
+                "parameters": {
                   "limit": 10,
                   "channelId": "1277593921886883850"
                 }
               }
-            ]
-          },
-          "intermediateSteps": []
-        }
-      }
-    ],
-    "Enrich With Discord Context": [
-      {
-        "json": {
-          "userPrompt": "List the last 10 messages in the Discord channel 'staryo-admin-only' (channelId: 1277593921886883850) in the 'Metarune Labs' guild (guildId: 1277590071574401084).",
-          "context": {
-            "serversOrGuilds": [
-              {
-                "id": "995045635441049600",
-                "name": "Draft Labs",
-                "members": 19,
-                "channels": {
-                  "1062558279621955594": "water-cooler",
-                  "1178812443317784626": "dev-updates",
-                  "1178814072561606697": "draftables-metaroon-private",
-                  "1178816006999777371": "waiting-room",
-                  "1179879461588570204": "dev-discussions",
-                  "1339690911583703040": "art",
-                  "1354082888940916799": "aice-arena"
-                }
-              },
-              {
-                "id": "1277590071574401084",
-                "name": "Metarune Labs",
-                "members": 15,
-                "channels": {
-                  "1277590072366993492": "metarune-internal",
-                  "1277590203669942272": "staryo-general",
-                  "1277592460742361119": "rules",
-                  "1277593921886883850": "staryo-admin-only",
-                  "1296702105108877312": "staryo-design",
-                  "1329740656414818375": "str3am-admin-only",
-                  "1329741632169574420": "str3am-geneal",
-                  "1349239039915458602": "staryo-qa",
-                  "1394660329467805827": "staryo-project-management"
-                }
-              },
-              {
-                "id": "1092968290046988298",
-                "name": "WandrLust",
-                "members": 19,
-                "channels": {
-                  "1175337140981338112": "📒・research-ai-training",
-                  "1413464992220582010": "🔑・mrl-project-management-discussion",
-                  "1092978766051037214": "🔔・discord-updates",
-                  "1354282957342380172": "🔑・patrick-metarune",
-                  "1092976237967839306": "😫・im-stuck",
-                  "1339437663911940227": "🔑・mrl-grff-trait-chat",
-                  "1175338786318712902": "📒・research-feature-ideas",
-                  "1252189909138014300": "🔑・mrl-admin-chat",
-                  "1092974110298099804": "🪩・verify-here",
-                  "1279268825652789320": "ticket-0002",
-                  "1270920384178290689": "🔑・mrl-dev-chat"
-                }
-              }
-            ],
-            "discordContacts": [
-              {
-                "id": "111111111",
-                "username": "immediateuser1#0001",
-                "displayName": "Immediate User 1",
-                "lastMessage": "29 days ago",
-                "contactType": "dm"
-              },
-              {
-                "id": "222222222",
-                "username": "immediateuser2#0002",
-                "displayName": "Immediate User 2",
-                "contactType": "friend"
-              },
-              {
-                "id": "1130657282364031016",
-                "username": "sebastianmoy.",
-                "displayName": "SebastianMoy",
-                "lastMessage": "22 days ago",
-                "contactType": "dm"
-              },
-              {
-                "id": "700498516807516240",
-                "username": "0xbri",
-                "displayName": "Brian",
-                "lastMessage": "27 days ago",
-                "contactType": "dm"
-              },
-              {
-                "id": "884878867016327208",
-                "username": "codyorlove",
-                "displayName": "CodyOrlove",
-                "lastMessage": "79 days ago",
-                "contactType": "dm"
-              },
-              {
-                "id": "936929561302675456",
-                "username": "Midjourney Bot#9282",
-                "displayName": "Midjourney Bot",
-                "lastMessage": "154 days ago",
-                "contactType": "dm"
-              },
-              {
-                "id": "807849176317558844",
-                "username": "cuteweirdo",
-                "displayName": "CuteWeirdo",
-                "lastMessage": "174 days ago",
-                "contactType": "dm"
-              },
-              {
-                "id": "203550068123500545",
-                "username": "klerii_",
-                "displayName": "Charmy♡",
-                "lastMessage": "174 days ago",
-                "contactType": "dm"
-              },
-              {
-                "id": "665506940918562826",
-                "username": "zaph.ira",
-                "displayName": "Zaphira",
-                "lastMessage": "174 days ago",
-                "contactType": "dm"
-              },
-              {
-                "id": "657072195033628675",
-                "username": "papayaaa_",
-                "displayName": "! papaya",
-                "lastMessage": "174 days ago",
-                "contactType": "dm"
-              },
-              {
-                "id": "405786119318405121",
-                "username": "hewa47",
-                "displayName": "hewa-47",
-                "lastMessage": "187 days ago",
-                "contactType": "dm"
-              },
-              {
-                "id": "983572693205012481",
-                "username": "nicscarce",
-                "displayName": "Nic_Wandrs",
-                "lastMessage": "207 days ago",
-                "contactType": "dm"
-              },
-              {
-                "id": "643945264868098049",
-                "username": "discord#0000",
-                "displayName": "Discord",
-                "lastMessage": "213 days ago",
-                "contactType": "dm"
-              },
-              {
-                "id": "344827190556360706",
-                "username": "nawodyaishan",
-                "displayName": "Nawodya Ishan",
-                "lastMessage": "255 days ago",
-                "contactType": "dm"
-              },
-              {
-                "id": "1014647883552792598",
-                "username": "s_m_n_",
-                "displayName": "Simon",
-                "lastMessage": "265 days ago",
-                "contactType": "dm"
-              },
-              {
-                "id": "969499062120382494",
-                "username": "metaops123",
-                "displayName": "MetaOps",
-                "lastMessage": "2 days ago",
-                "contactType": "dm"
-              },
-              {
-                "id": "621925387563171850",
-                "username": "sneep3r4476",
-                "displayName": "Sneep3r4476",
-                "lastMessage": "326 days ago",
-                "contactType": "dm"
-              },
-              {
-                "id": "1017643832109715598",
-                "username": "thirasara",
-                "displayName": "Thirasara",
-                "lastMessage": "356 days ago",
-                "contactType": "dm"
-              },
-              {
-                "id": "1277924298316709963",
-                "username": "ssachintha",
-                "displayName": "Sithira Sachintha",
-                "lastMessage": "360 days ago",
-                "contactType": "dm"
-              },
-              {
-                "id": "849986960642277396",
-                "username": "dulangakithmini",
-                "displayName": "dulangakithmini",
-                "lastMessage": "447 days ago",
-                "contactType": "dm"
-              }
-            ],
-            "toolRecommendations": [
-              {
-                "name": "discord_read_channel",
-                "description": "Read messages from a Discord channel or direct message (DM) chat using IDs only. Provide either a channelId to read any channel, or a userId to read the DM channel with that user. Supports comprehensive pagination options.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "channelId": {
-                      "type": "string",
-                      "description": "The Discord channel ID to read messages from (alternative to userId)."
-                    },
-                    "userId": {
-                      "type": "string",
-                      "description": "The Discord user ID to read DM chat history with (alternative to channelId). Use this to list direct messages with a specific user."
-                    },
-                    "limit": {
-                      "type": "number",
-                      "description": "Number of messages to fetch (default: 50, max: 100)"
-                    },
-                    "before": {
-                      "type": "string",
-                      "description": "Message ID to fetch messages before (for pagination)"
-                    },
-                    "after": {
-                      "type": "string",
-                      "description": "Message ID to fetch messages after (for pagination)"
-                    },
-                    "beforeDate": {
-                      "type": "string",
-                      "description": "ISO date string to fetch messages before (e.g., \"2023-12-01T10:00:00Z\")"
-                    },
-                    "afterDate": {
-                      "type": "string",
-                      "description": "ISO date string to fetch messages after (e.g., \"2023-12-01T10:00:00Z\")"
-                    },
-                    "applyFilters": {
-                      "type": "boolean",
-                      "description": "Whether to apply channel whitelist/blacklist filters (default: false)"
-                    }
-                  },
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              }
-            ],
-            "playbookRecommendations": [
-              {
-                "name": "catch_up_on_channel_since_time_or_message",
-                "whenToUse": "User asks to see or summarize what they missed in a specific channel.",
-                "steps": [
-                  "Resolve server and channel names to channelId using serversOrGuilds; if missing, call discord_list_channels (optionally with guildId) and match by name in the model.",
-                  "If the user gives a time window, call discord_read_channel with channelId=<channelId> and afterDate / beforeDate; otherwise use before / after messageId or a recent limit.",
-                  "Summarize important messages, mentions, and decisions for the user.",
-                  "Offer to draft replies and, if accepted, call discord_reply_message or discord_send_message as appropriate."
-                ]
-              }
-            ],
-            "allRelaventTools": [
-              {
-                "name": "discord_read_channel",
-                "description": "Read messages from a Discord channel or direct message (DM) chat using IDs only. Provide either a channelId to read any channel, or a userId to read the DM channel with that user. Supports comprehensive pagination options.",
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "channelId": {
-                      "type": "string",
-                      "description": "The Discord channel ID to read messages from (alternative to userId)."
-                    },
-                    "userId": {
-                      "type": "string",
-                      "description": "The Discord user ID to read DM chat history with (alternative to channelId). Use this to list direct messages with a specific user."
-                    },
-                    "limit": {
-                      "type": "number",
-                      "description": "Number of messages to fetch (default: 50, max: 100)"
-                    },
-                    "before": {
-                      "type": "string",
-                      "description": "Message ID to fetch messages before (for pagination)"
-                    },
-                    "after": {
-                      "type": "string",
-                      "description": "Message ID to fetch messages after (for pagination)"
-                    },
-                    "beforeDate": {
-                      "type": "string",
-                      "description": "ISO date string to fetch messages before (e.g., \"2023-12-01T10:00:00Z\")"
-                    },
-                    "afterDate": {
-                      "type": "string",
-                      "description": "ISO date string to fetch messages after (e.g., \"2023-12-01T10:00:00Z\")"
-                    },
-                    "applyFilters": {
-                      "type": "boolean",
-                      "description": "Whether to apply channel whitelist/blacklist filters (default: false)"
-                    }
-                  },
-                  "additionalProperties": false,
-                  "$schema": "http://json-schema.org/draft-07/schema#"
-                }
-              }
-            ],
+            },
             "myProfile": {
               "user": {
                 "id": "711983662144421991",
@@ -1053,8 +760,8 @@
       }
     ]
   },
-  "versionId": "0e0de147-46bb-4c6b-8625-2ce371617dcc",
-  "versionCounter": 268,
+  "versionId": "8774b160-da98-407f-a740-7c9fcdbfcbb9",
+  "versionCounter": 270,
   "triggerCount": 0,
   "tags": [
     {
