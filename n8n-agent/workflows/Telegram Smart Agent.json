@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-30T21:05:00.000Z",
+  "updatedAt": "2025-11-30T21:03:46.000Z",
   "createdAt": "2025-11-30T21:05:00.000Z",
   "id": "TelegramSmartAgent",
   "name": "Telegram Smart Agent",
@@ -347,29 +347,44 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "userPrompt": "Catch me up on the last 20 messages in my most active startup group chat and tell me what I need to respond to."
+          "userPrompt": "Catch me up on the last 5 messages in metarune management"
         }
       }
     ]
   },
-  "versionId": "telegram-smart-agent-v1",
-  "versionCounter": 1,
+  "versionId": "4dd9986b-1a06-4f15-b124-2fd710360aa7",
+  "versionCounter": 4,
   "triggerCount": 0,
   "tags": [
     {
-      "updatedAt": "2025-11-30T21:05:00.000Z",
-      "createdAt": "2025-11-30T21:05:00.000Z",
-      "id": "telegram-tag",
+      "updatedAt": "2025-11-07T17:59:49.155Z",
+      "createdAt": "2025-11-07T17:59:49.155Z",
+      "id": "q6mxN2D7JQjPEzuF",
       "name": "Telegram"
     },
     {
-      "updatedAt": "2025-11-30T21:05:00.000Z",
-      "createdAt": "2025-11-30T21:05:00.000Z",
-      "id": "mcp-tag",
+      "updatedAt": "2025-11-02T21:22:14.342Z",
+      "createdAt": "2025-11-02T21:22:14.342Z",
+      "id": "w6FOnYOvODOXV9os",
       "name": "MCP"
     }
   ],
-  "shared": []
+  "shared": [
+    {
+      "updatedAt": "2025-11-30T20:54:44.561Z",
+      "createdAt": "2025-11-30T20:54:44.561Z",
+      "role": "workflow:owner",
+      "workflowId": "TelegramSmartAgent",
+      "projectId": "GEUEn6ArNROzJ5FY",
+      "project": {
+        "updatedAt": "2025-10-28T15:11:59.092Z",
+        "createdAt": "2025-10-28T15:08:17.462Z",
+        "id": "GEUEn6ArNROzJ5FY",
+        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null
+      }
+    }
+  ]
 }
-
-

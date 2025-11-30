@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-30T21:00:00.000Z",
+  "updatedAt": "2025-11-30T21:02:35.000Z",
   "createdAt": "2025-11-30T21:00:00.000Z",
   "id": "TelegramContextScout",
   "name": "Telegram Context Scout",
@@ -109,7 +109,7 @@
       "parameters": {
         "operation": "executeTool",
         "toolName": "=telegram_list_contacts",
-        "toolParameters": "={\n  \"limit\": 30\n}"
+        "toolParameters": "={\n  \"limit\": 100\n}"
       },
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
@@ -256,7 +256,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "cacheKey": "telegramChannels",
+            "cacheKey": "telegramChannelsx",
             "trueToWrite": false,
             "writeTTLms": 0
           },
@@ -321,7 +321,7 @@
       "parameters": {
         "operation": "executeTool",
         "toolName": "=telegram_list_chats",
-        "toolParameters": "={\n  \"limit\": 40\n}"
+        "toolParameters": "={\n  \"limit\": 50\n}"
       },
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
@@ -652,7 +652,7 @@
         "limit": 10,
         "advancedOptions": {
           "includeScore": true,
-          "matchIndividualWords": false
+          "matchIndividualWords": true
         }
       },
       "type": "n8n-nodes-paragon-os.fuzzySearch",
@@ -1313,25 +1313,49 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": {},
-  "versionId": "telegram-context-scout-v1",
-  "versionCounter": 1,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "query": "send msg",
+          "entity": "self"
+        }
+      }
+    ]
+  },
+  "versionId": "cff22990-7c52-4bae-b50b-51d045fa940f",
+  "versionCounter": 18,
   "triggerCount": 0,
   "tags": [
     {
-      "updatedAt": "2025-11-30T21:00:00.000Z",
-      "createdAt": "2025-11-30T21:00:00.000Z",
-      "id": "telegram-tag",
+      "updatedAt": "2025-11-07T17:59:49.155Z",
+      "createdAt": "2025-11-07T17:59:49.155Z",
+      "id": "q6mxN2D7JQjPEzuF",
       "name": "Telegram"
     },
     {
-      "updatedAt": "2025-11-30T21:00:00.000Z",
-      "createdAt": "2025-11-30T21:00:00.000Z",
-      "id": "mcp-tag",
+      "updatedAt": "2025-11-02T21:22:14.342Z",
+      "createdAt": "2025-11-02T21:22:14.342Z",
+      "id": "w6FOnYOvODOXV9os",
       "name": "MCP"
     }
   ],
-  "shared": []
+  "shared": [
+    {
+      "updatedAt": "2025-11-30T20:54:42.692Z",
+      "createdAt": "2025-11-30T20:54:42.692Z",
+      "role": "workflow:owner",
+      "workflowId": "TelegramContextScout",
+      "projectId": "GEUEn6ArNROzJ5FY",
+      "project": {
+        "updatedAt": "2025-10-28T15:11:59.092Z",
+        "createdAt": "2025-10-28T15:08:17.462Z",
+        "id": "GEUEn6ArNROzJ5FY",
+        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null
+      }
+    }
+  ]
 }
-
-

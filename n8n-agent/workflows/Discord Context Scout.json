@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-30T20:32:53.000Z",
+  "updatedAt": "2025-11-30T20:56:38.000Z",
   "createdAt": "2025-11-30T05:19:38.311Z",
   "id": "BB1zsros5LmyJO9N",
   "name": "Discord Context Scout",
@@ -833,7 +833,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "cacheKey": "discordProfilex",
+            "cacheKey": "discordProfile",
             "trueToWrite": false,
             "writeTTLms": 0
           },
@@ -1371,8 +1371,8 @@
       }
     ]
   },
-  "versionId": "f5b69bde-f5f0-4e67-aa66-7209be887d28",
-  "versionCounter": 53,
+  "versionId": "62a86a49-ad3c-4f7d-b184-bc48fafd1a73",
+  "versionCounter": 54,
   "triggerCount": 0,
   "tags": [],
   "shared": [
