@@ -140,3 +140,4 @@ anythingllm-*.md
 tmp/
 temp/
 *.tmp
+n8n-nodes/database/
