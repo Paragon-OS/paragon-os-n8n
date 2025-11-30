@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-30T06:26:47.000Z",
+  "updatedAt": "2025-11-30T07:24:36.000Z",
   "createdAt": "2025-11-12T21:20:27.994Z",
   "id": "zBL0JT7t26pK2x95",
   "name": "[HELPERS] Discord Context Enricher",
@@ -52,13 +52,13 @@
     {
       "parameters": {
         "schemaType": "manual",
-        "inputSchema": "={\n  \"type\": \"object\",\n  \"properties\": {\n    \"prompt\": {\n      \"type\": \"string\",\n      \"description\": \"The optimized, less ambiguous user prompt\"\n    },\n    \"guildsToUse\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\"\n      },\n      \"description\": \"List of guilds that includes guild channels required to execute the task\"\n    },\n    \"toolsToUse\": {\n      \"type\": \"object\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"List of recommended tool specifications required to execute the task\"\n    },    \n    \"contactsToUse\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\"\n      },\n      \"description\": \"List of recommended contact data required to execute the task\"\n    }\n  },\n  \"required\": [\"prompt\"],\n  \"additionalProperties\": false\n}",
+        "inputSchema": "={\n  \"type\": \"object\",\n  \"properties\": {\n    \"prompt\": {\n      \"type\": \"string\",\n      \"description\": \"The optimized enriched user prompt\"\n    },\n    \"guildsToUse\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\"\n      },\n      \"description\": \"List of guilds that includes guild channel objects (original format you recieved from the tool) required to execute the task\"\n    },\n    \"toolsToUse\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\"\n      },\n      \"description\": \"List of recommended tool objects (original format you recieved from the tool) required to execute the task\"\n    },    \n    \"contactsToUse\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\"\n      },\n      \"description\": \"List of recommended contact objects (original format you recieved from the tool) required to execute the task\"\n    }\n  },\n  \"required\": [\"prompt\"],\n  \"additionalProperties\": false\n}",
         "autoFix": true
       },
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        56,
+        48,
         528
       ],
       "id": "6b81163c-5a17-4ed8-adf9-99d524005b4b",
@@ -67,10 +67,10 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=User Prompt:\n{{ $json.userPrompt }}\n\n{{ $('When Executed by Another Workflow').item.json.previousAttempt.isNotEmpty() ? `There has been a failed previous attempt: \\n\\n` + $('When Executed by Another Workflow').item.json.previousAttempt.toJsonString() : '' }}",
+        "text": "=User Prompt:\n{{ $json.userPrompt }}\n\n{{ $('When Executed by Another Workflow').item.json.previousAttempt.isNotEmpty() ? `There has been a failed previous attempt: \\n\\n` + $('When Executed by Another Workflow').item.json.previousAttempt.toJsonString() : '' }}\n\nCurrent Date & Time: {{ $now }}",
         "hasOutputParser": true,
         "options": {
-          "systemMessage": "=## You are a helpful assistant with the capabilities to decide & output\n- An optimal, enriched version of the user prompt with reduced ambiguities in wording and identifiers (including userIds, guildIds).\n- Recommend 'contacts', 'guilds', or 'tools' to use by searching the unified Discord search tool, which supports all three entity types.\n- Based on your tool search matches, include:\n  • 'toolsToUse' from the tool catalog as an array of tool specification objects\n  • 'guildsToUse' as an array of guild objects required to execute the task\n  • 'contactsToUse' as an array of contact objects required to execute the task\n- DO NOT HALLUCINATE Ids, tool-names, or play-names.\n- Be aware of the difference between UNREAD & UNRESPONDED.\n\n## Your own discord profile:\n\n{{ $json.myProfile?.toJsonString() ?? 'No profile available' }}",
+          "systemMessage": "=## You are a helpful assistant with the capabilities to decide & output data\n- Output an optimal, enriched version of the user prompt with identifiers (including userIds, toolIds, guildIds, channelIds).\n- Recommend 'contacts', 'guilds', or 'tools' to use by searching the unified Discord search tool, which supports all three entity types.\n- Based on your search tool matches, include:\n  • 'toolsToUse' from the tool catalog as an array of objects including exact tool descriptions, exact tool schema.\n  • 'guildsToUse' as an array of guild objects required to execute the task\n  • 'contactsToUse' as an array of contact objects required to execute the task\n- You are allowed to call searching tools as many times needed to collect the full context.\n- DO NOT HALLUCINATE Ids, tool-names.\n- Be aware of the difference between UNREAD & UNRESPONDED.\n\n## Your own discord profile:\n\n{{ $json.myProfile?.toJsonString() ?? 'No profile available' }}",
           "returnIntermediateSteps": false
         }
       },
@@ -109,7 +109,7 @@
               "id": "10469c07-980b-43a2-bf38-42a8cb530534",
               "name": "context.toolRecommendations",
               "value": "={{ $json.output.toolsToUse ?? [] }}",
-              "type": "object"
+              "type": "array"
             },
             {
               "id": "c7b916b0-7bf0-456b-8ce7-41e7df21562a",
@@ -130,7 +130,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        648,
+        656,
         128
       ],
       "id": "6f21e6e0-e873-4205-915b-7434c660a220",
@@ -200,7 +200,7 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        872,
+        880,
         128
       ],
       "id": "58391c37-e320-4f43-9a54-1e8490d2c1f9",
@@ -445,8 +445,8 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        -72,
-        528
+        -176,
+        624
       ],
       "id": "2a714430-22db-48cc-a1cd-084807941f8b",
       "name": "Call '[Tool] Discord Search Tool'"
@@ -644,14 +644,19 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "userPrompt": "what have i chatted with nawo",
-          "previousAttempt": {}
+          "userPrompt": "list messages from 2 weeks ago in the Discord channel 'staryo qa'",
+          "previousAttempt": {
+            "shouldRetry": true,
+            "retryStrategy": "change_approach",
+            "reasoning": "The generated output correctly identifies the tool and parameters to fetch messages from the specified channel on the given date. However, it only provides the tool call and not the actual list of messages. The next step should be to execute this tool and then present the messages to the user.",
+            "directAnswer": ""
+          }
         }
       }
     ]
   },
-  "versionId": "b7599b28-2b1b-4c7f-9f9e-6f88a5534bb3",
-  "versionCounter": 129,
+  "versionId": "23a64328-dbdc-4445-b36e-c65873381671",
+  "versionCounter": 155,
   "triggerCount": 0,
   "tags": [
     {

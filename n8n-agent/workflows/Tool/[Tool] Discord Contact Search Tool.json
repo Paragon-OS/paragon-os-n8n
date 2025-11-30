@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-30T05:47:50.000Z",
+  "updatedAt": "2025-11-30T07:18:04.000Z",
   "createdAt": "2025-11-30T05:19:38.311Z",
   "id": "BB1zsros5LmyJO9N",
   "name": "[Tool] Discord Contact Search Tool",
@@ -236,7 +236,7 @@
       "typeVersion": 1.1,
       "position": [
         -704,
-        248
+        256
       ],
       "id": "2ffc6c7b-37a1-4c90-99a0-e90bc4e23be6",
       "name": "When Executed by Another Workflow"
@@ -734,7 +734,7 @@
         "query": "={{ $('When Executed by Another Workflow').item.json.query }}",
         "arrayField": "tools",
         "searchKeys": "name\ndescription",
-        "matchQuality": 50,
+        "matchQuality": 30,
         "limit": 10,
         "advancedOptions": {
           "includeScore": true,
@@ -745,7 +745,7 @@
       "typeVersion": 1,
       "position": [
         864,
-        536
+        544
       ],
       "id": "7ab8e2fc-7718-4857-83fe-b8ca9bcfa476",
       "name": "FuzzySearch2"
@@ -758,7 +758,7 @@
       "typeVersion": 3.2,
       "position": [
         1088,
-        232
+        224
       ],
       "id": "303bab70-9898-4771-a6a0-99ec7bd2e984",
       "name": "Merge"
@@ -1030,26 +1030,14 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "query": "nawo",
-          "entity": "contact"
-        }
-      },
-      {
-        "json": {
-          "query": "str3am",
+          "query": "staryo-qa",
           "entity": "guild"
-        }
-      },
-      {
-        "json": {
-          "query": "send",
-          "entity": "tool"
         }
       }
     ]
   },
-  "versionId": "b484898a-4924-4183-8599-fed5bb7f9930",
-  "versionCounter": 27,
+  "versionId": "03c4d685-5614-4a88-904d-1c63b96c9c89",
+  "versionCounter": 28,
   "triggerCount": 0,
   "tags": [],
   "shared": [
