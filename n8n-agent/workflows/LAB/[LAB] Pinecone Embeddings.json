@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-29T15:55:58.000Z",
+  "updatedAt": "2025-11-30T03:56:08.000Z",
   "createdAt": "2025-11-28T22:18:06.049Z",
   "id": "iaJ7xXs647QyMHGF",
   "name": "[LAB] Pinecone Embeddings",
@@ -12,8 +12,8 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -624,
-        -104
+        -960,
+        368
       ],
       "id": "b7c94b85-d19f-40d6-8596-9d218e8cb7a1",
       "name": "When clicking ‘Execute workflow’"
@@ -27,16 +27,17 @@
           "mode": "list",
           "cachedResultName": "contacts"
         },
+        "embeddingBatchSize": 10,
         "options": {
-          "clearNamespace": true,
+          "clearNamespace": false,
           "pineconeNamespace": "v1"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
       "typeVersion": 1.3,
       "position": [
-        -48,
-        192
+        -960,
+        -64
       ],
       "id": "43663119-bf54-4b97-9ff0-8ba4debc55e9",
       "name": "Pinecone Vector Store",
@@ -52,8 +53,8 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
       "typeVersion": 1,
       "position": [
-        -328,
-        16
+        -536,
+        -32
       ],
       "id": "c685c063-9b31-424b-b181-922b372a48f5",
       "name": "Embeddings Google Gemini",
@@ -66,30 +67,6 @@
     },
     {
       "parameters": {
-        "jsonMode": "expressionData",
-        "jsonData": "={{ $json.pageContent }}",
-        "options": {
-          "metadata": {
-            "metadataValues": [
-              {
-                "name": "contactMetadata",
-                "value": "={{ $json.metadata }}"
-              }
-            ]
-          }
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
-      "typeVersion": 1.1,
-      "position": [
-        24,
-        416
-      ],
-      "id": "5ff16898-387f-406e-ba05-add9e0959ac3",
-      "name": "Default Data Loader"
-    },
-    {
-      "parameters": {
         "mode": "raw",
         "jsonOutput": "{\n  \"contacts\": [\n    {\n      \"id\": 333000,\n      \"displayName\": \"Kids\",\n      \"contactType\": \"user\",\n      \"phone\": \"333\"\n    },\n    {\n      \"id\": 225850636,\n      \"username\": \"zlatapaul\",\n      \"displayName\": \"Zlata Paul\",\n      \"contactType\": \"user\",\n      \"phone\": \"995599335201\"\n    },\n    {\n      \"id\": 340351644,\n      \"username\": \"SumanthNeppalli\",\n      \"displayName\": \"Sumanth | Polygon Ventures\",\n      \"contactType\": \"user\"\n    },\n    {\n      \"id\": 348840761,\n      \"username\": \"clemensley\",\n      \"displayName\": \"Clemens Ley\",\n      \"contactType\": \"user\"\n    },\n    {\n      \"id\": 363128374,\n      \"username\": \"Avihay_H\",\n      \"displayName\": \"Avihay\",\n      \"contactType\": \"user\"\n    },\n    {\n      \"id\": 416852475,\n      \"username\": \"devkratos\",\n      \"displayName\": \"Kratos (David) Dev | CL\",\n      \"contactType\": \"user\"\n    },\n    {\n      \"id\": 520043278,\n      \"username\": \"midasch\",\n      \"displayName\": \"MK | Matt\",\n      \"contactType\": \"user\"\n    },\n    {\n      \"id\": 543100343,\n      \"username\": \"dush88c\",\n      \"displayName\": \"Crypto - Dark\",\n      \"contactType\": \"user\"\n    },\n    {\n      \"id\": 586558850,\n      \"username\": \"johngvibes\",\n      \"displayName\": \"John Vibes\",\n      \"contactType\": \"user\",\n      \"phone\": \"14436190761\"\n    },\n    {\n      \"id\": 587300333,\n      \"username\": \"iCartic\",\n      \"displayName\": \"Cartic\",\n      \"contactType\": \"user\",\n      \"phone\": \"918197536227\"\n    },\n    {\n      \"id\": 624165486,\n      \"username\": \"vlkpthrna\",\n      \"displayName\": \"Venul\",\n      \"contactType\": \"user\"\n    },\n    {\n      \"id\": 632108563,\n      \"username\": \"chaingovernance\",\n      \"displayName\": \"Chaingovernance\",\n      \"contactType\": \"user\"\n    },\n    {\n      \"id\": 649401202,\n      \"username\": \"wholemealbread69\",\n      \"displayName\": \"Munchi\",\n      \"contactType\": \"user\",\n      \"phone\": \"94715852028\"\n    },\n    {\n      \"id\": 664694900,\n      \"username\": \"DonAnarchy\",\n      \"displayName\": \"Dulmina\",\n      \"contactType\": \"user\",\n      \"phone\": \"94763103710\"\n    },\n    {\n      \"id\": 668597892,\n      \"username\": \"SanSLR\",\n      \"displayName\": \"Janitha Metaroon\",\n      \"contactType\": \"user\",\n      \"phone\": \"94775527374\"\n    },\n    {\n      \"id\": 678211632,\n      \"username\": \"EmilyEmilyert6t4564e6\",\n      \"displayName\": \"Vajira\",\n      \"contactType\": \"user\",\n      \"phone\": \"94710413045\"\n    },\n    {\n      \"id\": 696359483,\n      \"username\": \"vivekst1\",\n      \"displayName\": \"vivek\",\n      \"contactType\": \"user\"\n    },\n    {\n      \"id\": 714725084,\n      \"username\": \"stoXmod\",\n      \"displayName\": \"Nishara Malli\",\n      \"contactType\": \"user\",\n      \"phone\": \"94775777956\"\n    },\n    {\n      \"id\": 722369780,\n      \"username\": \"dinukasal\",\n      \"displayName\": \"Dinuka Salwathura\",\n      \"contactType\": \"user\",\n      \"phone\": \"94714697757\"\n    },\n    {\n      \"id\": 742595333,\n      \"username\": \"Ruchira_s\",\n      \"displayName\": \"RUCHIRA SACHINTHANA\",\n      \"contactType\": \"user\",\n      \"phone\": \"94778072233\"\n    },\n    {\n      \"id\": 780339289,\n      \"username\": \"Trimasha21\",\n      \"displayName\": \"Trimasha\",\n      \"contactType\": \"user\",\n      \"phone\": \"94769083219\"\n    },\n    {\n      \"id\": 822246157,\n      \"username\": \"ahamedrikas\",\n      \"displayName\": \"Team - UCSC\",\n      \"contactType\": \"user\",\n      \"phone\": \"94756855515\"\n    },\n    {\n      \"id\": 835380621,\n      \"username\": \"nadeeshisu\",\n      \"displayName\": \"Nadeesh\",\n      \"contactType\": \"user\"\n    },\n    {\n      \"id\": 837248846,\n      \"username\": \"Aayush_Gupta_ji\",\n      \"displayName\": \"Aayush Gupta\",\n      \"contactType\": \"user\"\n    },\n    {\n      \"id\": 847498752,\n      \"username\": \"sandalu0\",\n      \"displayName\": \"sandalu 🏎 🐾Hivera\",\n      \"contactType\": \"user\"\n    },\n    {\n      \"id\": 875774449,\n      \"username\": \"SutYKP\",\n      \"displayName\": \"Kasun Alagiyawanna\",\n      \"contactType\": \"user\"\n    },\n    {\n      \"id\": 883709109,\n      \"username\": \"DNA1945\",\n      \"displayName\": \"Ayesh - Web3\",\n      \"contactType\": \"user\",\n      \"phone\": \"94779420892\"\n    },\n    {\n      \"id\": 894565034,\n      \"username\": \"rebeccaa_m\",\n      \"displayName\": \"Rebecca Meegahapola\",\n      \"contactType\": \"user\"\n    },\n    {\n      \"id\": 899220754,\n      \"username\": \"gabocarranza\",\n      \"displayName\": \"Gabriel Carranza\",\n      \"contactType\": \"user\"\n    },\n    {\n      \"id\": 919776951,\n      \"username\": \"dxshas\",\n      \"displayName\": \"Hash - co-founder dx.app\",\n      \"contactType\": \"user\"\n    }\n  ]\n}",
         "options": {}
@@ -97,8 +74,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -624,
-        192
+        -736,
+        368
       ],
       "id": "efc3e89f-4e10-4dc3-a597-b0b3f7a1e1b7",
       "name": "Edit Fields"
@@ -112,7 +89,8 @@
           "mode": "list",
           "cachedResultName": "contacts"
         },
-        "prompt": "stoX",
+        "prompt": "={{ $json.chatInput }}",
+        "topK": 3,
         "options": {
           "pineconeNamespace": "v1"
         }
@@ -120,8 +98,8 @@
       "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
       "typeVersion": 1.3,
       "position": [
-        -400,
-        -208
+        -608,
+        -256
       ],
       "id": "5f72b5d8-13ed-4b9c-800d-14094b311e78",
       "name": "Pinecone Vector Store1",
@@ -134,16 +112,79 @@
     },
     {
       "parameters": {
-        "jsCode": "// Transform contacts array into n8n items with pageContent for embedding\nconst contacts = $input.first().json.contacts;\n\nreturn contacts.map(contact => ({\n  json: {\n    pageContent: `${contact.displayName}${contact.username ? ' (@' + contact.username + ')' : ''}${contact.phone ? ' - Phone: ' + contact.phone : ''}`,\n    metadata: {\n      id: String(contact.id),\n      displayName: contact.displayName,\n      username: contact.username || null,\n      contactType: contact.contactType,\n      phone: contact.phone || null\n    }\n  }\n}));"
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.pageContent }}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "id",
+                "value": "={{ $json.metadata.id }}"
+              },
+              {
+                "name": "displayName",
+                "value": "={{ $json.metadata.displayName }}"
+              },
+              {
+                "name": "username",
+                "value": "={{ $json.metadata.username }}"
+              },
+              {
+                "name": "usernameLower",
+                "value": "={{ $json.metadata.usernameLower }}"
+              },
+              {
+                "name": "contactType",
+                "value": "={{ $json.metadata.contactType }}"
+              },
+              {
+                "name": "phone",
+                "value": "={{ $json.metadata.phone }}"
+              }
+            ]
+          }
+        }
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
       "position": [
-        -336,
-        192
+        -888,
+        160
       ],
-      "id": "f3c9b31b-6ecf-4e27-977d-006bd9e81aeb",
-      "name": "Code in JavaScript"
+      "id": "4de9027c-7d2f-4552-86cb-76506c49747d",
+      "name": "Default Data Loader2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -896,
+        -256
+      ],
+      "id": "374058ab-48d8-4c81-91c4-23f8e1e0f399",
+      "name": "When chat message received",
+      "webhookId": "d80bacc2-9626-45b0-946b-39bfdbb64bd3"
+    },
+    {
+      "parameters": {
+        "searchMode": "searchInArray",
+        "query": "nish",
+        "arrayField": "contacts",
+        "limit": 5,
+        "includeScore": true,
+        "matchIndividualWords": true
+      },
+      "type": "n8n-nodes-text-manipulation.fuzzySearch",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        368
+      ],
+      "id": "87d16b02-f364-4af5-8075-bddf1158a937",
+      "name": "FuzzySearch"
     }
   ],
   "connections": {
@@ -151,7 +192,7 @@
       "main": [
         [
           {
-            "node": "Pinecone Vector Store1",
+            "node": "Edit Fields",
             "type": "main",
             "index": 0
           }
@@ -174,7 +215,23 @@
         ]
       ]
     },
-    "Default Data Loader": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "FuzzySearch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store1": {
+      "main": [
+        []
+      ]
+    },
+    "Default Data Loader2": {
       "ai_document": [
         [
           {
@@ -185,22 +242,11 @@
         ]
       ]
     },
-    "Edit Fields": {
+    "When chat message received": {
       "main": [
         [
           {
-            "node": "Code in JavaScript",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code in JavaScript": {
-      "main": [
-        [
-          {
-            "node": "Pinecone Vector Store",
+            "node": "Pinecone Vector Store1",
             "type": "main",
             "index": 0
           }
@@ -216,8 +262,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "7fe4b169-e614-463c-8f5a-571c1d7ab104",
-  "versionCounter": 32,
+  "versionId": "438dbae9-d18d-4676-93e5-32fda128ee6b",
+  "versionCounter": 104,
   "triggerCount": 0,
   "tags": [],
   "shared": [
