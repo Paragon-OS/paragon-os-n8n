@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2025-11-30T06:28:50.000Z",
+  "updatedAt": "2025-11-30T20:37:19.000Z",
   "createdAt": "2025-11-06T21:51:04.792Z",
   "id": "vfcxqLBDDMKL5lnG",
-  "name": "Discord MCP Client Sequencer",
+  "name": "[LAB] Discord MCP Client Sequencer",
   "description": null,
   "active": false,
   "isArchived": false,
@@ -760,8 +760,8 @@
       }
     ]
   },
-  "versionId": "8774b160-da98-407f-a740-7c9fcdbfcbb9",
-  "versionCounter": 270,
+  "versionId": "b465120c-006a-40c5-9832-59abbd0fb10f",
+  "versionCounter": 273,
   "triggerCount": 0,
   "tags": [
     {

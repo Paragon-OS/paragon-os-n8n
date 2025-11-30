@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2025-11-30T07:18:04.000Z",
+  "updatedAt": "2025-11-30T20:32:53.000Z",
   "createdAt": "2025-11-30T05:19:38.311Z",
   "id": "BB1zsros5LmyJO9N",
-  "name": "[Tool] Discord Contact Search Tool",
-  "description": null,
+  "name": "Discord Context Scout",
+  "description": "This workflow provides a fast, consistent lookup system for Discord data by combining MCP tools, structured normalization, caching, and fuzzy search.\n\nIt supports four entity types:\n\n**contact**\nRepresents a Discord user contact returned by the `discord_list_contacts` MCP tool. The workflow normalizes each contact to include id, username, displayName, lastMessage, and contactType.\n\n**guild**\nRepresents a Discord server returned by the `discord_list_guilds` MCP tool. Each guild is normalized to include id, name, memberCount, and channels.\n\n**tool**\nRepresents an MCP tool exposed by the Discord MCP server. Each item includes the tool name, description and the exact tool call schema.\n\n**self**\nRepresents current user's own discord profile. It's a single item includes the displayName, userId, username etc. This entity ignores the `query` parameter.\n\n### What the workflow does\n\n**1. Retrieval**\nWhen an entity type is requested, the workflow fetches the relevant raw data from the appropriate MCP tool unless valid cached data is already available.\n\n**2. Normalization**\nFetched data is transformed into a predictable format for each entity category, enabling reliable fuzzy matching downstream.\n\n**3. Caching**\nAll data types are cached independently with a TTL to reduce repeated MCP calls and improve tool execution speed.\n\n**4. Query Processing**\nThe workflow accepts a search query along with an entity type, then performs fuzzy matching over the appropriate cached dataset and returns the most relevant matches along with match scores.\n\nUse this tool whenever a workflow needs structured Discord data lookup for contacts, guilds, or discord MCP tools.",
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -11,7 +11,7 @@
       "parameters": {
         "operation": "executeTool",
         "toolName": "=discord_list_contacts",
-        "toolParameters": "={}"
+        "toolParameters": "={{ {\n    limit: 100\n} }}"
       },
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
@@ -108,7 +108,7 @@
       "typeVersion": 1.3,
       "position": [
         -256,
-        -40
+        -48
       ],
       "id": "0fd2182f-489d-4ade-a72e-4400361b5aa8",
       "name": "Check Contact Cache",
@@ -193,7 +193,7 @@
       "typeVersion": 1,
       "position": [
         640,
-        -40
+        -48
       ],
       "id": "a954205b-95e9-46d2-93c3-2a23e01cf4f7",
       "name": "All Contacts"
@@ -207,14 +207,14 @@
         "limit": 10,
         "advancedOptions": {
           "includeScore": true,
-          "matchIndividualWords": true
+          "matchIndividualWords": false
         }
       },
       "type": "n8n-nodes-paragon-os.fuzzySearch",
       "typeVersion": 1,
       "position": [
         864,
-        -40
+        -48
       ],
       "id": "c420fcff-4d74-44ed-a87e-a12dfadf7917",
       "name": "FuzzySearch"
@@ -236,7 +236,7 @@
       "typeVersion": 1.1,
       "position": [
         -704,
-        256
+        384
       ],
       "id": "2ffc6c7b-37a1-4c90-99a0-e90bc4e23be6",
       "name": "When Executed by Another Workflow"
@@ -248,7 +248,7 @@
           "value": "HTXqB729RFNozetP",
           "mode": "list",
           "cachedResultUrl": "/workflow/HTXqB729RFNozetP",
-          "cachedResultName": "Global Cache System"
+          "cachedResultName": "[HELPERS] Global Cache System"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -308,7 +308,7 @@
       "typeVersion": 1.3,
       "position": [
         -256,
-        248
+        240
       ],
       "id": "c6d58466-937e-49a9-8cb3-8b593699e338",
       "name": "Check Guild Cache",
@@ -427,7 +427,7 @@
       "typeVersion": 1,
       "position": [
         640,
-        248
+        240
       ],
       "id": "fdda22de-063d-4083-8ee8-6d830763d37f",
       "name": "All Guilds"
@@ -441,14 +441,14 @@
         "limit": 10,
         "advancedOptions": {
           "includeScore": true,
-          "matchIndividualWords": true
+          "matchIndividualWords": false
         }
       },
       "type": "n8n-nodes-paragon-os.fuzzySearch",
       "typeVersion": 1,
       "position": [
         864,
-        248
+        240
       ],
       "id": "421b73f4-6b16-4116-8507-177a18722bbe",
       "name": "FuzzySearch1"
@@ -528,6 +528,30 @@
               },
               "renameOutput": true,
               "outputKey": "TOOL"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c99297b4-a4d9-4ac3-8393-84b5bc2e1406",
+                    "leftValue": "={{ $json.entity }}",
+                    "rightValue": "self",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "SELF"
             }
           ]
         },
@@ -537,7 +561,7 @@
       "typeVersion": 3.3,
       "position": [
         -480,
-        232
+        352
       ],
       "id": "27fd1bbc-2da7-4eb7-88a4-5c333b75c157",
       "name": "Switch"
@@ -626,7 +650,7 @@
       "typeVersion": 1.3,
       "position": [
         -256,
-        536
+        528
       ],
       "id": "2bd6e739-4739-4201-a490-226aea6b753b",
       "name": "Check Tool Cache",
@@ -724,7 +748,7 @@
       "typeVersion": 1,
       "position": [
         640,
-        536
+        528
       ],
       "id": "77956b1c-6e30-4e9d-9d8a-606969e6e529",
       "name": "All Tools"
@@ -734,34 +758,266 @@
         "query": "={{ $('When Executed by Another Workflow').item.json.query }}",
         "arrayField": "tools",
         "searchKeys": "name\ndescription",
-        "matchQuality": 30,
+        "matchQuality": 50,
         "limit": 10,
         "advancedOptions": {
           "includeScore": true,
-          "matchIndividualWords": true
+          "matchIndividualWords": false
         }
       },
       "type": "n8n-nodes-paragon-os.fuzzySearch",
       "typeVersion": 1,
       "position": [
         864,
-        544
+        528
       ],
       "id": "7ab8e2fc-7718-4857-83fe-b8ca9bcfa476",
       "name": "FuzzySearch2"
     },
     {
       "parameters": {
-        "numberInputs": 3
+        "numberInputs": 4
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1088,
-        224
+        1296,
+        352
       ],
       "id": "303bab70-9898-4771-a6a0-99ec7bd2e984",
       "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "=discord_get_user_info",
+        "toolParameters": "={}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        192,
+        912
+      ],
+      "id": "2b9768ed-6437-444f-9935-4ff3245484d6",
+      "name": "Get My Profile",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ZFofx3k2ze1wsifx",
+          "name": "Discord MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n    myProfile: JSON.parse($input.first().json.result.content[0].text)\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        912
+      ],
+      "id": "eecc46a9-03ff-4c0c-9697-05b4c5d0de87",
+      "name": "User Profile Simplifier"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "HTXqB729RFNozetP",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/HTXqB729RFNozetP",
+          "cachedResultName": "[HELPERS] Global Cache System"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cacheKey": "discordProfilex",
+            "trueToWrite": false,
+            "writeTTLms": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "trueToWrite",
+              "displayName": "trueToWrite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "cacheKey",
+              "displayName": "cacheKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "writeValue",
+              "displayName": "writeValue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "writeTTLms",
+              "displayName": "writeTTLms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -32,
+        848
+      ],
+      "id": "4d6fa135-798e-474f-a5dd-5cb2bcae117b",
+      "name": "Check Profile Cache",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "HTXqB729RFNozetP",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/HTXqB729RFNozetP",
+          "cachedResultName": "[HELPERS] Global Cache System"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "writeTTLms": "={{ 30 * 60 * 1000 }}",
+            "cacheKey": "discordProfile",
+            "writeValue": "={{ {myProfile: $json.myProfile} }}",
+            "trueToWrite": true
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "trueToWrite",
+              "displayName": "trueToWrite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "cacheKey",
+              "displayName": "cacheKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "writeValue",
+              "displayName": "writeValue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "writeTTLms",
+              "displayName": "writeTTLms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        848,
+        912
+      ],
+      "id": "77358c38-d7e5-466e-b734-b39ada9be8e3",
+      "name": "Update Profile Cache"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        848
+      ],
+      "id": "bc3c3555-718e-41b4-a142-3029b720fdc3",
+      "name": "My Profile"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "28248755-7525-42a6-93f8-f1b7d47718af",
+              "name": "myProfile.id",
+              "value": "={{ $json.myProfile.user.id }}",
+              "type": "string"
+            },
+            {
+              "id": "fd0027ad-00d3-49a2-ae08-15c9596be04d",
+              "name": "myProfile.username",
+              "value": "={{ $json.myProfile.user.username }}",
+              "type": "string"
+            },
+            {
+              "id": "14d22bc3-4531-434a-a92f-daa7a5328300",
+              "name": "myProfile.discriminator",
+              "value": "={{ $json.myProfile.user.discriminator }}",
+              "type": "string"
+            },
+            {
+              "id": "10c16ef6-25a1-4a39-bc31-f8cb1fd7e383",
+              "name": "myProfile.tag",
+              "value": "={{ $json.myProfile.user.tag }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        912
+      ],
+      "id": "70a5bc0a-dad6-4ce9-b26a-e90e3c67333d",
+      "name": "Edit Fields"
     }
   ],
   "connections": {
@@ -933,6 +1189,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Check Profile Cache",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -1019,6 +1282,79 @@
           }
         ]
       ]
+    },
+    "Get My Profile": {
+      "main": [
+        [
+          {
+            "node": "User Profile Simplifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User Profile Simplifier": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Profile Cache": {
+      "main": [
+        [
+          {
+            "node": "My Profile",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get My Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Profile Cache": {
+      "main": [
+        [
+          {
+            "node": "My Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "My Profile": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Update Profile Cache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -1030,14 +1366,13 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "query": "staryo-qa",
-          "entity": "guild"
+          "entity": "self"
         }
       }
     ]
   },
-  "versionId": "03c4d685-5614-4a88-904d-1c63b96c9c89",
-  "versionCounter": 28,
+  "versionId": "f5b69bde-f5f0-4e67-aa66-7209be887d28",
+  "versionCounter": 53,
   "triggerCount": 0,
   "tags": [],
   "shared": [

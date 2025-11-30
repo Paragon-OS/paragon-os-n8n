@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2025-11-27T22:06:58.000Z",
-  "createdAt": "2025-11-19T21:40:51.636Z",
-  "id": "rjoIG01kPyzaQwcU",
-  "name": "Telegram MCP Client Sequencer",
+  "updatedAt": "2025-11-30T20:37:17.000Z",
+  "createdAt": "2025-11-30T11:44:00.998Z",
+  "id": "UmVILcJm4YeLsvxf",
+  "name": "[LAB] Legacy Discord MCP Client Sequencer",
   "description": null,
   "active": false,
   "isArchived": false,
@@ -25,9 +25,9 @@
       "typeVersion": 1.1,
       "position": [
         -400,
-        -1248
+        -1232
       ],
-      "id": "06dfa42f-0829-4e09-ae87-71bfe7a55218",
+      "id": "fdd922c3-0dd7-42e3-a7b3-ebb191a3e47a",
       "name": "When Executed by Another Workflow",
       "alwaysOutputData": true,
       "retryOnFail": true,
@@ -47,7 +47,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ !!$json.output.directAnswer?.toJsonString() }}",
+                    "leftValue": "={{ $json.output.hasDirectAnswer }}",
                     "rightValue": "",
                     "operator": {
                       "type": "boolean",
@@ -94,10 +94,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        492,
-        -1424
+        848,
+        -1408
       ],
-      "id": "4b7d2922-7917-424c-be59-6c06a2dab261",
+      "id": "87d80d9d-ddb9-454a-9bfc-14f7fac04283",
       "name": "Has a direct answer?"
     },
     {
@@ -106,7 +106,7 @@
         "text": "=User prompt: \"{{ $json.userPrompt }}\"",
         "hasOutputParser": true,
         "options": {
-          "systemMessage": "=## You are a helpful assistant with the capabilities to generate\n\n- Either a sequence of tool execution steps for a user's prompt to accomplish the task OR a `directAnswer` answer if you can CORRECTLY answer directly from your knowledge.\n- You are NOT a tool executor.\n- You MUST output a valid JSON object\n- If provided, PRIORITIZE recommended contacts instead searching for contacts. If there are one or more matches for the same name, pick the most likely one.\n\nInstructions:\n\n- you are PROHIBITED from using chat/contact/group display names instead of proper IDs as execution parameters.\n- If you only have a name of a chat/contact/group, your TOP PRIORITY is finding the telegram chat/contact IDs.\n- try to use your knowledge of the contact list instead of calling 'telegram_list_contacts'\n- try to use your knowledge of the chats list instead of calling 'telegram_list_chats'\n\n# For ANY operation that requires Telegram API calls, you MUST use executionSteps:\n\n- Reading/list/get operations (list messages, get chat, get user info, etc.)\n- Writing/send operations (send message, edit message, etc.)\n- Finding/searching operations (find contact, search messages, etc.)\n- Any action that retrieves or modifies Telegram data\n\n# Examples:\n\n- \"list messages with user X\" → find contact ID then list messages\n- \"list messages in group Y\" → find chat ID using chat type filter then list messages\n- \"send a message to chat Y\" → find chat ID, then send a message\n- \"who are in my contacts?\" → list contacts\n- \"what's new in my groups?\" → get pending chats filtered by group type\n- \"search for keyword in chat Z\" → find chat ID then search messages\n\n## Your Knowledge of Telegram Chats:\n\n{{ $json.context.telegramChannels?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Your Own Profile:\n\n{{ $json.context.myProfile?.toJsonString() ?? 'Error! No Profile Info' }}\n\n## Recommended Contacts that could be related to the user's prompt.\n\n{{ $json.context.matchingContacts?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Recommended Playbook Play: \n\n{{ $json.context.playbookRecommendations?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Recommended Tools to Use:\n\n{{ $json.context.toolRecommendations?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Some of the Telegram Contacts:\n\n{{ $json.context.telegramContacts?.toJsonString() ?? '[]' }}",
+          "systemMessage": "=## You are a helpful assistant with the capabilities to generate\n- Either a sequence of tool execution steps for a user's prompt to accomplish the task OR a `directAnswer` answer if you can answer directly from your knowledge\n- You are NOT a tool executor.\n- You MUST output a valid JSON object\n\nInstructions:\n- you are PROHIBITED from using guild/server/channel/contact display names instead of proper IDs as execution parameters.\n- If you only have a name of a guild/server/channel/contact, your TOP PRIORITY is finding the discord guild/server/channel/contact IDs.\n- try to use your knowledge of the contact list instead of calling 'discord_list_contacts'\n- try to use your knowledge of the guilds/servers list instead of calling 'discord_list_guilds'\n\nFor ANY operation that requires Discord API calls, you MUST use executionSteps:\n- Reading/list/get operations (list messages, read channel, get user info, etc.)\n- Writing/send operations (send message, etc.)\n- Finding/searching operations (find channel, search messages, etc.)\n- Any action that retrieves or modifies Discord data\n\nExamples:\n- \"list messages with user X\" → find contact ID then list messages\n- \"list channels in guild/server Y\" → find guild ID then list\n- \"list messages in the guild/server Y channel Z\" → find guild ID, list channels, then list messages of the matching channel\n- \"send a message to channel Y\" → find channel ID, then send a message\n- \"who are in my contacts?\" → list contacts\n\n## Your Knowledge of Discord Contacts:\n\n{{ $json.context.discordContacts?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Your Own Profile:\n\n{{ $json.context.myProfile?.toJsonString() ?? 'Error! No Profile Info' }}\n\n## Your Knowledge of Discord Servers/Guilds:\n\n{{ $json.context.serversOrGuilds?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Recommended Playbook Play: \n\n{{ $json.context.playbookRecommendations?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Recommended Tools to Use:\n\n{{ $json.context.toolRecommendations?.toJsonString() ?? '[]' }}\n",
           "returnIntermediateSteps": true
         }
       },
@@ -114,9 +114,9 @@
       "typeVersion": 2.2,
       "position": [
         48,
-        -1424
+        -1408
       ],
-      "id": "f776edb3-2867-46ac-8200-669941fe6e59",
+      "id": "52b4fde7-112f-4716-ab55-bb091905627a",
       "name": "Execution Planner AI Agent"
     },
     {
@@ -128,10 +128,10 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        124,
-        -1200
+        256,
+        -1184
       ],
-      "id": "015274c8-a347-4c29-acae-678ea039b442",
+      "id": "79e1c041-98f9-4bfe-9154-6439e1cb9a33",
       "name": "Execution Plan Output Parser"
     },
     {
@@ -144,212 +144,85 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        120,
-        -992
+        192,
+        -976
       ],
-      "id": "2bcf1b7e-6d08-40e6-9faf-459f9ea18ec9",
-      "name": "Gemini Model (Execution Planner)",
-      "credentials": {
-        "googlePalmApi": {
-          "id": "NIhZoi9otQV2vaAP",
-          "name": "Google Gemini(PaLM) Api account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "schemaType": "manual",
-        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"shouldRetry\": {\n      \"type\": \"boolean\",\n      \"description\": \"Indicates whether the operation should be retried\"\n    },\n    \"retryStrategy\": {\n      \"type\": \"string\",\n      \"description\": \"The retry strategy to use (e.g., 'none', 'exponential', 'linear')\"\n    },\n    \"reasoning\": {\n      \"type\": \"string\",\n      \"description\": \"Explanation of the decision-making process\"\n    },\n    \"directAnswer\": {\n      \"type\": \"string\",\n      \"description\": \"Direct answer to the user's prompt\"\n    }\n  },\n  \"required\": [\"shouldRetry\", \"directAnswer\"],\n  \"additionalProperties\": false\n}\n",
-        "autoFix": true
-      },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.3,
-      "position": [
-        1240,
-        -1200
-      ],
-      "id": "68e0d78d-ef02-466a-84a9-2bacc276437b",
-      "name": "Structured Output Parser"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "254965fb-79da-4ee1-a539-3e9e5bda7eae",
-              "leftValue": "={{ $json.output.shouldRetry }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "false",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        1608,
-        -1424
-      ],
-      "id": "f0af5e49-7bce-41ec-94b5-3cfa2fcea60b",
-      "name": "Is Successful"
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineByPosition",
-        "options": {
-          "includeUnpaired": true
-        }
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        940,
-        -1424
-      ],
-      "id": "39029062-5166-486b-b4d9-08dac2144872",
-      "name": "Merge"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=## User's prompt input:\n\n\"{{ $('Enrich With Telegram Context').item.json.userPrompt }}\"\n\n## Generated output: \n\n\"{{ $json.executionSteps?.toJsonString() ?? $('Has a direct answer?').item.json.output.directAnswer }}\"\n",
-        "hasOutputParser": true,
-        "options": {
-          "systemMessage": "=You are SOLELY an AI generated answer validator. You are NOT a tool executor.\n\n# IMPORTANT:\n- You judge the user's prompt vs the generated output answer and output as a {} object.\n- If there is no Generated output, it's automatically a failure.\n\nYou must output in JSON:\n- shouldRetry: boolean\n- retryStrategy: \"refine_prompt\" | \"change_approach\" | \"add_context\" | \"none\"\n- reasoning: string\n- directAnswer: string\n\n# If you receive an already processed Direct Answer to the user's prompt: put that in the `directAnswer` of your output, and pass the validation.\n\n# If you receive a Telegram MCP tool execution result array:\nONLY IF the execution results don't trivially answer the user prompt AND you can confidently answer the question, use `directAnswer` to output an accurate answer based on the available execution results.\n\n# Telegram-specific considerations:\n- Verify chat_id resolution was successful before marking operations as complete\n- Check that message searches returned relevant results before summarizing\n- Confirm contact searches found the intended person before messaging\n- Validate that pending chats analysis included appropriate context_messages\n- Ensure time-based queries used proper from_date/to_date formatting\n- Verify file operations (send/download) completed successfully with valid paths\n\n## Your Knowledge of Telegram Contacts:\n\n{{ $('Enrich With Telegram Context').item.json.context.telegramContacts?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Telegram Chats:\n\n{{ $('Enrich With Telegram Context').item.json.context.telegramChannels?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Your Own Profile:\n\n{{ $('Enrich With Telegram Context').item.json.context.myProfile?.toJsonString() ?? 'Error! No Profile Info' }}\n\n## Your Knowledge of Recommended Tools to Use:\n\n{{ $('Enrich With Telegram Context').item.json.context.toolRecommendations?.toJsonString() ?? '[]' }}"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3,
-      "position": [
-        1164,
-        -1424
-      ],
-      "id": "bffcb933-ef79-407a-a171-e88adc633ef3",
-      "name": "Result Validator AI Agent"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "3f5e87b1-12e3-45a9-a7f4-e811c57e5477",
-              "name": "executionSteps",
-              "value": "={{ $('Merge').item.json.executionSteps ?? [] }}",
-              "type": "array"
-            },
-            {
-              "id": "c6d2472e-3c6b-4fa5-af80-aa60691fdd36",
-              "name": "directAnswer",
-              "value": "={{ $('Has a direct answer?').item.json.output.directAnswer ?? $json.output.directAnswer ?? null }}",
-              "type": "string"
-            },
-            {
-              "id": "aab0f5f3-c0f4-4f99-b31b-a9181c1d6666",
-              "name": "refinedUserPrompt",
-              "value": "={{ $('Enrich With Telegram Context').item.json.userPrompt }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1832,
-        -1472
-      ],
-      "id": "00fe64fa-b463-4f09-b207-1ad07804724a",
-      "name": "Format Final Output"
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [
-        2056,
-        -1472
-      ],
-      "id": "92161848-9ba4-456a-8a70-c0d9c2c153f9",
-      "name": "Output"
-    },
-    {
-      "parameters": {
-        "options": {
-          "temperature": 0.2
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-      "typeVersion": 1,
-      "position": [
-        1236,
-        -992
-      ],
-      "id": "93e15564-cda8-45c0-beed-904d92dc12da",
-      "name": "Gemini Model (Validator)",
-      "credentials": {
-        "googlePalmApi": {
-          "id": "NIhZoi9otQV2vaAP",
-          "name": "Google Gemini(PaLM) Api account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "12099019-73e3-4d7d-9a3e-ae6101e4ede3",
-              "name": "userPrompt",
-              "value": "={{ $('When Executed by Another Workflow').item.json.userPrompt }}",
-              "type": "string"
-            },
-            {
-              "id": "f59a7d1a-f3c6-45f5-bcac-2508d5625233",
-              "name": "previousAttempt",
-              "value": "={{ $json.output }}",
-              "type": "object"
-            },
-            {
-              "id": "00537d7c-a318-4695-bfa8-7d1d7e3a634e",
-              "name": "executionSteps",
-              "value": "={{ $('Merge').item.json.executionSteps }}",
-              "type": "array"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1832,
-        -1120
-      ],
-      "id": "c352df04-9252-45f7-a7c2-ab3c5fc8934b",
-      "name": "Edit Fields"
+      "id": "b72d3088-fb41-493f-9c96-f5c408200199",
+      "name": "Gemini Model (Execution Planner)"
     },
     {
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "WFlhiFmm1Tt6ICRM",
+          "value": "uoYXevOl4ePWKeNx",
           "mode": "list",
-          "cachedResultUrl": "/workflow/WFlhiFmm1Tt6ICRM",
-          "cachedResultName": "[HELPERS] Telegram Context Enricher"
+          "cachedResultUrl": "/workflow/uoYXevOl4ePWKeNx",
+          "cachedResultName": "[HELPERS] Discord & Telegram Step Executor"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "executionSteps": "={{ $json.output.executionSteps }}",
+            "targetMcp": "DISCORD",
+            "metadata": "={{ $('When Executed by Another Workflow').item.json.metadata }}"
+          },
+          "matchingColumns": [
+            "executionSteps"
+          ],
+          "schema": [
+            {
+              "id": "executionSteps",
+              "displayName": "executionSteps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "targetMcp",
+              "displayName": "targetMcp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "metadata",
+              "displayName": "metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1072,
+        -1312
+      ],
+      "id": "a602611a-af81-4625-a921-3124ec1f45da",
+      "name": "Call Discord Step Executor"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "zBL0JT7t26pK2x95",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/zBL0JT7t26pK2x95",
+          "cachedResultName": "[HELPERS] Discord Context Enricher"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -391,75 +264,223 @@
       "typeVersion": 1.3,
       "position": [
         -176,
-        -1248
+        -1232
       ],
-      "id": "138c48d9-8bc7-4a5b-b11e-6e7f5562d1d3",
-      "name": "Enrich With Telegram Context"
+      "id": "9a573227-3017-44cd-8cfb-875ac0702295",
+      "name": "Enrich With Discord Context"
     },
     {
       "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "uoYXevOl4ePWKeNx",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/uoYXevOl4ePWKeNx",
-          "cachedResultName": "[HELPERS] Discord & Telegram Step Executor"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "executionSteps": "={{ $json.output.executionSteps }}",
-            "targetMcp": "TELEGRAM",
-            "metadata": "={{ $('When Executed by Another Workflow').item.json.metadata }}"
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"shouldRetry\": {\n      \"type\": \"boolean\",\n      \"description\": \"Indicates whether the operation should be retried\"\n    },\n    \"retryStrategy\": {\n      \"type\": \"string\",\n      \"description\": \"The retry strategy to use (e.g., 'none', 'exponential', 'linear')\"\n    },\n    \"reasoning\": {\n      \"type\": \"string\",\n      \"description\": \"Explanation of the decision-making process\"\n    },\n    \"directAnswer\": {\n      \"type\": \"string\",\n      \"description\": \"Direct answer to the user's prompt\"\n    }\n  },\n  \"required\": [\"shouldRetry\", \"directAnswer\"],\n  \"additionalProperties\": false\n}\n",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1600,
+        -1184
+      ],
+      "id": "73a99ff5-12a7-42b0-94b4-db75f606bbc9",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
           },
-          "matchingColumns": [
-            "executionSteps"
-          ],
-          "schema": [
+          "conditions": [
             {
-              "id": "executionSteps",
-              "displayName": "executionSteps",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "array",
-              "removed": false
-            },
-            {
-              "id": "targetMcp",
-              "displayName": "targetMcp",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "metadata",
-              "displayName": "metadata",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "object",
-              "removed": false
+              "id": "254965fb-79da-4ee1-a539-3e9e5bda7eae",
+              "leftValue": "={{ $json.output.shouldRetry }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
             }
           ],
-          "attemptToConvertTypes": true,
-          "convertFieldsToString": true
+          "combinator": "and"
         },
         "options": {}
       },
-      "type": "n8n-nodes-base.executeWorkflow",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1968,
+        -1408
+      ],
+      "id": "6d8ea361-dfeb-418a-8095-105adaf2f54d",
+      "name": "Is Successful"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1296,
+        -1408
+      ],
+      "id": "6b26567a-06f9-46d9-9132-072266a65fbd",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=## User's prompt input:\n\n\"{{ $('Enrich With Discord Context').item.json.userPrompt }}\"\n\n## Generated output: \n\n\"{{ $json.executionSteps?.toJsonString() ?? $('Has a direct answer?').item.json.output.directAnswer }}\"\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are SOLELY a AI generated answer validator. You are NOT a tool executor. \n\n# IMPORTANT:\n- You just judge the user's prompt vs the generated output answer and output as a {} object.\n- If there is no Generated output, it's automatically a failure.\n\nYou must output in JSON:\n- shouldRetry: boolean\n- retryStrategy: \"refine_prompt\" | \"change_approach\" | \"add_context\" | \"none\"\n- reasoning: string\n- directAnswer: string\n\n# If you receive an already processed Direct Anwer to the user's prompt: put that in the `directAnswer` of your output, and pass the validation.\n\n# If you receive a MCP tool execution result array: \nONLY IF the execution results doesn't trivially answer the user prompt AND you can confidently answer the question, use `directAnswer` to output an accurate answer based on the available execution results.\n\n## Your Knowledge of Discord Contacts:\n\n{{ $('Enrich With Discord Context').item.json.context.discordContacts?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Discord Servers/Guilds:\n\n{{ $('Enrich With Discord Context').item.json.context.serversOrGuilds?.toJsonString() ?? '[]' }}\n\n## Your Knowledge of Your Own Profile:\n\n{{ $('Enrich With Discord Context').item.json.context.myProfile?.toJsonString() ?? 'Error! No Profile Info' }}\n\n## Your Knowledge of Recommended Tools to Use:\n\n{{ $('Enrich With Discord Context').item.json.context.toolRecommendations.toJsonString() }}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1520,
+        -1408
+      ],
+      "id": "97afd36a-068e-46d9-baa9-6e552ee865c4",
+      "name": "Result Validator AI Agent"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3f5e87b1-12e3-45a9-a7f4-e811c57e5477",
+              "name": "executionSteps",
+              "value": "={{ $('Merge').item.json.executionSteps ?? [] }}",
+              "type": "array"
+            },
+            {
+              "id": "c6d2472e-3c6b-4fa5-af80-aa60691fdd36",
+              "name": "directAnswer",
+              "value": "={{ $('Has a direct answer?').item.json.output.directAnswer ?? $json.output.directAnswer ?? null }}",
+              "type": "string"
+            },
+            {
+              "id": "aab0f5f3-c0f4-4f99-b31b-a9181c1d6666",
+              "name": "refinedUserPrompt",
+              "value": "={{ $('Enrich With Discord Context').item.json.userPrompt }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2192,
+        -1456
+      ],
+      "id": "7bb672c0-165e-44d1-9d3e-72c4c574773b",
+      "name": "Format Final Output"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2416,
+        -1456
+      ],
+      "id": "5531d439-ab31-413d-8193-fb45789ba540",
+      "name": "Output"
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        -976
+      ],
+      "id": "87cf272f-80a4-4ded-992d-dc1862ddb2fd",
+      "name": "Gemini Model (Validator)"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $execution.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
-        716,
-        -1320
+        128,
+        -1184
       ],
-      "id": "14c32d88-be47-4925-a9ef-7e265e9cd503",
-      "name": "Call Telegram Step Executor"
+      "id": "63a585d8-9f9a-4219-90ae-02a31b28b171",
+      "name": "Execution Planning Memory"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "12099019-73e3-4d7d-9a3e-ae6101e4ede3",
+              "name": "userPrompt",
+              "value": "={{ $('When Executed by Another Workflow').item.json.userPrompt }}",
+              "type": "string"
+            },
+            {
+              "id": "f59a7d1a-f3c6-45f5-bcac-2508d5625233",
+              "name": "previousAttempt",
+              "value": "={{ $json.output }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2192,
+        -1104
+      ],
+      "id": "64377f87-a4b3-4d7f-884f-e0a206f3220a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1cac0038-c81f-4eb8-b556-573d7c74fbd7",
+              "name": "output.hasDirectAnswer",
+              "value": "={{ !!$json.output.directAnswer?.toJsonString() }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        -1408
+      ],
+      "id": "25e2dfed-4012-466a-a364-ab63ed06b3af",
+      "name": "Edit Fields1"
     }
   ],
   "connections": {
@@ -467,7 +488,7 @@
       "main": [
         [
           {
-            "node": "Enrich With Telegram Context",
+            "node": "Enrich With Discord Context",
             "type": "main",
             "index": 0
           }
@@ -485,7 +506,7 @@
         ],
         [
           {
-            "node": "Call Telegram Step Executor",
+            "node": "Call Discord Step Executor",
             "type": "main",
             "index": 0
           }
@@ -496,7 +517,7 @@
       "main": [
         [
           {
-            "node": "Has a direct answer?",
+            "node": "Edit Fields1",
             "type": "main",
             "index": 0
           }
@@ -525,6 +546,28 @@
           {
             "node": "Execution Plan Output Parser",
             "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Discord Step Executor": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Enrich With Discord Context": {
+      "main": [
+        [
+          {
+            "node": "Execution Planner AI Agent",
+            "type": "main",
             "index": 0
           }
         ]
@@ -608,35 +651,35 @@
         ]
       ]
     },
+    "Execution Planning Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Execution Planner AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Edit Fields": {
       "main": [
         [
           {
-            "node": "Enrich With Telegram Context",
+            "node": "Enrich With Discord Context",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Enrich With Telegram Context": {
+    "Edit Fields1": {
       "main": [
         [
           {
-            "node": "Execution Planner AI Agent",
+            "node": "Has a direct answer?",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Call Telegram Step Executor": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 1
           }
         ]
       ]
@@ -653,7 +696,7 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "userPrompt": "List last 5 messages with sebastian",
+          "userPrompt": "List the last 10 messages in the Discord channel 'staryo-admin'",
           "metadata": {
             "sessionId": "sample-session-id-1",
             "messageId": "sample-message-id-1",
@@ -661,10 +704,52 @@
           }
         }
       }
+    ],
+    "Enrich With Discord Context": [
+      {
+        "json": {
+          "userPrompt": "List the last 10 messages in the Discord channel 'staryo-admin-only' in the 'Metarune Labs' guild.",
+          "context": {
+            "serversOrGuilds": [
+              {
+                "name": "Metarune Labs",
+                "channels": {
+                  "1277593921886883850": "staryo-admin-only"
+                },
+                "id": "1277590071574401084"
+              }
+            ],
+            "discordContacts": [],
+            "toolRecommendations": {
+              "discord_read_channel": {
+                "parameters": {
+                  "limit": 10,
+                  "channelId": "1277593921886883850"
+                }
+              }
+            },
+            "myProfile": {
+              "user": {
+                "id": "711983662144421991",
+                "username": "paragonthedev",
+                "discriminator": "0",
+                "tag": "paragonthedev",
+                "bot": false,
+                "verified": true,
+                "createdAt": 1589820533072
+              },
+              "status": "online",
+              "guildCount": 11,
+              "channelCount": 816
+            },
+            "previousAttempt": {}
+          }
+        }
+      }
     ]
   },
-  "versionId": "bbe4f2e9-0bb2-44f4-8857-df550fd629d2",
-  "versionCounter": 301,
+  "versionId": "63773e00-c0d3-46d2-a883-97d8e1154ecc",
+  "versionCounter": 275,
   "triggerCount": 0,
   "tags": [
     {
@@ -682,10 +767,10 @@
   ],
   "shared": [
     {
-      "updatedAt": "2025-11-19T21:40:51.641Z",
-      "createdAt": "2025-11-19T21:40:51.641Z",
+      "updatedAt": "2025-11-30T11:44:01.003Z",
+      "createdAt": "2025-11-30T11:44:01.003Z",
       "role": "workflow:owner",
-      "workflowId": "rjoIG01kPyzaQwcU",
+      "workflowId": "UmVILcJm4YeLsvxf",
       "projectId": "GEUEn6ArNROzJ5FY",
       "project": {
         "updatedAt": "2025-10-28T15:11:59.092Z",

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-30T06:55:53.000Z",
+  "updatedAt": "2025-11-30T20:32:04.000Z",
   "createdAt": "2025-11-06T23:04:10.688Z",
   "id": "z1Ry4y4k5dGR0BqR",
   "name": "ParagonOS Manager",
@@ -44,64 +44,10 @@
     },
     {
       "parameters": {
-        "description": "={{ `\nIntelligently plans and executes Discord operations using cached context and AI-powered sequencing.\\n\\n# How It Works:\\n\\n1. **Context Enrichment**: Automatically retrieves and caches Discord contacts, guilds/servers, channels, available MCP tools, and your profile. Uses a 30-minute cache to minimize API calls.\\n\\n2. **AI Planning**: Analyzes your request against a Discord playbook of common workflows (DMing contacts, catching up on channels, replying to pending messages, searching topics, editing/deleting messages, downloading attachments, triaging guild channels). Recommends relevant tools and generates either:\\n   - A direct answer (if no API calls needed)\\n   - A sequential execution plan with specific MCP tool calls\\n\\n3. **Sequential Execution**: Executes planned steps in order, passing data between steps automatically.\\n\\n4. **Validation & Retry**: Validates execution results against your original request. Automatically retries with refined approach if needed.\\n\\n# Capabilities:\\n\\nRead messages (channels/DMs with pagination, date filtering), search messages, send/edit/delete messages with attachments, download attachments, list guilds/servers/channels/contacts/members, search contacts, get pending channels/DMs (messages after your last reply), manage whitelist/blacklist filters. Supports both server channels and direct messages.\n`}}",
-        "workflowId": {
-          "__rl": true,
-          "value": "vfcxqLBDDMKL5lnG",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/vfcxqLBDDMKL5lnG",
-          "cachedResultName": "Discord MCP Client Sequencer"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `Natural language request for Discord operations. Examples: 'Check for unreplied messages in wandrlust admin channel', 'DM sebastian about the meeting', 'What did people say about the launch in metarune-labs?', 'Reply to my pending DMs', 'List all members in the dev server'`, 'string') }}",
-            "metadata": "={{ $json.body.metadata }}"
-          },
-          "matchingColumns": [
-            "userPrompt"
-          ],
-          "schema": [
-            {
-              "id": "userPrompt",
-              "displayName": "userPrompt",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "metadata",
-              "displayName": "metadata",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "object",
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
-      "typeVersion": 2.2,
-      "position": [
-        -32,
-        -608
-      ],
-      "id": "a85ea5f0-1f3f-4d39-af49-35e27cade5b4",
-      "name": "Discord Agent with Caching"
-    },
-    {
-      "parameters": {
         "promptType": "define",
         "text": "={{ $json.chatInput || $json.body.chatInput }}",
         "options": {
-          "systemMessage": "=You are ParagonOS, an intelligent messaging platform management assistant supporting both Discord and Telegram.\n\n# Your Capabilities:\n\nYou have access to two sophisticated agent tools:\n\n**Discord Agent:**\n- Automatically enriches requests with cached context (contacts, guilds, channels, your profile)\n- Uses an AI planner with a playbook of common Discord workflows\n- Generates and executes sequential MCP tool operations\n- Validates results and retries with refined approaches if needed\n\n**Telegram Agent:**\n- Automatically enriches requests with cached context (contacts, chats, groups, your profile)\n- Uses an AI planner with a playbook of common Telegram workflows\n- Generates and executes sequential MCP tool operations\n- Validates results and retries with refined approaches if needed\n\n# How to Use the Agents:\n\n1. **Pass natural language requests directly** - The agents handle planning and execution automatically\n2. **Provide clear intent** - Be specific about what the user wants (check messages, send DM/message, search topics, etc.)\n3. **Include relevant context** - Mention channel/chat names, contact names, server/group names, time ranges, or specific topics\n4. **Specify the platform** - Clearly indicate whether the request is for Discord or Telegram (or both)\n5. **Trust the sub-workflows** - They will resolve names to IDs, plan multi-step operations, and handle retries\n\n# Good Examples:\n\n**Discord Examples:**\n- \"Check for unreplied messages in the wandrlust admin & dev channel\"\n- \"DM sebastian asking about the deployment status\"\n- \"What were the key points discussed about the token launch in metarune-labs?\"\n- \"Show me all pending DMs that need my attention\"\n- \"Find and list all messages from the past week in the dev-team channel\"\n\n**Telegram Examples:**\n- \"Check for unreplied messages from sebastian in Telegram\"\n- \"Message john about the meeting in Telegram\"\n- \"What did people say about the launch in the dev group on Telegram?\"\n- \"Show me all pending chats that need my attention in Telegram\"\n- \"Find and list all messages from the past week in the team group on Telegram\"\n\n**Cross-Platform Examples:**\n- \"Check for pending messages in both Discord and Telegram\"\n- \"Send a message to sebastian on both platforms about the meeting\"\n- \"What's new in my Discord DMs and Telegram chats?\"\n\n# Your Role:\n\n- Understand user intent and reformulate as clear, actionable requests\n- Determine which platform(s) the user wants to interact with (Discord, Telegram, or both)\n- Interpret the agent results and present them conversationally\n- Handle multi-turn conversations with context from memory\n- Ask clarifying questions if the user's request is ambiguous or doesn't specify a platform",
+          "systemMessage": "=You are ParagonOS, an intelligent office assistant girl supporting her boss with both Discord, Telegram.\n\n# Your Capabilities:\n\nYou have access to two sophisticated agent tools:\n\n**Discord Agent:**\n- Automatically enriches requests with cached context (contacts, guilds, channels, your profile)\n- Generates and executes sequential MCP tool operations\n\n**Telegram Agent:**\n- Automatically enriches requests with cached context (contacts, chats, groups, your profile)\n- Uses an AI planner with a playbook of common Telegram workflows\n- Generates and executes sequential MCP tool operations\n\n# How to Use the Agents:\n\n1. **Pass natural language requests for single or batch operations directly** - The agents handle planning and execution automatically\n2. **Provide clear intent** - Be specific about what the user wants (check messages, send DM/message, search topics, etc.).\n3. **Include relevant context** - Mention channel/chat names, contact names, server/group names, time ranges, or specific topics\n4. **Specify the platform** - Clearly indicate whether the request is for Discord or Telegram (or both)\n5. **Trust the sub-workflows** - They will resolve names to IDs, plan multi-step operations, and handle retries\n\n# Good Examples:\n\n**Discord Examples:**\n- \"Check for unreplied messages in the wandrlust admin & dev channel\"\n- \"DM sebastian asking about the deployment status\"\n- \"What were the key points discussed about the token launch in metarune-labs?\"\n- \"Find and list all messages from the past week in the dev-team channel\"\n- \"Delete last 5 messages i sent to jake\"\n\n**Telegram Examples:**\n- \"Check for unreplied messages from sebastian in Telegram\"\n- \"Message john about the meeting in Telegram\"\n- \"What did people say about the launch in the dev group on Telegram?\"\n- \"Find and list all messages from the past week in the team group on Telegram\"\n\n**Cross-Platform Examples:**\n- \"Send a message to sebastian on both platforms about the meeting\"\n- \"What's new in my Discord DMs and Telegram chats?\"\n\n# Your Role:\n\n- Determine which platform(s) the user wants to interact with (Discord, Telegram, or both)\n- You are allowed to request batch operations (for example: fetch all message IDs we need and call the tool asking to delete all the IDs)\n- Interpret the agent results and present them conversationally\n- Handle multi-turn conversations with context from memory\n- Ask clarifying questions if the user's request is ambiguous or doesn't specify a platform",
           "enableStreaming": true
         }
       },
@@ -192,7 +138,7 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        96,
+        -32,
         -608
       ],
       "id": "77779f7b-6217-46a5-a355-4cb35d2e935a",
@@ -239,6 +185,64 @@
       ],
       "id": "83dc62cb-a639-4cf5-8b96-3e816bd771dc",
       "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $workflow.id }} v2.14",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -160,
+        -608
+      ],
+      "id": "83329724-8051-4a14-8d9c-173bbd3e1306",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "description": "={{ `\nIntelligently plans and executes Discord operations using cached context and AI-powered sequencing.\\n\\n# How It Works:\\n\\n1. **Context Enrichment**: Automatically retrieves and caches Discord contacts, guilds/servers, channels, available MCP tools, and your profile. Uses a 30-minute cache to minimize API calls.\\n\\n2. **AI Planning**: Analyzes your request against a Discord playbook of common workflows (DMing contacts, catching up on channels, replying messages, searching topics, editing/deleting messages, downloading attachments, triaging guild channels). Recommends relevant tools and generates either:\\n   - A direct answer (if no API calls needed)\\n   - A sequential execution plan with specific MCP tool calls\\n\\n3. **Sequential Execution**: Executes planned steps in order, passing data between steps automatically.\\n\\n4. **Validation & Retry**: Validates execution results against your original request. Automatically retries with refined approach if needed.\\n\\n# Capabilities:\\n\\nRead messages (channels/DMs with pagination, date filtering), search messages, send/edit/delete messages with attachments, download attachments, list guilds/servers/channels/contacts/members, search contacts, manage whitelist/blacklist filters. Supports both server channels and direct messages.\n`}}",
+        "workflowId": {
+          "__rl": true,
+          "value": "zBL0JT7t26pK2x95",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/zBL0JT7t26pK2x95",
+          "cachedResultName": "Discord Smart Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `natural language prompt for any single or batch discord related query or action`, 'string') }}"
+          },
+          "matchingColumns": [
+            "userPrompt"
+          ],
+          "schema": [
+            {
+              "id": "userPrompt",
+              "displayName": "userPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        96,
+        -608
+      ],
+      "id": "a85ea5f0-1f3f-4d39-af49-35e27cade5b4",
+      "name": "Discord Smart Agent Tool"
     }
   ],
   "connections": {
@@ -259,17 +263,6 @@
           {
             "node": "Metarune Admin Chat Agent",
             "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Discord Agent with Caching": {
-      "ai_tool": [
-        [
-          {
-            "node": "Metarune Admin Chat Agent",
-            "type": "ai_tool",
             "index": 0
           }
         ]
@@ -334,6 +327,28 @@
           }
         ]
       ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord Smart Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -366,8 +381,8 @@
       }
     ]
   },
-  "versionId": "7366cc98-c376-47a5-9353-a7cca0a585db",
-  "versionCounter": 275,
+  "versionId": "c54cc066-31e4-4104-baed-752274460410",
+  "versionCounter": 323,
   "triggerCount": 1,
   "tags": [
     {
