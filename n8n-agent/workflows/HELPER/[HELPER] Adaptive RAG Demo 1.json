@@ -1,0 +1,182 @@
+{
+  "updatedAt": "2025-12-02T01:59:50.000Z",
+  "createdAt": "2025-12-02T01:18:35.706Z",
+  "id": "IZa7S90Z9W1qxysr",
+  "name": "[HELPER] Adaptive RAG Demo 1",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "modelName": "models/embedding-001"
+      },
+      "id": "5f458a29-fb5b-4ce0-982d-e9134df50763",
+      "name": "Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "position": [
+        72,
+        144
+      ],
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "concatenate",
+              "field": "document.pageContent",
+              "separateBy": "other",
+              "customSeparator": "={{ \"\\n\\n---\\n\\n\" }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d430b89f-4da1-452c-9db9-5516faf169ce",
+      "name": "Concatenate Context",
+      "type": "n8n-nodes-base.summarize",
+      "position": [
+        352,
+        -80
+      ],
+      "typeVersion": 1.1,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "systemPrompt"
+            },
+            {
+              "name": "userPrompt"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -224,
+        -80
+      ],
+      "id": "44a9b2bb-744f-4700-9908-04fb43e925a1",
+      "name": "When Executed by Another Workflow",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "=chat-agent-experiment-1",
+          "mode": "id"
+        },
+        "prompt": "={{ $json.systemPrompt }}\n\nUser query: \n\n{{ $json.userPrompt }}",
+        "topK": 10,
+        "options": {}
+      },
+      "id": "97e658a8-663d-48ae-bf1d-ab81d74ce0b7",
+      "name": "Retrieve Documents from Vector Store1",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "position": [
+        0,
+        -80
+      ],
+      "typeVersion": 1.3,
+      "notesInFlow": false,
+      "alwaysOutputData": true,
+      "credentials": {
+        "qdrantApi": {
+          "id": "ytBh4xOzWNQ347S5",
+          "name": "QdrantApi account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Retrieve Documents from Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Retrieve Documents from Vector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve Documents from Vector Store1": {
+      "main": [
+        [
+          {
+            "node": "Concatenate Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "userPrompt": "1. The perspective of someone who holds a different belief or understanding of the facts, leading them to a different conclusion.\n2. The perspective of someone who values open dialogue and sees disagreement as an opportunity for learning and growth, regardless of who is \"right.\"\n3. The perspective of someone who feels personally attacked or invalidated, focusing on the impact of the statement rather than the content.\n",
+          "systemPrompt": "You are a helpful assistant discussing topics with multiple viewpoints. Based on the provided context, present different perspectives on the topic. Ensure fair representation of diverse opinions without showing bias. Acknowledge where the context presents limited viewpoints."
+        }
+      }
+    ]
+  },
+  "versionId": "8b9dd572-5c2e-4578-a18f-df2b3346bae8",
+  "activeVersionId": null,
+  "versionCounter": 10,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2025-12-02T01:18:35.713Z",
+      "createdAt": "2025-12-02T01:18:35.713Z",
+      "role": "workflow:owner",
+      "workflowId": "IZa7S90Z9W1qxysr",
+      "projectId": "GEUEn6ArNROzJ5FY",
+      "project": {
+        "updatedAt": "2025-10-28T15:11:59.092Z",
+        "createdAt": "2025-10-28T15:08:17.462Z",
+        "id": "GEUEn6ArNROzJ5FY",
+        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null
+      }
+    }
+  ]
+}

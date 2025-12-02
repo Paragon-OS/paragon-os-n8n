@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-30T21:02:35.000Z",
+  "updatedAt": "2025-12-02T01:03:14.000Z",
   "createdAt": "2025-11-30T21:00:00.000Z",
   "id": "TelegramContextScout",
   "name": "Telegram Context Scout",
@@ -115,7 +115,7 @@
       "typeVersion": 1,
       "position": [
         -32,
-        32
+        24
       ],
       "id": "list-telegram-contacts",
       "name": "List Contacts",
@@ -134,7 +134,7 @@
       "typeVersion": 2,
       "position": [
         192,
-        32
+        24
       ],
       "id": "telegram-contact-data-simplifier",
       "name": "Contact Data Simplifier"
@@ -207,7 +207,7 @@
       "typeVersion": 1.3,
       "position": [
         416,
-        32
+        24
       ],
       "id": "update-telegram-contact-cache",
       "name": "Update Contact Cache"
@@ -256,7 +256,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "cacheKey": "telegramChannelsx",
+            "cacheKey": "telegramChannels",
             "trueToWrite": false,
             "writeTTLms": 0
           },
@@ -327,7 +327,7 @@
       "typeVersion": 1,
       "position": [
         -32,
-        320
+        312
       ],
       "id": "list-telegram-chats",
       "name": "List Chats",
@@ -346,7 +346,7 @@
       "typeVersion": 2,
       "position": [
         192,
-        320
+        312
       ],
       "id": "telegram-chat-data-simplifier",
       "name": "Chat Data Simplifier"
@@ -419,7 +419,7 @@
       "typeVersion": 1.3,
       "position": [
         416,
-        320
+        312
       ],
       "id": "update-telegram-chat-cache",
       "name": "Update Chat Cache"
@@ -535,7 +535,7 @@
       "typeVersion": 1,
       "position": [
         -32,
-        608
+        600
       ],
       "id": "list-telegram-tools",
       "name": "List MCP Tools",
@@ -554,7 +554,7 @@
       "typeVersion": 2,
       "position": [
         192,
-        608
+        600
       ],
       "id": "telegram-tool-data-simplifier",
       "name": "Tool Data Simplifier"
@@ -627,7 +627,7 @@
       "typeVersion": 1.3,
       "position": [
         416,
-        608
+        600
       ],
       "id": "update-telegram-tool-cache",
       "name": "Update Tool Cache"
@@ -652,7 +652,7 @@
         "limit": 10,
         "advancedOptions": {
           "includeScore": true,
-          "matchIndividualWords": true
+          "matchIndividualWords": false
         }
       },
       "type": "n8n-nodes-paragon-os.fuzzySearch",
@@ -730,8 +730,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -256,
-        848
+        -32,
+        864
       ],
       "id": "check-telegram-profile-cache",
       "name": "Check Profile Cache",
@@ -746,8 +746,8 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        -32,
-        912
+        192,
+        792
       ],
       "id": "get-telegram-profile",
       "name": "Get My Profile",
@@ -765,8 +765,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        192,
-        912
+        416,
+        792
       ],
       "id": "telegram-profile-simplifier",
       "name": "User Profile Simplifier"
@@ -838,8 +838,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        416,
-        912
+        640,
+        792
       ],
       "id": "update-telegram-profile-cache",
       "name": "Update Profile Cache"
@@ -849,8 +849,8 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        848,
-        912
+        864,
+        864
       ],
       "id": "all-telegram-profile",
       "name": "My Profile"
@@ -975,7 +975,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1296,
+        1088,
         352
       ],
       "id": "telegram-merge-results",
@@ -1317,14 +1317,15 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "query": "send msg",
-          "entity": "self"
+          "query": "list messages",
+          "entity": "tool"
         }
       }
     ]
   },
-  "versionId": "cff22990-7c52-4bae-b50b-51d045fa940f",
-  "versionCounter": 18,
+  "versionId": "228d47fb-e48b-4979-8b8c-31428a17c49f",
+  "activeVersionId": null,
+  "versionCounter": 23,
   "triggerCount": 0,
   "tags": [
     {

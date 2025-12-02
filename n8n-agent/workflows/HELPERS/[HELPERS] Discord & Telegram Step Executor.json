@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-30T20:36:52.000Z",
+  "updatedAt": "2025-12-01T17:17:10.000Z",
   "createdAt": "2025-11-17T13:03:59.561Z",
   "id": "uoYXevOl4ePWKeNx",
   "name": "[HELPERS] Discord & Telegram Step Executor",
@@ -25,7 +25,7 @@
       "typeVersion": 1.1,
       "position": [
         -1616,
-        432
+        424
       ],
       "id": "dd089a93-3eb3-466d-9dd8-efc4a57a9e0e",
       "name": "When Executed by Another Workflow",
@@ -38,7 +38,7 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        176,
+        -48,
         256
       ],
       "id": "90a8d7ee-6bb9-46b7-8e15-f8d8b17fd413",
@@ -68,7 +68,7 @@
       "typeVersion": 3.4,
       "position": [
         -1392,
-        432
+        424
       ],
       "id": "490cd53f-a549-4be3-888d-e9838dc053e8",
       "name": "Prepare Execution Steps"
@@ -84,7 +84,7 @@
       "typeVersion": 1,
       "position": [
         -1168,
-        432
+        424
       ],
       "id": "b996eb98-f301-4d48-9b5a-999e52135faa",
       "name": "Split Execution Steps"
@@ -114,7 +114,7 @@
       "typeVersion": 3,
       "position": [
         -944,
-        672
+        664
       ],
       "id": "cd5a8d92-5e4f-4164-af15-6861fe96b4c4",
       "name": "Loop Over Execution Steps"
@@ -292,23 +292,10 @@
       "typeVersion": 2,
       "position": [
         -272,
-        816
+        808
       ],
       "id": "070d5a92-aef4-4406-9c71-04252c3cd22a",
       "name": "Code in JavaScript"
-    },
-    {
-      "parameters": {
-        "mode": "chooseBranch"
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        -48,
-        256
-      ],
-      "id": "fcda4537-84f6-421c-ba62-724d289b661f",
-      "name": "Merge"
     }
   ],
   "connections": {
@@ -394,7 +381,7 @@
       "main": [
         [
           {
-            "node": "Merge",
+            "node": "No Operation, do nothing",
             "type": "main",
             "index": 0
           }
@@ -460,15 +447,9 @@
         ]
       ]
     },
-    "Merge": {
+    "No Operation, do nothing": {
       "main": [
-        [
-          {
-            "node": "No Operation, do nothing",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     }
   },
@@ -483,130 +464,70 @@
         "json": {
           "executionSteps": [
             {
-              "reasoning": "I am deleting the first message ID from the channel.",
-              "toolName": "discord_delete_message",
               "callParams": {
-                "messageId": "1444698962559766620",
-                "force": true,
-                "channelId": "1186092033233551360"
-              }
-            },
-            {
-              "callParams": {
-                "force": true,
-                "messageId": "1444699053526089739",
-                "channelId": "1186092033233551360"
+                "chat_id": 5047309757
               },
-              "toolName": "discord_delete_message",
-              "reasoning": "I am deleting the second message ID from the channel."
-            },
-            {
-              "reasoning": "I am deleting the third message ID from the channel.",
-              "toolName": "discord_delete_message",
-              "callParams": {
-                "force": true,
-                "messageId": "1444699141648154816",
-                "channelId": "1186092033233551360"
-              }
-            },
-            {
-              "toolName": "discord_delete_message",
-              "callParams": {
-                "messageId": "1444699228407595193",
-                "force": true,
-                "channelId": "1186092033233551360"
-              },
-              "reasoning": "I am deleting the fourth message ID from the channel."
-            },
-            {
-              "reasoning": "I am deleting the fifth message ID from the channel.",
-              "toolName": "discord_delete_message",
-              "callParams": {
-                "channelId": "1186092033233551360",
-                "force": true,
-                "messageId": "1444699315011588168"
-              }
+              "toolName": "telegram_list_messages",
+              "reasoning": "This step lists the messages from the 'Cool N8N' chat."
             }
           ],
-          "targetMcp": "DISCORD"
+          "targetMcp": "TELEGRAM"
         }
       }
     ],
-    "Split Execution Steps": [
+    "No Operation, do nothing": [
       {
         "json": {
-          "executionSteps": {
-            "reasoning": "I am deleting the first message ID from the channel.",
-            "toolName": "discord_delete_message",
-            "callParams": {
-              "messageId": "1444698962559766620",
-              "force": true,
-              "channelId": "1186092033233551360"
+          "executionSteps": [
+            {
+              "stepResult": {
+                "stepOutput": {
+                  "data": [
+                    {
+                      "id": 358401,
+                      "date": "2025-12-01T16:52:26+00:00",
+                      "text": "This is the company logo",
+                      "from_id": 5008283745,
+                      "has_media": true,
+                      "media_type": "MessageMediaPhoto",
+                      "media": {
+                        "photo_id": 6154530162435886000,
+                        "dimensions": {
+                          "width": 320,
+                          "height": 320
+                        },
+                        "size": 5656,
+                        "resource_uri": "tgfile://-5047309757/358401"
+                      }
+                    },
+                    {
+                      "id": 358400,
+                      "date": "2025-12-01T16:51:37+00:00",
+                      "text": "Hey the next message to this one has a attachment image",
+                      "from_id": 5008283745
+                    },
+                    {
+                      "id": 358398,
+                      "date": "2025-12-01T16:50:46+00:00",
+                      "text": "",
+                      "from_id": 5008283745
+                    }
+                  ]
+                },
+                "toolName": "telegram_list_messages",
+                "callParams": {
+                  "chat_id": 5047309757
+                }
+              }
             }
-          },
-          "targetMcp": "DISCORD"
-        }
-      },
-      {
-        "json": {
-          "executionSteps": {
-            "callParams": {
-              "force": true,
-              "messageId": "1444699053526089739",
-              "channelId": "1186092033233551360"
-            },
-            "toolName": "discord_delete_message",
-            "reasoning": "I am deleting the second message ID from the channel."
-          },
-          "targetMcp": "DISCORD"
-        }
-      },
-      {
-        "json": {
-          "executionSteps": {
-            "reasoning": "I am deleting the third message ID from the channel.",
-            "toolName": "discord_delete_message",
-            "callParams": {
-              "force": true,
-              "messageId": "1444699141648154816",
-              "channelId": "1186092033233551360"
-            }
-          },
-          "targetMcp": "DISCORD"
-        }
-      },
-      {
-        "json": {
-          "executionSteps": {
-            "toolName": "discord_delete_message",
-            "callParams": {
-              "messageId": "1444699228407595193",
-              "force": true,
-              "channelId": "1186092033233551360"
-            },
-            "reasoning": "I am deleting the fourth message ID from the channel."
-          },
-          "targetMcp": "DISCORD"
-        }
-      },
-      {
-        "json": {
-          "executionSteps": {
-            "reasoning": "I am deleting the fifth message ID from the channel.",
-            "toolName": "discord_delete_message",
-            "callParams": {
-              "channelId": "1186092033233551360",
-              "force": true,
-              "messageId": "1444699315011588168"
-            }
-          },
-          "targetMcp": "DISCORD"
+          ]
         }
       }
     ]
   },
-  "versionId": "d567c367-22da-407a-af40-824216e332a2",
-  "versionCounter": 100,
+  "versionId": "e02bd2fc-fc14-4f1c-9c8f-3811fa7e0235",
+  "activeVersionId": null,
+  "versionCounter": 104,
   "triggerCount": 0,
   "tags": [
     {
