@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-02T02:48:18.000Z",
+  "updatedAt": "2025-12-02T02:54:40.000Z",
   "createdAt": "2025-12-02T01:18:35.706Z",
   "id": "IZa7S90Z9W1qxysr",
   "name": "[HELPERS] Dynamic RAG",
@@ -586,6 +586,20 @@
           "name": "QdrantApi account"
         }
       }
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        864,
+        1168
+      ],
+      "id": "fc6a3dc0-4002-424e-bce9-be70f6770797",
+      "name": "Wait",
+      "webhookId": "e3f877a7-e3ca-4549-812d-98c79605c5ce"
     }
   ],
   "connections": {
@@ -635,7 +649,13 @@
     },
     "Qdrant Vector Store": {
       "main": [
-        []
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Default Data Loader1": {
@@ -850,9 +870,9 @@
       }
     ]
   },
-  "versionId": "3e35b31b-077f-42ca-91c1-4b4296240b91",
+  "versionId": "923d64f7-ec8a-403f-9f97-0642f2559ce2",
   "activeVersionId": null,
-  "versionCounter": 36,
+  "versionCounter": 39,
   "triggerCount": 0,
   "tags": [],
   "shared": [
