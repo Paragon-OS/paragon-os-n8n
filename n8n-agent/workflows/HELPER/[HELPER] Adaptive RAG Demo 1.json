@@ -1,25 +1,142 @@
 {
-  "updatedAt": "2025-12-02T01:59:50.000Z",
+  "updatedAt": "2025-12-02T02:48:18.000Z",
   "createdAt": "2025-12-02T01:18:35.706Z",
   "id": "IZa7S90Z9W1qxysr",
-  "name": "[HELPER] Adaptive RAG Demo 1",
+  "name": "[HELPERS] Dynamic RAG",
   "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
     {
       "parameters": {
-        "modelName": "models/embedding-001"
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "file_id",
+                "value": "=file-001"
+              },
+              {
+                "name": "file_name",
+                "value": "=My File Number 001"
+              }
+            ]
+          }
+        }
       },
-      "id": "5f458a29-fb5b-4ce0-982d-e9134df50763",
-      "name": "Embeddings",
-      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "id": "2ac24ceb-8912-4191-8d43-6ff7f4fdeb13",
+      "name": "Default Data Loader1",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
       "position": [
-        72,
-        144
+        496,
+        1184
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "chat-agent-experiment-1",
+          "mode": "list",
+          "cachedResultName": "chat-agent-experiment-1"
+        },
+        "options": {}
+      },
+      "id": "2eb919a1-d766-4857-867c-1b6f456151c2",
+      "name": "Qdrant Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "position": [
+        400,
+        960
       ],
       "typeVersion": 1,
-      "alwaysOutputData": true,
+      "credentials": {
+        "qdrantApi": {
+          "id": "ytBh4xOzWNQ347S5",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "http://QDRANTURL/collections/COLLECTION",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"vectors\": {\n    \"size\": 1536,\n    \"distance\": \"Cosine\"  \n  },\n  \"shard_number\": 1,  \n  \"replication_factor\": 1,  \n  \"write_consistency_factor\": 1 \n}",
+        "options": {}
+      },
+      "id": "aed0bdff-4e56-4128-80f5-2e373cee6905",
+      "name": "Create collection",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -208,
+        2204
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "S0nticGtHhYu1fe4",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chunkSize": 500,
+        "chunkOverlap": 50,
+        "options": {}
+      },
+      "id": "6569e9c6-3c79-49d3-9e4b-7281d121b32b",
+      "name": "Recursive Character Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "position": [
+        576,
+        1392
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.input }}",
+        "options": {}
+      },
+      "id": "1d6ad257-d218-4964-8084-a69a6155e821",
+      "name": "Question and Answer Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainRetrievalQa",
+      "position": [
+        400,
+        2072
+      ],
+      "typeVersion": 1.5
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "id": "dae1e6e6-16b2-4120-b5b1-adae15db6cae",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        368,
+        2296
+      ],
+      "typeVersion": 1,
       "credentials": {
         "googlePalmApi": {
           "id": "NIhZoi9otQV2vaAP",
@@ -29,37 +146,282 @@
     },
     {
       "parameters": {
-        "fieldsToSummarize": {
-          "values": [
+        "topK": 5
+      },
+      "id": "be311b8d-c43e-4be4-96e9-cbebb0dd4832",
+      "name": "Vector Store Retriever",
+      "type": "@n8n/n8n-nodes-langchain.retrieverVectorStore",
+      "position": [
+        496,
+        2296
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "chat-agent-experiment-1",
+          "mode": "list",
+          "cachedResultName": "chat-agent-experiment-1"
+        },
+        "options": {}
+      },
+      "id": "2b128ca6-60ed-4e70-9a30-fe9aaa2c2d58",
+      "name": "Qdrant Vector Store1",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "position": [
+        496,
+        2504
+      ],
+      "typeVersion": 1.1,
+      "credentials": {
+        "qdrantApi": {
+          "id": "ytBh4xOzWNQ347S5",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "f39fcb8f-71bc-4c1e-8bfe-f3a01e38c89c",
+      "name": "Merge1",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        864,
+        1820
+      ],
+      "typeVersion": 3.1
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
             {
-              "aggregation": "concatenate",
-              "field": "document.pageContent",
-              "separateBy": "other",
-              "customSeparator": "={{ \"\\n\\n---\\n\\n\" }}"
+              "fieldToAggregate": "document.metadata.file_id"
+            },
+            {
+              "fieldToAggregate": "document.metadata.file_name"
             }
           ]
         },
         "options": {}
       },
-      "id": "d430b89f-4da1-452c-9db9-5516faf169ce",
-      "name": "Concatenate Context",
-      "type": "n8n-nodes-base.summarize",
+      "id": "0934c7d2-f3f3-469e-8d87-65dbfa6de06c",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
       "position": [
-        352,
-        -80
+        504,
+        1568
       ],
-      "typeVersion": 1.1,
-      "alwaysOutputData": true
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/chat-agent-experiment-1/points/delete",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "qdrantApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"filter\": {}\n}",
+        "options": {}
+      },
+      "id": "6f4e90ae-415a-404b-ad61-c5ac62d74f10",
+      "name": "Clear collection",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -208,
+        1168
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "S0nticGtHhYu1fe4",
+          "name": "Header Auth account"
+        },
+        "qdrantApi": {
+          "id": "ytBh4xOzWNQ347S5",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b296c92b-d9ee-4322-b972-d1069d01feb8",
+              "name": "output",
+              "type": "string",
+              "value": "={{ $('Question and Answer Chain').item.json.response }}\n\nSources: {{ (JSON.stringify($json.unique_file_names)) }},"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ee957717-7708-4ec4-82de-6b5e0f59af04",
+      "name": "Output",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1312,
+        1820
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\n\n// Creiamo Set per rimuovere duplicati\nconst uniqueFileIds = Array.from(new Set(item.file_id));\nconst uniqueFileNames = Array.from(new Set(item.file_name));\n\n// Ritorniamo un item con i valori univoci\nreturn [\n  {\n    json: {\n      unique_file_ids: uniqueFileIds,\n      unique_file_names: uniqueFileNames\n    }\n  }\n];\n"
+      },
+      "id": "17d5e418-e03f-4358-9a8c-0749c134ea37",
+      "name": "Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1088,
+        1820
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bdb8250e-e4b6-4e5b-b3b2-4f941c14e307",
+              "name": "story",
+              "value": "A fox jumped over a tree, you must know!",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        1168
+      ],
+      "id": "9f9b5121-2980-48c3-9d0b-81187e1a6df6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        368,
+        1184
+      ],
+      "id": "5ce1f530-794e-4e41-ac37-6ecb946c9ad5",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        88,
+        1792
+      ],
+      "id": "e873c882-2217-4bde-920a-06bc481ea5db",
+      "name": "Embeddings Google Gemini1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        576,
+        2712
+      ],
+      "id": "1428525f-8265-4b91-ab83-3a82696e8348",
+      "name": "Embeddings Google Gemini2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "chat-agent-experiment-1",
+          "mode": "list",
+          "cachedResultName": "chat-agent-experiment-1"
+        },
+        "prompt": "={{ $json.input }}",
+        "topK": 5,
+        "options": {}
+      },
+      "id": "579efbf5-55e4-4c28-9bcb-c8b4652d0e54",
+      "name": "Retrive sources1",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "position": [
+        16,
+        1568
+      ],
+      "typeVersion": 1.3,
+      "alwaysOutputData": true,
+      "credentials": {
+        "qdrantApi": {
+          "id": "ytBh4xOzWNQ347S5",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        1820
+      ],
+      "id": "1286b78a-a4ba-429c-83cc-911c058e1bd1",
+      "name": "No Operation, do nothing"
     },
     {
       "parameters": {
         "workflowInputs": {
           "values": [
             {
-              "name": "systemPrompt"
+              "name": "input",
+              "type": "any"
             },
             {
-              "name": "userPrompt"
+              "name": "mode"
+            },
+            {
+              "name": "collectionId"
             }
           ]
         }
@@ -67,36 +429,158 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -224,
-        -80
+        -656,
+        1916
       ],
-      "id": "44a9b2bb-744f-4700-9908-04fb43e925a1",
-      "name": "When Executed by Another Workflow",
-      "alwaysOutputData": true
+      "id": "0daf4a1a-88cc-4f6f-b827-b663ba32c0b8",
+      "name": "When Executed by Another Workflow"
     },
     {
       "parameters": {
-        "mode": "load",
-        "qdrantCollection": {
-          "__rl": true,
-          "value": "=chat-agent-experiment-1",
-          "mode": "id"
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0c0d73c5-48dd-4704-a4ec-018e7f38fbd3",
+                    "leftValue": "={{ $json.mode }}",
+                    "rightValue": "INSERT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "INSERT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "81936f1d-a6cb-45af-b8b8-6dffa7f565fb",
+                    "leftValue": "={{ $json.mode }}",
+                    "rightValue": "SEARCH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "SEARCH"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.mode }}",
+                    "rightValue": "CLEAR",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "204b2ebf-7ad7-4e51-9849-6553610a5afb"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CLEAR"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1d9f4d1f-c41b-4578-a7c4-d09f8fde2876",
+                    "leftValue": "={{ $json.mode }}",
+                    "rightValue": "CREATE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CREATE"
+            }
+          ]
         },
-        "prompt": "={{ $json.systemPrompt }}\n\nUser query: \n\n{{ $json.userPrompt }}",
-        "topK": 10,
         "options": {}
       },
-      "id": "97e658a8-663d-48ae-bf1d-ab81d74ce0b7",
-      "name": "Retrieve Documents from Vector Store1",
-      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
       "position": [
-        0,
-        -80
+        -432,
+        1884
       ],
-      "typeVersion": 1.3,
-      "notesInFlow": false,
-      "alwaysOutputData": true,
+      "id": "ae868fcd-b699-437f-908b-bd9fd03b5941",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/chat-agent-experiment-1/points/delete",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "qdrantApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"filter\": {}\n}",
+        "options": {}
+      },
+      "id": "7fc827f6-2878-4fe4-bdd7-96eecddd8c05",
+      "name": "Clear collection1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -208,
+        2012
+      ],
+      "typeVersion": 4.2,
       "credentials": {
+        "httpHeaderAuth": {
+          "id": "S0nticGtHhYu1fe4",
+          "name": "Header Auth account"
+        },
         "qdrantApi": {
           "id": "ytBh4xOzWNQ347S5",
           "name": "QdrantApi account"
@@ -105,12 +589,187 @@
     }
   ],
   "connections": {
-    "Embeddings": {
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Response": {
+      "main": [
+        [
+          {
+            "node": "Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clear collection": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store": {
+      "main": [
+        []
+      ]
+    },
+    "Default Data Loader1": {
+      "ai_document": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store1": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Vector Store Retriever",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store Retriever": {
+      "ai_retriever": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "ai_retriever",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Question and Answer Chain": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader1",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
       "ai_embedding": [
         [
           {
-            "node": "Retrieve Documents from Vector Store1",
+            "node": "Qdrant Vector Store",
             "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Retrive sources1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrive sources1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Retrive sources1",
+            "type": "main",
             "index": 0
           }
         ]
@@ -120,18 +779,39 @@
       "main": [
         [
           {
-            "node": "Retrieve Documents from Vector Store1",
+            "node": "Switch",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Retrieve Documents from Vector Store1": {
+    "Switch": {
       "main": [
         [
           {
-            "node": "Concatenate Context",
+            "node": "Clear collection",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clear collection1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create collection",
             "type": "main",
             "index": 0
           }
@@ -150,15 +830,29 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "userPrompt": "1. The perspective of someone who holds a different belief or understanding of the facts, leading them to a different conclusion.\n2. The perspective of someone who values open dialogue and sees disagreement as an opportunity for learning and growth, regardless of who is \"right.\"\n3. The perspective of someone who feels personally attacked or invalidated, focusing on the impact of the statement rather than the content.\n",
-          "systemPrompt": "You are a helpful assistant discussing topics with multiple viewpoints. Based on the provided context, present different perspectives on the topic. Ensure fair representation of diverse opinions without showing bias. Acknowledge where the context presents limited viewpoints."
+          "mode": "CLEAR",
+          "collectionId": "chat-agent-experiment-1"
+        }
+      },
+      {
+        "json": {
+          "mode": "INSERT",
+          "collectionId": "chat-agent-experiment-1",
+          "input": "tell me about fox"
+        }
+      },
+      {
+        "json": {
+          "mode": "SEARCH",
+          "collectionId": "chat-agent-experiment-1",
+          "input": "tell me about fox"
         }
       }
     ]
   },
-  "versionId": "8b9dd572-5c2e-4578-a18f-df2b3346bae8",
+  "versionId": "3e35b31b-077f-42ca-91c1-4b4296240b91",
   "activeVersionId": null,
-  "versionCounter": 10,
+  "versionCounter": 36,
   "triggerCount": 0,
   "tags": [],
   "shared": [
