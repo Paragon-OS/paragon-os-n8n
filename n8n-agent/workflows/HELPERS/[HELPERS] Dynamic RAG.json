@@ -38,7 +38,7 @@
         "mode": "insert",
         "qdrantCollection": {
           "__rl": true,
-          "value": "chat-agent-experiment-1",
+          "value": "={{ $('When Executed by Another Workflow').item.json.collectionId }}",
           "mode": "list",
           "cachedResultName": "chat-agent-experiment-1"
         },
@@ -62,7 +62,7 @@
     {
       "parameters": {
         "method": "PUT",
-        "url": "http://QDRANTURL/collections/COLLECTION",
+        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/{{ $json.collectionId }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -161,7 +161,7 @@
       "parameters": {
         "qdrantCollection": {
           "__rl": true,
-          "value": "chat-agent-experiment-1",
+          "value": "={{ $('When Executed by Another Workflow').item.json.collectionId }}",
           "mode": "list",
           "cachedResultName": "chat-agent-experiment-1"
         },
@@ -223,7 +223,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/chat-agent-experiment-1/points/delete",
+        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/{{ $json.collectionId }}/points/delete",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "qdrantApi",
         "sendHeaders": true,
@@ -374,7 +374,7 @@
         "mode": "load",
         "qdrantCollection": {
           "__rl": true,
-          "value": "chat-agent-experiment-1",
+          "value": "={{ $('When Executed by Another Workflow').item.json.collectionId }}",
           "mode": "list",
           "cachedResultName": "chat-agent-experiment-1"
         },
@@ -551,7 +551,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/chat-agent-experiment-1/points/delete",
+        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/{{ $json.collectionId }}/points/delete",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "qdrantApi",
         "sendHeaders": true,
