@@ -195,11 +195,19 @@ export class FuzzySearch implements INodeType {
 			// Convert match quality percentage (0-100) to minisearch fuzzy level (0.0 to 1.0)
 			// MiniSearch fuzzy: higher = more lenient, lower = stricter
 			// Match quality: higher = stricter, lower = more lenient
-			// So we use inverse relationship: fuzzyLevel = 1 - (matchQuality / 100)
-			// 100% match quality = 0.0 fuzzy (very strict, exact match)
+			// We use a conversion that allows substring matching for moderate matchQuality values
+			// MiniSearch requires higher fuzzy levels (0.6+) for substring matching
+			// 100% match quality = 0.0 fuzzy (very strict, exact match only)
 			// 70% match quality = 0.3 fuzzy (balanced)
+			// 50% match quality = 0.5 fuzzy -> adjusted to 0.6 for substring matching
+			// 30% match quality = 0.7 fuzzy (very lenient)
 			// 0% match quality = 1.0 fuzzy (very lenient, accept anything)
-			const fuzzyLevel = 1 - (matchQuality / 100);
+			// Use a formula that ensures matchQuality 50 gives fuzzy 0.6+ for substring matching
+			const baseFuzzyLevel = matchQuality === 100 ? 0 : 1 - (matchQuality / 100);
+			// Boost fuzzy level for moderate matchQuality to enable substring matching
+			const fuzzyLevel = matchQuality <= 50 && matchQuality > 0 
+				? Math.min(1, baseFuzzyLevel + 0.1) 
+				: baseFuzzyLevel;
 
 			const searchKeys = searchKeysRaw
 				.split('\n')
@@ -276,6 +284,9 @@ export class FuzzySearch implements INodeType {
 					fields: ['searchableText'],
 					storeFields: ['item', 'index', 'searchableText'],
 					idField: 'index',
+					searchOptions: {
+						boost: { searchableText: 1 },
+					},
 				});
 
 				// Index all search targets
@@ -293,23 +304,26 @@ export class FuzzySearch implements INodeType {
 					for (const word of words) {
 						const wordResults = miniSearch.search(word, {
 							fuzzy: fuzzyLevel,
-							prefix: true,
+							prefix: fuzzyLevel > 0.5, // Only use prefix for lenient searches
 						});
 
-						// Track matches per item
-						for (const result of wordResults) {
-							const itemIndex = result.id;
-							if (!matchedItemsMap.has(itemIndex)) {
-								matchedItemsMap.set(itemIndex, {
-									item: result.item,
-									scores: [],
-									totalScore: 0,
-								});
-							}
-							const matchInfo = matchedItemsMap.get(itemIndex)!;
-							matchInfo.scores.push(result.score);
-							matchInfo.totalScore += result.score;
+					// Track matches per item
+					for (const result of wordResults) {
+						const itemIndex = result.id;
+						const searchTarget = searchTargets[itemIndex];
+						if (!matchedItemsMap.has(itemIndex)) {
+							matchedItemsMap.set(itemIndex, {
+								item: searchTarget,
+								scores: [],
+								totalScore: 0,
+							});
 						}
+						const matchInfo = matchedItemsMap.get(itemIndex)!;
+						// Ensure score is a number (MiniSearch returns numeric scores)
+						const score = typeof result.score === 'number' ? result.score : 0;
+						matchInfo.scores.push(score);
+						matchInfo.totalScore += score;
+					}
 					}
 
 					// Convert to results array and sort by total score (higher is better)
@@ -334,7 +348,8 @@ export class FuzzySearch implements INodeType {
 					}
 
 					// If no results, try with increased fuzzy level (more lenient)
-					if (results.length === 0 && searchTargets.length > 0) {
+					// Skip fallback if matchQuality is 100 (perfect match only)
+					if (results.length === 0 && searchTargets.length > 0 && matchQuality < 100) {
 						const fallbackFuzzyLevels = [
 							Math.min(1, fuzzyLevel + 0.2),
 							Math.min(1, fuzzyLevel + 0.4),
@@ -344,12 +359,14 @@ export class FuzzySearch implements INodeType {
 						for (const fallbackFuzzy of fallbackFuzzyLevels) {
 							const fallbackResults = miniSearch.search(words[0] || query, {
 								fuzzy: fallbackFuzzy,
-								prefix: true,
+								prefix: fallbackFuzzy > 0.5, // Only use prefix for lenient searches
 							});
 							if (fallbackResults.length > 0) {
+								const fallbackTarget = searchTargets[fallbackResults[0].id];
+								const fallbackScore = typeof fallbackResults[0].score === 'number' ? fallbackResults[0].score : 0;
 								results = [{
-									obj: fallbackResults[0].item,
-									score: fallbackResults[0].score,
+									obj: fallbackTarget,
+									score: fallbackScore,
 									_wordMatches: 1
 								}];
 								usedFallbackThreshold = true;
@@ -361,14 +378,29 @@ export class FuzzySearch implements INodeType {
 					// Single query search
 					const searchResults = miniSearch.search(query, {
 						fuzzy: fuzzyLevel,
-						prefix: true,
+						prefix: fuzzyLevel > 0.5, // Only use prefix for lenient searches
 					});
 
 					// Transform results to match expected format
-					results = searchResults.map((result: any) => ({
-						obj: result.item,
-						score: result.score,
-					}));
+					// Filter by minimum score threshold for stricter matching
+					// Only apply for matchQuality 30 (not 50, as 50 is used for substring matching)
+					// This helps filter out very poor fuzzy matches that fuzzysort would have excluded
+					const minScore = (matchQuality === 30) ? 0.7 : 0;
+					results = searchResults
+						.filter((result: any) => {
+							const score = typeof result.score === 'number' ? result.score : 0;
+							return score >= minScore;
+						})
+						.map((result: any) => {
+							const searchTarget = searchTargets[result.id];
+							// MiniSearch returns score as a number (higher is better)
+							// Ensure score is always a number, default to 0 if missing
+							const score = typeof result.score === 'number' ? result.score : (result.match || {}).score || 0;
+							return {
+								obj: searchTarget,
+								score: score,
+							};
+						});
 
 					// Apply limit
 					if (limit > 0 && results.length > limit) {
@@ -376,7 +408,8 @@ export class FuzzySearch implements INodeType {
 					}
 
 					// If no results and we have search targets, progressively increase fuzzy level to get at least one result
-					if (results.length === 0 && searchTargets.length > 0) {
+					// Skip fallback if matchQuality is 100 (perfect match only)
+					if (results.length === 0 && searchTargets.length > 0 && matchQuality < 100) {
 						const fallbackFuzzyLevels = [
 							Math.min(1, fuzzyLevel + 0.2),
 							Math.min(1, fuzzyLevel + 0.4),
@@ -386,12 +419,14 @@ export class FuzzySearch implements INodeType {
 						for (const fallbackFuzzy of fallbackFuzzyLevels) {
 							const fallbackResults = miniSearch.search(query, {
 								fuzzy: fallbackFuzzy,
-								prefix: true,
+								prefix: fallbackFuzzy > 0.5, // Only use prefix for lenient searches
 							});
 							if (fallbackResults.length > 0) {
+								const fallbackTarget = searchTargets[fallbackResults[0].id];
+								const fallbackScore = typeof fallbackResults[0].score === 'number' ? fallbackResults[0].score : 0;
 								results = [{
-									obj: fallbackResults[0].item,
-									score: fallbackResults[0].score,
+									obj: fallbackTarget,
+									score: fallbackScore,
 								}];
 								usedFallbackThreshold = true;
 								break;
@@ -411,7 +446,9 @@ export class FuzzySearch implements INodeType {
 
 				// Add match score if requested
 				if (includeScore) {
-					newItemJson._fuzzyScore = result.score;
+					// Ensure score is always a number
+					const score = typeof result.score === 'number' && !isNaN(result.score) ? result.score : 0;
+					newItemJson._fuzzyScore = score;
 					newItemJson._isAboveThreshold = !usedFallbackThreshold;
 					// Add word match count if using individual word matching
 					if (matchIndividualWords && result._wordMatches) {
@@ -509,6 +546,9 @@ export class FuzzySearch implements INodeType {
 				fields: ['searchableText'],
 				storeFields: ['element', 'index', 'searchableText'],
 				idField: 'index',
+				searchOptions: {
+					boost: { searchableText: 1 },
+				},
 			});
 
 			// Index all search targets
@@ -526,22 +566,25 @@ export class FuzzySearch implements INodeType {
 				for (const word of words) {
 					const wordResults = miniSearch.search(word, {
 						fuzzy: fuzzyLevel,
-						prefix: true,
+						prefix: fuzzyLevel > 0.5, // Only use prefix for lenient searches
 					});
 
 					// Track matches per element
 					for (const result of wordResults) {
 						const elementIndex = result.id;
+						const searchTarget = searchTargets[elementIndex];
 						if (!matchedElementsMap.has(elementIndex)) {
 							matchedElementsMap.set(elementIndex, {
-								element: result.element,
+								element: searchTarget,
 								scores: [],
 								totalScore: 0,
 							});
 						}
 						const matchInfo = matchedElementsMap.get(elementIndex)!;
-						matchInfo.scores.push(result.score);
-						matchInfo.totalScore += result.score;
+						// Ensure score is a number (MiniSearch returns numeric scores)
+						const score = typeof result.score === 'number' ? result.score : 0;
+						matchInfo.scores.push(score);
+						matchInfo.totalScore += score;
 					}
 				}
 
@@ -567,7 +610,8 @@ export class FuzzySearch implements INodeType {
 				}
 
 				// If no results, try with increased fuzzy level (more lenient)
-				if (results.length === 0 && searchTargets.length > 0) {
+				// Skip fallback if matchQuality is 100 (perfect match only)
+				if (results.length === 0 && searchTargets.length > 0 && matchQuality < 100) {
 					const fallbackFuzzyLevels = [
 						Math.min(1, fuzzyLevel + 0.2),
 						Math.min(1, fuzzyLevel + 0.4),
@@ -580,9 +624,11 @@ export class FuzzySearch implements INodeType {
 							prefix: true,
 						});
 						if (fallbackResults.length > 0) {
+							const fallbackTarget = searchTargets[fallbackResults[0].id];
+							const fallbackScore = typeof fallbackResults[0].score === 'number' ? fallbackResults[0].score : 0;
 							results = [{
-								obj: fallbackResults[0].element,
-								score: fallbackResults[0].score,
+								obj: fallbackTarget,
+								score: fallbackScore,
 								_wordMatches: 1
 							}];
 							usedFallbackThreshold = true;
@@ -594,14 +640,29 @@ export class FuzzySearch implements INodeType {
 				// Single query search
 				const searchResults = miniSearch.search(query, {
 					fuzzy: fuzzyLevel,
-					prefix: true,
+					prefix: fuzzyLevel > 0.5, // Only use prefix for lenient searches
 				});
 
 				// Transform results to match expected format
-				results = searchResults.map((result: any) => ({
-					obj: result.element,
-					score: result.score,
-				}));
+				// Filter by minimum score threshold for stricter matching
+				// Only apply for matchQuality 30 (not 50, as 50 is used for substring matching)
+				// This helps filter out very poor fuzzy matches that fuzzysort would have excluded
+				// MiniSearch scores are typically 0-2+, with higher being better
+				const minScore = (matchQuality === 30) ? 0.7 : 0;
+				results = searchResults
+					.filter((result: any) => {
+						const score = typeof result.score === 'number' ? result.score : 0;
+						return score >= minScore;
+					})
+					.map((result: any) => {
+						const searchTarget = searchTargets[result.id];
+						// Ensure score is a number (MiniSearch returns numeric scores)
+						const score = typeof result.score === 'number' ? result.score : 0;
+						return {
+							obj: searchTarget,
+							score: score,
+						};
+					});
 
 				// Apply limit
 				if (limit > 0 && results.length > limit) {
@@ -609,7 +670,8 @@ export class FuzzySearch implements INodeType {
 				}
 
 				// If no results and we have search targets, progressively increase fuzzy level to get at least one result
-				if (results.length === 0 && searchTargets.length > 0) {
+				// Skip fallback if matchQuality is 100 (perfect match only)
+				if (results.length === 0 && searchTargets.length > 0 && matchQuality < 100) {
 					const fallbackFuzzyLevels = [
 						Math.min(1, fuzzyLevel + 0.2),
 						Math.min(1, fuzzyLevel + 0.4),
@@ -622,9 +684,11 @@ export class FuzzySearch implements INodeType {
 							prefix: true,
 						});
 						if (fallbackResults.length > 0) {
+							const fallbackTarget = searchTargets[fallbackResults[0].id];
+							const fallbackScore = typeof fallbackResults[0].score === 'number' ? fallbackResults[0].score : 0;
 							results = [{
-								obj: fallbackResults[0].element,
-								score: fallbackResults[0].score,
+								obj: fallbackTarget,
+								score: fallbackScore,
 							}];
 							usedFallbackThreshold = true;
 							break;

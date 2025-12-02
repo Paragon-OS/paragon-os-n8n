@@ -93,9 +93,11 @@ export function buildSearchAcrossItemsParams(
 		searchKeys: overrides.searchKeys ?? DEFAULT_PARAMS.searchKeys,
 		matchQuality: overrides.matchQuality ?? DEFAULT_PARAMS.matchQuality,
 		limit: overrides.limit ?? DEFAULT_PARAMS.limit,
-		keepOnlySet: overrides.keepOnlySet ?? DEFAULT_PARAMS.keepOnlySet,
-		includeScore: overrides.includeScore ?? DEFAULT_PARAMS.includeScore,
-		matchIndividualWords: overrides.matchIndividualWords ?? DEFAULT_PARAMS.matchIndividualWords,
+		advancedOptions: {
+			keepOnlySet: overrides.keepOnlySet ?? DEFAULT_PARAMS.keepOnlySet,
+			includeScore: overrides.includeScore ?? DEFAULT_PARAMS.includeScore,
+			matchIndividualWords: overrides.matchIndividualWords ?? DEFAULT_PARAMS.matchIndividualWords,
+		},
 	};
 }
 
@@ -113,9 +115,11 @@ export function buildSearchInArrayParams(
 		searchKeys: overrides.searchKeys ?? DEFAULT_PARAMS.searchKeys,
 		matchQuality: overrides.matchQuality ?? DEFAULT_PARAMS.matchQuality,
 		limit: overrides.limit ?? DEFAULT_PARAMS.limit,
-		keepOnlySet: overrides.keepOnlySet ?? DEFAULT_PARAMS.keepOnlySet,
-		includeScore: overrides.includeScore ?? DEFAULT_PARAMS.includeScore,
-		matchIndividualWords: overrides.matchIndividualWords ?? DEFAULT_PARAMS.matchIndividualWords,
+		advancedOptions: {
+			keepOnlySet: overrides.keepOnlySet ?? DEFAULT_PARAMS.keepOnlySet,
+			includeScore: overrides.includeScore ?? DEFAULT_PARAMS.includeScore,
+			matchIndividualWords: overrides.matchIndividualWords ?? DEFAULT_PARAMS.matchIndividualWords,
+		},
 	};
 }
 
