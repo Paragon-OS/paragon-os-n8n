@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-02T02:54:40.000Z",
+  "updatedAt": "2025-12-02T03:10:51.000Z",
   "createdAt": "2025-12-02T01:18:35.706Z",
   "id": "IZa7S90Z9W1qxysr",
   "name": "[HELPERS] Dynamic RAG",
@@ -42,7 +42,9 @@
           "mode": "list",
           "cachedResultName": "chat-agent-experiment-1"
         },
-        "options": {}
+        "options": {
+          "contentPayloadKey": "=story"
+        }
       },
       "id": "2eb919a1-d766-4857-867c-1b6f456151c2",
       "name": "Qdrant Vector Store",
@@ -319,7 +321,9 @@
       "name": "Edit Fields"
     },
     {
-      "parameters": {},
+      "parameters": {
+        "modelName": "models/gemini-embedding-001"
+      },
       "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
       "typeVersion": 1,
       "position": [
@@ -336,11 +340,13 @@
       }
     },
     {
-      "parameters": {},
+      "parameters": {
+        "modelName": "models/gemini-embedding-exp-03-07"
+      },
       "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
       "typeVersion": 1,
       "position": [
-        88,
+        96,
         1792
       ],
       "id": "e873c882-2217-4bde-920a-06bc481ea5db",
@@ -870,9 +876,9 @@
       }
     ]
   },
-  "versionId": "923d64f7-ec8a-403f-9f97-0642f2559ce2",
+  "versionId": "62b3e36f-88c0-41c2-84fe-ba11a45b7c97",
   "activeVersionId": null,
-  "versionCounter": 39,
+  "versionCounter": 42,
   "triggerCount": 0,
   "tags": [],
   "shared": [
