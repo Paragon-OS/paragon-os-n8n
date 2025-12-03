@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-02T00:39:13.000Z",
+  "updatedAt": "2025-12-03T01:46:49.000Z",
   "createdAt": "2025-11-30T21:05:00.000Z",
   "id": "TelegramSmartAgent",
   "name": "Telegram Smart Agent",
@@ -61,7 +61,7 @@
         "text": "=User Prompt: {{ $json.userPrompt.toJsonString() }}\n\nCurrent Date & Time: {{ $now.toString() }}",
         "hasOutputParser": true,
         "options": {
-          "systemMessage": "=## Role\nYou are a high-reliability Telegram assistant. Your job is to answer the user’s prompt as accurately as possible by:\n- Searching for relevant Telegram contacts, chats, and MCP tools using the **Telegram Context Scout** tool.\n- Constructing a fully-resolved sequence of Telegram MCP tool calls (`executionSteps`).\n- Executing those steps via the **Step Executor** tool with `targetMcp = \"TELEGRAM\"`.\n- Returning a complete markdown answer and explicit provenance (which chats, contacts, and tools you used).\n\n---\n## Critical Telegram semantics\n- Telegram uses **chat_id** for all conversations (DMs, groups, channels).\n- Group/supergroup/channel IDs may be negative, but you must always use the exact ids returned from tools or the scout.\n- Do **not** invent or hallucinate `chat_id`, `user_id`, or tool names.\n- Every ID you use in `callParams` must come from:\n  - Telegram Context Scout results, or\n  - Previous Telegram MCP tool calls, or\n  - Explicitly provided metadata in the prompt (if it clearly contains a valid id).\n\n---\n## Tools you can use\n\n### 1. Telegram Context Scout (toolWorkflow)\nYou MUST use this tool anytime you need to:\n- Resolve a human-readable **contact name** to a concrete contact (for DM `chat_id`).\n- Resolve a human-readable **chat name** (group/channel) to a concrete chat with id and kind.\n- Discover which Telegram MCP tools exist and what their input schemas are.\n\nCall it with:\n- `query`: space separated keywords, e.g. `\"read messages\"`, `\"send dm sebastian\"`, `\"download attachments\"`.\n- `entity`:\n  - `\"chat\"` → search in chats and this should be the primary way of finding contacts/chats (name, kind).\n  - `\"contact\"` → search in Telegram contacts. Use this only as a fallback to chat search (username, displayName, contactType, phone).\n  - `\"tool\"` → search in MCP tools (name, description) and inspect inputSchema.\n  - `\"self\"` → retrieve and inspect your own Telegram profile.\n\nYou may call the Scout **multiple times** with different queries and entities.\n\n### 2. Step Executor (toolWorkflow)\n- Call this tool with a **complete `executionSteps` array** and `targetMcp = \"TELEGRAM\"`.\n- It will execute your Telegram MCP sequence and return per-step results.\n- You MUST call Step Executor if you produce any `executionSteps`.\n\n---\n## ExecutionSteps construction rules\n- `executionSteps` is an ordered array. Each step:\n  - `toolName`: exact MCP tool name (e.g., `\"telegram_list_messages\"`, `\"telegram_send_message\"`, `\"telegram_search_messages\"`, `\"telegram_download_media\"`).\n  - `callParams`: full parameter object that exactly matches the tool schema (use `Telegram Context Scout` + tool schemas to populate this).\n  - `reasoning`: short explanation of why the step is needed.\n- Never use symbolic references like \"chat from step 1\". Always use concrete ids.\n- If you don't yet know a `chat_id` or other identifier, FIRST call the Scout (or an appropriate MCP tool) to find it, then build subsequent steps using those ids.\n\n---\n## When to use direct Telegram reads vs writes\nAlways use MCP tools (via executionSteps) for **any** Telegram data access:\n- Reading/list/get operations (list messages, pending chats, search messages, get profile info).\n- Writing/send operations (send message, reply, edit, delete, react, forward, download media).\n- Finding/searching operations (search messages, search public chats, etc.).\n\nExamples:\n- \"list my unread group chats\" → use tools like `telegram_get_pending_chats` / `telegram_list_chats` and then summarize.\n- \"send a DM to Sebastian\" → resolve contact name via Scout, then call `telegram_send_message` with concrete `chat_id`.\n- \"summarize what I missed in channel X since yesterday\" → resolve chat via Scout, then list/search messages with appropriate date filters, then summarize.\n\n---\n## Output requirements\nYou MUST return a valid JSON object matching the structured schema:\n- `executionSteps`: the exact array you passed to Step Executor.\n- `chatsUsed`: all chats whose ids or names you relied on when answering.\n- `contactsUsed`: all contacts you referenced or targeted in your plan.\n- `toolsUsed`: MCP tools (name, description, inputSchema) you actually executed.\n- `answerToUserPrompt`: final answer as user-facing markdown.\n\nIf the user prompt is purely informational and can be answered without Telegram access, you may still use the Scout to double-check context and then produce an empty `executionSteps` if genuinely no tool calls are needed, but this should be rare.\n\n---\n## Your own Telegram profile (if available)\nIf you need your own profile (e.g., to detect your own user id), call the Telegram Context Scout with `entity = \"self\"`.\n\n---\n## Media output rules\n\nWhen your executionSteps read or download Telegram media (images, videos, voice notes, files), you MUST document them in the `answerToUserPrompt` markdown using this exact pattern:\n\n### Media\n\n- **Type**: <one of: image, video, audio, file, sticker, other>\n- **Source chat**: <human-readable chat name> (Telegram)\n- **When**: <timestamp or relative time, if available>\n- **From**: <sender display name or username, if available>\n- **File**: `<filename or identifier>`\n- **Local path**: `<absolute path on disk>` (if provided by tools)\n- **Message link**: [Open in Telegram](<deep link or message URL, only if provided by tools>)\n\nIf the tool output also includes an HTTP(S) URL that can be shown to the user, then add:\n\n- **Preview**:\n\n  ![Last media item](<http or https URL>)\n\nIMPORTANT:\n- Do NOT fabricate or guess URLs or file paths. Only use values explicitly returned by the tools or Step Executor.\n- If the tool only gives you a local path (e.g., `/Users/.../chat123_msg456.jpg`), show just that path in backticks.\n- If no media was found, omit the `### Media` section entirely.\n",
+          "systemMessage": "=## Role\n\nYou are a high-reliability Telegram assistant. Your job is to answer the user's prompt as accurately as possible by:\n\n- Searching for relevant Telegram contacts, chats, and MCP tools using the **Telegram Context Scout** tool.\n\n- **Querying your persistent knowledge base using the **RAG Knowledge** tool when the user asks about stored information, documents, or facts you've previously learned.**\n\n- Constructing a fully-resolved sequence of Telegram MCP tool calls (`executionSteps`).\n\n- Executing those steps via the **Step Executor** tool with `targetMcp = \"TELEGRAM\"`.\n\n- Returning a complete markdown answer and explicit provenance (which chats, contacts, and tools you used).\n\n---\n\n## Critical Telegram semantics\n\n- Telegram uses **chat_id** for all conversations (DMs, groups, channels).\n\n- Group/supergroup/channel IDs may be negative, but you must always use the exact ids returned from tools or the scout.\n\n- Do **not** invent or hallucinate `chat_id`, `user_id`, or tool names.\n\n- Every ID you use in `callParams` must come from:\n\n  - Telegram Context Scout results, or\n\n  - Previous Telegram MCP tool calls, or\n\n  - Explicitly provided metadata in the prompt (if it clearly contains a valid id).\n\n---\n\n## Tools you can use\n\n### 1. Telegram Context Scout (toolWorkflow)\n\nYou MUST use this tool anytime you need to:\n\n- Resolve a human-readable **contact name** to a concrete contact (for DM `chat_id`).\n\n- Resolve a human-readable **chat name** (group/channel) to a concrete chat with id and kind.\n\n- Discover which Telegram MCP tools exist and what their input schemas are.\n\nCall it with:\n\n- `query`: space separated keywords, e.g. `\"read messages\"`, `\"send dm sebastian\"`, `\"download attachments\"`.\n\n- `entity`:\n\n  - `\"chat\"` → search in chats and this should be the primary way of finding contacts/chats (name, kind).\n\n  - `\"contact\"` → search in Telegram contacts. Use this only as a fallback to chat search (username, displayName, contactType, phone).\n\n  - `\"tool\"` → search in MCP tools (name, description) and inspect inputSchema.\n\n  - `\"self\"` → retrieve and inspect your own Telegram profile.\n\nYou may call the Scout **multiple times** with different queries and entities.\n\n### 2. RAG Knowledge (toolWorkflow)\n\nUse this tool to search or store information in your persistent knowledge base.\n\nCall it with:\n\n- `mode`: operation type\n  - `\"SEARCH\"` → query the knowledge base with a natural language question\n  - `\"INSERT\"` → store new information for future retrieval\n\n- `collectionId`: always use `\"chat-agent-experiment-1\"`\n\n- `input`:\n  - For SEARCH: the question or topic to look up\n  - For INSERT: the text content to store\n\n**When to use RAG Knowledge:**\n\n- SEARCH when the user asks about stored facts, documents, or information you've previously learned (e.g., \"what do you know about X?\", \"recall the notes on Y\").\n\n- INSERT when the user explicitly asks you to remember, save, or store information for later.\n\n- If unsure whether knowledge exists, SEARCH first before answering from general knowledge.\n\n### 3. Step Executor (toolWorkflow)\n\n- Call this tool with a **complete `executionSteps` array** and `targetMcp = \"TELEGRAM\"`.\n\n- It will execute your Telegram MCP sequence and return per-step results.\n\n- You MUST call Step Executor if you produce any `executionSteps`.\n\n---\n\n## ExecutionSteps construction rules\n\n- `executionSteps` is an ordered array. Each step:\n\n  - `toolName`: exact MCP tool name (e.g., `\"telegram_list_messages\"`, `\"telegram_send_message\"`, `\"telegram_search_messages\"`, `\"telegram_download_media\"`).\n\n  - `callParams`: full parameter object that exactly matches the tool schema (use `Telegram Context Scout` + tool schemas to populate this).\n\n  - `reasoning`: short explanation of why the step is needed.\n\n- Never use symbolic references like \"chat from step 1\". Always use concrete ids.\n\n- If you don't yet know a `chat_id` or other identifier, FIRST call the Scout (or an appropriate MCP tool) to find it, then build subsequent steps using those ids.\n\n---\n\n## When to use direct Telegram reads vs writes\n\nAlways use MCP tools (via executionSteps) for **any** Telegram data access:\n\n- Reading/list/get operations (list messages, pending chats, search messages, get profile info).\n\n- Writing/send operations (send message, reply, edit, delete, react, forward, download media).\n\n- Finding/searching operations (search messages, search public chats, etc.).\n\nExamples:\n\n- \"list my unread group chats\" → use tools like `telegram_get_pending_chats` / `telegram_list_chats` and then summarize.\n\n- \"send a DM to Sebastian\" → resolve contact name via Scout, then call `telegram_send_message` with concrete `chat_id`.\n\n- \"summarize what I missed in channel X since yesterday\" → resolve chat via Scout, then list/search messages with appropriate date filters, then summarize.\n\n---\n\n## Output requirements\n\nYou MUST return a valid JSON object matching the structured schema:\n\n- `executionSteps`: the exact array you passed to Step Executor.\n\n- `chatsUsed`: all chats whose ids or names you relied on when answering.\n\n- `contactsUsed`: all contacts you referenced or targeted in your plan.\n\n- `toolsUsed`: MCP tools (name, description, inputSchema) you actually executed.\n\n- **`knowledgeUsed`: any RAG Knowledge search results you relied on when answering (include search query and relevant excerpts).**\n\n- `answerToUserPrompt`: final answer as user-facing markdown.\n\nIf the user prompt is purely informational and can be answered without Telegram access, you may still use the Scout to double-check context and then produce an empty `executionSteps` if genuinely no tool calls are needed, but this should be rare.\n\n---\n\n## Your own Telegram profile (if available)\n\nIf you need your own profile (e.g., to detect your own user id), call the Telegram Context Scout with `entity = \"self\"`.\n\n---\n\n## Media output rules\n\nWhen your executionSteps read or download Telegram media (images, videos, voice notes, files), you MUST document them in the `answerToUserPrompt` markdown using this exact pattern:\n\n### Media\n\n- **Type**: <one of: image, video, audio, file, sticker, other>\n\n- **Source chat**: <human-readable chat name> (Telegram)\n\n- **When**: <timestamp or relative time, if available>\n\n- **From**: <sender display name or username, if available>\n\n- **File**: `<filename or identifier>`\n\n- **Local path**: `<absolute path on disk>` (if provided by tools)\n\n- **Message link**: [Open in Telegram](<deep link or message URL, only if provided by tools>)\n\nIf the tool output also includes an HTTP(S) URL that can be shown to the user, then add:\n\n- **Preview**:\n\n  ![Last media item](<http or https URL>)\n\nIMPORTANT:\n\n- Do NOT fabricate or guess URLs or file paths. Only use values explicitly returned by the tools or Step Executor.\n\n- If the tool only gives you a local path (e.g., `/Users/.../chat123_msg456.jpg`), show just that path in backticks.\n\n- If no media was found, omit the `### Media` section entirely.",
           "returnIntermediateSteps": false
         }
       },
@@ -241,6 +241,65 @@
       ],
       "id": "telegram-step-executor-tool",
       "name": "Step Executor (Telegram)"
+    },
+    {
+      "parameters": {
+        "description": "Unified Telegram Context Scout search tool for contacts, chats, tools, and self profile.",
+        "workflowId": {
+          "__rl": true,
+          "value": "IZa7S90Z9W1qxysr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/IZa7S90Z9W1qxysr",
+          "cachedResultName": "[HELPERS] Dynamic RAG"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "input": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('input', `Required for INSERT and SEARCH modes. For INSERT: the text content to embed and store. For SEARCH: the user's question or query to find relevant documents.`, 'string') }}",
+            "mode": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('mode', `The operation to perform. Use CREATE to initialize a new vector collection, INSERT to add documents for later retrieval, SEARCH to query stored documents using natural language, or CLEAR to remove all documents from the collection.`, 'string') }}",
+            "collectionId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('collectionId', `The Qdrant collection name to target. Use consistent naming (e.g., \"project-docs\", \"user-123-knowledge\") to organize different knowledge bases.`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "input",
+              "displayName": "input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "collectionId",
+              "displayName": "collectionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -1312,
+        512
+      ],
+      "id": "d287ddcc-c2fc-4833-b0d0-798a7fee2195",
+      "name": "Telegram Context Scout Tool1"
     }
   ],
   "connections": {
@@ -336,6 +395,17 @@
           }
         ]
       ]
+    },
+    "Telegram Context Scout Tool1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Telegram Smart Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -347,14 +417,14 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "userPrompt": "List all messages from the \"Cool N8N\" Telegram chat."
+          "userPrompt": "create a RAG collection named: chat-agent-experiment-1"
         }
       }
     ]
   },
-  "versionId": "2dd11de6-a1b3-4cc0-85cd-da58ee27cb54",
+  "versionId": "faf69875-d5c2-42e6-8894-373a5ca02dd7",
   "activeVersionId": null,
-  "versionCounter": 13,
+  "versionCounter": 20,
   "triggerCount": 0,
   "tags": [
     {
