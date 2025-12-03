@@ -342,7 +342,7 @@
     },
     {
       "parameters": {
-        "modelName": "models/gemini-embedding-exp-03-07"
+        "modelName": "models/gemini-embedding-001"
       },
       "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
       "typeVersion": 1,
@@ -360,7 +360,9 @@
       }
     },
     {
-      "parameters": {},
+      "parameters": {
+        "modelName": "models/gemini-embedding-001"
+      },
       "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
       "typeVersion": 1,
       "position": [
