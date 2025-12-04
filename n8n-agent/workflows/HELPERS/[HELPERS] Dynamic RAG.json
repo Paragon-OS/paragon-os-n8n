@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-03T01:51:13.000Z",
+  "updatedAt": "2025-12-04T10:57:43.000Z",
   "createdAt": "2025-12-02T01:18:35.706Z",
   "id": "IZa7S90Z9W1qxysr",
   "name": "[HELPERS] Dynamic RAG",
@@ -28,7 +28,7 @@
       "name": "Default Data Loader1",
       "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
       "position": [
-        496,
+        768,
         1184
       ],
       "typeVersion": 1
@@ -38,19 +38,16 @@
         "mode": "insert",
         "qdrantCollection": {
           "__rl": true,
-          "value": "={{ $('When Executed by Another Workflow').item.json.collectionId }}",
-          "mode": "list",
-          "cachedResultName": "chat-agent-experiment-1"
+          "value": "={{ $('Switch').item.json.collectionId }}",
+          "mode": "id"
         },
-        "options": {
-          "contentPayloadKey": "=story"
-        }
+        "options": {}
       },
       "id": "2eb919a1-d766-4857-867c-1b6f456151c2",
       "name": "Qdrant Vector Store",
       "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
       "position": [
-        400,
+        672,
         960
       ],
       "typeVersion": 1,
@@ -85,8 +82,8 @@
       "name": "Create collection",
       "type": "n8n-nodes-base.httpRequest",
       "position": [
-        -208,
-        2208
+        64,
+        2336
       ],
       "typeVersion": 4.2,
       "credentials": {
@@ -94,7 +91,8 @@
           "id": "S0nticGtHhYu1fe4",
           "name": "Header Auth account"
         }
-      }
+      },
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -106,7 +104,7 @@
       "name": "Recursive Character Text Splitter",
       "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
       "position": [
-        576,
+        848,
         1392
       ],
       "typeVersion": 1
@@ -121,8 +119,8 @@
       "name": "Question and Answer Chain",
       "type": "@n8n/n8n-nodes-langchain.chainRetrievalQa",
       "position": [
-        400,
-        2080
+        672,
+        2072
       ],
       "typeVersion": 1.5
     },
@@ -135,8 +133,8 @@
       "name": "Google Gemini Chat Model",
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "position": [
-        368,
-        2304
+        640,
+        2296
       ],
       "typeVersion": 1,
       "credentials": {
@@ -154,8 +152,8 @@
       "name": "Vector Store Retriever",
       "type": "@n8n/n8n-nodes-langchain.retrieverVectorStore",
       "position": [
-        496,
-        2304
+        768,
+        2296
       ],
       "typeVersion": 1
     },
@@ -163,8 +161,8 @@
       "parameters": {
         "qdrantCollection": {
           "__rl": true,
-          "mode": "id",
-          "value": "={{ $('When Executed by Another Workflow').item.json.collectionId }}"
+          "value": "={{ $('Switch').item.json.collectionId }}",
+          "mode": "id"
         },
         "options": {}
       },
@@ -172,7 +170,7 @@
       "name": "Qdrant Vector Store1",
       "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
       "position": [
-        496,
+        768,
         2512
       ],
       "typeVersion": 1.1,
@@ -193,8 +191,8 @@
       "name": "Merge1",
       "type": "n8n-nodes-base.merge",
       "position": [
-        864,
-        1824
+        1136,
+        1820
       ],
       "typeVersion": 3.1
     },
@@ -216,7 +214,7 @@
       "name": "Aggregate",
       "type": "n8n-nodes-base.aggregate",
       "position": [
-        512,
+        776,
         1568
       ],
       "typeVersion": 1
@@ -245,7 +243,7 @@
       "name": "Clear collection",
       "type": "n8n-nodes-base.httpRequest",
       "position": [
-        -208,
+        64,
         1168
       ],
       "typeVersion": 4.2,
@@ -280,8 +278,8 @@
       "name": "Output",
       "type": "n8n-nodes-base.set",
       "position": [
-        1312,
-        1824
+        1584,
+        1820
       ],
       "typeVersion": 3.4
     },
@@ -293,8 +291,8 @@
       "name": "Response",
       "type": "n8n-nodes-base.code",
       "position": [
-        1088,
-        1824
+        1360,
+        1820
       ],
       "typeVersion": 2
     },
@@ -304,8 +302,8 @@
           "assignments": [
             {
               "id": "bdb8250e-e4b6-4e5b-b3b2-4f941c14e307",
-              "name": "story",
-              "value": "={{ $('When Executed by Another Workflow').item.json.input }}",
+              "name": "about us",
+              "value": "={{ $('Switch').item.json.input }}",
               "type": "string"
             }
           ]
@@ -315,20 +313,18 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        80,
+        352,
         1168
       ],
       "id": "9f9b5121-2980-48c3-9d0b-81187e1a6df6",
       "name": "Edit Fields"
     },
     {
-      "parameters": {
-        "modelName": "models/gemini-embedding-001"
-      },
+      "parameters": {},
       "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
       "typeVersion": 1,
       "position": [
-        368,
+        640,
         1184
       ],
       "id": "5ce1f530-794e-4e41-ac37-6ecb946c9ad5",
@@ -341,13 +337,11 @@
       }
     },
     {
-      "parameters": {
-        "modelName": "models/gemini-embedding-001"
-      },
+      "parameters": {},
       "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
       "typeVersion": 1,
       "position": [
-        96,
+        360,
         1792
       ],
       "id": "e873c882-2217-4bde-920a-06bc481ea5db",
@@ -360,14 +354,12 @@
       }
     },
     {
-      "parameters": {
-        "modelName": "models/gemini-embedding-001"
-      },
+      "parameters": {},
       "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
       "typeVersion": 1,
       "position": [
-        576,
-        2720
+        848,
+        2712
       ],
       "id": "1428525f-8265-4b91-ab83-3a82696e8348",
       "name": "Embeddings Google Gemini2",
@@ -383,9 +375,8 @@
         "mode": "load",
         "qdrantCollection": {
           "__rl": true,
-          "value": "={{ $('When Executed by Another Workflow').item.json.collectionId }}",
-          "mode": "list",
-          "cachedResultName": "chat-agent-experiment-1"
+          "value": "={{ $('Switch').item.json.collectionId }}",
+          "mode": "id"
         },
         "prompt": "={{ $json.input }}",
         "topK": 5,
@@ -395,7 +386,7 @@
       "name": "Retrive sources1",
       "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
       "position": [
-        16,
+        288,
         1568
       ],
       "typeVersion": 1.3,
@@ -412,8 +403,8 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        -208,
-        1824
+        64,
+        1820
       ],
       "id": "1286b78a-a4ba-429c-83cc-911c058e1bd1",
       "name": "No Operation, do nothing"
@@ -438,8 +429,8 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -656,
-        1920
+        -832,
+        2144
       ],
       "id": "0daf4a1a-88cc-4f6f-b827-b663ba32c0b8",
       "name": "When Executed by Another Workflow"
@@ -543,6 +534,31 @@
               },
               "renameOutput": true,
               "outputKey": "CREATE"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7b1d45a5-0dec-4a34-96c2-aceb7bed030a",
+                    "leftValue": "={{ $json.mode }}",
+                    "rightValue": "DELETE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DELETE"
             }
           ]
         },
@@ -551,8 +567,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        -432,
-        1888
+        -160,
+        2096
       ],
       "id": "ae868fcd-b699-437f-908b-bd9fd03b5941",
       "name": "Switch"
@@ -581,8 +597,8 @@
       "name": "Clear collection1",
       "type": "n8n-nodes-base.httpRequest",
       "position": [
-        -208,
-        2016
+        64,
+        2144
       ],
       "typeVersion": 4.2,
       "credentials": {
@@ -603,12 +619,108 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        864,
+        1136,
         1168
       ],
       "id": "fc6a3dc0-4002-424e-bce9-be70f6770797",
       "name": "Wait",
       "webhookId": "e3f877a7-e3ca-4549-812d-98c79605c5ce"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        2144
+      ],
+      "id": "337f0a5f-c7fc-4fe4-958c-39abd6c8b51c",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $json.data[0] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -384,
+        2144
+      ],
+      "id": "53284e1b-b4b6-482d-bab8-d1a2a4897d15",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ $json.error.message }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        352,
+        2336
+      ],
+      "id": "7e1aac0a-a9f1-42b0-a631-d5a9bd8b10c9",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/{{ $json.collectionId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "qdrantApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "{     \"optimizers_config\": {         \"indexing_threshold\": 10000     }   }",
+        "options": {}
+      },
+      "id": "0320a784-752d-4ca1-a43b-2f53600093fa",
+      "name": "Delete collection",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        64,
+        2528
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "S0nticGtHhYu1fe4",
+          "name": "Header Auth account"
+        },
+        "qdrantApi": {
+          "id": "ytBh4xOzWNQ347S5",
+          "name": "QdrantApi account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ $json.error.message }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        352,
+        2528
+      ],
+      "id": "dc3aa657-42cf-4efe-b45a-1c207bc801ee",
+      "name": "Stop and Error1"
     }
   ],
   "connections": {
@@ -815,7 +927,7 @@
       "main": [
         [
           {
-            "node": "Switch",
+            "node": "Aggregate1",
             "type": "main",
             "index": 0
           }
@@ -851,6 +963,59 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Delete collection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create collection": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete collection": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Stop and Error1",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     }
@@ -866,16 +1031,41 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "input": "what is your company?",
           "mode": "SEARCH",
+          "collectionId": "chat-agent-experiment-1",
+          "input": "metarune"
+        }
+      },
+      {
+        "json": {
+          "mode": "INSERT",
+          "collectionId": "chat-agent-experiment-1",
+          "input": "Metarune Labs is a Sri Lanka based B2B software development studio that blends deep engineering expertise with practical product thinking to build future ready digital solutions for global clients. Specializing in Web3, mobile, AI, AR and VR, the team partners with startups and enterprises across North America and Europe to design and ship custom platforms, games, and tools that are actually used in the wild, not just in pitch decks. ([metarunelabs.dev][1]) From blockchain powered experiences like Draftables and DeFi Kingdoms to creator platforms, productivity tools, and immersive apps, Metarune Labs focuses on turning ambitious ideas into scalable, market ready products while staying lean, collaborative, and highly communicative throughout every engagement. ([metarunelabs.dev][1])\n\n[1]: https://www.metarunelabs.dev/?utm_source=chatgpt.com \"Metarune Labs - Web3 Innovation & AI-Powered Solutions\""
+        }
+      },
+      {
+        "json": {
+          "mode": "CREATE",
+          "collectionId": "chat-agent-experiment-1"
+        }
+      },
+      {
+        "json": {
+          "mode": "DELETE",
+          "collectionId": "chat-agent-experiment-1"
+        }
+      },
+      {
+        "json": {
+          "mode": "CLEAR",
           "collectionId": "chat-agent-experiment-1"
         }
       }
     ]
   },
-  "versionId": "ec6e8fb5-a4a7-4355-be09-45ba50366f2b",
+  "versionId": "25d36b3a-c535-409c-be85-1eef268a864f",
   "activeVersionId": null,
-  "versionCounter": 56,
+  "versionCounter": 90,
   "triggerCount": 0,
   "tags": [],
   "shared": [

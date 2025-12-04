@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-03T01:46:49.000Z",
+  "updatedAt": "2025-12-03T02:12:27.000Z",
   "createdAt": "2025-11-30T21:05:00.000Z",
   "id": "TelegramSmartAgent",
   "name": "Telegram Smart Agent",
@@ -49,7 +49,7 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        -1008,
+        -880,
         336
       ],
       "id": "telegram-smart-output-parser",
@@ -68,7 +68,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        -1264,
+        -1200,
         112
       ],
       "id": "telegram-smart-agent",
@@ -84,7 +84,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        -1136,
+        -1076,
         544
       ],
       "id": "telegram-smart-gemini",
@@ -119,7 +119,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -640,
+        -512,
         112
       ],
       "id": "telegram-smart-set-output",
@@ -130,7 +130,7 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        -416,
+        -288,
         112
       ],
       "id": "telegram-smart-noop-out",
@@ -295,11 +295,11 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        -1312,
-        512
+        -1008,
+        336
       ],
       "id": "d287ddcc-c2fc-4833-b0d0-798a7fee2195",
-      "name": "Telegram Context Scout Tool1"
+      "name": "Telegram RAG"
     }
   ],
   "connections": {
@@ -396,7 +396,7 @@
         ]
       ]
     },
-    "Telegram Context Scout Tool1": {
+    "Telegram RAG": {
       "ai_tool": [
         [
           {
@@ -422,9 +422,9 @@
       }
     ]
   },
-  "versionId": "faf69875-d5c2-42e6-8894-373a5ca02dd7",
+  "versionId": "c9508301-4a7c-45bb-aae8-dbc85dd15568",
   "activeVersionId": null,
-  "versionCounter": 20,
+  "versionCounter": 23,
   "triggerCount": 0,
   "tags": [
     {
