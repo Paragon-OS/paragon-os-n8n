@@ -316,6 +316,19 @@
       "name": "Edit Fields"
     },
     {
+      "parameters": {
+        "jsCode": "// Smart JSON Splitter - Preserves semantic structure\n// Instead of blindly splitting by characters, this splits JSON arrays\n// into individual items, keeping each item's semantic integrity intact.\n\nconst content = $input.item.json.content;\nconst baseMetadata = $input.item.json.metadata || {};\n\n// Helper to convert object to readable text for embeddings\nfunction objectToReadableText(obj, prefix = '') {\n  if (obj === null || obj === undefined) return '';\n  if (typeof obj !== 'object') return String(obj);\n  \n  const lines = [];\n  for (const [key, value] of Object.entries(obj)) {\n    // Convert camelCase/snake_case to readable labels\n    const label = key\n      .replace(/([A-Z])/g, ' $1')\n      .replace(/_/g, ' ')\n      .replace(/^./, s => s.toUpperCase())\n      .trim();\n    \n    if (Array.isArray(value)) {\n      if (value.length > 0 && typeof value[0] === 'object') {\n        // Skip nested object arrays - they'll be handled separately\n        continue;\n      }\n      lines.push(`${prefix}${label}: ${value.join(', ')}`);\n    } else if (typeof value === 'object' && value !== null) {\n      lines.push(`${prefix}${label}:`);\n      lines.push(objectToReadableText(value, prefix + '  '));\n    } else if (value !== null && value !== undefined && value !== '') {\n      lines.push(`${prefix}${label}: ${value}`);\n    }\n  }\n  return lines.join('\\n');\n}\n\n// Find and split arrays in content\nfunction extractChunks(data, path = '', parentMetadata = {}) {\n  const chunks = [];\n  \n  if (Array.isArray(data)) {\n    // Each array item becomes its own chunk\n    data.forEach((item, index) => {\n      const itemMetadata = {\n        ...parentMetadata,\n        array_path: path,\n        array_index: index,\n        item_id: String(item.id || item._id || `${path}_${index}`)\n      };\n      \n      // Create readable text for this item\n      const text = objectToReadableText(item);\n      \n      if (text.trim()) {\n        chunks.push({\n          content: text,\n          metadata: itemMetadata,\n          rawJson: JSON.stringify(item)\n        });\n      }\n    });\n  } else if (typeof data === 'object' && data !== null) {\n    // Check if object contains arrays we should split\n    let hasObjectArrays = false;\n    \n    for (const [key, value] of Object.entries(data)) {\n      if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {\n        hasObjectArrays = true;\n        const subChunks = extractChunks(value, key, { ...parentMetadata, source_key: key });\n        chunks.push(...subChunks);\n      }\n    }\n    \n    // If no splittable arrays, treat the whole object as one chunk\n    if (!hasObjectArrays) {\n      const text = objectToReadableText(data);\n      if (text.trim()) {\n        chunks.push({\n          content: text,\n          metadata: parentMetadata,\n          rawJson: JSON.stringify(data)\n        });\n      }\n    }\n  } else if (typeof data === 'string') {\n    // Plain string content - pass through as-is\n    if (data.trim()) {\n      chunks.push({\n        content: data,\n        metadata: parentMetadata,\n        rawJson: null\n      });\n    }\n  }\n  \n  return chunks;\n}\n\n// Extract chunks from content\nconst chunks = extractChunks(content, 'root', baseMetadata);\n\n// If no chunks extracted, return empty array\nif (chunks.length === 0) {\n  return [];\n}\n\n// Return items for the vector store\n// Each chunk is a separate item that will be embedded individually\nreturn chunks.map((chunk, idx) => ({\n  json: {\n    content: chunk.content,\n    metadata: JSON.stringify({\n      ...chunk.metadata,\n      chunk_type: 'json_semantic_split',\n      chunk_index: idx,\n      total_chunks: chunks.length,\n      raw_json: chunk.rawJson\n    })\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        1168
+      ],
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "JSON Splitter"
+    },
+    {
       "parameters": {},
       "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
       "typeVersion": 1,
@@ -863,6 +876,17 @@
       ]
     },
     "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "JSON Splitter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSON Splitter": {
       "main": [
         [
           {
