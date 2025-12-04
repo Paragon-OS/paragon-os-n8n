@@ -26,7 +26,8 @@
     "credentials": [],
     "nodes": [
       "dist/nodes/TextManipulation/TextManipulation.node.js",
-      "dist/nodes/FuzzySearch/FuzzySearch.node.js"
+      "dist/nodes/FuzzySearch/FuzzySearch.node.js",
+      "dist/nodes/JsonDocumentLoader/JsonDocumentLoader.node.js"
     ]
   },
   "repository": {
