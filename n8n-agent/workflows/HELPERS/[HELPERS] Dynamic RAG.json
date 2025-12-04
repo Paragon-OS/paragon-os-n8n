@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-04T10:57:43.000Z",
+  "updatedAt": "2025-12-04T20:16:52.000Z",
   "createdAt": "2025-12-02T01:18:35.706Z",
   "id": "IZa7S90Z9W1qxysr",
   "name": "[HELPERS] Dynamic RAG",
@@ -9,20 +9,7 @@
   "nodes": [
     {
       "parameters": {
-        "options": {
-          "metadata": {
-            "metadataValues": [
-              {
-                "name": "file_id",
-                "value": "=file-001"
-              },
-              {
-                "name": "file_name",
-                "value": "=My File Number 001"
-              }
-            ]
-          }
-        }
+        "options": {}
       },
       "id": "2ac24ceb-8912-4191-8d43-6ff7f4fdeb13",
       "name": "Default Data Loader1",
@@ -41,7 +28,10 @@
           "value": "={{ $('Switch').item.json.collectionId }}",
           "mode": "id"
         },
-        "options": {}
+        "options": {
+          "contentPayloadKey": "content",
+          "metadataPayloadKey": "metadata"
+        }
       },
       "id": "2eb919a1-d766-4857-867c-1b6f456151c2",
       "name": "Qdrant Vector Store",
@@ -171,7 +161,7 @@
       "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
       "position": [
         768,
-        2512
+        2504
       ],
       "typeVersion": 1.1,
       "credentials": {
@@ -302,8 +292,14 @@
           "assignments": [
             {
               "id": "bdb8250e-e4b6-4e5b-b3b2-4f941c14e307",
-              "name": "about us",
-              "value": "={{ $('Switch').item.json.input }}",
+              "name": "content",
+              "value": "={{ $('Switch').item.json.input.content }}",
+              "type": "object"
+            },
+            {
+              "id": "f30308e0-ffa7-4ced-9538-99077a0b7ecb",
+              "name": "metadata",
+              "value": "={{ $('Switch').item.json.input.metadata }}",
               "type": "string"
             }
           ]
@@ -430,7 +426,7 @@
       "typeVersion": 1.1,
       "position": [
         -832,
-        2144
+        2240
       ],
       "id": "0daf4a1a-88cc-4f6f-b827-b663ba32c0b8",
       "name": "When Executed by Another Workflow"
@@ -562,13 +558,15 @@
             }
           ]
         },
-        "options": {}
+        "options": {
+          "fallbackOutput": "extra"
+        }
       },
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
         -160,
-        2096
+        2176
       ],
       "id": "ae868fcd-b699-437f-908b-bd9fd03b5941",
       "name": "Switch"
@@ -614,20 +612,6 @@
     },
     {
       "parameters": {
-        "amount": 3
-      },
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        1136,
-        1168
-      ],
-      "id": "fc6a3dc0-4002-424e-bce9-be70f6770797",
-      "name": "Wait",
-      "webhookId": "e3f877a7-e3ca-4549-812d-98c79605c5ce"
-    },
-    {
-      "parameters": {
         "aggregate": "aggregateAllItemData",
         "options": {}
       },
@@ -635,7 +619,7 @@
       "typeVersion": 1,
       "position": [
         -608,
-        2144
+        2240
       ],
       "id": "337f0a5f-c7fc-4fe4-958c-39abd6c8b51c",
       "name": "Aggregate1"
@@ -650,7 +634,7 @@
       "typeVersion": 3.4,
       "position": [
         -384,
-        2144
+        2240
       ],
       "id": "53284e1b-b4b6-482d-bab8-d1a2a4897d15",
       "name": "Edit Fields1"
@@ -694,7 +678,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "position": [
         64,
-        2528
+        2720
       ],
       "typeVersion": 4.2,
       "credentials": {
@@ -717,10 +701,36 @@
       "typeVersion": 1,
       "position": [
         352,
-        2528
+        2720
       ],
       "id": "dc3aa657-42cf-4efe-b45a-1c207bc801ee",
       "name": "Stop and Error1"
+    },
+    {
+      "parameters": {
+        "errorMessage": "=Unknown execution mode: {{ $('Edit Fields1').item.json.mode }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        64,
+        2528
+      ],
+      "id": "8bc4d5f7-9756-4dc5-9d23-8f3b5172de31",
+      "name": "Stop and Error2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1136,
+        1168
+      ],
+      "id": "5afa0640-f722-446e-a90a-f10bd2ed0f49",
+      "name": "Edit Fields2"
     }
   ],
   "connections": {
@@ -779,7 +789,7 @@
       "main": [
         [
           {
-            "node": "Wait",
+            "node": "Edit Fields2",
             "type": "main",
             "index": 0
           }
@@ -970,6 +980,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Stop and Error2",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -1031,22 +1048,684 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "mode": "SEARCH",
-          "collectionId": "chat-agent-experiment-1",
-          "input": "metarune"
+          "input": {
+            "content": {
+              "allContacts": [
+                {
+                  "id": 333000,
+                  "displayName": "Kids",
+                  "contactType": "user",
+                  "phone": "333"
+                },
+                {
+                  "id": 225850636,
+                  "username": "zlatapaul",
+                  "displayName": "Zlata Paul",
+                  "contactType": "user",
+                  "phone": "995599335201"
+                },
+                {
+                  "id": 340351644,
+                  "username": "SumanthNeppalli",
+                  "displayName": "Sumanth | Polygon Ventures",
+                  "contactType": "user"
+                },
+                {
+                  "id": 348840761,
+                  "username": "clemensley",
+                  "displayName": "Clemens Ley",
+                  "contactType": "user"
+                },
+                {
+                  "id": 363128374,
+                  "username": "Avihay_H",
+                  "displayName": "Avihay",
+                  "contactType": "user"
+                },
+                {
+                  "id": 416852475,
+                  "username": "devkratos",
+                  "displayName": "Kratos (David) Dev | CL",
+                  "contactType": "user"
+                },
+                {
+                  "id": 520043278,
+                  "username": "midasch",
+                  "displayName": "MK | Matt",
+                  "contactType": "user"
+                },
+                {
+                  "id": 543100343,
+                  "username": "dush88c",
+                  "displayName": "Crypto - Dark",
+                  "contactType": "user"
+                },
+                {
+                  "id": 586558850,
+                  "username": "johngvibes",
+                  "displayName": "John Vibes",
+                  "contactType": "user",
+                  "phone": "14436190761"
+                },
+                {
+                  "id": 587300333,
+                  "username": "iCartic",
+                  "displayName": "Cartic",
+                  "contactType": "user",
+                  "phone": "918197536227"
+                },
+                {
+                  "id": 624165486,
+                  "username": "vlkpthrna",
+                  "displayName": "Venul",
+                  "contactType": "user"
+                },
+                {
+                  "id": 632108563,
+                  "username": "chaingovernance",
+                  "displayName": "Chaingovernance",
+                  "contactType": "user"
+                },
+                {
+                  "id": 649401202,
+                  "username": "wholemealbread69",
+                  "displayName": "Munchi",
+                  "contactType": "user",
+                  "phone": "94715852028"
+                },
+                {
+                  "id": 664694900,
+                  "username": "DonAnarchy",
+                  "displayName": "Dulmina",
+                  "contactType": "user",
+                  "phone": "94763103710"
+                },
+                {
+                  "id": 668597892,
+                  "username": "SanSLR",
+                  "displayName": "Janitha Metaroon",
+                  "contactType": "user",
+                  "phone": "94775527374"
+                },
+                {
+                  "id": 678211632,
+                  "username": "EmilyEmilyert6t4564e6",
+                  "displayName": "Vajira",
+                  "contactType": "user",
+                  "phone": "94710413045"
+                },
+                {
+                  "id": 696359483,
+                  "username": "vivekst1",
+                  "displayName": "vivek",
+                  "contactType": "user"
+                },
+                {
+                  "id": 714725084,
+                  "username": "stoXmod",
+                  "displayName": "Nishara Malli",
+                  "contactType": "user",
+                  "phone": "94775777956"
+                },
+                {
+                  "id": 722369780,
+                  "username": "dinukasal",
+                  "displayName": "Dinuka Salwathura",
+                  "contactType": "user",
+                  "phone": "94714697757"
+                },
+                {
+                  "id": 742595333,
+                  "username": "Ruchira_s",
+                  "displayName": "RUCHIRA SACHINTHANA",
+                  "contactType": "user",
+                  "phone": "94778072233"
+                },
+                {
+                  "id": 780339289,
+                  "username": "Trimasha21",
+                  "displayName": "Trimasha",
+                  "contactType": "user",
+                  "phone": "94769083219"
+                },
+                {
+                  "id": 822246157,
+                  "username": "ahamedrikas",
+                  "displayName": "Team - UCSC",
+                  "contactType": "user",
+                  "phone": "94756855515"
+                },
+                {
+                  "id": 835380621,
+                  "username": "nadeeshisu",
+                  "displayName": "Nadeesh",
+                  "contactType": "user"
+                },
+                {
+                  "id": 837248846,
+                  "username": "Aayush_Gupta_ji",
+                  "displayName": "Aayush Gupta",
+                  "contactType": "user"
+                },
+                {
+                  "id": 847498752,
+                  "username": "sandalu0",
+                  "displayName": "sandalu 🏎 🐾Hivera",
+                  "contactType": "user"
+                },
+                {
+                  "id": 875774449,
+                  "username": "SutYKP",
+                  "displayName": "Kasun Alagiyawanna",
+                  "contactType": "user"
+                },
+                {
+                  "id": 883709109,
+                  "username": "DNA1945",
+                  "displayName": "Ayesh - Web3",
+                  "contactType": "user",
+                  "phone": "94779420892"
+                },
+                {
+                  "id": 894565034,
+                  "username": "rebeccaa_m",
+                  "displayName": "Rebecca Meegahapola",
+                  "contactType": "user"
+                },
+                {
+                  "id": 899220754,
+                  "username": "gabocarranza",
+                  "displayName": "Gabriel Carranza",
+                  "contactType": "user"
+                },
+                {
+                  "id": 919776951,
+                  "username": "dxshas",
+                  "displayName": "Hash - co-founder dx.app",
+                  "contactType": "user"
+                },
+                {
+                  "id": 930169996,
+                  "username": "MichilaBimsara",
+                  "displayName": "Michila Bimsara",
+                  "contactType": "user",
+                  "phone": "94703417567"
+                },
+                {
+                  "id": 936198127,
+                  "username": "sano_d",
+                  "displayName": "Pasindu",
+                  "contactType": "user",
+                  "phone": "94702025582"
+                },
+                {
+                  "id": 964605812,
+                  "username": "uwinma",
+                  "displayName": "Uvin",
+                  "contactType": "user",
+                  "phone": "94716594979"
+                },
+                {
+                  "id": 969611956,
+                  "username": "DilshanFd",
+                  "displayName": "Moratu Ayya",
+                  "contactType": "user",
+                  "phone": "94757086204"
+                },
+                {
+                  "id": 973000347,
+                  "username": "HashSuranjana12",
+                  "displayName": "Hasitha Metarune",
+                  "contactType": "user",
+                  "phone": "94774178066"
+                },
+                {
+                  "id": 1000194878,
+                  "username": "apsare_prashakthi",
+                  "displayName": "Apsara Prashakthi🔅",
+                  "contactType": "user",
+                  "phone": "94772333266"
+                },
+                {
+                  "id": 1007382901,
+                  "displayName": "Malaka Metaroon",
+                  "contactType": "user",
+                  "phone": "94766679114"
+                },
+                {
+                  "id": 1011124163,
+                  "displayName": "Chamin",
+                  "contactType": "user",
+                  "phone": "94716650996"
+                },
+                {
+                  "id": 1026488792,
+                  "username": "AndreasNicolos",
+                  "displayName": "Andreas Nicolos | Access Protocol",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1032630935,
+                  "displayName": "Nirasha Candidate",
+                  "contactType": "user",
+                  "phone": "94761319259"
+                },
+                {
+                  "id": 1036942989,
+                  "username": "rash_mieee",
+                  "displayName": "Rashmi Nangi",
+                  "contactType": "user",
+                  "phone": "94772883918"
+                },
+                {
+                  "id": 1041291136,
+                  "displayName": "Udul Dialog",
+                  "contactType": "user",
+                  "phone": "94763356363"
+                },
+                {
+                  "id": 1047921467,
+                  "username": "anoj_TeamIR",
+                  "displayName": "Vpack Ayya",
+                  "contactType": "user",
+                  "phone": "94715292649"
+                },
+                {
+                  "id": 1056033462,
+                  "displayName": "Jayani Rathnayake 🙂",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1062562923,
+                  "username": "SpartacusAgt99",
+                  "displayName": "Binoj",
+                  "contactType": "user",
+                  "phone": "94769175718"
+                },
+                {
+                  "id": 1069589728,
+                  "username": "Vihanga_ms",
+                  "displayName": "Sithum Vihanga",
+                  "contactType": "user",
+                  "phone": "94713039970"
+                },
+                {
+                  "id": 1074918919,
+                  "username": "ftwpirate",
+                  "displayName": "Pirate",
+                  "contactType": "user",
+                  "phone": "94719118611"
+                },
+                {
+                  "id": 1080550211,
+                  "username": "shanendri",
+                  "displayName": "Kesharika",
+                  "contactType": "user",
+                  "phone": "94716001283"
+                },
+                {
+                  "id": 1103597876,
+                  "displayName": "Kasup",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1110176166,
+                  "username": "wrecksgg",
+                  "displayName": "Wrecks",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1119827933,
+                  "username": "nawodyaishan",
+                  "displayName": "Nawodya Ishan Whatsapp",
+                  "contactType": "user",
+                  "phone": "94712006388"
+                },
+                {
+                  "id": 1144776420,
+                  "username": "Anujasathsara",
+                  "displayName": "Anuja Malli",
+                  "contactType": "user",
+                  "phone": "94768790092"
+                },
+                {
+                  "id": 1148190268,
+                  "displayName": "Dr Sriya Whatsapp",
+                  "contactType": "user",
+                  "phone": "94775771125"
+                },
+                {
+                  "id": 1167687886,
+                  "username": "Thanu_me",
+                  "displayName": "Kavinsa (Sithu's Sister)",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1185444176,
+                  "username": "manzzup",
+                  "displayName": "Manujith Pallewatta",
+                  "contactType": "user",
+                  "phone": "94773684014"
+                },
+                {
+                  "id": 1190146531,
+                  "username": "vihan_001",
+                  "displayName": "Vihan Malli",
+                  "contactType": "user",
+                  "phone": "94775276664"
+                },
+                {
+                  "id": 1202327099,
+                  "displayName": "Binupa Weerakoon",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1210370782,
+                  "username": "apniadmin",
+                  "displayName": "Shehan Bio",
+                  "contactType": "user",
+                  "phone": "94713961386"
+                },
+                {
+                  "id": 1210384405,
+                  "username": "Nipuni_Wijesinghe",
+                  "displayName": "Sanduni Wijesinghe",
+                  "contactType": "user",
+                  "phone": "94714477572"
+                },
+                {
+                  "id": 1213801266,
+                  "displayName": "Indika IT",
+                  "contactType": "user",
+                  "phone": "94710957512"
+                },
+                {
+                  "id": 1218703930,
+                  "username": "senseinin",
+                  "displayName": "WERWOLF",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1219079193,
+                  "username": "deephawk",
+                  "displayName": "Deependra (Mangala Aunty)",
+                  "contactType": "user",
+                  "phone": "94719374870"
+                },
+                {
+                  "id": 1239602158,
+                  "username": "amandi_n",
+                  "displayName": "Amandi Nimasha",
+                  "contactType": "user",
+                  "phone": "94761732998"
+                },
+                {
+                  "id": 1245084856,
+                  "displayName": "Ajith Pickme Uber Prius Tax",
+                  "contactType": "user",
+                  "phone": "94779178091"
+                },
+                {
+                  "id": 1247919812,
+                  "username": "daparasyte",
+                  "displayName": "Aneesh",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1248381899,
+                  "username": "Ginushmal",
+                  "displayName": "Ginushmal Wikumjith",
+                  "contactType": "user",
+                  "phone": "94711926461"
+                },
+                {
+                  "id": 1249319918,
+                  "username": "dxsrph",
+                  "displayName": "Raphael - DxSale Founder",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1265641367,
+                  "displayName": "Sahana",
+                  "contactType": "user",
+                  "phone": "94771872112"
+                },
+                {
+                  "id": 1288162356,
+                  "displayName": "Thushan Smart Mobile",
+                  "contactType": "user",
+                  "phone": "94772337148"
+                },
+                {
+                  "id": 1308773607,
+                  "username": "thirasarad",
+                  "displayName": "Thirasara",
+                  "contactType": "user",
+                  "phone": "61423675220"
+                },
+                {
+                  "id": 1321094734,
+                  "displayName": "Tharindu",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1335731085,
+                  "displayName": "Riviru prabathiya",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1336322691,
+                  "username": "Goal_01",
+                  "displayName": "Yashini Intern",
+                  "contactType": "user",
+                  "phone": "94705518090"
+                },
+                {
+                  "id": 1342925197,
+                  "username": "Molindu_Achintha",
+                  "displayName": "Molindu Achintha",
+                  "contactType": "user",
+                  "phone": "94783030932"
+                },
+                {
+                  "id": 1343218352,
+                  "username": "mdtpandi",
+                  "displayName": "Thangapandi D",
+                  "contactType": "user",
+                  "phone": "919500466625"
+                },
+                {
+                  "id": 1347224013,
+                  "username": "laalitha_indrajith",
+                  "displayName": "Laalitha Gajanayake",
+                  "contactType": "user",
+                  "phone": "94711049379"
+                },
+                {
+                  "id": 1366304779,
+                  "username": "legoat_tg",
+                  "displayName": "Le Goat",
+                  "contactType": "user",
+                  "phone": "13109949776"
+                },
+                {
+                  "id": 1368335272,
+                  "username": "Dinaaaliii",
+                  "displayName": "Dinali Metaroon",
+                  "contactType": "user",
+                  "phone": "94703818358"
+                },
+                {
+                  "id": 1369554215,
+                  "username": "LchBot2",
+                  "displayName": "Vimukthi Nanayakkara",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1390153834,
+                  "username": "thatsdrop",
+                  "displayName": "ThatsDrop Drop ( Multi language DEV- DM for NFT or DEV work )",
+                  "contactType": "user",
+                  "phone": "16186103151"
+                },
+                {
+                  "id": 1401580205,
+                  "username": "PA_MI_th",
+                  "displayName": "Pamith sandaru",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1403617726,
+                  "displayName": "Uddhika app",
+                  "contactType": "user",
+                  "phone": "94761837711"
+                },
+                {
+                  "id": 1409636155,
+                  "displayName": "Lalalala",
+                  "contactType": "user",
+                  "phone": "94775407342"
+                },
+                {
+                  "id": 1412977518,
+                  "displayName": "Ijaz Ameen",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1423430887,
+                  "username": "Asindaa",
+                  "displayName": "Oshan Malli",
+                  "contactType": "user",
+                  "phone": "94764323452"
+                },
+                {
+                  "id": 1431052077,
+                  "username": "kithmal1993",
+                  "displayName": "Kithmal New",
+                  "contactType": "user",
+                  "phone": "94712907389"
+                },
+                {
+                  "id": 1431211256,
+                  "username": "ap_lanka",
+                  "displayName": "Pasindu Lanka",
+                  "contactType": "user",
+                  "phone": "94705747549"
+                },
+                {
+                  "id": 1441360080,
+                  "username": "navodkawshal",
+                  "displayName": "Navod Kawshal",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1441968953,
+                  "displayName": "Manranga~",
+                  "contactType": "user",
+                  "phone": "94788673120"
+                },
+                {
+                  "id": 1451941899,
+                  "username": "onebyteai",
+                  "displayName": "Thejan",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1458475925,
+                  "displayName": "Kalani Dayawansha",
+                  "contactType": "user",
+                  "phone": "94702518746"
+                },
+                {
+                  "id": 1463319151,
+                  "displayName": "Chirath UOM",
+                  "contactType": "user",
+                  "phone": "94716033458"
+                },
+                {
+                  "id": 1464932828,
+                  "displayName": "Mihindum Liyanage",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1477508188,
+                  "username": "Sandyv0",
+                  "displayName": "Saliya Wickramsinghe",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1482961035,
+                  "username": "DFGBDFGSDFGDSRFG",
+                  "displayName": "Nadugala Mobitel",
+                  "contactType": "user",
+                  "phone": "94711010312"
+                },
+                {
+                  "id": 1491973890,
+                  "displayName": "Rangi Furniture Mobile",
+                  "contactType": "user",
+                  "phone": "94772373750"
+                },
+                {
+                  "id": 1498481758,
+                  "username": "Retro_moon",
+                  "displayName": "Mithul Pirate",
+                  "contactType": "user",
+                  "phone": "94703649095"
+                },
+                {
+                  "id": 1514177353,
+                  "username": "limitlessotc",
+                  "displayName": "Limitless",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1523653714,
+                  "displayName": "Supun (Dulanga's Friend)",
+                  "contactType": "user",
+                  "phone": "94717712496"
+                },
+                {
+                  "id": 1525362528,
+                  "username": "AmayuruUpanith",
+                  "displayName": "Amayuru Amarasinghe",
+                  "contactType": "user",
+                  "phone": "94741112634"
+                }
+              ]
+            }
+          },
+          "mode": "INSERT",
+          "collectionId": "paragon-os-contacts"
         }
       },
       {
         "json": {
           "mode": "INSERT",
           "collectionId": "chat-agent-experiment-1",
-          "input": "Metarune Labs is a Sri Lanka based B2B software development studio that blends deep engineering expertise with practical product thinking to build future ready digital solutions for global clients. Specializing in Web3, mobile, AI, AR and VR, the team partners with startups and enterprises across North America and Europe to design and ship custom platforms, games, and tools that are actually used in the wild, not just in pitch decks. ([metarunelabs.dev][1]) From blockchain powered experiences like Draftables and DeFi Kingdoms to creator platforms, productivity tools, and immersive apps, Metarune Labs focuses on turning ambitious ideas into scalable, market ready products while staying lean, collaborative, and highly communicative throughout every engagement. ([metarunelabs.dev][1])\n\n[1]: https://www.metarunelabs.dev/?utm_source=chatgpt.com \"Metarune Labs - Web3 Innovation & AI-Powered Solutions\""
+          "input": {
+            "content": {
+              "page 1": "Metarune Labs is a Sri Lanka based B2B software development studio that blends deep engineering expertise with practical product thinking to build future ready digital solutions for global clients. Specializing in Web3, mobile, AI, AR and VR, the team partners with startups and enterprises across North America and Europe to design and ship custom platforms, games, and tools that are actually used in the wild, not just in pitch decks. ([metarunelabs.dev][1]) From blockchain powered experiences like Draftables and DeFi Kingdoms to creator platforms, productivity tools, and immersive apps, Metarune Labs focuses on turning ambitious ideas into scalable, market ready products while staying lean, collaborative, and highly communicative throughout every engagement. ([metarunelabs.dev][1])\n\n[1]: https://www.metarunelabs.dev/?utm_source=chatgpt.com \"Metarune Labs - Web3 Innovation & AI-Powered Solutions\""
+            },
+            "metadata": {
+              "topic": [
+                "metarune"
+              ]
+            }
+          }
         }
       },
       {
         "json": {
           "mode": "CREATE",
-          "collectionId": "chat-agent-experiment-1"
+          "collectionId": "paragon-os-contacts"
+        }
+      },
+      {
+        "json": {
+          "mode": "SEARCH",
+          "collectionId": "chat-agent-experiment-1",
+          "input": "metarune"
         }
       },
       {
@@ -1063,9 +1742,9 @@
       }
     ]
   },
-  "versionId": "25d36b3a-c535-409c-be85-1eef268a864f",
+  "versionId": "0db0af9c-bb00-489e-9715-fc295f4587d4",
   "activeVersionId": null,
-  "versionCounter": 90,
+  "versionCounter": 109,
   "triggerCount": 0,
   "tags": [],
   "shared": [
