@@ -1,4 +1,4 @@
-export type Command = "backup" | "restore" | "tree" | "organize";
+export type Command = "backup" | "restore" | "tree" | "organize" | "test";
 
 export interface ParsedArgs {
   command: Command;

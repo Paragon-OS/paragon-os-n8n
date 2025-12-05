@@ -3,6 +3,7 @@ import { executeBackup } from "./commands/backup";
 import { executeRestore } from "./commands/restore";
 import { executeTree } from "./commands/tree";
 import { executeOrganize } from "./commands/organize";
+import { executeTest } from "./commands/test";
 
 async function main() {
   const { command, flags } = parseArgs(process.argv);
@@ -19,6 +20,9 @@ async function main() {
       break;
     case "organize":
       await executeOrganize(flags);
+      break;
+    case "test":
+      await executeTest(flags);
       break;
   }
 }

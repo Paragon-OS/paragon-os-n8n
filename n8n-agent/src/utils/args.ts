@@ -7,7 +7,8 @@ export function parseArgs(argv: string[]): ParsedArgs {
     commandArg !== "backup" &&
     commandArg !== "restore" &&
     commandArg !== "tree" &&
-    commandArg !== "organize"
+    commandArg !== "organize" &&
+    commandArg !== "test"
   ) {
     printUsage();
     process.exit(1);
@@ -27,6 +28,7 @@ export function printUsage() {
       "  ts-node src/n8n-workflows-cli.ts restore [--input <dir>]",
       "  ts-node src/n8n-workflows-cli.ts organize [--input <dir>]",
       "  ts-node src/n8n-workflows-cli.ts tree [--all] [extra n8n flags]",
+      "  ts-node src/n8n-workflows-cli.ts test [--workflow <name>] [--test <case>] [--list]",
       "",
       "Examples:",
       "  Backup all workflows (pretty, separate files) into ./workflows (excluding archived workflows):",
@@ -46,6 +48,11 @@ export function printUsage() {
       "  Print logical n8n workflow folders and workflows (uses local n8n CLI):",
       "    ts-node src/n8n-workflows-cli.ts tree --all",
       "    ts-node src/n8n-workflows-cli.ts tree --all --active",
+      "",
+      "  Run tests headlessly:",
+      "    ts-node src/n8n-workflows-cli.ts test --list",
+      "    ts-node src/n8n-workflows-cli.ts test -w TelegramContextScout -t contact-rag",
+      "    ts-node src/n8n-workflows-cli.ts test -w DynamicRAG -t status",
     ].join("\n")
   );
 }

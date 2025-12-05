@@ -5,7 +5,9 @@
   "scripts": {
     "n8n:workflows:downsync": "ts-node src/n8n-workflows-cli.ts backup",
     "n8n:workflows:upsync": "ts-node src/n8n-workflows-cli.ts restore",
-    "n8n:workflows:tree": "ts-node src/n8n-workflows-cli.ts tree --all"
+    "n8n:workflows:tree": "ts-node src/n8n-workflows-cli.ts tree --all",
+    "n8n:test": "ts-node src/n8n-workflows-cli.ts test",
+    "n8n:test:list": "ts-node src/n8n-workflows-cli.ts test --list"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
