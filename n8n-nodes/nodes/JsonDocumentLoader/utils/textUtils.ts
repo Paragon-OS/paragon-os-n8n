@@ -60,9 +60,41 @@ export function applyTemplate(template: string, obj: unknown): string {
 }
 
 /**
+ * Converts a JSON object to dense text optimized for semantic search.
+ * No labels, just values concatenated - cleaner signal for embeddings.
+ * Example: { displayName: "Pasindu Lanka", username: "ap_lanka", phone: "123" }
+ *       → "Pasindu Lanka ap_lanka 123"
+ */
+export function objectToDenseText(obj: unknown): string {
+	if (obj === null || obj === undefined) return '';
+	if (typeof obj !== 'object') return String(obj);
+
+	const values: string[] = [];
+
+	for (const [, value] of Object.entries(obj as Record<string, unknown>)) {
+		if (Array.isArray(value)) {
+			// Handle arrays of primitives
+			if (value.length > 0 && typeof value[0] !== 'object') {
+				values.push(value.join(' '));
+			}
+		} else if (typeof value === 'object' && value !== null) {
+			// Recurse into nested objects
+			const nestedText = objectToDenseText(value);
+			if (nestedText) {
+				values.push(nestedText);
+			}
+		} else if (value !== null && value !== undefined && value !== '') {
+			values.push(String(value));
+		}
+	}
+
+	return values.join(' ');
+}
+
+/**
  * Text format types supported by the document loader.
  */
-export type TextFormat = 'readable' | 'json' | 'template';
+export type TextFormat = 'readable' | 'dense' | 'json' | 'template';
 
 /**
  * Converts an object to text based on the specified format.
@@ -75,6 +107,8 @@ export function formatObjectAsText(
 	switch (format) {
 		case 'readable':
 			return objectToReadableText(obj);
+		case 'dense':
+			return objectToDenseText(obj);
 		case 'json':
 			return JSON.stringify(obj);
 		case 'template':

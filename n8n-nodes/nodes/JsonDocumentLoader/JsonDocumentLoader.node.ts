@@ -185,9 +185,14 @@ export class JsonDocumentLoader implements INodeType {
 				type: 'options',
 				options: [
 					{
-						name: 'Readable (Recommended)',
+						name: 'Dense (Best for Search)',
+						value: 'dense',
+						description: 'Values only, no labels - optimal for semantic search',
+					},
+					{
+						name: 'Readable',
 						value: 'readable',
-						description: 'Human-readable text optimized for embeddings',
+						description: 'Human-readable text with field labels',
 					},
 					{
 						name: 'JSON String',
@@ -200,7 +205,7 @@ export class JsonDocumentLoader implements INodeType {
 						description: 'Use a custom template with field placeholders',
 					},
 				],
-				default: 'readable',
+				default: 'dense',
 			},
 			{
 				displayName: 'Template',

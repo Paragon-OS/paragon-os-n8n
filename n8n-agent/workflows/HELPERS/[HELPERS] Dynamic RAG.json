@@ -284,16 +284,8 @@
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "b296c92b-d9ee-4322-b972-d1069d01feb8",
-              "name": "output",
-              "type": "string",
-              "value": "={{ $('Question and Answer Chain').item.json.response }}\n\nSources: {{ $json.sources }}"
-            }
-          ]
-        },
+        "mode": "raw",
+        "jsonOutput": "={\n  \"answer\": {{ JSON.stringify($('Question and Answer Chain').item.json.response) }},\n  \"results\": {{ JSON.stringify($json.results) }},\n  \"count\": {{ $json.count }}\n}",
         "options": {}
       },
       "id": "ee957717-7708-4ec4-82de-6b5e0f59af04",
@@ -307,7 +299,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.item.json;\n\n// Get search results with scores\nconst results = (item.pageContent || []).map((content, i) => ({\n  content,\n  score: item.score ? item.score[i] : 0\n}));\n\n// Return formatted results\nreturn [\n  {\n    json: {\n      results,\n      sources: results.map(r => r.content.split('\\n')[0]).join(', ')\n    }\n  }\n];\n"
+        "jsCode": "// Get the raw search results from Retrive sources1\nconst searchResults = $('Retrive sources1').all();\n\n// Parse each result into clean JSON\nconst results = searchResults.map(item => {\n  const doc = item.json.document || item.json;\n  const pageContent = doc.pageContent || '';\n  const score = item.json.score || 0;\n  \n  // Parse metadata JSON string\n  let metadata = {};\n  try {\n    metadata = typeof doc.metadata === 'string' ? JSON.parse(doc.metadata) : (doc.metadata || {});\n  } catch(e) {}\n  \n  // Parse rawJson if available\n  let contact = {};\n  try {\n    contact = metadata.rawJson ? JSON.parse(metadata.rawJson) : {};\n  } catch(e) {}\n  \n  return {\n    id: contact.id || metadata.id,\n    displayName: contact.displayName,\n    username: contact.username || null,\n    phone: contact.phone || null,\n    contactType: contact.contactType,\n    score: Math.round(score * 1000) / 1000\n  };\n});\n\nreturn [{ json: { results, count: results.length } }];\n"
       },
       "id": "17d5e418-e03f-4358-9a8c-0749c134ea37",
       "name": "Response",
@@ -347,17 +339,18 @@
       "id": "9f9b5121-2980-48c3-9d0b-81187e1a6df6",
       "name": "Edit Fields"
     },
-    {
-      "parameters": {
-        "sourceField": "content",
-        "outputMode": "multiple",
-        "options": {
-          "includeRawJson": true,
-          "idField": "id",
-          "skipEmpty": true
-        }
-      },
-      "type": "n8n-nodes-paragon-os.jsonDocumentLoader",
+{
+        "parameters": {
+          "sourceField": "content",
+          "textFormat": "dense",
+          "outputMode": "multiple",
+          "options": {
+            "includeRawJson": true,
+            "idField": "id",
+            "skipEmpty": true
+          }
+        },
+        "type": "n8n-nodes-paragon-os.jsonDocumentLoader",
       "typeVersion": 1,
       "position": [
         776,
