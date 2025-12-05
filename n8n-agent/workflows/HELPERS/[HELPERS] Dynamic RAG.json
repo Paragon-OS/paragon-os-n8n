@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-05T14:06:25.000Z",
+  "updatedAt": "2025-12-05T14:57:47.000Z",
   "createdAt": "2025-12-02T01:18:35.706Z",
   "id": "IZa7S90Z9W1qxysr",
   "name": "[HELPERS] Dynamic RAG",
@@ -293,7 +293,7 @@
       "type": "n8n-nodes-base.set",
       "position": [
         1584,
-        1504
+        1508
       ],
       "typeVersion": 3.4
     },
@@ -339,18 +339,18 @@
       "id": "9f9b5121-2980-48c3-9d0b-81187e1a6df6",
       "name": "Edit Fields"
     },
-{
-        "parameters": {
-          "sourceField": "content",
-          "textFormat": "dense",
-          "outputMode": "multiple",
-          "options": {
-            "includeRawJson": true,
-            "idField": "id",
-            "skipEmpty": true
-          }
-        },
-        "type": "n8n-nodes-paragon-os.jsonDocumentLoader",
+    {
+      "parameters": {
+        "sourceField": "content",
+        "textFormat": "dense",
+        "outputMode": "multiple",
+        "options": {
+          "includeRawJson": true,
+          "idField": "id",
+          "skipEmpty": true
+        }
+      },
+      "type": "n8n-nodes-paragon-os.jsonDocumentLoader",
       "typeVersion": 1,
       "position": [
         776,
@@ -1128,7 +1128,7 @@
         "json": {
           "mode": "SEARCH",
           "collectionId": "paragon-os-contacts",
-          "input": "sano numbr"
+          "input": "lanka"
         }
       },
       {
@@ -1832,9 +1832,9 @@
       }
     ]
   },
-  "versionId": "1050df89-883f-4d8d-b773-227680f048cd",
+  "versionId": "6523e595-72fb-4220-bf92-12586b42d142",
   "activeVersionId": null,
-  "versionCounter": 117,
+  "versionCounter": 121,
   "triggerCount": 0,
   "tags": [],
   "shared": [
