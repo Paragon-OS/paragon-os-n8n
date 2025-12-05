@@ -223,10 +223,10 @@
         "fieldsToAggregate": {
           "fieldToAggregate": [
             {
-              "fieldToAggregate": "document.metadata.file_id"
+              "fieldToAggregate": "document.pageContent"
             },
             {
-              "fieldToAggregate": "document.metadata.file_name"
+              "fieldToAggregate": "score"
             }
           ]
         },
@@ -290,7 +290,7 @@
               "id": "b296c92b-d9ee-4322-b972-d1069d01feb8",
               "name": "output",
               "type": "string",
-              "value": "={{ $('Question and Answer Chain').item.json.response }}\n\nSources: {{ (JSON.stringify($json.unique_file_names)) }},"
+              "value": "={{ $('Question and Answer Chain').item.json.response }}\n\nSources: {{ $json.sources }}"
             }
           ]
         },
@@ -307,7 +307,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.item.json;\n\n// Creiamo Set per rimuovere duplicati\nconst uniqueFileIds = Array.from(new Set(item.file_id));\nconst uniqueFileNames = Array.from(new Set(item.file_name));\n\n// Ritorniamo un item con i valori univoci\nreturn [\n  {\n    json: {\n      unique_file_ids: uniqueFileIds,\n      unique_file_names: uniqueFileNames\n    }\n  }\n];\n"
+        "jsCode": "const item = $input.item.json;\n\n// Get search results with scores\nconst results = (item.pageContent || []).map((content, i) => ({\n  content,\n  score: item.score ? item.score[i] : 0\n}));\n\n// Return formatted results\nreturn [\n  {\n    json: {\n      results,\n      sources: results.map(r => r.content.split('\\n')[0]).join(', ')\n    }\n  }\n];\n"
       },
       "id": "17d5e418-e03f-4358-9a8c-0749c134ea37",
       "name": "Response",
