@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { runN8n } from "../utils/n8n";
+import { runN8n, runN8nQuiet } from "../utils/n8n";
 
 /**
  * Run a test case against a workflow using the Test Data helper.
@@ -170,8 +170,8 @@ export async function executeTest(flags: string[]): Promise<void> {
   console.log(`📤 Importing to n8n...`);
   
   try {
-    // Import the modified Test Runner workflow
-    await runN8n(['import:workflow', `--input=${tempPath}`]);
+    // Import the modified Test Runner workflow (quiet to suppress webhook warnings)
+    await runN8nQuiet(['import:workflow', `--input=${tempPath}`]);
     
     console.log(`▶️  Executing Test Runner...`);
     console.log('');
@@ -188,11 +188,11 @@ export async function executeTest(flags: string[]): Promise<void> {
       console.error('\n❌ Test failed with exit code:', exitCode);
     }
     
-    // Restore original Test Runner configuration
+    // Restore original Test Runner configuration (quiet)
     console.log(`\n🔄 Restoring Test Runner to default config...`);
     configNode.parameters.jsonOutput = originalJsonOutput;
     fs.writeFileSync(tempPath, JSON.stringify(testRunnerJson, null, 2));
-    await runN8n(['import:workflow', `--input=${tempPath}`]);
+    await runN8nQuiet(['import:workflow', `--input=${tempPath}`]);
     
     // Cleanup temp file
     fs.unlinkSync(tempPath);
