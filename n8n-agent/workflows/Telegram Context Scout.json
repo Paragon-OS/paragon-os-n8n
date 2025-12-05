@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-05T15:06:36.000Z",
+  "updatedAt": "2025-12-05T17:47:51.000Z",
   "createdAt": "2025-11-30T21:00:00.000Z",
   "id": "TelegramContextScout",
   "name": "Telegram Context Scout",
@@ -24,7 +24,7 @@
       "typeVersion": 1.1,
       "position": [
         -704,
-        408
+        256
       ],
       "id": "telegram-trigger",
       "name": "When Executed by Another Workflow",
@@ -99,7 +99,7 @@
       "typeVersion": 1.3,
       "position": [
         -256,
-        -48
+        -320
       ],
       "id": "check-telegram-contact-cache",
       "name": "Check Contact Cache",
@@ -115,7 +115,7 @@
       "typeVersion": 1,
       "position": [
         -32,
-        24
+        -248
       ],
       "id": "list-telegram-contacts",
       "name": "List Contacts",
@@ -134,7 +134,7 @@
       "typeVersion": 2,
       "position": [
         192,
-        24
+        -248
       ],
       "id": "telegram-contact-data-simplifier",
       "name": "Contact Data Simplifier"
@@ -207,7 +207,7 @@
       "typeVersion": 1.3,
       "position": [
         416,
-        24
+        -248
       ],
       "id": "update-telegram-contact-cache",
       "name": "Update Contact Cache"
@@ -217,8 +217,8 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        864,
-        -48
+        640,
+        -320
       ],
       "id": "all-telegram-contacts",
       "name": "All Contacts"
@@ -238,8 +238,8 @@
       "type": "n8n-nodes-paragon-os.fuzzySearch",
       "typeVersion": 1,
       "position": [
-        1088,
-        -48
+        864,
+        -320
       ],
       "id": "telegram-fuzzy-contacts",
       "name": "FuzzySearch (Contacts)"
@@ -310,8 +310,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -32,
-        264
+        -256,
+        -32
       ],
       "id": "check-telegram-chat-cache",
       "name": "Check Chat Cache",
@@ -326,8 +326,8 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        192,
-        336
+        -32,
+        40
       ],
       "id": "list-telegram-chats",
       "name": "List Chats",
@@ -345,8 +345,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        416,
-        336
+        192,
+        40
       ],
       "id": "telegram-chat-data-simplifier",
       "name": "Chat Data Simplifier"
@@ -418,8 +418,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        640,
-        336
+        416,
+        40
       ],
       "id": "update-telegram-chat-cache",
       "name": "Update Chat Cache"
@@ -429,8 +429,8 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        864,
-        264
+        640,
+        -32
       ],
       "id": "all-telegram-chats",
       "name": "All Chats"
@@ -450,8 +450,8 @@
       "type": "n8n-nodes-paragon-os.fuzzySearch",
       "typeVersion": 1,
       "position": [
-        1088,
-        264
+        864,
+        -32
       ],
       "id": "telegram-fuzzy-chats",
       "name": "FuzzySearch (Chats)"
@@ -522,8 +522,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -32,
-        552
+        -256,
+        256
       ],
       "id": "check-telegram-tool-cache",
       "name": "Check Tool Cache",
@@ -534,8 +534,8 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        192,
-        624
+        -32,
+        328
       ],
       "id": "list-telegram-tools",
       "name": "List MCP Tools",
@@ -553,8 +553,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        416,
-        624
+        192,
+        328
       ],
       "id": "telegram-tool-data-simplifier",
       "name": "Tool Data Simplifier"
@@ -626,8 +626,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        640,
-        624
+        416,
+        328
       ],
       "id": "update-telegram-tool-cache",
       "name": "Update Tool Cache"
@@ -637,8 +637,8 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        864,
-        552
+        640,
+        256
       ],
       "id": "all-telegram-tools",
       "name": "All Tools"
@@ -658,8 +658,8 @@
       "type": "n8n-nodes-paragon-os.fuzzySearch",
       "typeVersion": 1,
       "position": [
-        1088,
-        552
+        864,
+        256
       ],
       "id": "telegram-fuzzy-tools",
       "name": "FuzzySearch (Tools)"
@@ -730,8 +730,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        192,
-        888
+        -32,
+        568
       ],
       "id": "check-telegram-profile-cache",
       "name": "Check Profile Cache",
@@ -746,8 +746,8 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        416,
-        816
+        192,
+        640
       ],
       "id": "get-telegram-profile",
       "name": "Get My Profile",
@@ -765,8 +765,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        640,
-        816
+        416,
+        640
       ],
       "id": "telegram-profile-simplifier",
       "name": "User Profile Simplifier"
@@ -838,8 +838,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        864,
-        816
+        640,
+        640
       ],
       "id": "update-telegram-profile-cache",
       "name": "Update Profile Cache"
@@ -849,8 +849,8 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        1088,
-        888
+        864,
+        568
       ],
       "id": "all-telegram-profile",
       "name": "My Profile"
@@ -954,6 +954,30 @@
               },
               "renameOutput": true,
               "outputKey": "SELF"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fe0ed798-0a79-4ac5-8af0-a56f45ff08f6",
+                    "leftValue": "={{ $json.entity }}",
+                    "rightValue": "contact-rag",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CONTACT_RAG"
             }
           ]
         },
@@ -963,20 +987,20 @@
       "typeVersion": 3.3,
       "position": [
         -480,
-        376
+        208
       ],
       "id": "telegram-entity-switch",
       "name": "Switch"
     },
     {
       "parameters": {
-        "numberInputs": 4
+        "numberInputs": 5
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1312,
-        376
+        1088,
+        208
       ],
       "id": "telegram-merge-results",
       "name": "Merge"
@@ -1037,11 +1061,140 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        640,
-        24
+        416,
+        952
       ],
-      "id": "5aa6e4d8-9976-4ae7-aa06-6443ea9a9c00",
+      "id": "cf8f41b0-1a9e-40c9-95d4-4d5b334499de",
       "name": "Contacts Dynamic RAG"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "=telegram_list_contacts",
+        "toolParameters": "={\n  \"limit\": 100\n}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        952
+      ],
+      "id": "c1a55dcd-ddaf-4821-ad50-4b55f3621601",
+      "name": "List Contacts1",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "aiYCclLDUqob5iQ0",
+          "name": "Telegram MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\n// Generic helper function (inline)\nfunction simplifyMCPData(input, dataKey, mcpDataKey, mapper, errorMsg) {\n  let rawData = [];\n  try {\n    if (input.result?.content?.[0]) {\n      const parsed = JSON.parse(input.result.content[0].text);\n      rawData = parsed?.[mcpDataKey] || [];\n    } else if (input[dataKey]) {\n      rawData = Array.isArray(input[dataKey]) ? input[dataKey] : [];\n    } else if (input.output?.[dataKey]) {\n      rawData = Array.isArray(input.output[dataKey]) ? input.output[dataKey] : [];\n    }\n    \n    if (!Array.isArray(rawData) || rawData.length === 0) {\n      return { [dataKey]: [], error: errorMsg, shouldFetch: true };\n    }\n    \n    return { [dataKey]: rawData.map(mapper) };\n  } catch (error) {\n    return { [dataKey]: [], error: error.message, shouldFetch: true };\n  }\n}\n\n// Use it\nreturn simplifyMCPData(\n  input,\n  'contacts',\n  'contacts',\n  (c) => ({\n    id: c.id,\n    username: c.username,\n    displayName: c.name,\n    lastMessage: c.lastMessageAtRelative,\n    contactType: c.type,\n    phone: c.phone\n  }),\n  'No valid contacts found'\n);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        952
+      ],
+      "id": "2c9e44c5-3e3c-40f6-afa1-930364da7dbd",
+      "name": "Contact Data Simplifier1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        640,
+        880
+      ],
+      "id": "6530fe58-7931-42d9-b79d-4d85c303d55f",
+      "name": "All Contacts1"
+    },
+    {
+      "parameters": {
+        "query": "={{ $('When Executed by Another Workflow').item.json.query }}",
+        "arrayField": "telegramContacts",
+        "searchKeys": "username\ndisplayName\ncontactType\nphone",
+        "matchQuality": 60,
+        "limit": 10,
+        "advancedOptions": {
+          "includeScore": true,
+          "matchIndividualWords": false
+        }
+      },
+      "type": "n8n-nodes-paragon-os.fuzzySearch",
+      "typeVersion": 1,
+      "position": [
+        864,
+        880
+      ],
+      "id": "0a10a614-6852-48fd-bde8-eb1ab1bf7055",
+      "name": "FuzzySearch (Contacts)1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "IZa7S90Z9W1qxysr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/IZa7S90Z9W1qxysr",
+          "cachedResultName": "[HELPERS] Dynamic RAG"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "mode": "STATUS",
+            "collectionId": "paragon-os-contacts"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "input",
+              "displayName": "input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "collectionId",
+              "displayName": "collectionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -256,
+        880
+      ],
+      "id": "eb9b444d-5241-4f61-af6f-6f76b44995ff",
+      "name": "Check RAG Status",
+      "retryOnFail": false,
+      "onError": "continueErrorOutput"
     }
   ],
   "connections": {
@@ -1100,7 +1253,7 @@
       "main": [
         [
           {
-            "node": "Contacts Dynamic RAG",
+            "node": "All Contacts",
             "type": "main",
             "index": 0
           }
@@ -1366,6 +1519,46 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Check RAG Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Contacts1": {
+      "main": [
+        [
+          {
+            "node": "Contact Data Simplifier1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact Data Simplifier1": {
+      "main": [
+        [
+          {
+            "node": "Contacts Dynamic RAG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "All Contacts1": {
+      "main": [
+        [
+          {
+            "node": "FuzzySearch (Contacts)1",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -1373,7 +1566,36 @@
       "main": [
         [
           {
-            "node": "All Contacts",
+            "node": "All Contacts1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FuzzySearch (Contacts)1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Check RAG Status": {
+      "main": [
+        [
+          {
+            "node": "All Contacts1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "List Contacts1",
             "type": "main",
             "index": 0
           }
@@ -1391,14 +1613,14 @@
       {
         "json": {
           "query": "sebastian",
-          "entity": "contact"
+          "entity": "contact-rag"
         }
       }
     ]
   },
-  "versionId": "90ee2435-c3e3-4d12-bf41-08c8766231fb",
+  "versionId": "edcc00dc-f0bb-476a-9146-7c4c4db41c8e",
   "activeVersionId": null,
-  "versionCounter": 30,
+  "versionCounter": 37,
   "triggerCount": 0,
   "tags": [
     {

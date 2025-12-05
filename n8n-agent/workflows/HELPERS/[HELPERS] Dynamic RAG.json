@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-05T14:57:47.000Z",
+  "updatedAt": "2025-12-05T17:48:48.000Z",
   "createdAt": "2025-12-02T01:18:35.706Z",
   "id": "IZa7S90Z9W1qxysr",
   "name": "[HELPERS] Dynamic RAG",
@@ -482,7 +482,7 @@
       "typeVersion": 1.1,
       "position": [
         -832,
-        1928
+        2024
       ],
       "id": "0daf4a1a-88cc-4f6f-b827-b663ba32c0b8",
       "name": "When Executed by Another Workflow"
@@ -646,7 +646,7 @@
       "typeVersion": 3.3,
       "position": [
         -160,
-        1864
+        1944
       ],
       "id": "ae868fcd-b699-437f-908b-bd9fd03b5941",
       "name": "Switch"
@@ -699,7 +699,7 @@
       "typeVersion": 1,
       "position": [
         -608,
-        1928
+        2024
       ],
       "id": "337f0a5f-c7fc-4fe4-958c-39abd6c8b51c",
       "name": "Aggregate1"
@@ -714,7 +714,7 @@
       "typeVersion": 3.4,
       "position": [
         -384,
-        1928
+        2024
       ],
       "id": "53284e1b-b4b6-482d-bab8-d1a2a4897d15",
       "name": "Edit Fields1"
@@ -814,7 +814,6 @@
     },
     {
       "parameters": {
-        "method": "GET",
         "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/{{ $json.collectionId }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "qdrantApi",
@@ -853,8 +852,8 @@
       "name": "Format Status Response",
       "type": "n8n-nodes-base.code",
       "position": [
-        288,
-        2600
+        352,
+        2504
       ],
       "typeVersion": 2
     },
@@ -866,8 +865,8 @@
       "name": "Format Not Found Response",
       "type": "n8n-nodes-base.code",
       "position": [
-        288,
-        2800
+        352,
+        2696
       ],
       "typeVersion": 2
     }
@@ -1234,14 +1233,20 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "mode": "SEARCH",
-          "collectionId": "paragon-os-contacts",
-          "input": "lanka"
+          "mode": "STATUS",
+          "collectionId": "paragon-os-contacts"
         }
       },
       {
         "json": {
           "=": "============================================================="
+        }
+      },
+      {
+        "json": {
+          "mode": "SEARCH",
+          "collectionId": "paragon-os-contacts",
+          "input": "lanka"
         }
       },
       {
@@ -1946,9 +1951,9 @@
       }
     ]
   },
-  "versionId": "6523e595-72fb-4220-bf92-12586b42d142",
+  "versionId": "c14d8dc1-5eab-4006-a833-bd34ee5c4d36",
   "activeVersionId": null,
-  "versionCounter": 121,
+  "versionCounter": 124,
   "triggerCount": 0,
   "tags": [],
   "shared": [
