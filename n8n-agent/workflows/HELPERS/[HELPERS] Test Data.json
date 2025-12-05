@@ -1,0 +1,87 @@
+{
+  "updatedAt": "2025-12-05T18:00:00.000Z",
+  "createdAt": "2025-12-05T18:00:00.000Z",
+  "id": "TestDataHelper001",
+  "name": "[HELPERS] Test Data",
+  "description": "Centralized test case store for workflow testing. Call this workflow with { workflow: 'WorkflowName', testCase: 'test-id' } to get test input data. All test cases sync automatically with workflow backups.",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "workflow",
+              "type": "string"
+            },
+            {
+              "name": "testCase",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "test-data-trigger",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        240,
+        300
+      ],
+      "typeVersion": 1.1,
+      "notes": "Input:\n- workflow: Name of the workflow (e.g., 'TelegramContextScout')\n- testCase: ID of the test case (e.g., 'contact-rag')"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ╔══════════════════════════════════════════════════════════════════╗\n// ║                    TEST CASES DATABASE                            ║\n// ║  Add your test cases here. They sync with workflow backups.       ║\n// ╚══════════════════════════════════════════════════════════════════╝\n\nconst TESTS = {\n  \n  // ────────────────────────────────────────────────────────────────\n  // Telegram Context Scout\n  // ────────────────────────────────────────────────────────────────\n  'TelegramContextScout': {\n    'contact-rag': {\n      query: 'sebastian',\n      entity: 'contact-rag'\n    },\n    'contact-fuzzy': {\n      query: 'lanka',\n      entity: 'contact'\n    },\n    'chat-search': {\n      query: 'metarune',\n      entity: 'chat'\n    },\n    'tool-lookup': {\n      query: 'send message',\n      entity: 'tool'\n    },\n    'self-profile': {\n      query: '',\n      entity: 'self'\n    }\n  },\n\n  // ────────────────────────────────────────────────────────────────\n  // Dynamic RAG\n  // ────────────────────────────────────────────────────────────────\n  'DynamicRAG': {\n    'status': {\n      mode: 'STATUS',\n      collectionId: 'paragon-os-contacts'\n    },\n    'search-contacts': {\n      mode: 'SEARCH',\n      collectionId: 'paragon-os-contacts',\n      input: 'lanka'\n    },\n    'search-metarune': {\n      mode: 'SEARCH',\n      collectionId: 'chat-agent-experiment-1',\n      input: 'metarune'\n    },\n    'create-collection': {\n      mode: 'CREATE',\n      collectionId: 'test-collection'\n    },\n    'delete-collection': {\n      mode: 'DELETE',\n      collectionId: 'test-collection'\n    },\n    'clear-collection': {\n      mode: 'CLEAR',\n      collectionId: 'test-collection'\n    }\n  },\n\n  // ────────────────────────────────────────────────────────────────\n  // Discord Context Scout (template - add your tests)\n  // ────────────────────────────────────────────────────────────────\n  'DiscordContextScout': {\n    'example': {\n      query: 'example query',\n      entity: 'contact'\n    }\n  }\n\n};\n\n// ╔══════════════════════════════════════════════════════════════════╗\n// ║                    LOOKUP LOGIC (don't edit)                      ║\n// ╚══════════════════════════════════════════════════════════════════╝\n\nconst { workflow, testCase } = $input.first().json;\n\n// List all available tests if no specific one requested\nif (!workflow || !testCase) {\n  const available = {};\n  for (const [wf, cases] of Object.entries(TESTS)) {\n    available[wf] = Object.keys(cases);\n  }\n  return {\n    error: 'Please provide workflow and testCase parameters',\n    available\n  };\n}\n\n// Get the specific test case\nconst workflowTests = TESTS[workflow];\nif (!workflowTests) {\n  return {\n    error: `Workflow '${workflow}' not found`,\n    availableWorkflows: Object.keys(TESTS)\n  };\n}\n\nconst data = workflowTests[testCase];\nif (!data) {\n  return {\n    error: `Test case '${testCase}' not found in '${workflow}'`,\n    availableTestCases: Object.keys(workflowTests)\n  };\n}\n\n// Return the test data\nreturn data;"
+      },
+      "id": "test-cases-code",
+      "name": "Test Cases",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        480,
+        300
+      ],
+      "typeVersion": 2,
+      "notes": "Edit the TESTS object above to add/modify test cases.\n\nFormat:\n'WorkflowName': {\n  'test-id': { ...payload },\n  'another-test': { ...payload }\n}"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Test Cases",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "workflow": "TelegramContextScout",
+          "testCase": "contact-rag"
+        }
+      }
+    ]
+  },
+  "versionId": "a1b2c3d4-test-data-0001",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": []
+}
+
