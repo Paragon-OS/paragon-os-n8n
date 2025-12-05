@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-04T20:16:52.000Z",
+  "updatedAt": "2025-12-05T14:06:25.000Z",
   "createdAt": "2025-12-02T01:18:35.706Z",
   "id": "IZa7S90Z9W1qxysr",
   "name": "[HELPERS] Dynamic RAG",
@@ -9,38 +9,85 @@
   "nodes": [
     {
       "parameters": {
+        "aggregate": "aggregateAllItemData",
         "options": {}
       },
-      "id": "2ac24ceb-8912-4191-8d43-6ff7f4fdeb13",
-      "name": "Default Data Loader1",
-      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "id": "batch-aggregate-node",
+      "name": "Aggregate Batch",
+      "type": "n8n-nodes-base.aggregate",
       "position": [
-        768,
-        1184
+        1360,
+        960
       ],
       "typeVersion": 1
     },
     {
       "parameters": {
-        "mode": "insert",
-        "qdrantCollection": {
-          "__rl": true,
-          "value": "={{ $('Switch').item.json.collectionId }}",
-          "mode": "id"
-        },
-        "options": {
-          "contentPayloadKey": "content",
-          "metadataPayloadKey": "metadata"
-        }
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:batchEmbedContents",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requests\": {{ JSON.stringify($json.data.map(item => ({ \"model\": \"models/text-embedding-004\", \"content\": { \"parts\": [{ \"text\": item.content }] } }))) }}\n}",
+        "options": {}
       },
-      "id": "2eb919a1-d766-4857-867c-1b6f456151c2",
-      "name": "Qdrant Vector Store",
-      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "id": "batch-embed-gemini",
+      "name": "Batch Embed (Gemini)",
+      "type": "n8n-nodes-base.httpRequest",
       "position": [
-        672,
+        1584,
         960
       ],
-      "typeVersion": 1,
+      "typeVersion": 4.2,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combine original items with embeddings\nconst items = $('Aggregate Batch').first().json.data;\nconst embeddings = $input.first().json.embeddings;\n\n// Generate Qdrant points\nconst points = items.map((item, index) => {\n  let metadata = {};\n  try { metadata = JSON.parse(item.metadata || '{}'); } catch(e) {}\n  \n  // Qdrant requires ID to be unsigned integer or UUID\n  // Use the numeric id if available, otherwise use index\n  const id = typeof metadata.id === 'number' ? metadata.id : index;\n  \n  return {\n    id: id,\n    vector: embeddings[index].values,\n    payload: {\n      content: item.content,\n      metadata: item.metadata\n    }\n  };\n});\n\nreturn [{ json: { points, collectionId: $('Switch').first().json.collectionId } }];"
+      },
+      "id": "prepare-qdrant-points",
+      "name": "Prepare Qdrant Points",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1808,
+        960
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/{{ $json.collectionId }}/points",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "qdrantApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ points: $json.points }) }}",
+        "options": {}
+      },
+      "id": "batch-upsert-qdrant",
+      "name": "Batch Upsert (Qdrant)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2032,
+        960
+      ],
+      "typeVersion": 4.2,
       "credentials": {
         "qdrantApi": {
           "id": "ytBh4xOzWNQ347S5",
@@ -73,7 +120,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "position": [
         64,
-        2336
+        2024
       ],
       "typeVersion": 4.2,
       "credentials": {
@@ -86,21 +133,6 @@
     },
     {
       "parameters": {
-        "chunkSize": 500,
-        "chunkOverlap": 50,
-        "options": {}
-      },
-      "id": "6569e9c6-3c79-49d3-9e4b-7281d121b32b",
-      "name": "Recursive Character Text Splitter",
-      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
-      "position": [
-        848,
-        1392
-      ],
-      "typeVersion": 1
-    },
-    {
-      "parameters": {
         "promptType": "define",
         "text": "={{ $json.input }}",
         "options": {}
@@ -110,7 +142,7 @@
       "type": "@n8n/n8n-nodes-langchain.chainRetrievalQa",
       "position": [
         672,
-        2072
+        1760
       ],
       "typeVersion": 1.5
     },
@@ -124,7 +156,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "position": [
         640,
-        2296
+        1984
       ],
       "typeVersion": 1,
       "credentials": {
@@ -143,7 +175,7 @@
       "type": "@n8n/n8n-nodes-langchain.retrieverVectorStore",
       "position": [
         768,
-        2296
+        1984
       ],
       "typeVersion": 1
     },
@@ -161,7 +193,7 @@
       "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
       "position": [
         768,
-        2504
+        2192
       ],
       "typeVersion": 1.1,
       "credentials": {
@@ -182,7 +214,7 @@
       "type": "n8n-nodes-base.merge",
       "position": [
         1136,
-        1820
+        1508
       ],
       "typeVersion": 3.1
     },
@@ -205,7 +237,7 @@
       "type": "n8n-nodes-base.aggregate",
       "position": [
         776,
-        1568
+        1256
       ],
       "typeVersion": 1
     },
@@ -234,7 +266,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "position": [
         64,
-        1168
+        960
       ],
       "typeVersion": 4.2,
       "retryOnFail": false,
@@ -269,7 +301,7 @@
       "type": "n8n-nodes-base.set",
       "position": [
         1584,
-        1820
+        1504
       ],
       "typeVersion": 3.4
     },
@@ -282,7 +314,7 @@
       "type": "n8n-nodes-base.code",
       "position": [
         1360,
-        1820
+        1508
       ],
       "typeVersion": 2
     },
@@ -310,16 +342,14 @@
       "typeVersion": 3.4,
       "position": [
         352,
-        1168
+        960
       ],
       "id": "9f9b5121-2980-48c3-9d0b-81187e1a6df6",
       "name": "Edit Fields"
     },
     {
       "parameters": {
-        "operation": "autoSplit",
         "sourceField": "content",
-        "textFormat": "readable",
         "outputMode": "multiple",
         "options": {
           "includeRawJson": true,
@@ -330,8 +360,8 @@
       "type": "n8n-nodes-paragon-os.jsonDocumentLoader",
       "typeVersion": 1,
       "position": [
-        512,
-        1168
+        776,
+        960
       ],
       "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
       "name": "JSON Document Loader"
@@ -359,8 +389,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        592,
-        1168
+        1136,
+        960
       ],
       "id": "b2c3d4e5-f678-9012-bcde-f23456789abc",
       "name": "Map to Vector Store Format"
@@ -370,25 +400,8 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
       "typeVersion": 1,
       "position": [
-        640,
-        1184
-      ],
-      "id": "5ce1f530-794e-4e41-ac37-6ecb946c9ad5",
-      "name": "Embeddings Google Gemini",
-      "credentials": {
-        "googlePalmApi": {
-          "id": "NIhZoi9otQV2vaAP",
-          "name": "Google Gemini(PaLM) Api account"
-        }
-      }
-    },
-    {
-      "parameters": {},
-      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
-      "typeVersion": 1,
-      "position": [
         360,
-        1792
+        1480
       ],
       "id": "e873c882-2217-4bde-920a-06bc481ea5db",
       "name": "Embeddings Google Gemini1",
@@ -405,7 +418,7 @@
       "typeVersion": 1,
       "position": [
         848,
-        2712
+        2400
       ],
       "id": "1428525f-8265-4b91-ab83-3a82696e8348",
       "name": "Embeddings Google Gemini2",
@@ -433,7 +446,7 @@
       "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
       "position": [
         288,
-        1568
+        1256
       ],
       "typeVersion": 1.3,
       "alwaysOutputData": true,
@@ -450,7 +463,7 @@
       "typeVersion": 1,
       "position": [
         64,
-        1820
+        1508
       ],
       "id": "1286b78a-a4ba-429c-83cc-911c058e1bd1",
       "name": "No Operation, do nothing"
@@ -476,7 +489,7 @@
       "typeVersion": 1.1,
       "position": [
         -832,
-        2240
+        1928
       ],
       "id": "0daf4a1a-88cc-4f6f-b827-b663ba32c0b8",
       "name": "When Executed by Another Workflow"
@@ -616,7 +629,7 @@
       "typeVersion": 3.3,
       "position": [
         -160,
-        2176
+        1864
       ],
       "id": "ae868fcd-b699-437f-908b-bd9fd03b5941",
       "name": "Switch"
@@ -646,7 +659,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "position": [
         64,
-        2144
+        1832
       ],
       "typeVersion": 4.2,
       "credentials": {
@@ -669,7 +682,7 @@
       "typeVersion": 1,
       "position": [
         -608,
-        2240
+        1928
       ],
       "id": "337f0a5f-c7fc-4fe4-958c-39abd6c8b51c",
       "name": "Aggregate1"
@@ -684,7 +697,7 @@
       "typeVersion": 3.4,
       "position": [
         -384,
-        2240
+        1928
       ],
       "id": "53284e1b-b4b6-482d-bab8-d1a2a4897d15",
       "name": "Edit Fields1"
@@ -697,7 +710,7 @@
       "typeVersion": 1,
       "position": [
         352,
-        2336
+        2024
       ],
       "id": "7e1aac0a-a9f1-42b0-a631-d5a9bd8b10c9",
       "name": "Stop and Error"
@@ -728,7 +741,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "position": [
         64,
-        2720
+        2216
       ],
       "typeVersion": 4.2,
       "credentials": {
@@ -751,7 +764,7 @@
       "typeVersion": 1,
       "position": [
         352,
-        2720
+        2216
       ],
       "id": "dc3aa657-42cf-4efe-b45a-1c207bc801ee",
       "name": "Stop and Error1"
@@ -764,7 +777,7 @@
       "typeVersion": 1,
       "position": [
         64,
-        2528
+        2408
       ],
       "id": "8bc4d5f7-9756-4dc5-9d23-8f3b5172de31",
       "name": "Stop and Error2"
@@ -776,8 +789,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1136,
-        1168
+        2256,
+        960
       ],
       "id": "5afa0640-f722-446e-a90a-f10bd2ed0f49",
       "name": "Edit Fields2"
@@ -835,23 +848,45 @@
         ]
       ]
     },
-    "Qdrant Vector Store": {
+    "Aggregate Batch": {
       "main": [
         [
           {
-            "node": "Edit Fields2",
+            "node": "Batch Embed (Gemini)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Default Data Loader1": {
-      "ai_document": [
+    "Batch Embed (Gemini)": {
+      "main": [
         [
           {
-            "node": "Qdrant Vector Store",
-            "type": "ai_document",
+            "node": "Prepare Qdrant Points",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Qdrant Points": {
+      "main": [
+        [
+          {
+            "node": "Batch Upsert (Qdrant)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Batch Upsert (Qdrant)": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
             "index": 0
           }
         ]
@@ -901,17 +936,6 @@
         ]
       ]
     },
-    "Recursive Character Text Splitter": {
-      "ai_textSplitter": [
-        [
-          {
-            "node": "Default Data Loader1",
-            "type": "ai_textSplitter",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Edit Fields": {
       "main": [
         [
@@ -938,19 +962,8 @@
       "main": [
         [
           {
-            "node": "Qdrant Vector Store",
+            "node": "Aggregate Batch",
             "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Embeddings Google Gemini": {
-      "ai_embedding": [
-        [
-          {
-            "node": "Qdrant Vector Store",
-            "type": "ai_embedding",
             "index": 0
           }
         ]
@@ -1118,6 +1131,18 @@
   },
   "pinData": {
     "When Executed by Another Workflow": [
+      {
+        "json": {
+          "mode": "SEARCH",
+          "collectionId": "paragon-os-contacts",
+          "input": "sano numbr"
+        }
+      },
+      {
+        "json": {
+          "=": "============================================================="
+        }
+      },
       {
         "json": {
           "input": {
@@ -1814,9 +1839,9 @@
       }
     ]
   },
-  "versionId": "0db0af9c-bb00-489e-9715-fc295f4587d4",
+  "versionId": "1050df89-883f-4d8d-b773-227680f048cd",
   "activeVersionId": null,
-  "versionCounter": 109,
+  "versionCounter": 117,
   "triggerCount": 0,
   "tags": [],
   "shared": [
