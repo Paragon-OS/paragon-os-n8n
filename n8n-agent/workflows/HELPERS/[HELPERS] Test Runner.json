@@ -21,7 +21,7 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "={\n  \"workflow\": \"TelegramContextScout\",\n  \"testCase\": \"contact-rag\"\n}",
+        "jsonOutput": "={\n  \"workflow\": \"TelegramContextScout\",\n  \"testCase\": \"self-profile\"\n}",
         "options": {}
       },
       "id": "test-config",

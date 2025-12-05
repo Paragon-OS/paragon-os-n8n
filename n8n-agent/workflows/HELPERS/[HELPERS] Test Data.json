@@ -72,7 +72,7 @@
       {
         "json": {
           "workflow": "TelegramContextScout",
-          "testCase": "contact-rag"
+          "testCase": "self-profile"
         }
       }
     ]
