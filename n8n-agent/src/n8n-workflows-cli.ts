@@ -4,6 +4,7 @@ import { executeRestore } from "./commands/restore";
 import { executeTree } from "./commands/tree";
 import { executeOrganize } from "./commands/organize";
 import { executeTest } from "./commands/test";
+import { executeVerify } from "./commands/verify";
 
 async function main() {
   const { command, flags } = parseArgs(process.argv);
@@ -23,6 +24,9 @@ async function main() {
       break;
     case "test":
       await executeTest(flags);
+      break;
+    case "verify":
+      await executeVerify(flags);
       break;
   }
 }
