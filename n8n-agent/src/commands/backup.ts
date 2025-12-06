@@ -4,6 +4,7 @@ import { resolveDir, getPassthroughArgs, confirm } from "../cli";
 import { runN8n } from "../utils/n8n";
 import { collectJsonFilesRecursive, removeEmptyDirectoriesUnder } from "../utils/file";
 import { parseTagFromName, sanitizeWorkflowName } from "../utils/workflow";
+import { logger } from "../utils/logger";
 import type { WorkflowFile } from "../types/index";
 
 interface BackupOptions {
@@ -27,10 +28,7 @@ async function renameExportedWorkflowsToNames(
       jsonPaths.push(...tempPaths);
     }
   } catch (err) {
-    console.warn(
-      `Warning: Failed to collect workflow JSON files under "${normalizedOutputDir}":`,
-      err
-    );
+    logger.warn("Failed to collect workflow JSON files", { outputDir: normalizedOutputDir }, err);
     return;
   }
 
@@ -53,7 +51,7 @@ async function renameExportedWorkflowsToNames(
     try {
       content = await fs.promises.readFile(fullPath, "utf8");
     } catch (err) {
-      console.warn(`Warning: Failed to read workflow file "${fullPath}":`, err);
+      logger.warn("Failed to read workflow file", { filePath: fullPath }, err);
       continue;
     }
 
@@ -61,12 +59,12 @@ async function renameExportedWorkflowsToNames(
     try {
       parsed = JSON.parse(content);
     } catch (err) {
-      console.warn(`Warning: Skipping non-JSON file "${fullPath}":`, err);
+      logger.warn("Skipping non-JSON file", { filePath: fullPath }, err);
       continue;
     }
 
     if (!parsed || typeof parsed !== "object") {
-      console.warn(`Warning: Skipping unexpected workflow format in "${fullPath}".`);
+      logger.warn("Skipping unexpected workflow format", { filePath: fullPath });
       continue;
     }
 
@@ -83,7 +81,7 @@ async function renameExportedWorkflowsToNames(
       try {
         await fs.promises.unlink(fullPath);
       } catch (err) {
-        console.warn(`Warning: Failed to remove archived workflow file "${fullPath}":`, err);
+        logger.warn("Failed to remove archived workflow file", { filePath: fullPath }, err);
       }
       continue;
     }
@@ -185,7 +183,7 @@ async function renameExportedWorkflowsToNames(
     try {
       await fs.promises.mkdir(path.dirname(targetFullPath), { recursive: true });
     } catch (err) {
-      console.warn(`Warning: Failed to ensure directory for "${targetFullPath}":`, err);
+      logger.warn("Failed to ensure directory", { targetPath: targetFullPath }, err);
       continue;
     }
 
@@ -228,10 +226,10 @@ async function renameExportedWorkflowsToNames(
         
         await fs.promises.unlink(wfFile.fullPath);
       } catch (err) {
-        console.warn(
-          `Warning: Failed to remove duplicate workflow file "${wfFile.fullPath}" for workflow ID "${target.id}":`,
-          err
-        );
+        logger.warn("Failed to remove duplicate workflow file", {
+          filePath: wfFile.fullPath,
+          workflowId: target.id
+        }, err);
       }
     }
 
@@ -250,10 +248,10 @@ async function renameExportedWorkflowsToNames(
 
         await fs.promises.rename(canonical.fullPath, targetFullPath);
       } catch (err) {
-        console.warn(
-          `Warning: Failed to rename workflow file "${canonical.fullPath}" to "${targetFullPath}":`,
-          err
-        );
+        logger.warn("Failed to rename workflow file", {
+          from: canonical.fullPath,
+          to: targetFullPath
+        }, err);
       }
     }
   }
@@ -263,10 +261,7 @@ async function renameExportedWorkflowsToNames(
   try {
     await removeEmptyDirectoriesUnder(normalizedOutputDir);
   } catch (err) {
-    console.warn(
-      `Warning: Failed to remove empty directories under "${normalizedOutputDir}":`,
-      err
-    );
+    logger.warn("Failed to remove empty directories", { outputDir: normalizedOutputDir }, err);
   }
 }
 
@@ -275,16 +270,16 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
   const normalizedOutputDir = path.resolve(outputDir);
 
   // Show what will be backed up and ask for confirmation
-  console.log(`📦 Backup target: ${normalizedOutputDir}`);
-  console.log(`   This will export all workflows from n8n to the backup directory.\n`);
+  logger.info(`📦 Backup target: ${normalizedOutputDir}`);
+  logger.info(`   This will export all workflows from n8n to the backup directory.\n`);
 
   const confirmed = await confirm("Do you want to proceed with the backup?", options.yes || false);
   if (!confirmed) {
-    console.log("Backup cancelled.");
+    logger.info("Backup cancelled.");
     process.exit(0);
   }
 
-  console.log(""); // Empty line after confirmation
+  logger.info(""); // Empty line after confirmation
 
   // n8n's export command does not overwrite existing files - it skips them.
   // To ensure we always get fresh exports, temporarily move existing workflow
@@ -312,7 +307,7 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
       movedFiles = true;
     }
   } catch (err) {
-    console.warn("Warning: Failed to move existing workflow files to temp directory:", err);
+    logger.warn("Failed to move existing workflow files to temp directory", { tempDir }, err);
     // Continue anyway - worst case n8n will skip existing files
   }
 
@@ -336,7 +331,7 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
       try {
         await fs.promises.rm(tempDir, { recursive: true, force: true });
       } catch (err) {
-        console.warn("Warning: Failed to clean up temporary directory:", err);
+        logger.warn("Failed to clean up temporary directory", { tempDir }, err);
       }
     }
   } else {
@@ -355,7 +350,7 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
         
         await fs.promises.rm(tempDir, { recursive: true, force: true });
       } catch (err) {
-        console.warn("Warning: Failed to restore files after export failure:", err);
+        logger.error("Failed to restore files after export failure", err, { tempDir });
       }
     }
   }

@@ -1,4 +1,5 @@
 import { execa } from "execa";
+import { logger } from "./logger";
 
 /**
  * Error type for execa timeout errors
@@ -30,10 +31,7 @@ export async function runN8n(args: string[]): Promise<number> {
     });
     return result.exitCode ?? 1;
   } catch (error: unknown) {
-    console.error(
-      "Failed to execute n8n command:",
-      error instanceof Error ? error.message : String(error)
-    );
+    logger.error("Failed to execute n8n command", error, { args });
     return 1;
   }
 }
@@ -78,7 +76,7 @@ export async function runN8nCapture(
       stdout: result.stdout ?? "",
       stderr: result.stderr ?? "",
     };
-  } catch (error: unknown) {
+    } catch (error: unknown) {
     // Handle timeout errors (when reject: true or other errors)
     if (isExecaTimeoutError(error)) {
       return {
@@ -87,7 +85,7 @@ export async function runN8nCapture(
         stderr: `Command timed out after ${timeout ?? 'default'}ms`,
       };
     }
-    console.error("Failed to execute n8n command:", error);
+    logger.error("Failed to execute n8n command", error, { args, timeout });
     return {
       code: 1,
       stdout: "",
@@ -256,7 +254,9 @@ export async function runN8nQuiet(args: string[]): Promise<number> {
         const lines = data.toString().split("\n");
         for (const line of lines) {
           if (line.trim() && !shouldFilter(line)) {
-            console.log(line);
+            // User-facing output - use info level but output directly
+            // pino-pretty will format this nicely
+            logger.info(line);
           }
         }
       });
@@ -267,7 +267,8 @@ export async function runN8nQuiet(args: string[]): Promise<number> {
         const lines = data.toString().split("\n");
         for (const line of lines) {
           if (line.trim() && !shouldFilter(line)) {
-            console.error(line);
+            // User-facing error output
+            logger.warn(line);
           }
         }
       });
@@ -276,10 +277,7 @@ export async function runN8nQuiet(args: string[]): Promise<number> {
     const result = await child;
     return result.exitCode ?? 1;
   } catch (error: unknown) {
-    console.error(
-      "Failed to execute n8n command:",
-      error instanceof Error ? error.message : String(error)
-    );
+    logger.error("Failed to execute n8n command", error, { args });
     return 1;
   }
 }

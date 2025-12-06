@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { globby } from "globby";
+import { logger } from "./logger";
 
 export async function collectJsonFilesRecursive(dir: string): Promise<string[]> {
   try {
@@ -12,7 +13,7 @@ export async function collectJsonFilesRecursive(dir: string): Promise<string[]> 
     });
     return files;
   } catch (err) {
-    console.warn(`Warning: Failed to read directory "${dir}":`, err);
+    logger.warn("Failed to read directory", { dir }, err);
     return [];
   }
 }

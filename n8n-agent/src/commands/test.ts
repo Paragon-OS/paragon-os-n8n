@@ -4,6 +4,7 @@ import boxen from "boxen";
 import chalk from "chalk";
 import { runN8nCapture, runN8nQuiet } from "../utils/n8n";
 import { collectJsonFilesRecursive } from "../utils/file";
+import { logger } from "../utils/logger";
 import { 
   findWorkflowFile, 
   parseExecutionOutput, 
@@ -164,8 +165,8 @@ async function initTestContext(workflowsDir: string): Promise<TestContext> {
   const testRunnerPath = path.join(workflowsDir, TEST_RUNNER_FILE);
 
   if (!fs.existsSync(testRunnerPath)) {
-    console.error(chalk.red(`❌ Test Runner workflow not found: ${testRunnerPath}`));
-    console.log(chalk.gray(`   Run: npm run n8n:workflows:upsync to import it first`));
+    logger.error(`❌ Test Runner workflow not found: ${testRunnerPath}`);
+    logger.info(`   Run: npm run n8n:workflows:upsync to import it first`);
     process.exit(1);
   }
 
@@ -226,13 +227,13 @@ async function runSingleTest(
       }
     } catch (error) {
       if (verbose) {
-        console.warn(chalk.yellow(`⚠️  Warning: Failed to auto-sync workflow "${workflow}": ${error}`));
-        console.warn(chalk.yellow(`   Continuing with test anyway...\n`));
+        logger.warn(`⚠️  Warning: Failed to auto-sync workflow "${workflow}"`, error, { workflow });
+        logger.warn(`   Continuing with test anyway...\n`);
       }
     }
   } else if (verbose) {
-    console.warn(chalk.yellow(`⚠️  Warning: Workflow file for "${workflow}" not found in ${workflowsDir}`));
-    console.warn(chalk.yellow(`   Make sure the workflow is imported to n8n before running tests.\n`));
+    logger.warn(`⚠️  Warning: Workflow file for "${workflow}" not found`, { workflow, workflowsDir });
+    logger.warn(`   Make sure the workflow is imported to n8n before running tests.\n`);
   }
 
   // Read the Test Runner workflow
@@ -290,7 +291,7 @@ async function runSingleTest(
 
     const filteredStderr = filterVersionWarnings(stderr);
     if (verbose && filteredStderr.trim()) {
-      console.error(filteredStderr);
+      logger.warn(filteredStderr);
     }
 
     const filteredStdout = filterVersionWarnings(stdout);
@@ -352,9 +353,7 @@ async function runSingleTest(
         console.error(errorBox);
 
         if (errorDetails) {
-          console.error(chalk.red('Error Details:'));
-          console.error(JSON.stringify(errorDetails, null, 2));
-          console.error('');
+          logger.error('Error Details:', errorDetails);
         }
       }
       return { testCase, success: false, error: error || 'Unknown error' };
@@ -474,8 +473,8 @@ export async function executeTest(options: TestOptions): Promise<void> {
 
   // Validate workflow exists
   if (!TEST_CASES[workflow]) {
-    console.error(chalk.red(`❌ Unknown workflow: ${workflow}`));
-    console.log(chalk.gray(`Available workflows: ${Object.keys(TEST_CASES).join(', ')}`));
+    logger.error(`❌ Unknown workflow: ${workflow}`);
+    logger.info(`Available workflows: ${Object.keys(TEST_CASES).join(', ')}`);
     process.exit(1);
   }
 
@@ -491,8 +490,8 @@ export async function executeTest(options: TestOptions): Promise<void> {
   // Validate test case exists
   const testData = TEST_CASES[workflow][testCase];
   if (!testData) {
-    console.error(chalk.red(`❌ Unknown test case: ${testCase}`));
-    console.log(chalk.gray(`Available tests for ${workflow}: ${Object.keys(TEST_CASES[workflow]).join(', ')}`));
+    logger.error(`❌ Unknown test case: ${testCase}`);
+    logger.info(`Available tests for ${workflow}: ${Object.keys(TEST_CASES[workflow]).join(', ')}`);
     process.exit(1);
   }
 

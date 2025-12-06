@@ -1,9 +1,11 @@
 import fs from "fs";
 import path from "path";
+import fs from "fs";
 import boxen from "boxen";
 import chalk from "chalk";
 import { runN8nCapture } from "../utils/n8n";
 import { collectJsonFilesRecursive } from "../utils/file";
+import { logger } from "../utils/logger";
 import type { WorkflowObject } from "../types/index";
 import type { ExecuteWorkflowTriggerNode } from "../types/n8n";
 import { isExecuteWorkflowTriggerNode } from "../types/n8n";
@@ -191,7 +193,7 @@ export async function executeVerify(options: VerifyOptions): Promise<void> {
       path.basename(f, ".json").includes(specificWorkflow)
     );
     if (jsonFiles.length === 0) {
-      console.error(chalk.red(`❌ Workflow "${specificWorkflow}" not found in ${workflowsDir}`));
+      logger.error(`❌ Workflow "${specificWorkflow}" not found`, undefined, { workflow: specificWorkflow, workflowsDir });
       process.exit(1);
     }
   } else {
@@ -199,7 +201,7 @@ export async function executeVerify(options: VerifyOptions): Promise<void> {
   }
 
   if (jsonFiles.length === 0) {
-    console.log(chalk.yellow(`No workflow JSON files found under "${workflowsDir}".`));
+    logger.warn(`No workflow JSON files found under "${workflowsDir}".`);
     process.exit(0);
   }
 
@@ -266,17 +268,17 @@ export async function executeVerify(options: VerifyOptions): Promise<void> {
   console.log("\n" + summaryBox + "\n");
 
   if (mismatchCount > 0) {
-    console.log(chalk.yellow(`⚠️  Found ${mismatchCount} workflow(s) with mismatched trigger inputs.`));
-    console.log(chalk.gray(`   Recommendation: Delete and re-import affected workflows.\n`));
+    logger.warn(`⚠️  Found ${mismatchCount} workflow(s) with mismatched trigger inputs.`, { mismatchCount });
+    logger.info(`   Recommendation: Delete and re-import affected workflows.\n`);
     process.exit(1);
   }
 
   if (errorCount > 0) {
-    console.log(chalk.yellow(`⚠️  Found ${errorCount} workflow(s) with errors during verification.\n`));
+    logger.warn(`⚠️  Found ${errorCount} workflow(s) with errors during verification.\n`, { errorCount });
     process.exit(1);
   }
 
-  console.log(chalk.green(`✅ All workflows verified successfully!\n`));
+  logger.info(`✅ All workflows verified successfully!\n`);
   process.exit(0);
 }
 

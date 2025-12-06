@@ -1,6 +1,7 @@
 import { isEqual } from "lodash";
 import type { WorkflowObject } from "../types/index";
 import { runN8nCapture } from "./n8n";
+import { logger } from "./logger";
 
 /**
  * Deep equality comparison using lodash.isEqual
@@ -12,10 +13,7 @@ export async function exportCurrentWorkflowsForCompare(): Promise<Map<string, Wo
   const { code, stdout, stderr } = await runN8nCapture(["export:workflow", "--pretty", "--all"]);
 
   if (code !== 0) {
-    console.error("n8n export:workflow failed while preparing selective restore with code", code);
-    if (stderr.trim()) {
-      console.error(stderr.trim());
-    }
+    logger.error("n8n export:workflow failed while preparing selective restore", undefined, { exitCode: code, stderr: stderr.trim() });
     throw new Error("Failed to export current workflows for comparison.");
   }
 
@@ -29,12 +27,12 @@ export async function exportCurrentWorkflowsForCompare(): Promise<Map<string, Wo
   try {
     workflows = JSON.parse(stdout);
   } catch (err) {
-    console.error("Failed to parse JSON from n8n export:workflow during selective restore:", err);
+    logger.error("Failed to parse JSON from n8n export:workflow during selective restore", err);
     throw new Error("Failed to parse current workflows for comparison.");
   }
 
   if (!Array.isArray(workflows)) {
-    console.error("Unexpected export format from n8n during selective restore: expected an array of workflows.");
+    logger.error("Unexpected export format from n8n during selective restore: expected an array of workflows.");
     throw new Error("Unexpected export format from n8n during selective restore.");
   }
 

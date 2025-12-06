@@ -4,6 +4,7 @@ import { runN8nQuiet } from "../utils/n8n";
 import { collectJsonFilesRecursive } from "../utils/file";
 import { normalizeWorkflowForCompare } from "../utils/workflow";
 import { deepEqual, exportCurrentWorkflowsForCompare } from "../utils/compare";
+import { logger } from "../utils/logger";
 import type { BackupWorkflowForRestore, WorkflowObject } from "../types/index";
 
 interface RestoreOptions {
@@ -20,7 +21,7 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
   const jsonFiles = await collectJsonFilesRecursive(inputDir);
 
   if (jsonFiles.length === 0) {
-    console.log(`No workflow JSON files found under "${inputDir}".`);
+    logger.info(`No workflow JSON files found under "${inputDir}".`);
     process.exit(0);
   }
 
@@ -28,7 +29,7 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
   try {
     currentWorkflows = await exportCurrentWorkflowsForCompare();
   } catch (err) {
-    console.error(String(err));
+    logger.error("Failed to export current workflows for comparison", err);
     process.exit(1);
     return;
   }
@@ -40,7 +41,7 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
     try {
       content = await fs.promises.readFile(filePath, "utf8");
     } catch (err) {
-      console.warn(`Warning: Failed to read workflow file "${filePath}" during restore:`, err);
+      logger.warn("Failed to read workflow file during restore", { filePath }, err);
       continue;
     }
 
@@ -48,12 +49,12 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
     try {
       parsed = JSON.parse(content);
     } catch (err) {
-      console.warn(`Warning: Skipping non-JSON file "${filePath}" during restore:`, err);
+      logger.warn("Skipping non-JSON file during restore", { filePath }, err);
       continue;
     }
 
     if (!parsed || typeof parsed !== "object") {
-      console.warn(`Warning: Skipping unexpected workflow format in "${filePath}" during restore.`);
+      logger.warn("Skipping unexpected workflow format during restore", { filePath });
       continue;
     }
 
@@ -65,7 +66,7 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
   }
 
   if (backups.length === 0) {
-    console.log(`No valid workflow JSON files found under "${inputDir}" after parsing.`);
+    logger.info(`No valid workflow JSON files found under "${inputDir}" after parsing.`);
     process.exit(0);
   }
 
@@ -99,28 +100,27 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
     toImport.push(backup);
   }
 
-  console.log(
-    [
-      `Found ${backups.length} workflow JSON file(s) in backup.`,
-      `Unchanged on server (skipped): ${unchangedCount}.`,
-      `New or changed (to import): ${toImport.length} (including ${newCount} without existing live workflows).`,
-    ].join(" ")
-  );
+  logger.info({
+    total: backups.length,
+    unchanged: unchangedCount,
+    toImport: toImport.length,
+    new: newCount
+  }, `Found ${backups.length} workflow JSON file(s) in backup. Unchanged on server (skipped): ${unchangedCount}. New or changed (to import): ${toImport.length} (including ${newCount} without existing live workflows).`);
 
   if (toImport.length === 0) {
-    console.log("All workflows in the backup already match the current n8n instance. Nothing to restore.");
+    logger.info("All workflows in the backup already match the current n8n instance. Nothing to restore.");
     process.exit(0);
   }
 
   // Ask for confirmation before importing
-  console.log(`\n📥 Ready to import ${toImport.length} workflow(s) to n8n.`);
+  logger.info(`\n📥 Ready to import ${toImport.length} workflow(s) to n8n.`);
   const confirmed = await confirm("Do you want to proceed with the restore?", options.yes || false);
   if (!confirmed) {
-    console.log("Restore cancelled.");
+    logger.info("Restore cancelled.");
     process.exit(0);
   }
 
-  console.log(""); // Empty line after confirmation
+  logger.info(""); // Empty line after confirmation
 
   /**
    * NOTE:
@@ -139,14 +139,15 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
    */
   for (const backup of toImport) {
     const args = ["import:workflow", `--input=${backup.filePath}`, ...passthroughFlags];
-    console.log(
-      `Importing workflow from "${backup.filePath}"` +
-        (backup.id ? ` (id: ${backup.id}, name: ${backup.name})` : ` (name: ${backup.name})`)
-    );
+    logger.info({
+      filePath: backup.filePath,
+      workflowId: backup.id,
+      workflowName: backup.name
+    }, `Importing workflow from "${backup.filePath}"${backup.id ? ` (id: ${backup.id}, name: ${backup.name})` : ` (name: ${backup.name})`}`);
     const exitCode = await runN8nQuiet(args);
 
     if (exitCode !== 0) {
-      console.error(`n8n import:workflow failed for "${backup.filePath}" with code`, exitCode);
+      logger.error(`n8n import:workflow failed for "${backup.filePath}" with code ${exitCode}`, undefined, { filePath: backup.filePath, exitCode });
       process.exit(exitCode);
     }
   }

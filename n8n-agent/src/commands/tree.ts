@@ -1,4 +1,5 @@
 import { runN8nCapture } from "../utils/n8n";
+import { logger } from "../utils/logger";
 import type { ExportedWorkflow } from "../types/index";
 
 export async function executeTree(remainingArgs: string[] = []): Promise<void> {
@@ -14,15 +15,12 @@ export async function executeTree(remainingArgs: string[] = []): Promise<void> {
   const { code, stdout, stderr } = await runN8nCapture([...baseArgs, ...selectionArgs, ...remainingArgs]);
 
   if (code !== 0) {
-    console.error("n8n export:workflow failed with code", code);
-    if (stderr.trim()) {
-      console.error(stderr.trim());
-    }
+    logger.error("n8n export:workflow failed", undefined, { exitCode: code, stderr: stderr.trim() });
     process.exit(code);
   }
 
   if (!stdout.trim()) {
-    console.log("No workflows returned by n8n export:workflow.");
+    logger.info("No workflows returned by n8n export:workflow.");
     process.exit(0);
   }
 
@@ -31,12 +29,12 @@ export async function executeTree(remainingArgs: string[] = []): Promise<void> {
   try {
     workflows = JSON.parse(stdout);
   } catch (err) {
-    console.error("Failed to parse JSON from n8n export:workflow:", err);
+    logger.error("Failed to parse JSON from n8n export:workflow", err);
     process.exit(1);
   }
 
   if (!Array.isArray(workflows)) {
-    console.error("Unexpected export format from n8n: expected an array of workflows.");
+    logger.error("Unexpected export format from n8n: expected an array of workflows.");
     process.exit(1);
   }
 

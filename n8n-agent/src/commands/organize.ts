@@ -2,6 +2,7 @@ import path from "path";
 import fs from "fs";
 import { resolveDir } from "../cli";
 import { parseTagFromName } from "../utils/workflow";
+import { logger } from "../utils/logger";
 
 interface OrganizeOptions {
   input?: string;
@@ -19,7 +20,7 @@ async function organizeWorkflows(baseDir: string): Promise<void> {
   try {
     entries = await fs.promises.readdir(baseDir);
   } catch (err) {
-    console.error(`Failed to read workflows directory "${baseDir}":`, err);
+    logger.error(`Failed to read workflows directory "${baseDir}"`, err, { baseDir });
     process.exit(1);
   }
 
@@ -39,7 +40,7 @@ async function organizeWorkflows(baseDir: string): Promise<void> {
     try {
       await fs.promises.mkdir(targetDir, { recursive: true });
     } catch (err) {
-      console.warn(`Warning: Failed to create directory "${targetDir}":`, err);
+      logger.warn("Failed to create directory", { targetDir }, err);
       continue;
     }
 
@@ -56,9 +57,7 @@ async function organizeWorkflows(baseDir: string): Promise<void> {
         .catch(() => undefined as unknown as fs.Stats | undefined);
 
       if (existingStat && existingStat.isFile()) {
-        console.warn(
-          `Warning: Skipping move of "${fullPath}" to "${targetPath}" because the target file already exists.`
-        );
+        logger.warn("Skipping move because target file already exists", { from: fullPath, to: targetPath });
         continue;
       }
     } catch {
@@ -67,9 +66,9 @@ async function organizeWorkflows(baseDir: string): Promise<void> {
 
     try {
       await fs.promises.rename(fullPath, targetPath);
-      console.log(`Moved "${fullPath}" -> "${targetPath}"`);
+      logger.info(`Moved "${fullPath}" -> "${targetPath}"`, { from: fullPath, to: targetPath });
     } catch (err) {
-      console.warn(`Warning: Failed to move "${fullPath}" to "${targetPath}":`, err);
+      logger.warn("Failed to move file", { from: fullPath, to: targetPath }, err);
     }
   }
 }
