@@ -46,7 +46,7 @@ function filterVersionWarnings(output: string): string {
 /**
  * Display test results in a clean format
  */
-function displayTestResults(output: any, workflowName: string): void {
+function displayTestResults(output: unknown, workflowName: string): void {
   const outputText = output === null || output === undefined
     ? "(No output returned)"
     : JSON.stringify(output, null, 2);
@@ -236,20 +236,30 @@ async function runSingleTest(
   }
 
   // Read the Test Runner workflow
-  const testRunnerJson = JSON.parse(context.originalTestRunnerContent);
+  const testRunnerJson = JSON.parse(
+    context.originalTestRunnerContent
+  ) as {
+    nodes?: Array<{ name?: string; parameters?: Record<string, unknown> }>;
+    [key: string]: unknown;
+  };
 
   // Find and update the Test Config node
-  const configNode = testRunnerJson.nodes.find((n: any) => n.name === TEST_CONFIG_NODE);
-  if (!configNode) {
+  const configNode = testRunnerJson.nodes?.find(
+    (n) => n.name === TEST_CONFIG_NODE
+  );
+  if (!configNode || !configNode.parameters) {
     return {
       testCase,
       success: false,
-      error: 'Test Config node not found in Test Runner workflow'
+      error: 'Test Config node not found in Test Runner workflow',
     };
   }
 
   // Save original config for restoration
-  const originalJsonOutput = configNode.parameters.jsonOutput;
+  const originalJsonOutput =
+    typeof configNode.parameters.jsonOutput === 'string'
+      ? configNode.parameters.jsonOutput
+      : undefined;
 
   // Update config with test parameters
   const configObject = { workflow, testCase, testData };
@@ -304,14 +314,18 @@ async function runSingleTest(
       };
     }
 
-    let executionJson: any;
+    let executionJson;
     try {
       executionJson = parseExecutionOutput(filteredStdout);
     } catch (parseError) {
       return {
         testCase,
         success: false,
-        error: `Failed to parse execution output: ${parseError}`
+        error: `Failed to parse execution output: ${
+          parseError instanceof Error
+            ? parseError.message
+            : String(parseError)
+        }`,
       };
     }
 
@@ -348,9 +362,11 @@ async function runSingleTest(
 
   } finally {
     // Restore original Test Runner configuration
-    configNode.parameters.jsonOutput = originalJsonOutput;
-    fs.writeFileSync(tempPath, JSON.stringify(testRunnerJson, null, 2));
-    await runN8nQuiet(['import:workflow', `--input=${tempPath}`]);
+    if (configNode && configNode.parameters) {
+      configNode.parameters.jsonOutput = originalJsonOutput;
+      fs.writeFileSync(tempPath, JSON.stringify(testRunnerJson, null, 2));
+      await runN8nQuiet(['import:workflow', `--input=${tempPath}`]);
+    }
   }
 }
 

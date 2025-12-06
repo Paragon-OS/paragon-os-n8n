@@ -5,6 +5,8 @@ import chalk from "chalk";
 import { runN8nCapture } from "../utils/n8n";
 import { collectJsonFilesRecursive } from "../utils/file";
 import type { WorkflowObject } from "../types/index";
+import type { ExecuteWorkflowTriggerNode } from "../types/n8n";
+import { isExecuteWorkflowTriggerNode } from "../types/n8n";
 
 /**
  * Verify that workflow trigger inputs in the database match the JSON files.
@@ -36,20 +38,22 @@ function extractTriggerInputs(workflow: WorkflowObject): TriggerInput[] {
 
   // Find executeWorkflowTrigger nodes
   const triggerNodes = workflow.nodes.filter(
-    (node) => node.type === "n8n-nodes-base.executeWorkflowTrigger"
+    (node): node is ExecuteWorkflowTriggerNode =>
+      isExecuteWorkflowTriggerNode(node as ExecuteWorkflowTriggerNode)
   );
 
   const inputs: TriggerInput[] = [];
 
   for (const node of triggerNodes) {
-    const values = (node.parameters as any)?.workflowInputs?.values;
+    const values = node.parameters?.workflowInputs?.values;
     if (Array.isArray(values)) {
       for (const value of values) {
-        if (typeof value === "object" && value.name) {
+        if (typeof value === "object" && value !== null && "name" in value) {
+          const valueObj = value as { name: string; type?: string; required?: boolean };
           inputs.push({
-            name: value.name,
-            type: value.type,
-            required: value.required,
+            name: valueObj.name,
+            type: valueObj.type,
+            required: valueObj.required,
           });
         } else if (typeof value === "string") {
           inputs.push({ name: value });

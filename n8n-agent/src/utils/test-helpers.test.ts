@@ -151,7 +151,25 @@ Execution was successful:
   }
 }`;
     const result = parseExecutionOutput(stdout);
-    expect(result.data.resultData.runData['Run: TestWorkflow']).toBeDefined();
+    if (
+      typeof result === 'object' &&
+      result !== null &&
+      'data' in result &&
+      typeof result.data === 'object' &&
+      result.data !== null &&
+      'resultData' in result.data &&
+      typeof result.data.resultData === 'object' &&
+      result.data.resultData !== null &&
+      'runData' in result.data.resultData
+    ) {
+      const runData = result.data.resultData.runData as Record<
+        string,
+        unknown
+      >;
+      expect(runData['Run: TestWorkflow']).toBeDefined();
+    } else {
+      throw new Error('Expected full execution JSON format');
+    }
   });
 });
 

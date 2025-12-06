@@ -10,6 +10,8 @@ import type { Command } from "commander";
 export function getRemainingArgs(command: Command): string[] {
   // commander stores unknown options in command.args
   // For commands with allowUnknownOption, these are the unparsed arguments
-  return (command as any).args || [];
+  // Type assertion needed because commander's Command type doesn't expose args
+  const cmd = command as Command & { args?: string[] };
+  return cmd.args || [];
 }
 

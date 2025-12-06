@@ -50,3 +50,23 @@ export type ExportedWorkflow = {
   [key: string]: unknown;
 };
 
+// Re-export n8n types
+export type {
+  N8nNode,
+  ExecuteWorkflowTriggerNode,
+  N8nWorkflow,
+  N8nExecutionError,
+  N8nExecutionJson,
+  N8nFullExecutionJson,
+  N8nRawOutputArray,
+  N8nRawOutputObject,
+} from './n8n';
+
+export {
+  isN8nExecutionJson,
+  isN8nFullExecutionJson,
+  isN8nRawOutputArray,
+  isN8nRawOutputObject,
+  isExecuteWorkflowTriggerNode,
+} from './n8n';
+

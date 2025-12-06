@@ -1,6 +1,25 @@
 import { execa } from "execa";
 
 /**
+ * Error type for execa timeout errors
+ */
+interface ExecaTimeoutError extends Error {
+  timedOut?: boolean;
+  isCanceled?: boolean;
+}
+
+/**
+ * Type guard to check if error is an execa timeout error
+ */
+function isExecaTimeoutError(error: unknown): error is ExecaTimeoutError {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    ("timedOut" in error || "isCanceled" in error)
+  );
+}
+
+/**
  * Run n8n command with output inherited (visible to user)
  */
 export async function runN8n(args: string[]): Promise<number> {
@@ -10,8 +29,11 @@ export async function runN8n(args: string[]): Promise<number> {
       reject: false,
     });
     return result.exitCode ?? 1;
-  } catch (error) {
-    console.error("Failed to execute n8n command:", error);
+  } catch (error: unknown) {
+    console.error(
+      "Failed to execute n8n command:",
+      error instanceof Error ? error.message : String(error)
+    );
     return 1;
   }
 }
@@ -56,9 +78,9 @@ export async function runN8nCapture(
       stdout: result.stdout ?? "",
       stderr: result.stderr ?? "",
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Handle timeout errors (when reject: true or other errors)
-    if (error?.timedOut || error?.isCanceled) {
+    if (isExecaTimeoutError(error)) {
       return {
         code: 124, // Standard timeout exit code
         stdout: "",
@@ -66,7 +88,11 @@ export async function runN8nCapture(
       };
     }
     console.error("Failed to execute n8n command:", error);
-    return { code: 1, stdout: "", stderr: String(error) };
+    return {
+      code: 1,
+      stdout: "",
+      stderr: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
@@ -249,8 +275,11 @@ export async function runN8nQuiet(args: string[]): Promise<number> {
 
     const result = await child;
     return result.exitCode ?? 1;
-  } catch (error) {
-    console.error("Failed to execute n8n command:", error);
+  } catch (error: unknown) {
+    console.error(
+      "Failed to execute n8n command:",
+      error instanceof Error ? error.message : String(error)
+    );
     return 1;
   }
 }
