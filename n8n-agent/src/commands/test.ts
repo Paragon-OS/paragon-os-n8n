@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { runN8n, runN8nQuiet } from "../utils/n8n";
+import { collectJsonFilesRecursive } from "../utils/file";
 
 /**
  * Run a test case against a workflow using the Test Data helper.
@@ -119,8 +120,57 @@ export async function executeTest(flags: string[]): Promise<void> {
   console.log(JSON.stringify(testData, null, 2));
   console.log('');
 
-  // Read the Test Runner workflow
   const workflowsDir = path.resolve(__dirname, '../../workflows');
+  
+  // Auto-import the workflow being tested to ensure it's up-to-date
+  console.log(`🔄 Auto-syncing workflow "${workflow}" to n8n...`);
+  const allWorkflowFiles = await collectJsonFilesRecursive(workflowsDir);
+  let workflowFile: string | undefined;
+  
+  // Try to find workflow by ID first, then by name match
+  for (const filePath of allWorkflowFiles) {
+    try {
+      const content = await fs.promises.readFile(filePath, 'utf-8');
+      const workflowJson = JSON.parse(content) as { id?: string; name?: string };
+      const basename = path.basename(filePath, '.json');
+      
+      // Match by ID (most reliable)
+      if (workflowJson.id === workflow) {
+        workflowFile = filePath;
+        break;
+      }
+      
+      // Match by exact name
+      if (workflowJson.name === workflow) {
+        workflowFile = filePath;
+        break;
+      }
+      
+      // Match by basename (fallback for workflows without proper name/ID)
+      if (basename === workflow || basename.replace(/\[.*?\]\s*/, '') === workflow) {
+        workflowFile = filePath;
+        break;
+      }
+    } catch {
+      // Skip files that can't be parsed
+      continue;
+    }
+  }
+  
+  if (workflowFile) {
+    try {
+      await runN8nQuiet(['import:workflow', `--input=${workflowFile}`]);
+      console.log(`✅ Workflow "${workflow}" synced successfully\n`);
+    } catch (error) {
+      console.warn(`⚠️  Warning: Failed to auto-sync workflow "${workflow}": ${error}`);
+      console.warn(`   Continuing with test anyway...\n`);
+    }
+  } else {
+    console.warn(`⚠️  Warning: Workflow file for "${workflow}" not found in ${workflowsDir}`);
+    console.warn(`   Make sure the workflow is imported to n8n before running tests.\n`);
+  }
+
+  // Read the Test Runner workflow
   const testRunnerPath = path.join(workflowsDir, TEST_RUNNER_FILE);
   
   if (!fs.existsSync(testRunnerPath)) {

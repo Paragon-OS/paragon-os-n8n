@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-03T02:12:27.000Z",
+  "updatedAt": "2025-12-06T15:45:36.000Z",
   "createdAt": "2025-11-30T21:05:00.000Z",
   "id": "TelegramSmartAgent",
   "name": "Telegram Smart Agent",
@@ -84,7 +84,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        -1076,
+        -1072,
         544
       ],
       "id": "telegram-smart-gemini",
@@ -347,14 +347,14 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "userPrompt": "What is my Telegram profile?"
+          "userPrompt": "who is cody?"
         }
       }
     ]
   },
-  "versionId": "c9508301-4a7c-45bb-aae8-dbc85dd15568",
+  "versionId": "dbb36ee4-08b1-4897-9e82-146eb631bd73",
   "activeVersionId": null,
-  "versionCounter": 23,
+  "versionCounter": 24,
   "triggerCount": 0,
   "tags": [
     {
