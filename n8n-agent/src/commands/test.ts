@@ -284,11 +284,21 @@ async function runSingleTest(
 
     const filteredStdout = filterVersionWarnings(stdout);
 
+    // Handle timeout (exit code 124)
+    if (exitCode === 124) {
+      return {
+        testCase,
+        success: false,
+        error: `Test timed out after 30 seconds. The workflow may be stuck or taking too long to execute.`,
+        output: filteredStdout.trim() || undefined
+      };
+    }
+
     if (exitCode !== 0) {
       return {
         testCase,
         success: false,
-        error: `Test failed with exit code: ${exitCode}`,
+        error: `Test failed with exit code: ${exitCode}${stderr ? ` - ${stderr}` : ''}`,
         output: filteredStdout.trim() || undefined
       };
     }

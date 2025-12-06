@@ -18,21 +18,48 @@ export async function runN8n(args: string[]): Promise<number> {
 
 /**
  * Run n8n command and capture stdout/stderr
+ * @param args Command arguments
+ * @param timeoutMs Optional timeout in milliseconds (default: 5 minutes for execute, no timeout for others)
  */
 export async function runN8nCapture(
-  args: string[]
+  args: string[],
+  timeoutMs?: number
 ): Promise<{ code: number; stdout: string; stderr: string }> {
+  // Default timeout for execute commands (30 seconds), no timeout for others
+  const defaultTimeout = args.includes('execute') ? 30 * 1000 : undefined;
+  const timeout = timeoutMs ?? defaultTimeout;
+
   try {
     const result = await execa("n8n", args, {
       stdio: ["inherit", "pipe", "pipe"],
       reject: false,
+      timeout,
     });
+
+    // Check if process was killed due to timeout
+    // When execa times out with reject: false, it may return with a signal
+    if (result.signal === 'SIGTERM' && timeout) {
+      return {
+        code: 124, // Standard timeout exit code
+        stdout: result.stdout ?? "",
+        stderr: `Command timed out after ${timeout}ms`,
+      };
+    }
+
     return {
       code: result.exitCode ?? 1,
       stdout: result.stdout ?? "",
       stderr: result.stderr ?? "",
     };
-  } catch (error) {
+  } catch (error: any) {
+    // Handle timeout errors (when reject: true or other errors)
+    if (error?.timedOut || error?.isCanceled) {
+      return {
+        code: 124, // Standard timeout exit code
+        stdout: "",
+        stderr: `Command timed out after ${timeout ?? 'default'}ms`,
+      };
+    }
     console.error("Failed to execute n8n command:", error);
     return { code: 1, stdout: "", stderr: String(error) };
   }
