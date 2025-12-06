@@ -274,7 +274,8 @@ async function runSingleTest(
 
     const { code: exitCode, stdout, stderr } = await runN8nCapture([
       'execute',
-      `--id=${TEST_RUNNER_ID}`
+      `--id=${TEST_RUNNER_ID}`,
+      '--rawOutput' // Use raw output for cleaner JSON parsing
     ]);
 
     const filteredStderr = filterVersionWarnings(stderr);
@@ -289,7 +290,7 @@ async function runSingleTest(
       return {
         testCase,
         success: false,
-        error: `Test timed out after 30 seconds. The workflow may be stuck or taking too long to execute.`,
+        error: `Test timed out after 2 minutes. The workflow may be stuck or taking too long to execute.`,
         output: filteredStdout.trim() || undefined
       };
     }

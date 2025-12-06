@@ -57,21 +57,39 @@ export function findWorkflowFile(
  * @throws Error if JSON cannot be parsed
  */
 export function parseExecutionOutput(stdout: string): any {
+  const trimmed = stdout.trim();
+  
+  // Try to parse the entire output as JSON first (for --rawOutput format)
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    // Not valid JSON, continue with other parsing methods
+  }
+
   const lines = stdout.split('\n');
   const separatorIndex = lines.findIndex(line => line.trim().startsWith('==='));
   
   if (separatorIndex >= 0 && separatorIndex < lines.length - 1) {
     // JSON block after separator line
     const jsonLines = lines.slice(separatorIndex + 1).join('\n');
-    return JSON.parse(jsonLines.trim());
-  } else {
-    // Fallback: try to find JSON object anywhere in output
-    const jsonMatch = stdout.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+    try {
+      return JSON.parse(jsonLines.trim());
+    } catch {
+      // Continue to fallback
     }
-    throw new Error('No JSON found in execution output');
   }
+  
+  // Fallback: try to find JSON object or array anywhere in output
+  const jsonMatch = stdout.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+  if (jsonMatch) {
+    try {
+      return JSON.parse(jsonMatch[0]);
+    } catch {
+      // Continue to error
+    }
+  }
+  
+  throw new Error('No JSON found in execution output');
 }
 
 /**
@@ -81,6 +99,23 @@ export function parseExecutionOutput(stdout: string): any {
  */
 export function extractWorkflowResults(executionJson: any): ExecutionResult {
   try {
+    // Handle --rawOutput format: direct workflow output (array or object)
+    if (Array.isArray(executionJson) && executionJson.length > 0) {
+      const firstItem = executionJson[0];
+      // Check if it looks like workflow output (has 'output' field)
+      if (firstItem && typeof firstItem === 'object' && 'output' in firstItem) {
+        return { success: true, output: firstItem };
+      }
+    }
+    
+    // Handle direct object output (--rawOutput single object)
+    if (executionJson && typeof executionJson === 'object' && !Array.isArray(executionJson)) {
+      if ('output' in executionJson && !('data' in executionJson)) {
+        return { success: true, output: executionJson };
+      }
+    }
+
+    // Handle full execution JSON structure (default format)
     const runData = executionJson?.data?.resultData?.runData;
     if (!runData) {
       return { success: false, error: 'No execution data found' };

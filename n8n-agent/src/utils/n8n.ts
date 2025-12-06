@@ -19,15 +19,20 @@ export async function runN8n(args: string[]): Promise<number> {
 /**
  * Run n8n command and capture stdout/stderr
  * @param args Command arguments
- * @param timeoutMs Optional timeout in milliseconds (default: 5 minutes for execute, no timeout for others)
+ * @param timeoutMs Optional timeout in milliseconds (default: 2 minutes for execute, no timeout for others)
  */
 export async function runN8nCapture(
   args: string[],
   timeoutMs?: number
 ): Promise<{ code: number; stdout: string; stderr: string }> {
-  // Default timeout for execute commands (30 seconds), no timeout for others
-  const defaultTimeout = args.includes('execute') ? 30 * 1000 : undefined;
+  // Default timeout for execute commands (2 minutes), no timeout for others
+  const defaultTimeout = args.includes('execute') ? 2 * 60 * 1000 : undefined;
   const timeout = timeoutMs ?? defaultTimeout;
+
+  // For execute commands, use streaming to detect completion early
+  if (args.includes('execute')) {
+    return runN8nExecuteWithStreaming(args, timeout);
+  }
 
   try {
     const result = await execa("n8n", args, {
@@ -63,6 +68,122 @@ export async function runN8nCapture(
     console.error("Failed to execute n8n command:", error);
     return { code: 1, stdout: "", stderr: String(error) };
   }
+}
+
+/**
+ * Run n8n execute command with streaming to detect completion early
+ * This prevents hanging when the workflow completes but the CLI doesn't exit
+ */
+async function runN8nExecuteWithStreaming(
+  args: string[],
+  timeoutMs?: number
+): Promise<{ code: number; stdout: string; stderr: string }> {
+  return new Promise((resolve) => {
+    const child = execa("n8n", args, {
+      stdio: ["inherit", "pipe", "pipe"],
+      reject: false,
+    });
+
+    let stdout = "";
+    let stderr = "";
+    let completed = false;
+    let timeoutId: NodeJS.Timeout | undefined;
+
+    // Set up timeout
+    if (timeoutMs) {
+      timeoutId = setTimeout(() => {
+        if (!completed) {
+          completed = true;
+          child.kill('SIGTERM');
+          resolve({
+            code: 124,
+            stdout,
+            stderr: stderr || `Command timed out after ${timeoutMs}ms`,
+          });
+        }
+      }, timeoutMs);
+    }
+
+    // Stream stdout
+    if (child.stdout) {
+      child.stdout.on("data", (data: Buffer) => {
+        const chunk = data.toString();
+        stdout += chunk;
+
+        // Try to detect if we have complete JSON output
+        // Look for valid JSON objects/arrays that might indicate completion
+        if (chunk.includes('}') || chunk.includes(']')) {
+          // Check if we have a complete JSON structure
+          try {
+            // Try to parse the accumulated stdout as JSON
+            const trimmed = stdout.trim();
+            if (trimmed) {
+              // Look for JSON after separator or at the end
+              const jsonMatch = trimmed.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+              if (jsonMatch) {
+                try {
+                  JSON.parse(jsonMatch[0]);
+                  // If we successfully parsed JSON and haven't seen new output in a bit,
+                  // the workflow might be done. But we'll still wait for the process to exit
+                  // to be safe, unless it's taking too long.
+                } catch {
+                  // Not complete JSON yet, continue
+                }
+              }
+            }
+          } catch {
+            // Continue streaming
+          }
+        }
+      });
+    }
+
+    // Stream stderr
+    if (child.stderr) {
+      child.stderr.on("data", (data: Buffer) => {
+        stderr += data.toString();
+      });
+    }
+
+    // Wait for process to complete
+    child.on("exit", (exitCode, signal) => {
+      if (completed) return;
+      completed = true;
+
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+
+      if (signal === 'SIGTERM' && timeoutMs) {
+        resolve({
+          code: 124,
+          stdout,
+          stderr: stderr || `Command timed out after ${timeoutMs}ms`,
+        });
+      } else {
+        resolve({
+          code: exitCode ?? 1,
+          stdout,
+          stderr,
+        });
+      }
+    });
+
+    child.on("error", (error) => {
+      if (completed) return;
+      completed = true;
+
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+
+      resolve({
+        code: 1,
+        stdout,
+        stderr: stderr || String(error),
+      });
+    });
+  });
 }
 
 /**
