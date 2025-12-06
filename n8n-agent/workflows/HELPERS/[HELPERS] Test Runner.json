@@ -133,6 +133,30 @@
               },
               "renameOutput": true,
               "outputKey": "DynamicRAG"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('⚙️ Test Config').item.json.workflow }}",
+                    "rightValue": "DiscordContextScout",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "route-discord"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DiscordContextScout"
             }
           ]
         },
@@ -256,6 +280,54 @@
     },
     {
       "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "BB1zsros5LmyJO9N",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ $json.query }}",
+            "entity": "={{ $json.entity }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "entity",
+              "displayName": "entity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "run-discord-scout",
+      "name": "Run: Discord Context Scout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "position": [
+        1140,
+        500
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
         "errorMessage": "={{ 'Unknown workflow: ' + $('⚙️ Test Config').item.json.workflow }}"
       },
       "id": "unknown-workflow-error",
@@ -263,7 +335,7 @@
       "type": "n8n-nodes-base.stopAndError",
       "position": [
         1140,
-        600
+        700
       ],
       "typeVersion": 1
     },
@@ -335,6 +407,13 @@
         ],
         [
           {
+            "node": "Run: Discord Context Scout",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "Unknown Workflow",
             "type": "main",
             "index": 0
@@ -354,6 +433,17 @@
       ]
     },
     "Run: Dynamic RAG": {
+      "main": [
+        [
+          {
+            "node": "Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run: Discord Context Scout": {
       "main": [
         [
           {
