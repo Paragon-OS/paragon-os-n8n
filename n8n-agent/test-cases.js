@@ -129,11 +129,27 @@ const TESTS = {
   },
 
   // ────────────────────────────────────────────────────────────────
-  // Discord Context Scout (template - add your tests)
+  // Discord Context Scout
   // ────────────────────────────────────────────────────────────────
   'DiscordContextScout': {
-    'example': {
-      query: 'example query',
+    'contact-fuzzy': {
+      query: 'hubert',
+      entity: 'contact'
+    },
+    'guild-search': {
+      query: 'test',
+      entity: 'guild'
+    },
+    'tool-lookup': {
+      query: 'read',
+      entity: 'tool'
+    },
+    'self-profile': {
+      query: '',
+      entity: 'self'
+    },
+    'contact-empty-query': {
+      query: '',
       entity: 'contact'
     }
   },
