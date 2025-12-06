@@ -44,7 +44,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "cacheKey": "telegramContactsx",
+            "cacheKey": "telegramContacts",
             "trueToWrite": false,
             "writeTTLms": 0
           },
