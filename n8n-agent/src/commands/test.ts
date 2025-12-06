@@ -68,20 +68,22 @@ function displayTestResults(output: any, workflowName: string): void {
 function printUsage(): void {
   const usageText = `
 Usage:
-  npm run n8n:test -- --workflow <name> --test <case>
-  npm run n8n:test -- --list
+  npm run n8n:test -- --workflow <name>              Run all tests for a workflow
+  npm run n8n:test -- --workflow <name> --test <id>  Run a specific test
+  npm run n8n:test -- --list                         List all available tests
 
 Options:
   --workflow, -w   Workflow name to test
-  --test, -t       Test case ID
+  --test, -t       Test case ID (optional - runs all if omitted)
   --list, -l       List all available test cases
 
 Examples:
-  npm run n8n:test -- -w TelegramContextScout -t contact-rag
+  npm run n8n:test -- -w TelegramContextScout           # Run all tests
+  npm run n8n:test -- -w TelegramContextScout -t contact-rag  # Run one test
   npm run n8n:test -- -w DynamicRAG -t status
   npm run n8n:test -- --list
 `;
-  
+
   const box = boxen(usageText.trim(), {
     title: "n8n Test Runner CLI",
     titleAlignment: "center",
@@ -89,7 +91,7 @@ Examples:
     borderColor: "blue",
     borderStyle: "round",
   });
-  
+
   console.log(box);
 }
 
@@ -120,58 +122,27 @@ interface TestOptions {
   list?: boolean;
 }
 
-export async function executeTest(options: TestOptions): Promise<void> {
-  const { workflow, test: testCase, list } = options;
-  
-  // List mode
-  if (list) {
-    printAvailableTests();
-    process.exit(0);
-  }
-  
-  // Validate inputs
-  if (!workflow || !testCase) {
-    printUsage();
-    process.exit(1);
-  }
-  
-  // Validate workflow exists
-  if (!TEST_CASES[workflow]) {
-    console.error(chalk.red(`❌ Unknown workflow: ${workflow}`));
-    console.log(chalk.gray(`Available workflows: ${Object.keys(TEST_CASES).join(', ')}`));
-    process.exit(1);
-  }
-  
-  // Validate test case exists
-  const testData = TEST_CASES[workflow][testCase];
-  if (!testData) {
-    console.error(chalk.red(`❌ Unknown test case: ${testCase}`));
-    console.log(chalk.gray(`Available tests for ${workflow}: ${Object.keys(TEST_CASES[workflow]).join(', ')}`));
-    process.exit(1);
-  }
-  
-  const runningTestBox = boxen(
-    `${chalk.bold("Workflow:")} ${workflow}\n${chalk.bold("Test:")}     ${testCase}`,
-    {
-      title: "Running Test",
-      titleAlignment: "center",
-      padding: 1,
-      borderColor: "yellow",
-      borderStyle: "round",
-    }
-  );
-  console.log(runningTestBox);
-  
-  console.log(chalk.blue(`📥 Test Input:`));
-  console.log(JSON.stringify(testData, null, 2));
-  console.log('');
+interface SingleTestResult {
+  testCase: string;
+  success: boolean;
+  output?: unknown;
+  error?: string;
+}
 
-  const workflowsDir = path.resolve(__dirname, '../../workflows');
-  
-  // Auto-import the workflow being tested to ensure it's up-to-date
-  console.log(chalk.yellow(`🔄 Auto-syncing workflow "${workflow}" to n8n...`));
+interface TestContext {
+  workflowsDir: string;
+  workflowFiles: WorkflowFile[];
+  testRunnerPath: string;
+  originalTestRunnerContent: string;
+  tempPath: string;
+}
+
+/**
+ * Initialize test context (shared setup for single and batch test runs)
+ */
+async function initTestContext(workflowsDir: string): Promise<TestContext> {
   const allWorkflowFiles = await collectJsonFilesRecursive(workflowsDir);
-  
+
   // Build workflow file objects for matching
   const workflowFiles: WorkflowFile[] = [];
   for (const filePath of allWorkflowFiles) {
@@ -179,157 +150,333 @@ export async function executeTest(options: TestOptions): Promise<void> {
       const content = await fs.promises.readFile(filePath, 'utf-8');
       const workflowJson = JSON.parse(content) as { id?: string; name?: string };
       const basename = path.basename(filePath, '.json');
-      
+
       workflowFiles.push({
         path: filePath,
         content: workflowJson,
         basename
       });
     } catch {
-      // Skip files that can't be parsed
       continue;
     }
   }
-  
-  const workflowFile = findWorkflowFile(workflow, workflowFiles);
-  
-  if (workflowFile) {
-    try {
-      await runN8nQuiet(['import:workflow', `--input=${workflowFile}`]);
-      console.log(chalk.green(`✅ Workflow "${workflow}" synced successfully\n`));
-    } catch (error) {
-      console.warn(chalk.yellow(`⚠️  Warning: Failed to auto-sync workflow "${workflow}": ${error}`));
-      console.warn(chalk.yellow(`   Continuing with test anyway...\n`));
-    }
-  } else {
-    console.warn(chalk.yellow(`⚠️  Warning: Workflow file for "${workflow}" not found in ${workflowsDir}`));
-    console.warn(chalk.yellow(`   Make sure the workflow is imported to n8n before running tests.\n`));
-  }
 
-  // Read the Test Runner workflow
   const testRunnerPath = path.join(workflowsDir, TEST_RUNNER_FILE);
-  
+
   if (!fs.existsSync(testRunnerPath)) {
     console.error(chalk.red(`❌ Test Runner workflow not found: ${testRunnerPath}`));
     console.log(chalk.gray(`   Run: npm run n8n:workflows:upsync to import it first`));
     process.exit(1);
   }
-  
-  const originalContent = fs.readFileSync(testRunnerPath, 'utf-8');
-  const testRunnerJson = JSON.parse(originalContent);
-  
+
+  const originalTestRunnerContent = fs.readFileSync(testRunnerPath, 'utf-8');
+  const tempPath = path.join(workflowsDir, `.test-runner-temp.json`);
+
+  return {
+    workflowsDir,
+    workflowFiles,
+    testRunnerPath,
+    originalTestRunnerContent,
+    tempPath
+  };
+}
+
+/**
+ * Run a single test case and return the result (without calling process.exit)
+ */
+async function runSingleTest(
+  workflow: string,
+  testCase: string,
+  testData: Record<string, unknown>,
+  context: TestContext,
+  verbose: boolean = true
+): Promise<SingleTestResult> {
+  const { workflowsDir, workflowFiles, tempPath } = context;
+
+  if (verbose) {
+    const runningTestBox = boxen(
+      `${chalk.bold("Workflow:")} ${workflow}\n${chalk.bold("Test:")}     ${testCase}`,
+      {
+        title: "Running Test",
+        titleAlignment: "center",
+        padding: 1,
+        borderColor: "yellow",
+        borderStyle: "round",
+      }
+    );
+    console.log(runningTestBox);
+
+    console.log(chalk.blue(`📥 Test Input:`));
+    console.log(JSON.stringify(testData, null, 2));
+    console.log('');
+  }
+
+  // Auto-import the workflow being tested
+  if (verbose) {
+    console.log(chalk.yellow(`🔄 Auto-syncing workflow "${workflow}" to n8n...`));
+  }
+
+  const workflowFile = findWorkflowFile(workflow, workflowFiles);
+
+  if (workflowFile) {
+    try {
+      await runN8nQuiet(['import:workflow', `--input=${workflowFile}`]);
+      if (verbose) {
+        console.log(chalk.green(`✅ Workflow "${workflow}" synced successfully\n`));
+      }
+    } catch (error) {
+      if (verbose) {
+        console.warn(chalk.yellow(`⚠️  Warning: Failed to auto-sync workflow "${workflow}": ${error}`));
+        console.warn(chalk.yellow(`   Continuing with test anyway...\n`));
+      }
+    }
+  } else if (verbose) {
+    console.warn(chalk.yellow(`⚠️  Warning: Workflow file for "${workflow}" not found in ${workflowsDir}`));
+    console.warn(chalk.yellow(`   Make sure the workflow is imported to n8n before running tests.\n`));
+  }
+
+  // Read the Test Runner workflow
+  const testRunnerJson = JSON.parse(context.originalTestRunnerContent);
+
   // Find and update the Test Config node
   const configNode = testRunnerJson.nodes.find((n: any) => n.name === TEST_CONFIG_NODE);
   if (!configNode) {
-    console.error(chalk.red(`❌ Test Config node not found in Test Runner workflow`));
-    process.exit(1);
+    return {
+      testCase,
+      success: false,
+      error: 'Test Config node not found in Test Runner workflow'
+    };
   }
-  
-  // Save original config
+
+  // Save original config for restoration
   const originalJsonOutput = configNode.parameters.jsonOutput;
-  
-  // Update config with test parameters and test data
-  // Properly stringify the entire config object to handle empty strings and special characters
-  const configObject = {
-    workflow,
-    testCase,
-    testData
-  };
+
+  // Update config with test parameters
+  const configObject = { workflow, testCase, testData };
   const configJson = JSON.stringify(configObject, null, 2);
   configNode.parameters.jsonOutput = `=${configJson}`;
-  
+
   // Write modified workflow to temp file
-  const tempPath = path.join(workflowsDir, `.test-runner-temp.json`);
   fs.writeFileSync(tempPath, JSON.stringify(testRunnerJson, null, 2));
-  
-  console.log(chalk.blue(`📝 Configured Test Runner with test: ${workflow}/${testCase}`));
-  console.log(chalk.blue(`📤 Importing to n8n...`));
-  
+
+  if (verbose) {
+    console.log(chalk.blue(`📝 Configured Test Runner with test: ${workflow}/${testCase}`));
+    console.log(chalk.blue(`📤 Importing to n8n...`));
+  }
+
   try {
-    // Import the modified Test Runner workflow (quiet to suppress webhook warnings)
     await runN8nQuiet(['import:workflow', `--input=${tempPath}`]);
-    
-    console.log(chalk.blue(`▶️  Executing Test Runner...`));
-    console.log('');
-    
-    // Execute the Test Runner workflow and capture output
+
+    if (verbose) {
+      console.log(chalk.blue(`▶️  Executing Test Runner...`));
+      console.log('');
+    }
+
     const { code: exitCode, stdout, stderr } = await runN8nCapture([
       'execute',
       `--id=${TEST_RUNNER_ID}`
     ]);
-    
-    // Filter version warnings from stderr
+
     const filteredStderr = filterVersionWarnings(stderr);
-    if (filteredStderr.trim()) {
+    if (verbose && filteredStderr.trim()) {
       console.error(filteredStderr);
     }
-    
-    // Filter version warnings from stdout before parsing
+
     const filteredStdout = filterVersionWarnings(stdout);
-    
-    // Check if execution failed
+
     if (exitCode !== 0) {
-      console.error(chalk.red(`\n❌ Test failed with exit code: ${exitCode}`));
-      if (filteredStdout.trim()) {
-        console.error(chalk.red('Output:'), filteredStdout);
-      }
-      process.exit(exitCode);
+      return {
+        testCase,
+        success: false,
+        error: `Test failed with exit code: ${exitCode}`,
+        output: filteredStdout.trim() || undefined
+      };
     }
-    
-    // Parse execution result - n8n outputs JSON after "Execution was successful:" and "===================================="
+
     let executionJson: any;
     try {
       executionJson = parseExecutionOutput(filteredStdout);
     } catch (parseError) {
-      console.error(chalk.red('❌ Failed to parse execution output'));
-      console.error(chalk.red('Error:'), parseError);
-      console.error(chalk.red('Raw stdout:'), stdout);
-      process.exit(1);
+      return {
+        testCase,
+        success: false,
+        error: `Failed to parse execution output: ${parseError}`
+      };
     }
-    
-    // Extract and display workflow results
+
     const { success, output, error, errorDetails } = extractWorkflowResults(executionJson);
-    
+
     if (success) {
-      displayTestResults(output, workflow);
-      console.log(chalk.green('✅ Test completed successfully'));
-    } else {
-      const errorBox = boxen(
-        chalk.bold("Error:") + " " + (error || 'Unknown error'),
-        {
-          title: "Test Failed",
-          titleAlignment: "center",
-          padding: 1,
-          borderColor: "red",
-          borderStyle: "round",
-        }
-      );
-      console.error(errorBox);
-      
-      if (errorDetails) {
-        console.error(chalk.red('Error Details:'));
-        console.error(JSON.stringify(errorDetails, null, 2));
-        console.error('');
+      if (verbose) {
+        displayTestResults(output, workflow);
+        console.log(chalk.green('✅ Test completed successfully'));
       }
-      process.exit(1);
+      return { testCase, success: true, output };
+    } else {
+      if (verbose) {
+        const errorBox = boxen(
+          chalk.bold("Error:") + " " + (error || 'Unknown error'),
+          {
+            title: "Test Failed",
+            titleAlignment: "center",
+            padding: 1,
+            borderColor: "red",
+            borderStyle: "round",
+          }
+        );
+        console.error(errorBox);
+
+        if (errorDetails) {
+          console.error(chalk.red('Error Details:'));
+          console.error(JSON.stringify(errorDetails, null, 2));
+          console.error('');
+        }
+      }
+      return { testCase, success: false, error: error || 'Unknown error' };
     }
-    
-    // Restore original Test Runner configuration (quiet - no output)
+
+  } finally {
+    // Restore original Test Runner configuration
     configNode.parameters.jsonOutput = originalJsonOutput;
     fs.writeFileSync(tempPath, JSON.stringify(testRunnerJson, null, 2));
     await runN8nQuiet(['import:workflow', `--input=${tempPath}`]);
-    
-    // Cleanup temp file
-    fs.unlinkSync(tempPath);
-    
-    process.exit(0);
-    
-  } catch (error) {
-    // Cleanup on error
-    if (fs.existsSync(tempPath)) {
-      fs.unlinkSync(tempPath);
-    }
-    throw error;
   }
+}
+
+/**
+ * Run all tests for a workflow and display summary
+ */
+async function runAllTests(
+  workflow: string,
+  tests: Record<string, Record<string, unknown>>,
+  context: TestContext
+): Promise<void> {
+  const testCases = Object.entries(tests);
+  const totalTests = testCases.length;
+
+  console.log(boxen(
+    `${chalk.bold("Workflow:")} ${workflow}\n${chalk.bold("Tests:")}    ${totalTests} test case${totalTests > 1 ? 's' : ''}`,
+    {
+      title: "Running All Tests",
+      titleAlignment: "center",
+      padding: 1,
+      borderColor: "cyan",
+      borderStyle: "round",
+    }
+  ));
+  console.log('');
+
+  const results: SingleTestResult[] = [];
+
+  for (let i = 0; i < testCases.length; i++) {
+    const [testCase, testData] = testCases[i];
+
+    console.log(chalk.cyan(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`));
+    console.log(chalk.cyan.bold(`  [${i + 1}/${totalTests}] ${testCase}`));
+    console.log(chalk.cyan(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`));
+
+    const result = await runSingleTest(workflow, testCase, testData, context, false);
+    results.push(result);
+
+    if (result.success) {
+      console.log(chalk.green(`  ✅ ${testCase} - PASSED`));
+      if (result.output) {
+        const outputStr = JSON.stringify(result.output, null, 2);
+        const truncated = outputStr.length > 200 ? outputStr.substring(0, 200) + '...' : outputStr;
+        console.log(chalk.gray(`     ${truncated.replace(/\n/g, '\n     ')}`));
+      }
+    } else {
+      console.log(chalk.red(`  ❌ ${testCase} - FAILED`));
+      if (result.error) {
+        console.log(chalk.red(`     ${result.error}`));
+      }
+    }
+  }
+
+  // Display summary
+  const passed = results.filter(r => r.success).length;
+  const failed = results.filter(r => !r.success).length;
+
+  console.log('\n');
+
+  let summaryText = '';
+  summaryText += `${chalk.bold("Total:")}  ${totalTests} tests\n`;
+  summaryText += `${chalk.green.bold("Passed:")} ${passed}\n`;
+  summaryText += `${chalk.red.bold("Failed:")} ${failed}`;
+
+  if (failed > 0) {
+    summaryText += '\n\n' + chalk.red.bold('Failed Tests:');
+    for (const result of results.filter(r => !r.success)) {
+      summaryText += `\n  • ${result.testCase}: ${result.error}`;
+    }
+  }
+
+  const borderColor = failed === 0 ? 'green' : 'red';
+  const title = failed === 0 ? '✅ All Tests Passed' : '❌ Some Tests Failed';
+
+  console.log(boxen(summaryText, {
+    title,
+    titleAlignment: "center",
+    padding: 1,
+    borderColor,
+    borderStyle: "round",
+  }));
+
+  // Cleanup temp file
+  if (fs.existsSync(context.tempPath)) {
+    fs.unlinkSync(context.tempPath);
+  }
+
+  process.exit(failed > 0 ? 1 : 0);
+}
+
+export async function executeTest(options: TestOptions): Promise<void> {
+  const { workflow, test: testCase, list } = options;
+
+  // List mode
+  if (list) {
+    printAvailableTests();
+    process.exit(0);
+  }
+
+  // Validate workflow is provided
+  if (!workflow) {
+    printUsage();
+    process.exit(1);
+  }
+
+  // Validate workflow exists
+  if (!TEST_CASES[workflow]) {
+    console.error(chalk.red(`❌ Unknown workflow: ${workflow}`));
+    console.log(chalk.gray(`Available workflows: ${Object.keys(TEST_CASES).join(', ')}`));
+    process.exit(1);
+  }
+
+  const workflowsDir = path.resolve(__dirname, '../../workflows');
+  const context = await initTestContext(workflowsDir);
+
+  // If no test case specified, run all tests for the workflow
+  if (!testCase) {
+    await runAllTests(workflow, TEST_CASES[workflow], context);
+    return;
+  }
+
+  // Validate test case exists
+  const testData = TEST_CASES[workflow][testCase];
+  if (!testData) {
+    console.error(chalk.red(`❌ Unknown test case: ${testCase}`));
+    console.log(chalk.gray(`Available tests for ${workflow}: ${Object.keys(TEST_CASES[workflow]).join(', ')}`));
+    process.exit(1);
+  }
+
+  // Run single test
+  const result = await runSingleTest(workflow, testCase, testData, context, true);
+
+  // Cleanup temp file
+  if (fs.existsSync(context.tempPath)) {
+    fs.unlinkSync(context.tempPath);
+  }
+
+  process.exit(result.success ? 0 : 1);
 }
 
