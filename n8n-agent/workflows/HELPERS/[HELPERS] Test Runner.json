@@ -21,7 +21,7 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "={\n  \"workflow\": \"TelegramContextScout\",\n  \"testCase\": \"self-profile\"\n}",
+        "jsonOutput": "={\n  \"workflow\": \"TelegramContextScout\",\n  \"testCase\": \"self-profile\",\n  \"testData\": null\n}",
         "options": {}
       },
       "id": "test-config",
@@ -45,7 +45,8 @@
           "mappingMode": "defineBelow",
           "value": {
             "workflow": "={{ $json.workflow }}",
-            "testCase": "={{ $json.testCase }}"
+            "testCase": "={{ $json.testCase }}",
+            "testData": "={{ $json.testData }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -66,6 +67,14 @@
               "display": true,
               "canBeUsedToMatch": true,
               "type": "string"
+            },
+            {
+              "id": "testData",
+              "displayName": "testData",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
             }
           ],
           "attemptToConvertTypes": false,
@@ -442,7 +451,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "userPrompt": "={{ $json.userPrompt }}"
+            "userPrompt": "={{ $json.userPrompt || $json.testData?.userPrompt }}"
           },
           "matchingColumns": [],
           "schema": [

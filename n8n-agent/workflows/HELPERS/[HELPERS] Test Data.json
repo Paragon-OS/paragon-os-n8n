@@ -3,7 +3,7 @@
   "createdAt": "2025-12-05T18:00:00.000Z",
   "id": "TestDataHelper001",
   "name": "[HELPERS] Test Data",
-  "description": "Centralized test case store for workflow testing. Call this workflow with { workflow: 'WorkflowName', testCase: 'test-id' } to get test input data. All test cases sync automatically with workflow backups.",
+  "description": "Centralized test case store for workflow testing. Call this workflow with { workflow: 'WorkflowName', testCase: 'test-id', testData: {...} } to get test input data. The CLI passes testData directly, so file loading is not needed.",
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -18,6 +18,10 @@
             {
               "name": "testCase",
               "type": "string"
+            },
+            {
+              "name": "testData",
+              "type": "any"
             }
           ]
         }
@@ -30,11 +34,11 @@
         300
       ],
       "typeVersion": 1.1,
-      "notes": "Input:\n- workflow: Name of the workflow (e.g., 'TelegramContextScout')\n- testCase: ID of the test case (e.g., 'contact-rag')"
+      "notes": "Input:\n- workflow: Name of the workflow (e.g., 'TelegramContextScout')\n- testCase: ID of the test case (e.g., 'contact-rag')\n- testData: Test data object (passed directly from CLI)"
     },
     {
       "parameters": {
-        "jsCode": "// ╔══════════════════════════════════════════════════════════════════╗\n// ║                    LOOKUP LOGIC (don't edit)                      ║\n// ╚══════════════════════════════════════════════════════════════════╝\n\n// Load test cases from external file\n// Try multiple possible paths where test-cases.js might be located\nconst possiblePaths = [\n  '/Users/nipuna/Software/paragon-os/paragon-os-app/n8n-agent/test-cases.js',\n  process.cwd() + '/test-cases.js',\n  process.cwd() + '/n8n-agent/test-cases.js'\n];\n\nlet TESTS;\nlet loadedPath;\n\n// Clear all test-cases.js from require cache first\nObject.keys(require.cache).forEach(key => {\n  if (key.includes('test-cases.js')) {\n    delete require.cache[key];\n  }\n});\n\nfor (const testCasesPath of possiblePaths) {\n  try {\n    // Try to resolve the path\n    let resolvedPath;\n    try {\n      resolvedPath = require.resolve(testCasesPath);\n      // Clear cache for this specific path\n      delete require.cache[resolvedPath];\n    } catch (resolveError) {\n      // Path doesn't exist in cache yet, that's fine\n      resolvedPath = testCasesPath;\n    }\n    \n    // Try to require the module\n    try {\n      TESTS = require(testCasesPath);\n      loadedPath = testCasesPath;\n      break;\n    } catch (requireError) {\n      // Module not found at this path, try next\n      continue;\n    }\n  } catch (error) {\n    // Continue to next path\n    continue;\n  }\n}\n\nif (!TESTS) {\n  return {\n    error: 'Failed to load test cases from any of the following paths:',\n    attemptedPaths: possiblePaths,\n    cwd: process.cwd()\n  };\n}\n\nconst { workflow, testCase } = $input.first().json;\n\n// List all available tests if no specific one requested\nif (!workflow || !testCase) {\n  const available = {};\n  for (const [wf, cases] of Object.entries(TESTS)) {\n    available[wf] = Object.keys(cases);\n  }\n  return {\n    error: 'Please provide workflow and testCase parameters',\n    available,\n    loadedFrom: loadedPath\n  };\n}\n\n// Get the specific test case\nconst workflowTests = TESTS[workflow];\nif (!workflowTests) {\n  return {\n    error: `Workflow '${workflow}' not found`,\n    availableWorkflows: Object.keys(TESTS)\n  };\n}\n\nconst data = workflowTests[testCase];\nif (!data) {\n  return {\n    error: `Test case '${testCase}' not found in '${workflow}'`,\n    availableTestCases: Object.keys(workflowTests)\n  };\n}\n\n// Return the test data\nreturn data;"
+        "jsCode": "// ╔══════════════════════════════════════════════════════════════════╗\n// ║                    LOOKUP LOGIC (don't edit)                      ║\n// ╚══════════════════════════════════════════════════════════════════╝\n\n// Test data is passed directly from the CLI via testData parameter\n// This avoids file system access issues in n8n's Code node\n\nconst input = $input.first().json;\nconst { workflow, testCase, testData } = input;\n\n// If testData is provided directly, return it\nif (testData && typeof testData === 'object' && Object.keys(testData).length > 0) {\n  return testData;\n}\n\n// Otherwise, return an error\nreturn {\n  error: 'Test data not provided. The CLI should pass testData directly.',\n  workflow,\n  testCase,\n  received: { workflow, testCase, hasTestData: !!testData },\n  hint: 'Make sure the test CLI passes testData in the Test Config node'\n};"
       },
       "id": "test-cases-code",
       "name": "Test Cases",
@@ -44,7 +48,7 @@
         300
       ],
       "typeVersion": 2,
-      "notes": "Test cases are loaded from: n8n-agent/test-cases.js\n\nEdit that file to add/modify test cases.\n\nFormat:\n'WorkflowName': {\n  'test-id': { ...payload },\n  'another-test': { ...payload }\n}"
+      "notes": "Test cases are loaded from: n8n-agent/test-cases.js\n\nEdit that file to add/modify test cases.\n\nFormat:\n'WorkflowName': {\n  'test-id': { ...payload },\n  'another-test': { ...payload }\n}\n\nNote: The CLI passes testData directly, so file loading is not needed."
     }
   ],
   "connections": {
@@ -84,4 +88,3 @@
   "tags": [],
   "shared": []
 }
-

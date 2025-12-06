@@ -135,6 +135,9 @@ const TESTS = {
     },
     'simple-query': {
       userPrompt: 'What is my Telegram profile?'
+    },
+    'ingest-metarune-messages': {
+      userPrompt: 'List the last 10 messages from the metarune management chat, then properly ingest them into the RAG knowledge base for future retrieval. Format the messages clearly with sender names and timestamps before storing them.'
     }
   }
 

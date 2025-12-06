@@ -142,8 +142,9 @@ export async function executeTest(flags: string[]): Promise<void> {
   // Save original config
   const originalJsonOutput = configNode.parameters.jsonOutput;
   
-  // Update config with test parameters
-  configNode.parameters.jsonOutput = `={\n  "workflow": "${workflow}",\n  "testCase": "${testCase}"\n}`;
+  // Update config with test parameters and test data
+  const testDataJson = JSON.stringify(testData).replace(/"/g, '\\"');
+  configNode.parameters.jsonOutput = `={\n  "workflow": "${workflow}",\n  "testCase": "${testCase}",\n  "testData": ${testDataJson}\n}`;
   
   // Write modified workflow to temp file
   const tempPath = path.join(workflowsDir, `.test-runner-temp.json`);
