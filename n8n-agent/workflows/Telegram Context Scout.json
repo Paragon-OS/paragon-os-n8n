@@ -773,6 +773,53 @@
     },
     {
       "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "telegram-profile-id",
+              "name": "myProfile.id",
+              "value": "={{ $json.myProfile.id }}",
+              "type": "string"
+            },
+            {
+              "id": "telegram-profile-username",
+              "name": "myProfile.username",
+              "value": "={{ $json.myProfile.username }}",
+              "type": "string"
+            },
+            {
+              "id": "telegram-profile-firstName",
+              "name": "myProfile.firstName",
+              "value": "={{ $json.myProfile.firstName }}",
+              "type": "string"
+            },
+            {
+              "id": "telegram-profile-lastName",
+              "name": "myProfile.lastName",
+              "value": "={{ $json.myProfile.lastName }}",
+              "type": "string"
+            },
+            {
+              "id": "telegram-profile-phone",
+              "name": "myProfile.phone",
+              "value": "={{ $json.myProfile.phone }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        640
+      ],
+      "id": "telegram-profile-edit-fields",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
         "workflowId": {
           "__rl": true,
           "value": "zZfQPFI7JkUjGspq",
@@ -838,7 +885,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        640,
+        784,
         640
       ],
       "id": "update-telegram-profile-cache",
@@ -849,7 +896,7 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        864,
+        1008,
         568
       ],
       "id": "all-telegram-profile",
@@ -1458,6 +1505,17 @@
       ]
     },
     "User Profile Simplifier": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
       "main": [
         [
           {
