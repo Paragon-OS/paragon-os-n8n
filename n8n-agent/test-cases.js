@@ -46,7 +46,7 @@ const TESTS = {
 
   // ────────────────────────────────────────────────────────────────
   // Dynamic RAG
-  // Tests are ordered for proper execution (create → use → delete)
+  // Tests are ordered for proper execution (cleanup → create → use → delete)
   // ────────────────────────────────────────────────────────────────
   'DynamicRAG': {
     // 1. Status checks on existing collections
@@ -64,17 +64,22 @@ const TESTS = {
       collectionId: 'paragon-os-knowledge',
       input: 'metarune'
     },
-    // 2. Create test collection
+    // 2. Delete test collection first (cleanup from previous runs)
+    'cleanup-collection': {
+      mode: 'DELETE',
+      collectionId: 'test-collection'
+    },
+    // 3. Create test collection fresh
     'create-collection': {
       mode: 'CREATE',
       collectionId: 'test-collection'
     },
-    // 3. Clear it (ensure empty)
+    // 4. Clear it (ensure empty)
     'clear-collection': {
       mode: 'CLEAR',
       collectionId: 'test-collection'
     },
-    // 4. Insert test data
+    // 5. Insert test data
     'insert': {
       mode: 'INSERT',
       collectionId: 'test-collection',
@@ -89,13 +94,13 @@ const TESTS = {
         metadata: { source: 'integration-test' }
       }
     },
-    // 5. Search the inserted data
+    // 6. Search the inserted data
     'search-test': {
       mode: 'SEARCH',
       collectionId: 'test-collection',
       input: 'engineer backend'
     },
-    // 6. Delete collection (cleanup - runs last)
+    // 7. Delete collection (final cleanup)
     'delete-collection': {
       mode: 'DELETE',
       collectionId: 'test-collection'
