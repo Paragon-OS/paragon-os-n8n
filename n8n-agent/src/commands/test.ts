@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { runN8n, runN8nQuiet } from "../utils/n8n";
+import { runN8nCapture, runN8nQuiet } from "../utils/n8n";
 import { collectJsonFilesRecursive } from "../utils/file";
 
 /**
@@ -21,6 +21,99 @@ const TEST_CASES: Record<string, Record<string, Record<string, unknown>>> = requ
 const TEST_RUNNER_FILE = 'HELPERS/[HELPERS] Test Runner.json';
 const TEST_RUNNER_ID = 'TestRunnerHelper001';
 const TEST_CONFIG_NODE = '⚙️ Test Config';
+
+/**
+ * Extract workflow results from n8n execution output
+ */
+function extractWorkflowResults(executionJson: any): { success: boolean; output?: any; error?: string; errorDetails?: any } {
+  try {
+    const runData = executionJson?.data?.resultData?.runData;
+    if (!runData) {
+      return { success: false, error: 'No execution data found' };
+    }
+
+    // Find the workflow execution node (starts with "Run: ")
+    const workflowNodeName = Object.keys(runData).find(name => name.startsWith('Run: '));
+    if (!workflowNodeName) {
+      // Check for errors in other nodes
+      const errorNodes = Object.entries(runData).filter(([_, data]: [string, any]) => 
+        Array.isArray(data) && data.some((exec: any) => exec.executionStatus === 'error')
+      );
+      if (errorNodes.length > 0) {
+        const [nodeName, nodeData] = errorNodes[0];
+        const errorExec = (nodeData as any[]).find((exec: any) => exec.executionStatus === 'error');
+        return { 
+          success: false, 
+          error: `Error in ${nodeName}: ${errorExec?.error?.message || 'Unknown error'}`,
+          errorDetails: errorExec?.error
+        };
+      }
+      return { success: false, error: 'Workflow execution node not found' };
+    }
+
+    const workflowNodeData = runData[workflowNodeName];
+    if (!workflowNodeData || workflowNodeData.length === 0) {
+      return { success: false, error: 'Workflow execution data is empty' };
+    }
+
+    const execution = workflowNodeData[0];
+    
+    // Check for execution errors
+    if (execution.executionStatus !== 'success') {
+      const errorMessage = execution.error?.message || execution.error || 'Workflow execution failed';
+      return { 
+        success: false, 
+        error: errorMessage,
+        errorDetails: execution.error
+      };
+    }
+
+    // Extract output from the workflow execution
+    const outputData = execution.data?.main;
+    if (!outputData || outputData.length === 0 || outputData[0].length === 0) {
+      return { success: true, output: null };
+    }
+
+    // Return the first item's JSON (workflow output)
+    const output = outputData[0][0]?.json;
+    return { success: true, output };
+    
+  } catch (error) {
+    return { success: false, error: `Failed to parse execution result: ${error instanceof Error ? error.message : String(error)}` };
+  }
+}
+
+/**
+ * Filter out version compatibility warnings from output
+ */
+function filterVersionWarnings(output: string): string {
+  const lines = output.split('\n');
+  return lines
+    .filter(line => !line.includes('Client version') && !line.includes('is incompatible with server version'))
+    .filter(line => !line.includes('checkCompatibility=false'))
+    .filter(line => !line.includes('Major versions should match'))
+    .join('\n');
+}
+
+/**
+ * Display test results in a clean format
+ */
+function displayTestResults(output: any, workflowName: string): void {
+  console.log(`
+╔══════════════════════════════════════════════════════════════════╗
+║                      Test Results                                ║
+╠══════════════════════════════════════════════════════════════════╣
+║  Workflow Output:                                                ║
+╚══════════════════════════════════════════════════════════════════╝
+`);
+  
+  if (output === null || output === undefined) {
+    console.log('  (No output returned)');
+  } else {
+    console.log(JSON.stringify(output, null, 2));
+  }
+  console.log('');
+}
 
 function printUsage(): void {
   console.log(`
@@ -216,20 +309,78 @@ export async function executeTest(flags: string[]): Promise<void> {
     console.log(`▶️  Executing Test Runner...`);
     console.log('');
     
-    // Execute the Test Runner workflow (has Manual Trigger, so it works!)
-    const exitCode = await runN8n([
+    // Execute the Test Runner workflow and capture output
+    const { code: exitCode, stdout, stderr } = await runN8nCapture([
       'execute',
       `--id=${TEST_RUNNER_ID}`
     ]);
     
-    if (exitCode === 0) {
-      console.log('\n✅ Test completed successfully');
-    } else {
-      console.error('\n❌ Test failed with exit code:', exitCode);
+    // Filter version warnings from stderr
+    const filteredStderr = filterVersionWarnings(stderr);
+    if (filteredStderr.trim()) {
+      console.error(filteredStderr);
     }
     
-    // Restore original Test Runner configuration (quiet)
-    console.log(`\n🔄 Restoring Test Runner to default config...`);
+    // Filter version warnings from stdout before parsing
+    const filteredStdout = filterVersionWarnings(stdout);
+    
+    // Check if execution failed
+    if (exitCode !== 0) {
+      console.error(`\n❌ Test failed with exit code: ${exitCode}`);
+      if (filteredStdout.trim()) {
+        console.error('Output:', filteredStdout);
+      }
+      process.exit(exitCode);
+    }
+    
+    // Parse execution result - n8n outputs JSON after "Execution was successful:" and "===================================="
+    let executionJson: any;
+    try {
+      // Find JSON block after the separator line
+      const lines = filteredStdout.split('\n');
+      const separatorIndex = lines.findIndex(line => line.trim().startsWith('==='));
+      if (separatorIndex >= 0 && separatorIndex < lines.length - 1) {
+        const jsonLines = lines.slice(separatorIndex + 1).join('\n');
+        executionJson = JSON.parse(jsonLines.trim());
+      } else {
+        // Fallback: try to find JSON object in filtered output
+        const jsonMatch = filteredStdout.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          executionJson = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error('No JSON found in execution output');
+        }
+      }
+    } catch (parseError) {
+      console.error('❌ Failed to parse execution output');
+      console.error('Error:', parseError);
+      console.error('Raw stdout:', stdout);
+      process.exit(1);
+    }
+    
+    // Extract and display workflow results
+    const { success, output, error, errorDetails } = extractWorkflowResults(executionJson);
+    
+    if (success) {
+      displayTestResults(output, workflow);
+      console.log('✅ Test completed successfully');
+    } else {
+      console.error(`
+╔══════════════════════════════════════════════════════════════════╗
+║                      Test Failed                                 ║
+╠══════════════════════════════════════════════════════════════════╣
+║  Error: ${(error || 'Unknown error').padEnd(56)}║
+╚══════════════════════════════════════════════════════════════════╝
+`);
+      if (errorDetails) {
+        console.error('Error Details:');
+        console.error(JSON.stringify(errorDetails, null, 2));
+        console.error('');
+      }
+      process.exit(1);
+    }
+    
+    // Restore original Test Runner configuration (quiet - no output)
     configNode.parameters.jsonOutput = originalJsonOutput;
     fs.writeFileSync(tempPath, JSON.stringify(testRunnerJson, null, 2));
     await runN8nQuiet(['import:workflow', `--input=${tempPath}`]);
@@ -237,7 +388,7 @@ export async function executeTest(flags: string[]): Promise<void> {
     // Cleanup temp file
     fs.unlinkSync(tempPath);
     
-    process.exit(exitCode);
+    process.exit(0);
     
   } catch (error) {
     // Cleanup on error
