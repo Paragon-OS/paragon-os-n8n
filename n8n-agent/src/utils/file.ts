@@ -1,29 +1,20 @@
 import fs from "fs";
 import path from "path";
+import { globby } from "globby";
 
 export async function collectJsonFilesRecursive(dir: string): Promise<string[]> {
-  let entries: fs.Dirent[];
-
   try {
-    entries = await fs.promises.readdir(dir, { withFileTypes: true });
+    // Use globby to find all JSON files recursively
+    const files = await globby("**/*.json", {
+      cwd: dir,
+      absolute: true,
+      onlyFiles: true,
+    });
+    return files;
   } catch (err) {
     console.warn(`Warning: Failed to read directory "${dir}":`, err);
     return [];
   }
-
-  const results: string[] = [];
-
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      const nested = await collectJsonFilesRecursive(fullPath);
-      results.push(...nested);
-    } else if (entry.isFile() && entry.name.toLowerCase().endsWith(".json")) {
-      results.push(fullPath);
-    }
-  }
-
-  return results;
 }
 
 export async function removeEmptyDirectoriesUnder(rootDir: string): Promise<void> {

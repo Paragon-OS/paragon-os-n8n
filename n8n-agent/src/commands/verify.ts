@@ -1,5 +1,7 @@
 import fs from "fs";
 import path from "path";
+import boxen from "boxen";
+import chalk from "chalk";
 import { runN8nCapture } from "../utils/n8n";
 import { collectJsonFilesRecursive } from "../utils/file";
 import type { WorkflowObject } from "../types/index";
@@ -185,7 +187,7 @@ export async function executeVerify(options: VerifyOptions): Promise<void> {
       path.basename(f, ".json").includes(specificWorkflow)
     );
     if (jsonFiles.length === 0) {
-      console.error(`❌ Workflow "${specificWorkflow}" not found in ${workflowsDir}`);
+      console.error(chalk.red(`❌ Workflow "${specificWorkflow}" not found in ${workflowsDir}`));
       process.exit(1);
     }
   } else {
@@ -193,16 +195,22 @@ export async function executeVerify(options: VerifyOptions): Promise<void> {
   }
 
   if (jsonFiles.length === 0) {
-    console.log(`No workflow JSON files found under "${workflowsDir}".`);
+    console.log(chalk.yellow(`No workflow JSON files found under "${workflowsDir}".`));
     process.exit(0);
   }
 
-  console.log(`
-╔══════════════════════════════════════════════════════════════════╗
-║              Workflow Trigger Input Verification                 ║
-╚══════════════════════════════════════════════════════════════════╝
-`);
-  console.log(`Checking ${jsonFiles.length} workflow(s)...\n`);
+  const headerBox = boxen(
+    `Checking ${chalk.bold(jsonFiles.length.toString())} workflow(s)...`,
+    {
+      title: "Workflow Trigger Input Verification",
+      titleAlignment: "center",
+      padding: 1,
+      borderColor: "blue",
+      borderStyle: "round",
+    }
+  );
+  console.log(headerBox);
+  console.log('');
 
   const results: VerificationResult[] = [];
 
@@ -222,44 +230,49 @@ export async function executeVerify(options: VerifyOptions): Promise<void> {
   for (const result of results) {
     if (result.status === "ok") {
       okCount++;
-      console.log(`✅ ${result.workflowName} (${result.workflowId})`);
-      console.log(`   JSON inputs: ${result.jsonInputs.map((i) => i.name).join(", ") || "none"}`);
+      console.log(chalk.green(`✅ ${result.workflowName} (${result.workflowId})`));
+      console.log(chalk.gray(`   JSON inputs: ${result.jsonInputs.map((i) => i.name).join(", ") || "none"}`));
     } else if (result.status === "mismatch") {
       mismatchCount++;
-      console.log(`\n❌ ${result.workflowName} (${result.workflowId})`);
-      console.log(`   JSON inputs: ${result.jsonInputs.map((i) => i.name).join(", ") || "none"}`);
-      console.log(`   DB inputs:   ${result.dbInputs.map((i) => i.name).join(", ") || "none"}`);
+      console.log(chalk.red(`\n❌ ${result.workflowName} (${result.workflowId})`));
+      console.log(chalk.gray(`   JSON inputs: ${result.jsonInputs.map((i) => i.name).join(", ") || "none"}`));
+      console.log(chalk.gray(`   DB inputs:   ${result.dbInputs.map((i) => i.name).join(", ") || "none"}`));
       for (const diff of result.differences) {
-        console.log(`   ${diff}`);
+        console.log(chalk.yellow(`   ${diff}`));
       }
     } else {
       errorCount++;
-      console.log(`\n⚠️  ${result.workflowName} (${result.workflowId})`);
+      console.log(chalk.yellow(`\n⚠️  ${result.workflowName} (${result.workflowId})`));
       for (const diff of result.differences) {
-        console.log(`   ${diff}`);
+        console.log(chalk.red(`   ${diff}`));
       }
     }
   }
 
-  console.log(`\n${"=".repeat(60)}`);
-  console.log(`Summary:`);
-  console.log(`  ✅ OK:        ${okCount}`);
-  console.log(`  ❌ Mismatch:  ${mismatchCount}`);
-  console.log(`  ⚠️  Errors:   ${errorCount}`);
-  console.log(`${"=".repeat(60)}\n`);
+  const summaryText = `Summary:\n` +
+    `  ${chalk.green("✅ OK:")}        ${okCount}\n` +
+    `  ${chalk.red("❌ Mismatch:")}  ${mismatchCount}\n` +
+    `  ${chalk.yellow("⚠️  Errors:")}   ${errorCount}`;
+  
+  const summaryBox = boxen(summaryText, {
+    padding: 1,
+    borderColor: mismatchCount > 0 || errorCount > 0 ? "red" : "green",
+    borderStyle: "round",
+  });
+  console.log("\n" + summaryBox + "\n");
 
   if (mismatchCount > 0) {
-    console.log(`⚠️  Found ${mismatchCount} workflow(s) with mismatched trigger inputs.`);
-    console.log(`   Recommendation: Delete and re-import affected workflows.\n`);
+    console.log(chalk.yellow(`⚠️  Found ${mismatchCount} workflow(s) with mismatched trigger inputs.`));
+    console.log(chalk.gray(`   Recommendation: Delete and re-import affected workflows.\n`));
     process.exit(1);
   }
 
   if (errorCount > 0) {
-    console.log(`⚠️  Found ${errorCount} workflow(s) with errors during verification.\n`);
+    console.log(chalk.yellow(`⚠️  Found ${errorCount} workflow(s) with errors during verification.\n`));
     process.exit(1);
   }
 
-  console.log(`✅ All workflows verified successfully!\n`);
+  console.log(chalk.green(`✅ All workflows verified successfully!\n`));
   process.exit(0);
 }
 

@@ -1,5 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
+import boxen from "boxen";
+import chalk from "chalk";
 import { runN8nCapture, runN8nQuiet } from "../utils/n8n";
 import { collectJsonFilesRecursive } from "../utils/file";
 
@@ -99,28 +101,26 @@ function filterVersionWarnings(output: string): string {
  * Display test results in a clean format
  */
 function displayTestResults(output: any, workflowName: string): void {
-  console.log(`
-╔══════════════════════════════════════════════════════════════════╗
-║                      Test Results                                ║
-╠══════════════════════════════════════════════════════════════════╣
-║  Workflow Output:                                                ║
-╚══════════════════════════════════════════════════════════════════╝
-`);
+  const outputText = output === null || output === undefined
+    ? "(No output returned)"
+    : JSON.stringify(output, null, 2);
   
-  if (output === null || output === undefined) {
-    console.log('  (No output returned)');
-  } else {
-    console.log(JSON.stringify(output, null, 2));
-  }
-  console.log('');
+  const box = boxen(
+    chalk.bold("Workflow Output:") + "\n\n" + outputText,
+    {
+      title: "Test Results",
+      titleAlignment: "center",
+      padding: 1,
+      borderColor: "green",
+      borderStyle: "round",
+    }
+  );
+  
+  console.log(box);
 }
 
 function printUsage(): void {
-  console.log(`
-╔══════════════════════════════════════════════════════════════════╗
-║                     n8n Test Runner CLI                          ║
-╚══════════════════════════════════════════════════════════════════╝
-
+  const usageText = `
 Usage:
   npm run n8n:test -- --workflow <name> --test <case>
   npm run n8n:test -- --list
@@ -134,23 +134,38 @@ Examples:
   npm run n8n:test -- -w TelegramContextScout -t contact-rag
   npm run n8n:test -- -w DynamicRAG -t status
   npm run n8n:test -- --list
-`);
+`;
+  
+  const box = boxen(usageText.trim(), {
+    title: "n8n Test Runner CLI",
+    titleAlignment: "center",
+    padding: 1,
+    borderColor: "blue",
+    borderStyle: "round",
+  });
+  
+  console.log(box);
 }
 
 function printAvailableTests(): void {
-  console.log(`
-╔══════════════════════════════════════════════════════════════════╗
-║                    Available Test Cases                          ║
-╚══════════════════════════════════════════════════════════════════╝
-`);
-  
+  let testsText = "";
   for (const [workflow, tests] of Object.entries(TEST_CASES)) {
-    console.log(`📦 ${workflow}`);
+    testsText += chalk.cyan.bold(`📦 ${workflow}\n`);
     for (const testId of Object.keys(tests)) {
-      console.log(`   • ${testId}`);
+      testsText += `   • ${testId}\n`;
     }
-    console.log('');
+    testsText += "\n";
   }
+  
+  const box = boxen(testsText.trim(), {
+    title: "Available Test Cases",
+    titleAlignment: "center",
+    padding: 1,
+    borderColor: "cyan",
+    borderStyle: "round",
+  });
+  
+  console.log(box);
 }
 
 interface TestOptions {
@@ -176,35 +191,39 @@ export async function executeTest(options: TestOptions): Promise<void> {
   
   // Validate workflow exists
   if (!TEST_CASES[workflow]) {
-    console.error(`❌ Unknown workflow: ${workflow}`);
-    console.log(`Available workflows: ${Object.keys(TEST_CASES).join(', ')}`);
+    console.error(chalk.red(`❌ Unknown workflow: ${workflow}`));
+    console.log(chalk.gray(`Available workflows: ${Object.keys(TEST_CASES).join(', ')}`));
     process.exit(1);
   }
   
   // Validate test case exists
   const testData = TEST_CASES[workflow][testCase];
   if (!testData) {
-    console.error(`❌ Unknown test case: ${testCase}`);
-    console.log(`Available tests for ${workflow}: ${Object.keys(TEST_CASES[workflow]).join(', ')}`);
+    console.error(chalk.red(`❌ Unknown test case: ${testCase}`));
+    console.log(chalk.gray(`Available tests for ${workflow}: ${Object.keys(TEST_CASES[workflow]).join(', ')}`));
     process.exit(1);
   }
   
-  console.log(`
-╔══════════════════════════════════════════════════════════════════╗
-║                     Running Test                                 ║
-╠══════════════════════════════════════════════════════════════════╣
-║  Workflow: ${workflow.padEnd(50)}║
-║  Test:     ${testCase.padEnd(50)}║
-╚══════════════════════════════════════════════════════════════════╝
-`);
-  console.log(`📥 Test Input:`);
+  const runningTestBox = boxen(
+    `${chalk.bold("Workflow:")} ${workflow}\n${chalk.bold("Test:")}     ${testCase}`,
+    {
+      title: "Running Test",
+      titleAlignment: "center",
+      padding: 1,
+      borderColor: "yellow",
+      borderStyle: "round",
+    }
+  );
+  console.log(runningTestBox);
+  
+  console.log(chalk.blue(`📥 Test Input:`));
   console.log(JSON.stringify(testData, null, 2));
   console.log('');
 
   const workflowsDir = path.resolve(__dirname, '../../workflows');
   
   // Auto-import the workflow being tested to ensure it's up-to-date
-  console.log(`🔄 Auto-syncing workflow "${workflow}" to n8n...`);
+  console.log(chalk.yellow(`🔄 Auto-syncing workflow "${workflow}" to n8n...`));
   const allWorkflowFiles = await collectJsonFilesRecursive(workflowsDir);
   let workflowFile: string | undefined;
   
@@ -241,22 +260,22 @@ export async function executeTest(options: TestOptions): Promise<void> {
   if (workflowFile) {
     try {
       await runN8nQuiet(['import:workflow', `--input=${workflowFile}`]);
-      console.log(`✅ Workflow "${workflow}" synced successfully\n`);
+      console.log(chalk.green(`✅ Workflow "${workflow}" synced successfully\n`));
     } catch (error) {
-      console.warn(`⚠️  Warning: Failed to auto-sync workflow "${workflow}": ${error}`);
-      console.warn(`   Continuing with test anyway...\n`);
+      console.warn(chalk.yellow(`⚠️  Warning: Failed to auto-sync workflow "${workflow}": ${error}`));
+      console.warn(chalk.yellow(`   Continuing with test anyway...\n`));
     }
   } else {
-    console.warn(`⚠️  Warning: Workflow file for "${workflow}" not found in ${workflowsDir}`);
-    console.warn(`   Make sure the workflow is imported to n8n before running tests.\n`);
+    console.warn(chalk.yellow(`⚠️  Warning: Workflow file for "${workflow}" not found in ${workflowsDir}`));
+    console.warn(chalk.yellow(`   Make sure the workflow is imported to n8n before running tests.\n`));
   }
 
   // Read the Test Runner workflow
   const testRunnerPath = path.join(workflowsDir, TEST_RUNNER_FILE);
   
   if (!fs.existsSync(testRunnerPath)) {
-    console.error(`❌ Test Runner workflow not found: ${testRunnerPath}`);
-    console.log(`   Run: npm run n8n:workflows:upsync to import it first`);
+    console.error(chalk.red(`❌ Test Runner workflow not found: ${testRunnerPath}`));
+    console.log(chalk.gray(`   Run: npm run n8n:workflows:upsync to import it first`));
     process.exit(1);
   }
   
@@ -266,7 +285,7 @@ export async function executeTest(options: TestOptions): Promise<void> {
   // Find and update the Test Config node
   const configNode = testRunnerJson.nodes.find((n: any) => n.name === TEST_CONFIG_NODE);
   if (!configNode) {
-    console.error(`❌ Test Config node not found in Test Runner workflow`);
+    console.error(chalk.red(`❌ Test Config node not found in Test Runner workflow`));
     process.exit(1);
   }
   
@@ -287,14 +306,14 @@ export async function executeTest(options: TestOptions): Promise<void> {
   const tempPath = path.join(workflowsDir, `.test-runner-temp.json`);
   fs.writeFileSync(tempPath, JSON.stringify(testRunnerJson, null, 2));
   
-  console.log(`📝 Configured Test Runner with test: ${workflow}/${testCase}`);
-  console.log(`📤 Importing to n8n...`);
+  console.log(chalk.blue(`📝 Configured Test Runner with test: ${workflow}/${testCase}`));
+  console.log(chalk.blue(`📤 Importing to n8n...`));
   
   try {
     // Import the modified Test Runner workflow (quiet to suppress webhook warnings)
     await runN8nQuiet(['import:workflow', `--input=${tempPath}`]);
     
-    console.log(`▶️  Executing Test Runner...`);
+    console.log(chalk.blue(`▶️  Executing Test Runner...`));
     console.log('');
     
     // Execute the Test Runner workflow and capture output
@@ -314,9 +333,9 @@ export async function executeTest(options: TestOptions): Promise<void> {
     
     // Check if execution failed
     if (exitCode !== 0) {
-      console.error(`\n❌ Test failed with exit code: ${exitCode}`);
+      console.error(chalk.red(`\n❌ Test failed with exit code: ${exitCode}`));
       if (filteredStdout.trim()) {
-        console.error('Output:', filteredStdout);
+        console.error(chalk.red('Output:'), filteredStdout);
       }
       process.exit(exitCode);
     }
@@ -340,9 +359,9 @@ export async function executeTest(options: TestOptions): Promise<void> {
         }
       }
     } catch (parseError) {
-      console.error('❌ Failed to parse execution output');
-      console.error('Error:', parseError);
-      console.error('Raw stdout:', stdout);
+      console.error(chalk.red('❌ Failed to parse execution output'));
+      console.error(chalk.red('Error:'), parseError);
+      console.error(chalk.red('Raw stdout:'), stdout);
       process.exit(1);
     }
     
@@ -351,17 +370,22 @@ export async function executeTest(options: TestOptions): Promise<void> {
     
     if (success) {
       displayTestResults(output, workflow);
-      console.log('✅ Test completed successfully');
+      console.log(chalk.green('✅ Test completed successfully'));
     } else {
-      console.error(`
-╔══════════════════════════════════════════════════════════════════╗
-║                      Test Failed                                 ║
-╠══════════════════════════════════════════════════════════════════╣
-║  Error: ${(error || 'Unknown error').padEnd(56)}║
-╚══════════════════════════════════════════════════════════════════╝
-`);
+      const errorBox = boxen(
+        chalk.bold("Error:") + " " + (error || 'Unknown error'),
+        {
+          title: "Test Failed",
+          titleAlignment: "center",
+          padding: 1,
+          borderColor: "red",
+          borderStyle: "round",
+        }
+      );
+      console.error(errorBox);
+      
       if (errorDetails) {
-        console.error('Error Details:');
+        console.error(chalk.red('Error Details:'));
         console.error(JSON.stringify(errorDetails, null, 2));
         console.error('');
       }
