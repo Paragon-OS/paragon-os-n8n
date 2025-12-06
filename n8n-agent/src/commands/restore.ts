@@ -4,13 +4,17 @@ import { runN8nQuiet } from "../utils/n8n";
 import { collectJsonFilesRecursive } from "../utils/file";
 import { normalizeWorkflowForCompare } from "../utils/workflow";
 import { deepEqual, exportCurrentWorkflowsForCompare } from "../utils/compare";
+import { confirm } from "../utils/prompt";
 import type { BackupWorkflowForRestore, WorkflowObject } from "../types/index";
 
 export async function executeRestore(flags: string[]): Promise<void> {
   const inputDir = resolveDir("--input", flags, "./workflows");
 
+  // Filter out -y/--yes as it's handled by our confirmation prompt
   const passthroughFlags = flags.filter(
-    (f) => !["--input"].includes(f) && !["backup", "restore"].includes(f)
+    (f) => 
+      !["--input", "-y", "--yes", "-Y", "--Yes"].includes(f) && 
+      !["backup", "restore"].includes(f)
   );
 
   const jsonFiles = await collectJsonFilesRecursive(inputDir);
@@ -107,6 +111,16 @@ export async function executeRestore(flags: string[]): Promise<void> {
     console.log("All workflows in the backup already match the current n8n instance. Nothing to restore.");
     process.exit(0);
   }
+
+  // Ask for confirmation before importing
+  console.log(`\n📥 Ready to import ${toImport.length} workflow(s) to n8n.`);
+  const confirmed = await confirm("Do you want to proceed with the restore?", flags);
+  if (!confirmed) {
+    console.log("Restore cancelled.");
+    process.exit(0);
+  }
+
+  console.log(""); // Empty line after confirmation
 
   /**
    * NOTE:

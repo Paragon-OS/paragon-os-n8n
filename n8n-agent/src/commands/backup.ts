@@ -4,6 +4,7 @@ import { resolveDir } from "../utils/args";
 import { runN8n } from "../utils/n8n";
 import { collectJsonFilesRecursive, removeEmptyDirectoriesUnder } from "../utils/file";
 import { parseTagFromName, sanitizeWorkflowName } from "../utils/workflow";
+import { confirm } from "../utils/prompt";
 import type { WorkflowFile } from "../types/index";
 
 async function renameExportedWorkflowsToNames(
@@ -269,6 +270,18 @@ export async function executeBackup(flags: string[]): Promise<void> {
   const outputDir = resolveDir("--output", flags, "./workflows");
   const normalizedOutputDir = path.resolve(outputDir);
 
+  // Show what will be backed up and ask for confirmation
+  console.log(`📦 Backup target: ${normalizedOutputDir}`);
+  console.log(`   This will export all workflows from n8n to the backup directory.\n`);
+
+  const confirmed = await confirm("Do you want to proceed with the backup?", flags);
+  if (!confirmed) {
+    console.log("Backup cancelled.");
+    process.exit(0);
+  }
+
+  console.log(""); // Empty line after confirmation
+
   // n8n's export command does not overwrite existing files - it skips them.
   // To ensure we always get fresh exports, temporarily move existing workflow
   // files to a staging area, run the export, then let our renaming logic merge
@@ -303,8 +316,11 @@ export async function executeBackup(flags: string[]): Promise<void> {
   const args = ["export:workflow", "--backup", `--output=${outputDir}`];
 
   // Allow extra flags like --all to be forwarded.
+  // Filter out -y/--yes as it's handled by our confirmation prompt
   const passthroughFlags = flags.filter(
-    (f) => !["--output"].includes(f) && !["backup", "restore"].includes(f)
+    (f) => 
+      !["--output", "-y", "--yes", "-Y", "--Yes"].includes(f) && 
+      !["backup", "restore"].includes(f)
   );
 
   const exitCode = await runN8n([...args, ...passthroughFlags]);
