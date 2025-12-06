@@ -135,6 +135,8 @@ const TESTS = {
 
   // ────────────────────────────────────────────────────────────────
   // Discord Smart Agent
+  // Note: Tests that require multiple MCP tool calls (like read-messages)
+  // may be slow because each MCP call initializes a new Discord client connection.
   // ────────────────────────────────────────────────────────────────
   'DiscordSmartAgent': {
     'simple-query': {
@@ -144,7 +146,7 @@ const TESTS = {
       userPrompt: 'List my Discord contacts'
     },
     'read-messages': {
-      userPrompt: 'Show me recent messages from my Discord DMs'
+      userPrompt: 'Show me the 5 most recent messages from my most recent Discord DM'
     }
   },
 
