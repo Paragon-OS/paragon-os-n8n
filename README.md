@@ -3,11 +3,26 @@
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [n8n-Agent CLI Tooling](#n8n-agent-cli-tooling)
-3. [Custom n8n Nodes](#custom-n8n-nodes)
-4. [Workflow Architecture](#workflow-architecture)
-5. [Testing System](#testing-system)
-6. [Workflow Logic & Patterns](#workflow-logic--patterns)
+2. [Product Roadmap](#product-roadmap)
+3. [n8n-Agent CLI Tooling](#n8n-agent-cli-tooling)
+4. [Custom n8n Nodes](#custom-n8n-nodes)
+5. [Workflow Architecture](#workflow-architecture)
+6. [Testing System](#testing-system)
+7. [Workflow Logic & Patterns](#workflow-logic--patterns)
+
+---
+
+## Product Roadmap
+
+For detailed product roadmap, feature priorities, and strategic planning, see [ROADMAP.md](./ROADMAP.md).
+
+The roadmap includes:
+- **Phase 1 (Months 1-3)**: Foundation & Productization
+- **Phase 2 (Months 4-6)**: Team Collaboration & Scalability
+- **Phase 3 (Months 7-9)**: Custom Nodes Expansion
+- **Phase 4 (Months 10-12)**: Agentic Patterns & Templates
+- **Phase 5 (Months 13-18)**: SaaS Platform Launch
+- **Phase 6 (Months 19-24)**: Enterprise Features
 
 ---
 
