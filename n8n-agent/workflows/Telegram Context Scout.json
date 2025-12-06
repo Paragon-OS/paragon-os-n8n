@@ -1066,7 +1066,7 @@
           "value": {
             "collectionId": "paragon-os-contacts",
             "mode": "INSERT",
-            "input": "={{ \n  ({\n    content: {\n      contacts: $json.telegramContacts\n    }\n  })\n}}"
+            "input": "={{ \n  ({\n    content: {\n      contacts: $json.contacts\n    }\n  })\n}}"
           },
           "matchingColumns": [],
           "schema": [
@@ -1149,11 +1149,86 @@
       "name": "Contact Data Simplifier1"
     },
     {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "IZa7S90Z9W1qxysr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/IZa7S90Z9W1qxysr",
+          "cachedResultName": "[HELPERS] Dynamic RAG"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "mode": "SEARCH",
+            "collectionId": "paragon-os-contacts",
+            "input": "={{ $('When Executed by Another Workflow').item.json.query }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "input",
+              "displayName": "input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "collectionId",
+              "displayName": "collectionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        640,
+        880
+      ],
+      "id": "search-rag-contacts",
+      "name": "Search RAG Contacts"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Transform RAG search results to match expected format\nconst input = $input.first().json;\n\n// RAG returns results in format: { results: [...] }\n// Each result has: { content: { contacts: [...] }, score: ... }\n// We need to extract contacts and flatten to telegramContacts array\n\nlet telegramContacts = [];\n\ntry {\n  if (input.results && Array.isArray(input.results)) {\n    // Extract contacts from each RAG result\n    for (const result of input.results) {\n      if (result.content && result.content.contacts && Array.isArray(result.content.contacts)) {\n        telegramContacts.push(...result.content.contacts);\n      }\n    }\n  } else if (input.contacts && Array.isArray(input.contacts)) {\n    // Fallback: if contacts are directly in the response\n    telegramContacts = input.contacts;\n  } else if (Array.isArray(input)) {\n    // Fallback: if the response is directly an array\n    telegramContacts = input;\n  }\n} catch (error) {\n  // If transformation fails, return empty array\n  telegramContacts = [];\n}\n\n// Return in the format expected by FuzzySearch\nreturn {\n  telegramContacts: telegramContacts\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        880
+      ],
+      "id": "transform-rag-results",
+      "name": "Transform RAG Results"
+    },
+    {
       "parameters": {},
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        640,
+        1088,
         880
       ],
       "id": "6530fe58-7931-42d9-b79d-4d85c303d55f",
@@ -1620,11 +1695,33 @@
         ]
       ]
     },
-    "Contacts Dynamic RAG": {
+    "Search RAG Contacts": {
+      "main": [
+        [
+          {
+            "node": "Transform RAG Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform RAG Results": {
       "main": [
         [
           {
             "node": "All Contacts1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contacts Dynamic RAG": {
+      "main": [
+        [
+          {
+            "node": "Search RAG Contacts",
             "type": "main",
             "index": 0
           }
@@ -1646,7 +1743,7 @@
       "main": [
         [
           {
-            "node": "All Contacts1",
+            "node": "Search RAG Contacts",
             "type": "main",
             "index": 0
           }
