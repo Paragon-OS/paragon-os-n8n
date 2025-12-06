@@ -1384,6 +1384,39 @@
     },
     {
       "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "rag-ready-check",
+              "leftValue": "={{ $json.ready }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "rag-ready-router",
+      "name": "RAG Ready Router",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        880
+      ]
+    },
+    {
+      "parameters": {
         "workflowId": {
           "__rl": true,
           "value": "IZa7S90Z9W1qxysr",
@@ -1444,6 +1477,39 @@
       "name": "Check Message RAG Status",
       "retryOnFail": false,
       "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "message-rag-ready-check",
+              "leftValue": "={{ $json.ready }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "message-rag-ready-router",
+      "name": "Message RAG Ready Router",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        1040
+      ]
     },
     {
       "parameters": {
@@ -1710,6 +1776,39 @@
       "name": "Check Knowledge RAG Status",
       "retryOnFail": false,
       "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "knowledge-rag-ready-check",
+              "leftValue": "={{ $json.ready }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "knowledge-rag-ready-router",
+      "name": "Knowledge RAG Ready Router",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        1200
+      ]
     },
     {
       "parameters": {
@@ -2310,6 +2409,17 @@
       "main": [
         [
           {
+            "node": "RAG Ready Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RAG Ready Router": {
+      "main": [
+        [
+          {
             "node": "Search RAG Contacts",
             "type": "main",
             "index": 0
@@ -2325,6 +2435,17 @@
       ]
     },
     "Check Message RAG Status": {
+      "main": [
+        [
+          {
+            "node": "Message RAG Ready Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message RAG Ready Router": {
       "main": [
         [
           {
@@ -2420,6 +2541,17 @@
       ]
     },
     "Check Knowledge RAG Status": {
+      "main": [
+        [
+          {
+            "node": "Knowledge RAG Ready Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Knowledge RAG Ready Router": {
       "main": [
         [
           {
