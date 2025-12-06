@@ -1,11 +1,8 @@
 {
-  "updatedAt": "2025-11-26T20:13:12.000Z",
-  "createdAt": "2025-11-06T21:54:34.704Z",
-  "id": "HTXqB729RFNozetP",
+  "id": "zZfQPFI7JkUjGspq",
   "name": "[HELPERS] Global Cache System",
-  "description": null,
   "active": false,
-  "isArchived": false,
+  "versionId": "b52e1436-15f5-4f64-bb07-d22b694bf58e",
   "nodes": [
     {
       "parameters": {
@@ -41,75 +38,26 @@
     },
     {
       "parameters": {
-        "operation": "upsert",
-        "dataTableId": {
-          "__rl": true,
-          "value": "AxHE7kFUIMEVfQgd",
-          "mode": "list",
-          "cachedResultName": "cache",
-          "cachedResultUrl": "/projects/GEUEn6ArNROzJ5FY/datatables/AxHE7kFUIMEVfQgd"
-        },
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "key",
-              "keyValue": "={{ $json.cacheKey }}"
-            }
-          ]
-        },
-        "columns": {
-          "value": {
-            "key": "={{ $json.cacheKey }}",
-            "ttl": "={{ $now.plus($json.writeTTLms > 0 ? $json.writeTTLms : 10000) }}",
-            "value": "={{ JSON.stringify($json.writeValue) }}"
-          },
-          "schema": [
-            {
-              "id": "key",
-              "type": "string",
-              "display": true,
-              "removed": false,
-              "readOnly": false,
-              "required": false,
-              "displayName": "key",
-              "defaultMatch": false
-            },
-            {
-              "id": "value",
-              "type": "string",
-              "display": true,
-              "removed": false,
-              "readOnly": false,
-              "required": false,
-              "displayName": "value",
-              "defaultMatch": false
-            },
-            {
-              "id": "ttl",
-              "type": "dateTime",
-              "display": true,
-              "removed": false,
-              "readOnly": false,
-              "required": false,
-              "displayName": "ttl",
-              "defaultMatch": false
-            }
-          ],
-          "mappingMode": "defineBelow",
-          "matchingColumns": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
+        "operation": "set",
+        "key": "={{ $json.cacheKey }}",
+        "value": "={{ JSON.stringify($json.writeValue) }}",
+        "expire": true,
+        "ttl": "={{ Math.floor(($json.writeTTLms > 0 ? $json.writeTTLms : 10000) / 1000) }}"
       },
       "id": "b241947c-97ce-4ecf-ae51-cf33f80e34ef",
-      "name": "Upsert row(s)",
-      "type": "n8n-nodes-base.dataTable",
+      "name": "Redis Set",
+      "type": "n8n-nodes-base.redis",
       "position": [
         976,
         -16
       ],
       "typeVersion": 1,
+      "credentials": {
+        "redis": {
+          "id": "I9K02BUMIbHYp1nQ",
+          "name": "Redis account"
+        }
+      },
       "alwaysOutputData": true
     },
     {
@@ -141,65 +89,23 @@
     {
       "parameters": {
         "operation": "get",
-        "dataTableId": {
-          "__rl": true,
-          "value": "AxHE7kFUIMEVfQgd",
-          "mode": "list",
-          "cachedResultName": "cache",
-          "cachedResultUrl": "/projects/GEUEn6ArNROzJ5FY/datatables/AxHE7kFUIMEVfQgd"
-        },
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "key",
-              "keyValue": "={{ $json.cacheKey }}"
-            }
-          ]
-        }
+        "key": "={{ $json.cacheKey }}"
       },
       "id": "d920cf30-c99b-4be7-a822-60426e5aa98b",
-      "name": "Get row(s)",
-      "type": "n8n-nodes-base.dataTable",
+      "name": "Redis Get",
+      "type": "n8n-nodes-base.redis",
       "position": [
         976,
         176
       ],
       "typeVersion": 1,
-      "alwaysOutputData": true
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "03943791-3760-46e3-ac12-028fdbd5b440",
-              "operator": {
-                "type": "dateTime",
-                "operation": "before"
-              },
-              "leftValue": "={{ $json.ttl }}",
-              "rightValue": "={{ $now }}"
-            }
-          ],
-          "combinator": "and"
-        },
-        "looseTypeValidation": true,
-        "options": {}
+      "credentials": {
+        "redis": {
+          "id": "I9K02BUMIbHYp1nQ",
+          "name": "Redis account"
+        }
       },
-      "id": "5bbebf08-e0ba-4596-ab9e-682a00d900d8",
-      "name": "If Expired Cache",
-      "type": "n8n-nodes-base.if",
-      "position": [
-        1424,
-        248
-      ],
-      "typeVersion": 2.2
+      "alwaysOutputData": true
     },
     {
       "parameters": {},
@@ -248,37 +154,17 @@
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "version": 2,
-            "leftValue": "",
-            "caseSensitive": true,
-            "typeValidation": "strict"
-          },
-          "combinator": "and",
-          "conditions": [
-            {
-              "id": "a3e38df9-cfdc-4a30-943f-34b42c37eb63",
-              "operator": {
-                "type": "object",
-                "operation": "empty",
-                "singleValue": true
-              },
-              "leftValue": "={{ $json }}",
-              "rightValue": ""
-            }
-          ]
-        },
-        "options": {}
+        "jsCode": "// Get the raw Redis response\nconst input = $input.first().json;\nconst cacheKey = $('When Executed by Another Workflow').item.json.cacheKey;\n\n// Redis returns { keyName: value } or { keyName: null } if not found\n// The key in the response is the actual cache key we queried\nconst rawValue = input[cacheKey] ?? input[Object.keys(input)[0]];\n\nif (!rawValue || rawValue === 'null' || rawValue === null) {\n  // Cache miss - throw error to trigger the error output path\n  throw new Error('No Entry or Expired Cache Item.');\n}\n\n// Parse the cached JSON value and return it\ntry {\n  return JSON.parse(rawValue);\n} catch (e) {\n  // If it's not JSON, return as-is\n  return { value: rawValue };\n}"
       },
       "id": "fc38cdf6-32ba-4839-9573-02efa7f46874",
-      "name": "If not in Cache",
-      "type": "n8n-nodes-base.if",
+      "name": "Parse Cache Result",
+      "type": "n8n-nodes-base.code",
       "position": [
         1200,
         176
       ],
-      "typeVersion": 2.2
+      "typeVersion": 2,
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -288,74 +174,19 @@
       "name": "No cache found, use error detection to detect this.",
       "type": "n8n-nodes-base.stopAndError",
       "position": [
-        1648,
-        80
+        1424,
+        96
       ],
       "typeVersion": 1
     },
     {
-      "parameters": {
-        "mode": "raw",
-        "jsonOutput": "={{ JSON.parse($('Get row(s)').item.json.value) }}",
-        "options": {}
-      },
+      "parameters": {},
       "id": "662e3347-f1d3-4980-9b2c-92214701379b",
       "name": "Return Value from Cache",
-      "type": "n8n-nodes-base.set",
+      "type": "n8n-nodes-base.noOp",
       "position": [
-        1648,
-        296
-      ],
-      "typeVersion": 3.4
-    },
-    {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "hours"
-            }
-          ]
-        }
-      },
-      "id": "b81abef9-2ac4-4392-9c0f-59bbca085087",
-      "name": "1 Hour Clean for Cache Table",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "position": [
-        304,
-        520
-      ],
-      "typeVersion": 1.2
-    },
-    {
-      "parameters": {
-        "operation": "deleteRows",
-        "dataTableId": {
-          "__rl": true,
-          "value": "AxHE7kFUIMEVfQgd",
-          "mode": "list",
-          "cachedResultName": "cache",
-          "cachedResultUrl": "/projects/GEUEn6ArNROzJ5FY/datatables/AxHE7kFUIMEVfQgd"
-        },
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "ttl",
-              "condition": "lt",
-              "keyValue": "={{ $now }}"
-            }
-          ]
-        },
-        "options": {
-          "dryRun": true
-        }
-      },
-      "id": "87fbca63-1ad2-4261-86c9-c5f5883488a2",
-      "name": "Drop all rows with expired cache entires",
-      "type": "n8n-nodes-base.dataTable",
-      "position": [
-        528,
-        520
+        1424,
+        256
       ],
       "typeVersion": 1
     }
@@ -372,7 +203,7 @@
         ]
       ]
     },
-    "Upsert row(s)": {
+    "Redis Set": {
       "main": [
         [
           {
@@ -387,36 +218,18 @@
       "main": [
         [
           {
-            "node": "Upsert row(s)",
+            "node": "Redis Set",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Get row(s)": {
+    "Redis Get": {
       "main": [
         [
           {
-            "node": "If not in Cache",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If Expired Cache": {
-      "main": [
-        [
-          {
-            "node": "No cache found, use error detection to detect this.",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Return Value from Cache",
+            "node": "Parse Cache Result",
             "type": "main",
             "index": 0
           }
@@ -427,7 +240,7 @@
       "main": [
         [
           {
-            "node": "Get row(s)",
+            "node": "Redis Get",
             "type": "main",
             "index": 0
           }
@@ -452,29 +265,18 @@
         ]
       ]
     },
-    "If not in Cache": {
+    "Parse Cache Result": {
       "main": [
         [
           {
-            "node": "No cache found, use error detection to detect this.",
+            "node": "Return Value from Cache",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "If Expired Cache",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "1 Hour Clean for Cache Table": {
-      "main": [
-        [
-          {
-            "node": "Drop all rows with expired cache entires",
+            "node": "No cache found, use error detection to detect this.",
             "type": "main",
             "index": 0
           }
@@ -500,27 +302,5 @@
       }
     ]
   },
-  "versionId": "1150c5d4-9082-4eb0-b455-9737222300b2",
-  "activeVersionId": null,
-  "versionCounter": 14,
-  "triggerCount": 0,
-  "tags": [],
-  "shared": [
-    {
-      "updatedAt": "2025-11-06T21:54:34.710Z",
-      "createdAt": "2025-11-06T21:54:34.710Z",
-      "role": "workflow:owner",
-      "workflowId": "HTXqB729RFNozetP",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
-    }
-  ]
+  "tags": []
 }
