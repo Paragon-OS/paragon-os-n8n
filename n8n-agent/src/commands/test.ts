@@ -4,6 +4,12 @@ import boxen from "boxen";
 import chalk from "chalk";
 import { runN8nCapture, runN8nQuiet } from "../utils/n8n";
 import { collectJsonFilesRecursive } from "../utils/file";
+import { 
+  findWorkflowFile, 
+  parseExecutionOutput, 
+  extractWorkflowResults,
+  type WorkflowFile 
+} from "../utils/test-helpers";
 
 /**
  * Run a test case against a workflow using the Test Data helper.
@@ -24,66 +30,6 @@ const TEST_RUNNER_FILE = 'HELPERS/[HELPERS] Test Runner.json';
 const TEST_RUNNER_ID = 'TestRunnerHelper001';
 const TEST_CONFIG_NODE = '⚙️ Test Config';
 
-/**
- * Extract workflow results from n8n execution output
- */
-function extractWorkflowResults(executionJson: any): { success: boolean; output?: any; error?: string; errorDetails?: any } {
-  try {
-    const runData = executionJson?.data?.resultData?.runData;
-    if (!runData) {
-      return { success: false, error: 'No execution data found' };
-    }
-
-    // Find the workflow execution node (starts with "Run: ")
-    const workflowNodeName = Object.keys(runData).find(name => name.startsWith('Run: '));
-    if (!workflowNodeName) {
-      // Check for errors in other nodes
-      const errorNodes = Object.entries(runData).filter(([_, data]: [string, any]) => 
-        Array.isArray(data) && data.some((exec: any) => exec.executionStatus === 'error')
-      );
-      if (errorNodes.length > 0) {
-        const [nodeName, nodeData] = errorNodes[0];
-        const errorExec = (nodeData as any[]).find((exec: any) => exec.executionStatus === 'error');
-        return { 
-          success: false, 
-          error: `Error in ${nodeName}: ${errorExec?.error?.message || 'Unknown error'}`,
-          errorDetails: errorExec?.error
-        };
-      }
-      return { success: false, error: 'Workflow execution node not found' };
-    }
-
-    const workflowNodeData = runData[workflowNodeName];
-    if (!workflowNodeData || workflowNodeData.length === 0) {
-      return { success: false, error: 'Workflow execution data is empty' };
-    }
-
-    const execution = workflowNodeData[0];
-    
-    // Check for execution errors
-    if (execution.executionStatus !== 'success') {
-      const errorMessage = execution.error?.message || execution.error || 'Workflow execution failed';
-      return { 
-        success: false, 
-        error: errorMessage,
-        errorDetails: execution.error
-      };
-    }
-
-    // Extract output from the workflow execution
-    const outputData = execution.data?.main;
-    if (!outputData || outputData.length === 0 || outputData[0].length === 0) {
-      return { success: true, output: null };
-    }
-
-    // Return the first item's JSON (workflow output)
-    const output = outputData[0][0]?.json;
-    return { success: true, output };
-    
-  } catch (error) {
-    return { success: false, error: `Failed to parse execution result: ${error instanceof Error ? error.message : String(error)}` };
-  }
-}
 
 /**
  * Filter out version compatibility warnings from output
@@ -225,37 +171,27 @@ export async function executeTest(options: TestOptions): Promise<void> {
   // Auto-import the workflow being tested to ensure it's up-to-date
   console.log(chalk.yellow(`🔄 Auto-syncing workflow "${workflow}" to n8n...`));
   const allWorkflowFiles = await collectJsonFilesRecursive(workflowsDir);
-  let workflowFile: string | undefined;
   
-  // Try to find workflow by ID first, then by name match
+  // Build workflow file objects for matching
+  const workflowFiles: WorkflowFile[] = [];
   for (const filePath of allWorkflowFiles) {
     try {
       const content = await fs.promises.readFile(filePath, 'utf-8');
       const workflowJson = JSON.parse(content) as { id?: string; name?: string };
       const basename = path.basename(filePath, '.json');
       
-      // Match by ID (most reliable)
-      if (workflowJson.id === workflow) {
-        workflowFile = filePath;
-        break;
-      }
-      
-      // Match by exact name
-      if (workflowJson.name === workflow) {
-        workflowFile = filePath;
-        break;
-      }
-      
-      // Match by basename (fallback for workflows without proper name/ID)
-      if (basename === workflow || basename.replace(/\[.*?\]\s*/, '') === workflow) {
-        workflowFile = filePath;
-        break;
-      }
+      workflowFiles.push({
+        path: filePath,
+        content: workflowJson,
+        basename
+      });
     } catch {
       // Skip files that can't be parsed
       continue;
     }
   }
+  
+  const workflowFile = findWorkflowFile(workflow, workflowFiles);
   
   if (workflowFile) {
     try {
@@ -343,21 +279,7 @@ export async function executeTest(options: TestOptions): Promise<void> {
     // Parse execution result - n8n outputs JSON after "Execution was successful:" and "===================================="
     let executionJson: any;
     try {
-      // Find JSON block after the separator line
-      const lines = filteredStdout.split('\n');
-      const separatorIndex = lines.findIndex(line => line.trim().startsWith('==='));
-      if (separatorIndex >= 0 && separatorIndex < lines.length - 1) {
-        const jsonLines = lines.slice(separatorIndex + 1).join('\n');
-        executionJson = JSON.parse(jsonLines.trim());
-      } else {
-        // Fallback: try to find JSON object in filtered output
-        const jsonMatch = filteredStdout.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          executionJson = JSON.parse(jsonMatch[0]);
-        } else {
-          throw new Error('No JSON found in execution output');
-        }
-      }
+      executionJson = parseExecutionOutput(filteredStdout);
     } catch (parseError) {
       console.error(chalk.red('❌ Failed to parse execution output'));
       console.error(chalk.red('Error:'), parseError);
