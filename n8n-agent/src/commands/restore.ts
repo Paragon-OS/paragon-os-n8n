@@ -1,6 +1,6 @@
 import fs from "fs";
 import { resolveDir } from "../utils/args";
-import { runN8n } from "../utils/n8n";
+import { runN8nQuiet } from "../utils/n8n";
 import { collectJsonFilesRecursive } from "../utils/file";
 import { normalizeWorkflowForCompare } from "../utils/workflow";
 import { deepEqual, exportCurrentWorkflowsForCompare } from "../utils/compare";
@@ -129,7 +129,7 @@ export async function executeRestore(flags: string[]): Promise<void> {
       `Importing workflow from "${backup.filePath}"` +
         (backup.id ? ` (id: ${backup.id}, name: ${backup.name})` : ` (name: ${backup.name})`)
     );
-    const exitCode = await runN8n(args);
+    const exitCode = await runN8nQuiet(args);
 
     if (exitCode !== 0) {
       console.error(`n8n import:workflow failed for "${backup.filePath}" with code`, exitCode);

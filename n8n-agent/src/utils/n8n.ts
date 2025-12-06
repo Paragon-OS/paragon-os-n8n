@@ -60,6 +60,10 @@ export function runN8nQuiet(args: string[]): Promise<number> {
       /at ImportWorkflowsCommand/,
       /at CommandRegistry/,
       /at \/Users\/.*\/n8n/,
+      // Version compatibility warnings
+      /Client version .* is incompatible with server version/,
+      /Major versions should match/,
+      /checkCompatibility=false/,
     ];
 
     const shouldFilter = (line: string): boolean => {
