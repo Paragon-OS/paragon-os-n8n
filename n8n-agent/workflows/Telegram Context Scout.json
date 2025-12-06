@@ -19,9 +19,6 @@
             },
             {
               "name": "mode"
-            },
-            {
-              "name": "testMode"
             }
           ]
         }
@@ -37,6 +34,19 @@
       "alwaysOutputData": true,
       "retryOnFail": false,
       "maxTries": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize inputs and detect test mode\n// testMode can be passed directly (from Test Runner) but is not in the tool schema\n// Default to false (production mode) if not provided\nconst input = $input.first().json;\nconst testMode = input.testMode !== undefined ? input.testMode : false;\n\nreturn {\n  query: input.query || '',\n  entity: input.entity || '',\n  mode: input.mode || '',\n  testMode: testMode\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        256
+      ],
+      "id": "normalize-inputs",
+      "name": "Normalize Inputs"
     },
     {
       "parameters": {
@@ -1853,6 +1863,17 @@
   ],
   "connections": {
     "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Normalize Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Inputs": {
       "main": [
         [
           {

@@ -26,6 +26,39 @@ const TESTS = {
       entity: 'knowledge-rag',
       mode: 'INSERT'
     },
+    // Schema validation tests - these should catch parameter mismatches early
+    'knowledge-rag-search-no-mode': {
+      query: 'test query without mode',
+      entity: 'knowledge-rag'
+      // mode omitted - should default to SEARCH
+    },
+    'knowledge-rag-insert-explicit': {
+      query: 'Test knowledge entry with explicit INSERT mode',
+      entity: 'knowledge-rag',
+      mode: 'INSERT'
+    },
+    'knowledge-rag-with-testmode': {
+      query: 'test knowledge with testMode',
+      entity: 'knowledge-rag',
+      mode: 'SEARCH',
+      testMode: true
+    },
+    'chat-with-all-params': {
+      query: 'metarune management',
+      entity: 'chat',
+      testMode: false
+    },
+    // Test all entity types to ensure schema compatibility
+    'all-entities-test': {
+      query: 'test',
+      entity: 'contact',
+      testMode: false
+    },
+    'knowledge-rag-default-mode': {
+      query: 'default mode test',
+      entity: 'knowledge-rag'
+      // No mode specified - should default to SEARCH
+    },
     'contact-fuzzy': {
       query: 'lanka',
       entity: 'contact'
@@ -138,6 +171,13 @@ const TESTS = {
     },
     'ingest-metarune-messages': {
       userPrompt: 'List the last 10 messages from the metarune management chat, then properly ingest them into the RAG knowledge base for future retrieval. Format the messages clearly with sender names and timestamps before storing them.'
+    },
+    // Schema validation tests - ensures the agent can call knowledge-rag
+    'test-knowledge-rag-call': {
+      userPrompt: 'Store this information in your knowledge base: "The project deadline is December 15th, 2025. Key stakeholders are Alice, Bob, and Charlie."'
+    },
+    'test-knowledge-rag-search': {
+      userPrompt: 'What do you know about project deadlines? Search your knowledge base.'
     }
   }
 
