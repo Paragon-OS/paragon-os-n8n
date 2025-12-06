@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-05T17:47:51.000Z",
+  "updatedAt": "2025-12-06T15:24:42.000Z",
   "createdAt": "2025-11-30T21:00:00.000Z",
   "id": "TelegramContextScout",
   "name": "Telegram Context Scout",
@@ -27,7 +27,7 @@
       "typeVersion": 1.1,
       "position": [
         -704,
-        256
+        544
       ],
       "id": "telegram-trigger",
       "name": "When Executed by Another Workflow",
@@ -43,7 +43,7 @@
       "typeVersion": 2,
       "position": [
         -480,
-        256
+        544
       ],
       "id": "normalize-inputs",
       "name": "Normalize Inputs"
@@ -114,7 +114,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -256,
+        192,
         -320
       ],
       "id": "check-telegram-contact-cache",
@@ -130,7 +130,7 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        -32,
+        416,
         -248
       ],
       "id": "list-telegram-contacts",
@@ -149,7 +149,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        192,
+        640,
         -248
       ],
       "id": "telegram-contact-data-simplifier",
@@ -222,7 +222,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        416,
+        864,
         -248
       ],
       "id": "update-telegram-contact-cache",
@@ -233,7 +233,7 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        640,
+        1088,
         -320
       ],
       "id": "all-telegram-contacts",
@@ -254,7 +254,7 @@
       "type": "n8n-nodes-paragon-os.fuzzySearch",
       "typeVersion": 1,
       "position": [
-        864,
+        1312,
         -320
       ],
       "id": "telegram-fuzzy-contacts",
@@ -326,7 +326,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -256,
+        192,
         -32
       ],
       "id": "check-telegram-chat-cache",
@@ -342,7 +342,7 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        -32,
+        416,
         40
       ],
       "id": "list-telegram-chats",
@@ -361,7 +361,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        192,
+        640,
         40
       ],
       "id": "telegram-chat-data-simplifier",
@@ -434,7 +434,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        416,
+        864,
         40
       ],
       "id": "update-telegram-chat-cache",
@@ -445,7 +445,7 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        640,
+        1088,
         -32
       ],
       "id": "all-telegram-chats",
@@ -466,7 +466,7 @@
       "type": "n8n-nodes-paragon-os.fuzzySearch",
       "typeVersion": 1,
       "position": [
-        864,
+        1312,
         -32
       ],
       "id": "telegram-fuzzy-chats",
@@ -538,7 +538,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -256,
+        192,
         256
       ],
       "id": "check-telegram-tool-cache",
@@ -550,7 +550,7 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        -32,
+        416,
         328
       ],
       "id": "list-telegram-tools",
@@ -569,7 +569,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        192,
+        640,
         328
       ],
       "id": "telegram-tool-data-simplifier",
@@ -642,7 +642,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        416,
+        864,
         328
       ],
       "id": "update-telegram-tool-cache",
@@ -653,7 +653,7 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        640,
+        1088,
         256
       ],
       "id": "all-telegram-tools",
@@ -674,7 +674,7 @@
       "type": "n8n-nodes-paragon-os.fuzzySearch",
       "typeVersion": 1,
       "position": [
-        864,
+        1312,
         256
       ],
       "id": "telegram-fuzzy-tools",
@@ -746,8 +746,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -32,
-        568
+        192,
+        544
       ],
       "id": "check-telegram-profile-cache",
       "name": "Check Profile Cache",
@@ -762,8 +762,8 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        192,
-        640
+        416,
+        616
       ],
       "id": "get-telegram-profile",
       "name": "Get My Profile",
@@ -781,8 +781,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        416,
-        640
+        640,
+        616
       ],
       "id": "telegram-profile-simplifier",
       "name": "User Profile Simplifier"
@@ -828,8 +828,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        560,
-        640
+        864,
+        616
       ],
       "id": "telegram-profile-edit-fields",
       "name": "Edit Fields"
@@ -901,8 +901,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        784,
-        640
+        1088,
+        616
       ],
       "id": "update-telegram-profile-cache",
       "name": "Update Profile Cache"
@@ -912,8 +912,8 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        1008,
-        568
+        1312,
+        544
       ],
       "id": "all-telegram-profile",
       "name": "My Profile"
@@ -1097,8 +1097,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        -480,
-        208
+        -256,
+        464
       ],
       "id": "telegram-entity-switch",
       "name": "Switch"
@@ -1110,8 +1110,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1088,
-        208
+        1536,
+        464
       ],
       "id": "telegram-merge-results",
       "name": "Merge"
@@ -1172,8 +1172,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        416,
-        952
+        864,
+        928
       ],
       "id": "cf8f41b0-1a9e-40c9-95d4-4d5b334499de",
       "name": "Contacts Dynamic RAG"
@@ -1187,8 +1187,8 @@
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        -32,
-        952
+        416,
+        928
       ],
       "id": "c1a55dcd-ddaf-4821-ad50-4b55f3621601",
       "name": "List Contacts1",
@@ -1206,8 +1206,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        192,
-        952
+        640,
+        928
       ],
       "id": "2c9e44c5-3e3c-40f6-afa1-930364da7dbd",
       "name": "Contact Data Simplifier1"
@@ -1268,56 +1268,11 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        640,
-        880
+        1088,
+        856
       ],
       "id": "search-rag-contacts",
       "name": "Search RAG Contacts"
-    },
-    {
-      "parameters": {
-        "jsCode": "// Transform RAG search results to match expected format\nconst input = $input.first().json;\n\n// RAG returns results in format: { results: [...] }\n// Each result has: { content: { contacts: [...] }, score: ... }\n// We need to extract contacts and flatten to telegramContacts array\n\nlet telegramContacts = [];\n\ntry {\n  if (input.results && Array.isArray(input.results)) {\n    // Extract contacts from each RAG result\n    for (const result of input.results) {\n      if (result.content && result.content.contacts && Array.isArray(result.content.contacts)) {\n        telegramContacts.push(...result.content.contacts);\n      }\n    }\n  } else if (input.contacts && Array.isArray(input.contacts)) {\n    // Fallback: if contacts are directly in the response\n    telegramContacts = input.contacts;\n  } else if (Array.isArray(input)) {\n    // Fallback: if the response is directly an array\n    telegramContacts = input;\n  }\n} catch (error) {\n  // If transformation fails, return empty array\n  telegramContacts = [];\n}\n\n// Return in the format expected by FuzzySearch\nreturn {\n  telegramContacts: telegramContacts\n};"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        864,
-        880
-      ],
-      "id": "transform-rag-results",
-      "name": "Transform RAG Results"
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [
-        1088,
-        880
-      ],
-      "id": "6530fe58-7931-42d9-b79d-4d85c303d55f",
-      "name": "All Contacts1"
-    },
-    {
-      "parameters": {
-        "query": "={{ $('When Executed by Another Workflow').item.json.query }}",
-        "arrayField": "telegramContacts",
-        "searchKeys": "username\ndisplayName\ncontactType\nphone",
-        "matchQuality": 60,
-        "limit": 10,
-        "advancedOptions": {
-          "includeScore": true,
-          "matchIndividualWords": false
-        }
-      },
-      "type": "n8n-nodes-paragon-os.fuzzySearch",
-      "typeVersion": 1,
-      "position": [
-        864,
-        880
-      ],
-      "id": "0a10a614-6852-48fd-bde8-eb1ab1bf7055",
-      "name": "FuzzySearch (Contacts)1"
     },
     {
       "parameters": {
@@ -1374,8 +1329,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -256,
-        880
+        -32,
+        856
       ],
       "id": "eb9b444d-5241-4f61-af6f-6f76b44995ff",
       "name": "Check RAG Status",
@@ -1411,8 +1366,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.1,
       "position": [
-        0,
-        880
+        192,
+        856
       ]
     },
     {
@@ -1470,8 +1425,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -256,
-        1040
+        -32,
+        1144
       ],
       "id": "check-message-rag-status",
       "name": "Check Message RAG Status",
@@ -1507,21 +1462,21 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.1,
       "position": [
-        0,
-        1040
+        192,
+        1144
       ]
     },
     {
       "parameters": {
         "operation": "executeTool",
         "toolName": "=telegram_list_messages",
-        "toolParameters": "={\n  \"limit\": 100\n}"
+        "toolParameters": "={\n  \"chat_id\": \"4000551178\",\n  \"limit\": 100\n}"
       },
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
-        -32,
-        1112
+        416,
+        1216
       ],
       "id": "list-messages",
       "name": "List Messages",
@@ -1534,13 +1489,13 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.first().json;\n\nfunction simplifyMCPData(input, dataKey, mcpDataKey, mapper, errorMsg) {\n  let rawData = [];\n  try {\n    if (input.result?.content?.[0]) {\n      const parsed = JSON.parse(input.result.content[0].text);\n      rawData = parsed?.[mcpDataKey] || [];\n    } else if (input[dataKey]) {\n      rawData = Array.isArray(input[dataKey]) ? input[dataKey] : [];\n    } else if (input.output?.[dataKey]) {\n      rawData = Array.isArray(input.output[dataKey]) ? input.output[dataKey] : [];\n    }\n    \n    if (!Array.isArray(rawData) || rawData.length === 0) {\n      return { [dataKey]: [], error: errorMsg, shouldFetch: true };\n    }\n    \n    return { [dataKey]: rawData.map(mapper) };\n  } catch (error) {\n    return { [dataKey]: [], error: error.message, shouldFetch: true };\n  }\n}\n\nreturn simplifyMCPData(\n  input,\n  'messages',\n  'messages',\n  (m) => ({\n    id: m.id,\n    chatId: m.chatId,\n    text: m.text || '',\n    senderId: m.senderId,\n    senderName: m.senderName || m.from?.name || '',\n    date: m.date || m.timestamp,\n    kind: m.kind || 'message'\n  }),\n  'No valid messages found'\n);"
+        "jsCode": "const input = $input.first().json;\n\nfunction simplifyMCPData(input, dataKey, mapper, errorMsg) {\n  let rawData = [];\n  try {\n    if (input.result?.content?.[0]) {\n      const parsed = JSON.parse(input.result.content[0].text);\n      console.log(parsed)\n      rawData = parsed || [];\n    } else if (input[dataKey]) {\n      rawData = Array.isArray(input[dataKey]) ? input[dataKey] : [];\n    } else if (input.output?.[dataKey]) {\n      rawData = Array.isArray(input.output[dataKey]) ? input.output[dataKey] : [];\n    }\n    if (!Array.isArray(rawData) || rawData.length === 0) {\n      return { [dataKey]: [], error: errorMsg, shouldFetch: true };\n    }\n    \n    return { [dataKey]: rawData.map(mapper) };\n  } catch (error) {\n    return { [dataKey]: [], error: error.message, shouldFetch: true };\n  }\n}\n\nreturn simplifyMCPData(\n  input,\n  'messages',\n  (m) => ({\n    id: m.id,\n    chatId: m.chatId,\n    text: m.text || '',\n    senderId: m.senderId,\n    senderName: m.senderName || m.from?.name || '',\n    date: m.date || m.timestamp,\n    kind: m.kind || 'message'\n  }),\n  'No valid messages found'\n);"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        192,
-        1112
+        640,
+        1216
       ],
       "id": "message-data-simplifier",
       "name": "Message Data Simplifier"
@@ -1601,118 +1556,22 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        416,
-        1112
+        864,
+        1216
       ],
       "id": "messages-dynamic-rag",
       "name": "Messages Dynamic RAG"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "IZa7S90Z9W1qxysr",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/IZa7S90Z9W1qxysr",
-          "cachedResultName": "[HELPERS] Dynamic RAG"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "mode": "SEARCH",
-            "collectionId": "paragon-os-messages",
-            "input": "={{ $('When Executed by Another Workflow').item.json.query }}"
-          },
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "input",
-              "displayName": "input",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "mode",
-              "displayName": "mode",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "collectionId",
-              "displayName": "collectionId",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        640,
-        1040
-      ],
-      "id": "search-rag-messages",
-      "name": "Search RAG Messages"
-    },
-    {
-      "parameters": {
-        "jsCode": "const input = $input.first().json;\n\nlet telegramMessages = [];\n\ntry {\n  if (input.results && Array.isArray(input.results)) {\n    for (const result of input.results) {\n      if (result.content && result.content.messages && Array.isArray(result.content.messages)) {\n        telegramMessages.push(...result.content.messages);\n      }\n    }\n  } else if (input.messages && Array.isArray(input.messages)) {\n    telegramMessages = input.messages;\n  } else if (Array.isArray(input)) {\n    telegramMessages = input;\n  }\n} catch (error) {\n  telegramMessages = [];\n}\n\nreturn {\n  telegramMessages: telegramMessages\n};"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        864,
-        1040
-      ],
-      "id": "transform-rag-message-results",
-      "name": "Transform RAG Message Results"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        1088,
-        1040
+        1312,
+        1144
       ],
       "id": "all-messages",
       "name": "All Messages"
-    },
-    {
-      "parameters": {
-        "query": "={{ $('When Executed by Another Workflow').item.json.query }}",
-        "arrayField": "telegramMessages",
-        "searchKeys": "text\nsenderName",
-        "matchQuality": 50,
-        "limit": 10,
-        "advancedOptions": {
-          "includeScore": true,
-          "matchIndividualWords": false
-        }
-      },
-      "type": "n8n-nodes-paragon-os.fuzzySearch",
-      "typeVersion": 1,
-      "position": [
-        1312,
-        1040
-      ],
-      "id": "fuzzysearch-messages",
-      "name": "FuzzySearch (Messages)"
     },
     {
       "parameters": {
@@ -1769,8 +1628,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -256,
-        1200
+        416,
+        1456
       ],
       "id": "check-knowledge-rag-status",
       "name": "Check Knowledge RAG Status",
@@ -1806,72 +1665,9 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.1,
       "position": [
-        0,
-        1200
+        640,
+        1456
       ]
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "IZa7S90Z9W1qxysr",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/IZa7S90Z9W1qxysr",
-          "cachedResultName": "[HELPERS] Dynamic RAG"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "mode": "CREATE",
-            "collectionId": "paragon-os-knowledge"
-          },
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "input",
-              "displayName": "input",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "mode",
-              "displayName": "mode",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "collectionId",
-              "displayName": "collectionId",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        -32,
-        1200
-      ],
-      "id": "create-knowledge-collection",
-      "name": "Create Knowledge Collection",
-      "retryOnFail": false,
-      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -1880,8 +1676,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        416,
-        1200
+        864,
+        1528
       ],
       "id": "prepare-knowledge-rag-input",
       "name": "Prepare Knowledge RAG Input"
@@ -1942,8 +1738,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        640,
-        1200
+        1088,
+        1456
       ],
       "id": "search-insert-knowledge",
       "name": "Search/Insert Knowledge"
@@ -1953,11 +1749,84 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        1088,
-        1200
+        1312,
+        1456
       ],
       "id": "knowledge-rag-result",
       "name": "Knowledge RAG Result"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        856
+      ],
+      "id": "6530fe58-7931-42d9-b79d-4d85c303d55f",
+      "name": "Contacts RAG results"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "IZa7S90Z9W1qxysr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/IZa7S90Z9W1qxysr",
+          "cachedResultName": "[HELPERS] Dynamic RAG"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "mode": "SEARCH",
+            "collectionId": "paragon-os-messages",
+            "input": "={{ $('When Executed by Another Workflow').item.json.query }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "input",
+              "displayName": "input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "collectionId",
+              "displayName": "collectionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1088,
+        1144
+      ],
+      "id": "search-rag-messages",
+      "name": "Search RAG Messages"
     }
   ],
   "connections": {
@@ -2350,33 +2219,11 @@
         ]
       ]
     },
-    "All Contacts1": {
-      "main": [
-        [
-          {
-            "node": "FuzzySearch (Contacts)1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Search RAG Contacts": {
       "main": [
         [
           {
-            "node": "Transform RAG Results",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Transform RAG Results": {
-      "main": [
-        [
-          {
-            "node": "All Contacts1",
+            "node": "Contacts RAG results",
             "type": "main",
             "index": 0
           }
@@ -2390,17 +2237,6 @@
             "node": "Search RAG Contacts",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "FuzzySearch (Contacts)1": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 4
           }
         ]
       ]
@@ -2496,40 +2332,7 @@
         ]
       ]
     },
-    "Search RAG Messages": {
-      "main": [
-        [
-          {
-            "node": "Transform RAG Message Results",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Transform RAG Message Results": {
-      "main": [
-        [
-          {
-            "node": "All Messages",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "All Messages": {
-      "main": [
-        [
-          {
-            "node": "FuzzySearch (Messages)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "FuzzySearch (Messages)": {
       "main": [
         [
           {
@@ -2555,22 +2358,11 @@
       "main": [
         [
           {
-            "node": "Prepare Knowledge RAG Input",
+            "node": "Search/Insert Knowledge",
             "type": "main",
             "index": 0
           }
         ],
-        [
-          {
-            "node": "Create Knowledge Collection",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Create Knowledge Collection": {
-      "main": [
         [
           {
             "node": "Prepare Knowledge RAG Input",
@@ -2612,6 +2404,28 @@
           }
         ]
       ]
+    },
+    "Contacts RAG results": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Search RAG Messages": {
+      "main": [
+        [
+          {
+            "node": "All Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -2623,15 +2437,15 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "query": "sebastian",
-          "entity": "contact-rag"
+          "query": "what do you know?",
+          "entity": "knowledge-rag"
         }
       }
     ]
   },
-  "versionId": "edcc00dc-f0bb-476a-9146-7c4c4db41c8e",
+  "versionId": "4be01c6e-0088-417f-b9a3-acb88e06a3a3",
   "activeVersionId": null,
-  "versionCounter": 37,
+  "versionCounter": 46,
   "triggerCount": 0,
   "tags": [
     {
