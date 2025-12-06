@@ -23,23 +23,63 @@
     },
     {
       "parameters": {
+        "jsCode": "// Split aggregated data into chunks of 100 (Gemini API limit)\nconst data = $input.first().json.data || [];\nconst BATCH_SIZE = 100;\nconst chunks = [];\n\n// Store original data and collectionId for later use\nconst collectionId = $('Switch').first().json.collectionId;\n\n// Split into chunks of 100\nfor (let i = 0; i < data.length; i += BATCH_SIZE) {\n  chunks.push({\n    chunk: data.slice(i, i + BATCH_SIZE),\n    chunkIndex: Math.floor(i / BATCH_SIZE),\n    totalChunks: Math.ceil(data.length / BATCH_SIZE),\n    collectionId: collectionId,\n    originalData: data // Keep reference to all data for later merging\n  });\n}\n\n// Output one item per chunk\nreturn chunks.map(chunk => ({ json: chunk }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        960
+      ],
+      "id": "split-into-chunks",
+      "name": "Split Into Chunks (100)"
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1584,
+        960
+      ],
+      "id": "process-chunks",
+      "name": "Process Chunks"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare chunk data for embedding, preserving metadata\nconst chunkData = $input.first().json;\n\n// Store the chunk metadata to be merged with embeddings later\nreturn [{\n  json: {\n    ...chunkData,\n    _chunkMetadata: {\n      chunk: chunkData.chunk,\n      chunkIndex: chunkData.chunkIndex,\n      collectionId: chunkData.collectionId\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        960
+      ],
+      "id": "prepare-chunk-for-embed",
+      "name": "Prepare Chunk for Embed"
+    },
+    {
+      "parameters": {
         "method": "POST",
         "url": "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:batchEmbedContents",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googlePalmApi",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"requests\": {{ JSON.stringify($json.data.map(item => ({ \"model\": \"models/text-embedding-004\", \"content\": { \"parts\": [{ \"text\": item.content }] } }))) }}\n}",
+        "jsonBody": "={\n  \"requests\": {{ JSON.stringify($json.chunk.map(item => ({ \"model\": \"models/text-embedding-004\", \"content\": { \"parts\": [{ \"text\": item.content }] } }))) }}\n}",
         "options": {}
       },
       "id": "batch-embed-gemini",
       "name": "Batch Embed (Gemini)",
       "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
-        1584,
+        1808,
         960
       ],
-      "typeVersion": 4.2,
       "credentials": {
         "googlePalmApi": {
           "id": "NIhZoi9otQV2vaAP",
@@ -49,16 +89,58 @@
     },
     {
       "parameters": {
-        "jsCode": "// Combine original items with embeddings\nconst items = $('Aggregate Batch').first().json.data;\nconst embeddings = $input.first().json.embeddings;\n\n// Generate Qdrant points\nconst points = items.map((item, index) => {\n  let metadata = {};\n  try { metadata = JSON.parse(item.metadata || '{}'); } catch(e) {}\n  \n  // Qdrant requires ID to be unsigned integer or UUID\n  // Use the numeric id if available, otherwise use index\n  const id = typeof metadata.id === 'number' ? metadata.id : index;\n  \n  return {\n    id: id,\n    vector: embeddings[index].values,\n    payload: {\n      content: item.content,\n      metadata: item.metadata\n    }\n  };\n});\n\nreturn [{ json: { points, collectionId: $('Switch').first().json.collectionId } }];"
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1920,
+        960
+      ],
+      "id": "merge-chunk-with-embeddings",
+      "name": "Merge Chunk with Embeddings"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combine chunk metadata with embeddings\nconst chunkMetadata = $('Prepare Chunk for Embed').first().json._chunkMetadata || {};\nconst embeddings = $input.first().json.embeddings || [];\n\nreturn [{\n  json: {\n    chunk: chunkMetadata.chunk || [],\n    chunkIndex: chunkMetadata.chunkIndex ?? 0,\n    embeddings: embeddings,\n    collectionId: chunkMetadata.collectionId\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        960
+      ],
+      "id": "store-chunk-embeddings",
+      "name": "Store Chunk Embeddings"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2120,
+        960
+      ],
+      "id": "merge-embeddings",
+      "name": "Merge All Embeddings"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combine all chunks and their embeddings\nconst mergedData = $input.first().json.data || [];\n\n// Flatten chunks and embeddings back into single arrays\nconst allItems = [];\nconst allEmbeddings = [];\n\n// Sort by chunkIndex to maintain order\nconst sortedChunks = mergedData.sort((a, b) => a.chunkIndex - b.chunkIndex);\n\nfor (const chunkData of sortedChunks) {\n  const chunk = chunkData.chunk || [];\n  const embeddings = chunkData.embeddings || [];\n  \n  allItems.push(...chunk);\n  allEmbeddings.push(...embeddings);\n}\n\n// Generate Qdrant points\nconst points = allItems.map((item, index) => {\n  let metadata = {};\n  try { metadata = JSON.parse(item.metadata || '{}'); } catch(e) {}\n  \n  // Qdrant requires ID to be unsigned integer or UUID\n  // Use the numeric id if available, otherwise use index\n  const id = typeof metadata.id === 'number' ? metadata.id : index;\n  \n  return {\n    id: id,\n    vector: allEmbeddings[index]?.values || [],\n    payload: {\n      content: item.content,\n      metadata: item.metadata\n    }\n  };\n});\n\nconst collectionId = mergedData[0]?.collectionId || $('Switch').first().json.collectionId;\n\nreturn [{ json: { points, collectionId } }];"
       },
       "id": "prepare-qdrant-points",
       "name": "Prepare Qdrant Points",
       "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
-        1808,
+        2332,
         960
-      ],
-      "typeVersion": 2
+      ]
     },
     {
       "parameters": {
@@ -84,7 +166,7 @@
       "name": "Batch Upsert (Qdrant)",
       "type": "n8n-nodes-base.httpRequest",
       "position": [
-        2032,
+        2544,
         960
       ],
       "typeVersion": 4.2,
@@ -926,7 +1008,52 @@
       "main": [
         [
           {
+            "node": "Split Into Chunks (100)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Into Chunks (100)": {
+      "main": [
+        [
+          {
+            "node": "Process Chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Chunks": {
+      "main": [
+        [
+          {
+            "node": "Prepare Chunk for Embed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge All Embeddings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Chunk for Embed": {
+      "main": [
+        [
+          {
             "node": "Batch Embed (Gemini)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Chunk with Embeddings",
             "type": "main",
             "index": 0
           }
@@ -934,6 +1061,39 @@
       ]
     },
     "Batch Embed (Gemini)": {
+      "main": [
+        [
+          {
+            "node": "Merge Chunk with Embeddings",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Chunk with Embeddings": {
+      "main": [
+        [
+          {
+            "node": "Store Chunk Embeddings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Chunk Embeddings": {
+      "main": [
+        [
+          {
+            "node": "Process Chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All Embeddings": {
       "main": [
         [
           {
