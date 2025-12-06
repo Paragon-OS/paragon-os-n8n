@@ -32,7 +32,7 @@
         300
       ],
       "typeVersion": 3.4,
-      "notes": "╔════════════════════════════════════════╗\n║  CHANGE THESE VALUES TO SWITCH TESTS   ║\n╠════════════════════════════════════════╣\n║  workflow: Target workflow name        ║\n║  testCase: Test case ID from Test Data ║\n╚════════════════════════════════════════╝\n\nAvailable:\n• TelegramContextScout: contact-rag, message-rag, contact-fuzzy, chat-search, tool-lookup, self-profile\n• DynamicRAG: status, search-contacts, search-metarune, create-collection, delete-collection, clear-collection, insert, search-test\n• DiscordSmartAgent: simple-query, list-contacts, read-messages"
+      "notes": "╔════════════════════════════════════════╗\n║  CHANGE THESE VALUES TO SWITCH TESTS   ║\n╠════════════════════════════════════════╣\n║  workflow: Target workflow name        ║\n║  testCase: Test case ID from Test Data ║\n╚════════════════════════════════════════╝\n\nAvailable:\n• TelegramContextScout: contact-rag, message-rag, contact-fuzzy, chat-search, tool-lookup, self-profile\n• DynamicRAG: status, search-contacts, search-metarune, create-collection, delete-collection, clear-collection, insert, search-test\n• DiscordSmartAgent: simple-query, list-contacts, read-messages\n• TelegramSmartAgent: search-messages, find-message-content, list-contacts, simple-query"
     },
     {
       "parameters": {
@@ -181,6 +181,30 @@
               },
               "renameOutput": true,
               "outputKey": "DiscordSmartAgent"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('⚙️ Test Config').item.json.workflow }}",
+                    "rightValue": "TelegramSmartAgent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "route-telegram-smart-agent"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TelegramSmartAgent"
             }
           ]
         },
@@ -390,6 +414,44 @@
     },
     {
       "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TelegramSmartAgent",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "userPrompt": "={{ $json.userPrompt }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "userPrompt",
+              "displayName": "userPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "run-telegram-smart-agent",
+      "name": "Run: Telegram Smart Agent",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "position": [
+        1140,
+        700
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
         "errorMessage": "={{ 'Unknown workflow: ' + $('⚙️ Test Config').item.json.workflow }}"
       },
       "id": "unknown-workflow-error",
@@ -397,7 +459,7 @@
       "type": "n8n-nodes-base.stopAndError",
       "position": [
         1140,
-        700
+        800
       ],
       "typeVersion": 1
     },
@@ -483,6 +545,13 @@
         ],
         [
           {
+            "node": "Run: Telegram Smart Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "Unknown Workflow",
             "type": "main",
             "index": 0
@@ -524,6 +593,17 @@
       ]
     },
     "Run: Discord Smart Agent": {
+      "main": [
+        [
+          {
+            "node": "Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run: Telegram Smart Agent": {
       "main": [
         [
           {

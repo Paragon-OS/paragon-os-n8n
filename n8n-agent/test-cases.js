@@ -109,6 +109,24 @@ const TESTS = {
     'read-messages': {
       userPrompt: 'Show me recent messages from my Discord DMs'
     }
+  },
+
+  // ────────────────────────────────────────────────────────────────
+  // Telegram Smart Agent
+  // ────────────────────────────────────────────────────────────────
+  'TelegramSmartAgent': {
+    'search-messages': {
+      userPrompt: 'Search for messages about meeting'
+    },
+    'find-message-content': {
+      userPrompt: 'Find messages containing the word "project" in my Telegram chats'
+    },
+    'list-contacts': {
+      userPrompt: 'List my Telegram contacts'
+    },
+    'simple-query': {
+      userPrompt: 'What is my Telegram profile?'
+    }
   }
 
 };
