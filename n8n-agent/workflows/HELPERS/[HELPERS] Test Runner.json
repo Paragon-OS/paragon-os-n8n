@@ -32,7 +32,7 @@
         300
       ],
       "typeVersion": 3.4,
-      "notes": "╔════════════════════════════════════════╗\n║  CHANGE THESE VALUES TO SWITCH TESTS   ║\n╠════════════════════════════════════════╣\n║  workflow: Target workflow name        ║\n║  testCase: Test case ID from Test Data ║\n╚════════════════════════════════════════╝\n\nAvailable:\n• TelegramContextScout: contact-rag, contact-fuzzy, chat-search, tool-lookup, self-profile\n• DynamicRAG: status, search-contacts, search-metarune, create-collection, delete-collection, clear-collection, insert, search-test"
+      "notes": "╔════════════════════════════════════════╗\n║  CHANGE THESE VALUES TO SWITCH TESTS   ║\n╠════════════════════════════════════════╣\n║  workflow: Target workflow name        ║\n║  testCase: Test case ID from Test Data ║\n╚════════════════════════════════════════╝\n\nAvailable:\n• TelegramContextScout: contact-rag, contact-fuzzy, chat-search, tool-lookup, self-profile\n• DynamicRAG: status, search-contacts, search-metarune, create-collection, delete-collection, clear-collection, insert, search-test\n• DiscordSmartAgent: simple-query, list-contacts, read-messages"
     },
     {
       "parameters": {
@@ -157,6 +157,30 @@
               },
               "renameOutput": true,
               "outputKey": "DiscordContextScout"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('⚙️ Test Config').item.json.workflow }}",
+                    "rightValue": "DiscordSmartAgent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "route-discord-smart-agent"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DiscordSmartAgent"
             }
           ]
         },
@@ -328,6 +352,44 @@
     },
     {
       "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "zBL0JT7t26pK2x95",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "userPrompt": "={{ $json.userPrompt }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "userPrompt",
+              "displayName": "userPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "run-discord-smart-agent",
+      "name": "Run: Discord Smart Agent",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "position": [
+        1140,
+        600
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
         "errorMessage": "={{ 'Unknown workflow: ' + $('⚙️ Test Config').item.json.workflow }}"
       },
       "id": "unknown-workflow-error",
@@ -414,6 +476,13 @@
         ],
         [
           {
+            "node": "Run: Discord Smart Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "Unknown Workflow",
             "type": "main",
             "index": 0
@@ -444,6 +513,17 @@
       ]
     },
     "Run: Discord Context Scout": {
+      "main": [
+        [
+          {
+            "node": "Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run: Discord Smart Agent": {
       "main": [
         [
           {

@@ -11,42 +11,10 @@ import { runN8n, runN8nQuiet } from "../utils/n8n";
  *   npm run n8n:test -- --list  (show available tests)
  */
 
-// Test cases registry (mirrors Test Data workflow)
-const TEST_CASES: Record<string, Record<string, Record<string, unknown>>> = {
-  'TelegramContextScout': {
-    'contact-rag': { query: 'sebastian', entity: 'contact-rag' },
-    'contact-fuzzy': { query: 'lanka', entity: 'contact' },
-    'chat-search': { query: 'metarune', entity: 'chat' },
-    'tool-lookup': { query: 'send message', entity: 'tool' },
-    'self-profile': { query: '', entity: 'self' },
-  },
-  'DynamicRAG': {
-    'status': { mode: 'STATUS', collectionId: 'paragon-os-contacts' },
-    'search-contacts': { mode: 'SEARCH', collectionId: 'paragon-os-contacts', input: 'lanka' },
-    'search-metarune': { mode: 'SEARCH', collectionId: 'chat-agent-experiment-1', input: 'metarune' },
-    'create-collection': { mode: 'CREATE', collectionId: 'test-collection' },
-    'delete-collection': { mode: 'DELETE', collectionId: 'test-collection' },
-    'clear-collection': { mode: 'CLEAR', collectionId: 'test-collection' },
-    'insert': { 
-      mode: 'INSERT', 
-      collectionId: 'test-collection',
-      input: {
-        content: {
-          testDocuments: [
-            { id: 1, name: 'Alice Smith', role: 'Engineer', department: 'Backend' },
-            { id: 2, name: 'Bob Johnson', role: 'Designer', department: 'Frontend' },
-            { id: 3, name: 'Charlie Brown', role: 'Manager', department: 'Operations' },
-          ]
-        },
-        metadata: { source: 'integration-test', timestamp: new Date().toISOString() }
-      }
-    },
-    'search-test': { mode: 'SEARCH', collectionId: 'test-collection', input: 'engineer backend' },
-  },
-  'DiscordContextScout': {
-    'example': { query: 'example query', entity: 'contact' },
-  },
-};
+// Load test cases from external file (same source as Test Data workflow)
+const testCasesPath = path.resolve(__dirname, '../../test-cases.js');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const TEST_CASES: Record<string, Record<string, Record<string, unknown>>> = require(testCasesPath);
 
 // Test Runner workflow configuration
 const TEST_RUNNER_FILE = 'HELPERS/[HELPERS] Test Runner.json';
