@@ -11,7 +11,7 @@ const TESTS = {
   'TelegramContextScout': {
     'contact-rag': {
       query: 'sebastian',
-      entity: 'contact-rag'
+      entity: 'contact'
     },
     'message-rag': {
       query: 'meeting',
@@ -26,7 +26,7 @@ const TESTS = {
       query: 'test',
       entity: 'contact'
     },
-    'contact-fuzzy': {
+    'contact-search': {
       query: 'lanka',
       entity: 'contact'
     },
