@@ -27,6 +27,21 @@ const TEST_CASES: Record<string, Record<string, Record<string, unknown>>> = {
     'create-collection': { mode: 'CREATE', collectionId: 'test-collection' },
     'delete-collection': { mode: 'DELETE', collectionId: 'test-collection' },
     'clear-collection': { mode: 'CLEAR', collectionId: 'test-collection' },
+    'insert': { 
+      mode: 'INSERT', 
+      collectionId: 'test-collection',
+      input: {
+        content: {
+          testDocuments: [
+            { id: 1, name: 'Alice Smith', role: 'Engineer', department: 'Backend' },
+            { id: 2, name: 'Bob Johnson', role: 'Designer', department: 'Frontend' },
+            { id: 3, name: 'Charlie Brown', role: 'Manager', department: 'Operations' },
+          ]
+        },
+        metadata: { source: 'integration-test', timestamp: new Date().toISOString() }
+      }
+    },
+    'search-test': { mode: 'SEARCH', collectionId: 'test-collection', input: 'engineer backend' },
   },
   'DiscordContextScout': {
     'example': { query: 'example query', entity: 'contact' },

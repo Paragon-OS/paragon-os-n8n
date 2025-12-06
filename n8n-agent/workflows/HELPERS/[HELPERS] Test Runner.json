@@ -32,7 +32,7 @@
         300
       ],
       "typeVersion": 3.4,
-      "notes": "╔════════════════════════════════════════╗\n║  CHANGE THESE VALUES TO SWITCH TESTS   ║\n╠════════════════════════════════════════╣\n║  workflow: Target workflow name        ║\n║  testCase: Test case ID from Test Data ║\n╚════════════════════════════════════════╝\n\nAvailable:\n• TelegramContextScout: contact-rag, contact-fuzzy, chat-search, tool-lookup, self-profile\n• DynamicRAG: status, search-contacts, search-metarune, create-collection, delete-collection, clear-collection"
+      "notes": "╔════════════════════════════════════════╗\n║  CHANGE THESE VALUES TO SWITCH TESTS   ║\n╠════════════════════════════════════════╣\n║  workflow: Target workflow name        ║\n║  testCase: Test case ID from Test Data ║\n╚════════════════════════════════════════╝\n\nAvailable:\n• TelegramContextScout: contact-rag, contact-fuzzy, chat-search, tool-lookup, self-profile\n• DynamicRAG: status, search-contacts, search-metarune, create-collection, delete-collection, clear-collection, insert, search-test"
     },
     {
       "parameters": {
