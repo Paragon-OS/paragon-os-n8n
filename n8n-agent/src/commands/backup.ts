@@ -1,11 +1,16 @@
 import path from "path";
 import fs from "fs";
-import { resolveDir } from "../utils/args";
+import { resolveDir, getPassthroughArgs } from "../utils/args";
 import { runN8n } from "../utils/n8n";
 import { collectJsonFilesRecursive, removeEmptyDirectoriesUnder } from "../utils/file";
 import { parseTagFromName, sanitizeWorkflowName } from "../utils/workflow";
 import { confirm } from "../utils/prompt";
 import type { WorkflowFile } from "../types/index";
+
+interface BackupOptions {
+  output?: string;
+  yes?: boolean;
+}
 
 async function renameExportedWorkflowsToNames(
   outputDir: string,
@@ -266,15 +271,15 @@ async function renameExportedWorkflowsToNames(
   }
 }
 
-export async function executeBackup(flags: string[]): Promise<void> {
-  const outputDir = resolveDir("--output", flags, "./workflows");
+export async function executeBackup(options: BackupOptions, remainingArgs: string[] = []): Promise<void> {
+  const outputDir = resolveDir(options.output, "./workflows");
   const normalizedOutputDir = path.resolve(outputDir);
 
   // Show what will be backed up and ask for confirmation
   console.log(`📦 Backup target: ${normalizedOutputDir}`);
   console.log(`   This will export all workflows from n8n to the backup directory.\n`);
 
-  const confirmed = await confirm("Do you want to proceed with the backup?", flags);
+  const confirmed = await confirm("Do you want to proceed with the backup?", options.yes || false);
   if (!confirmed) {
     console.log("Backup cancelled.");
     process.exit(0);
@@ -315,13 +320,8 @@ export async function executeBackup(flags: string[]): Promise<void> {
   // Mirrors: n8n export:workflow --backup --output=./workflows/
   const args = ["export:workflow", "--backup", `--output=${outputDir}`];
 
-  // Allow extra flags like --all to be forwarded.
-  // Filter out -y/--yes as it's handled by our confirmation prompt
-  const passthroughFlags = flags.filter(
-    (f) => 
-      !["--output", "-y", "--yes", "-Y", "--Yes"].includes(f) && 
-      !["backup", "restore"].includes(f)
-  );
+  // Allow extra flags like --all to be forwarded to n8n
+  const passthroughFlags = getPassthroughArgs(remainingArgs, ["--output"]);
 
   const exitCode = await runN8n([...args, ...passthroughFlags]);
 

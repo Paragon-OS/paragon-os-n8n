@@ -2,18 +2,13 @@ import * as readline from "readline";
 
 /**
  * Prompt user for confirmation. Returns true if user confirms, false otherwise.
- * Supports -y/--yes flag to skip prompt and auto-confirm.
+ * Supports yes option from commander to skip prompt and auto-confirm.
  */
 export async function confirm(
   message: string,
-  flags: string[] = []
+  yes: boolean = false
 ): Promise<boolean> {
-  // Check for -y or --yes flag to skip confirmation
-  const hasYesFlag = flags.some(
-    (flag) => flag === "-y" || flag === "--yes" || flag === "-Y" || flag === "--Yes"
-  );
-
-  if (hasYesFlag) {
+  if (yes) {
     return true;
   }
 

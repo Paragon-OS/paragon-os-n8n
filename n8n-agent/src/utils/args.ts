@@ -1,75 +1,40 @@
-import type { Command, ParsedArgs } from "../types/index";
+import path from "path";
 
-export function parseArgs(argv: string[]): ParsedArgs {
-  const [, , commandArg, ...rest] = argv;
-
-  if (
-    commandArg !== "backup" &&
-    commandArg !== "restore" &&
-    commandArg !== "tree" &&
-    commandArg !== "organize" &&
-    commandArg !== "test" &&
-    commandArg !== "verify"
-  ) {
-    printUsage();
-    process.exit(1);
+/**
+ * Resolve directory path from commander option or use fallback
+ */
+export function resolveDir(optionValue: string | undefined, fallback: string): string {
+  if (optionValue) {
+    return path.resolve(optionValue);
   }
-
-  return {
-    command: commandArg as Command,
-    flags: rest,
-  };
+  return path.resolve(fallback);
 }
 
-export function printUsage() {
-  console.log(
-    [
-      "Usage:",
-      "  ts-node src/n8n-workflows-cli.ts backup [--output <dir>] [--all]",
-      "  ts-node src/n8n-workflows-cli.ts restore [--input <dir>]",
-      "  ts-node src/n8n-workflows-cli.ts organize [--input <dir>]",
-      "  ts-node src/n8n-workflows-cli.ts tree [--all] [extra n8n flags]",
-      "  ts-node src/n8n-workflows-cli.ts test [--workflow <name>] [--test <case>] [--list]",
-      "  ts-node src/n8n-workflows-cli.ts verify [--workflow <name>]",
-      "",
-      "Examples:",
-      "  Backup all workflows (pretty, separate files) into ./workflows (excluding archived workflows):",
-      "    ts-node src/n8n-workflows-cli.ts backup",
-      "  Backup to a custom directory:",
-      "    ts-node src/n8n-workflows-cli.ts backup --output ./backups/latest",
-      "  Restore from ./workflows (selective restore; only new/changed workflows are imported):",
-      "    ts-node src/n8n-workflows-cli.ts restore",
-      "  Restore from a custom directory:",
-      "    ts-node src/n8n-workflows-cli.ts restore --input ./backups/latest",
-      "",
-      "  Organize workflows in ./workflows/ into tag-based subdirectories based on filenames:",
-      "    ts-node src/n8n-workflows-cli.ts organize",
-      "  Organize a different directory:",
-      "    ts-node src/n8n-workflows-cli.ts organize --input ./backups/latest",
-      "",
-      "  Print logical n8n workflow folders and workflows (uses local n8n CLI):",
-      "    ts-node src/n8n-workflows-cli.ts tree --all",
-      "    ts-node src/n8n-workflows-cli.ts tree --all --active",
-      "",
-      "  Run tests headlessly:",
-      "    ts-node src/n8n-workflows-cli.ts test --list",
-      "    ts-node src/n8n-workflows-cli.ts test -w TelegramContextScout -t contact-rag",
-      "    ts-node src/n8n-workflows-cli.ts test -w DynamicRAG -t status",
-      "",
-      "  Verify workflow trigger inputs match database:",
-      "    ts-node src/n8n-workflows-cli.ts verify",
-      "    ts-node src/n8n-workflows-cli.ts verify --workflow=TelegramContextScout",
-    ].join("\n")
-  );
-}
+/**
+ * Get passthrough args for n8n CLI (filters out our custom flags)
+ */
+export function getPassthroughArgs(args: string[], excludeFlags: string[] = []): string[] {
+  const excludeSet = new Set([
+    "--output",
+    "--input",
+    "--workflow",
+    "--test",
+    "--list",
+    "-w",
+    "-t",
+    "-l",
+    "-y",
+    "--yes",
+    ...excludeFlags,
+  ]);
 
-export function resolveDir(flagName: "--output" | "--input", argv: string[], fallback: string): string {
-  const index = argv.indexOf(flagName);
-
-  if (index !== -1 && argv[index + 1]) {
-    return require("path").resolve(argv[index + 1]);
-  }
-
-  return require("path").resolve(fallback);
+  return args.filter((arg) => {
+    // Exclude our custom flags and their values
+    if (excludeSet.has(arg)) {
+      return false;
+    }
+    // Exclude values that follow our flags (handled by commander)
+    return true;
+  });
 }
 

@@ -3,8 +3,12 @@ import fs from "fs";
 import { resolveDir } from "../utils/args";
 import { parseTagFromName } from "../utils/workflow";
 
-export async function executeOrganize(flags: string[]): Promise<void> {
-  const inputDir = resolveDir("--input", flags, "./workflows");
+interface OrganizeOptions {
+  input?: string;
+}
+
+export async function executeOrganize(options: OrganizeOptions): Promise<void> {
+  const inputDir = resolveDir(options.input, "./workflows");
   await organizeWorkflows(inputDir);
   process.exit(0);
 }

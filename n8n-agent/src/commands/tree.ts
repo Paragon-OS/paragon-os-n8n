@@ -1,19 +1,17 @@
 import { runN8nCapture } from "../utils/n8n";
 import type { ExportedWorkflow } from "../types/index";
 
-export async function executeTree(flags: string[]): Promise<void> {
+export async function executeTree(remainingArgs: string[] = []): Promise<void> {
   // We intentionally do NOT set stdio: "inherit" here so we can parse JSON.
   // If the user does not pass any explicit selection flags, default to --all.
-  const hasSelectionFlag = flags.some((f) =>
+  const hasSelectionFlag = remainingArgs.some((f) =>
     ["--all", "--id", "--active", "--inactive"].some((sel) => f === sel || f.startsWith(`${sel}=`))
   );
-
-  const passthroughFlags = flags.filter((f) => !["backup", "restore", "tree"].includes(f));
 
   const baseArgs = ["export:workflow", "--pretty"];
   const selectionArgs = hasSelectionFlag ? [] : ["--all"];
 
-  const { code, stdout, stderr } = await runN8nCapture([...baseArgs, ...selectionArgs, ...passthroughFlags]);
+  const { code, stdout, stderr } = await runN8nCapture([...baseArgs, ...selectionArgs, ...remainingArgs]);
 
   if (code !== 0) {
     console.error("n8n export:workflow failed with code", code);

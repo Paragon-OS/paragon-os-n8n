@@ -153,26 +153,14 @@ function printAvailableTests(): void {
   }
 }
 
-function parseArgs(args: string[]): { workflow?: string; testCase?: string; list?: boolean } {
-  const result: { workflow?: string; testCase?: string; list?: boolean } = {};
-  
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    
-    if (arg === '--list' || arg === '-l') {
-      result.list = true;
-    } else if (arg === '--workflow' || arg === '-w') {
-      result.workflow = args[++i];
-    } else if (arg === '--test' || arg === '-t') {
-      result.testCase = args[++i];
-    }
-  }
-  
-  return result;
+interface TestOptions {
+  workflow?: string;
+  test?: string;
+  list?: boolean;
 }
 
-export async function executeTest(flags: string[]): Promise<void> {
-  const { workflow, testCase, list } = parseArgs(flags);
+export async function executeTest(options: TestOptions): Promise<void> {
+  const { workflow, test: testCase, list } = options;
   
   // List mode
   if (list) {

@@ -38,3 +38,8 @@ build/
 # Temporary files
 *.tmp
 .cache/
+
+# Test artifacts
+test-output/
+*.test-runner-temp.json
+.backup-temp/

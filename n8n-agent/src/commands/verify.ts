@@ -169,12 +169,13 @@ async function verifyWorkflow(
   };
 }
 
-export async function executeVerify(flags: string[]): Promise<void> {
+interface VerifyOptions {
+  workflow?: string;
+}
+
+export async function executeVerify(options: VerifyOptions): Promise<void> {
   const workflowsDir = path.resolve(__dirname, "../../workflows");
-  const workflowFlag = flags.find((f) => f.startsWith("--workflow"));
-  const specificWorkflow = workflowFlag?.includes("=") 
-    ? workflowFlag.split("=")[1] 
-    : workflowFlag ? flags[flags.indexOf(workflowFlag) + 1] : undefined;
+  const specificWorkflow = options.workflow;
 
   let jsonFiles: string[];
   if (specificWorkflow) {

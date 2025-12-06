@@ -1,5 +1,5 @@
 import fs from "fs";
-import { resolveDir } from "../utils/args";
+import { resolveDir, getPassthroughArgs } from "../utils/args";
 import { runN8nQuiet } from "../utils/n8n";
 import { collectJsonFilesRecursive } from "../utils/file";
 import { normalizeWorkflowForCompare } from "../utils/workflow";
@@ -7,15 +7,16 @@ import { deepEqual, exportCurrentWorkflowsForCompare } from "../utils/compare";
 import { confirm } from "../utils/prompt";
 import type { BackupWorkflowForRestore, WorkflowObject } from "../types/index";
 
-export async function executeRestore(flags: string[]): Promise<void> {
-  const inputDir = resolveDir("--input", flags, "./workflows");
+interface RestoreOptions {
+  input?: string;
+  yes?: boolean;
+}
 
-  // Filter out -y/--yes as it's handled by our confirmation prompt
-  const passthroughFlags = flags.filter(
-    (f) => 
-      !["--input", "-y", "--yes", "-Y", "--Yes"].includes(f) && 
-      !["backup", "restore"].includes(f)
-  );
+export async function executeRestore(options: RestoreOptions, remainingArgs: string[] = []): Promise<void> {
+  const inputDir = resolveDir(options.input, "./workflows");
+
+  // Get passthrough flags for n8n (excluding our custom flags)
+  const passthroughFlags = getPassthroughArgs(remainingArgs, ["--input"]);
 
   const jsonFiles = await collectJsonFilesRecursive(inputDir);
 
@@ -114,7 +115,7 @@ export async function executeRestore(flags: string[]): Promise<void> {
 
   // Ask for confirmation before importing
   console.log(`\n📥 Ready to import ${toImport.length} workflow(s) to n8n.`);
-  const confirmed = await confirm("Do you want to proceed with the restore?", flags);
+  const confirmed = await confirm("Do you want to proceed with the restore?", options.yes || false);
   if (!confirmed) {
     console.log("Restore cancelled.");
     process.exit(0);
