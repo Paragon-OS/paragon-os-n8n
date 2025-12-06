@@ -1,4 +1,4 @@
-import * as readline from "readline";
+import prompts from "prompts";
 
 /**
  * Prompt user for confirmation. Returns true if user confirms, false otherwise.
@@ -12,17 +12,18 @@ export async function confirm(
     return true;
   }
 
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
+  const { value } = await prompts({
+    type: "confirm",
+    name: "value",
+    message: `${message} (y/N)`,
+    initial: false,
   });
 
-  return new Promise((resolve) => {
-    rl.question(`${message} (y/N): `, (answer) => {
-      rl.close();
-      const normalized = answer.trim().toLowerCase();
-      resolve(normalized === "y" || normalized === "yes");
-    });
-  });
+  // Handle Ctrl+C cancellation
+  if (value === undefined) {
+    return false;
+  }
+
+  return value === true;
 }
 
