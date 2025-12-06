@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-06T15:49:09.000Z",
+  "updatedAt": "2025-12-06T17:07:06.000Z",
   "createdAt": "2025-12-02T01:18:35.706Z",
   "id": "IZa7S90Z9W1qxysr",
   "name": "[HELPERS] Dynamic RAG",
@@ -17,7 +17,7 @@
       "type": "n8n-nodes-base.aggregate",
       "position": [
         1360,
-        960
+        896
       ],
       "typeVersion": 1
     },
@@ -28,22 +28,21 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1472,
-        960
+        1584,
+        896
       ],
       "id": "split-into-chunks",
       "name": "Split Into Chunks (100)"
     },
     {
       "parameters": {
-        "batchSize": 1,
         "options": {}
       },
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        1584,
-        960
+        1808,
+        896
       ],
       "id": "process-chunks",
       "name": "Process Chunks"
@@ -55,8 +54,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1696,
-        960
+        2032,
+        992
       ],
       "id": "prepare-chunk-for-embed",
       "name": "Prepare Chunk for Embed"
@@ -77,8 +76,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1808,
-        960
+        2256,
+        1064
       ],
       "credentials": {
         "googlePalmApi": {
@@ -96,8 +95,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1920,
-        960
+        2480,
+        992
       ],
       "id": "merge-chunk-with-embeddings",
       "name": "Merge Chunk with Embeddings"
@@ -109,8 +108,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2032,
-        960
+        2704,
+        1064
       ],
       "id": "store-chunk-embeddings",
       "name": "Store Chunk Embeddings"
@@ -123,8 +122,8 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        2120,
-        960
+        2032,
+        752
       ],
       "id": "merge-embeddings",
       "name": "Merge All Embeddings"
@@ -138,8 +137,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2332,
-        960
+        2256,
+        752
       ]
     },
     {
@@ -166,8 +165,8 @@
       "name": "Batch Upsert (Qdrant)",
       "type": "n8n-nodes-base.httpRequest",
       "position": [
-        2544,
-        960
+        2480,
+        752
       ],
       "typeVersion": 4.2,
       "credentials": {
@@ -202,7 +201,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "position": [
         64,
-        2032
+        2056
       ],
       "typeVersion": 4.2,
       "credentials": {
@@ -224,7 +223,7 @@
       "type": "@n8n/n8n-nodes-langchain.chainRetrievalQa",
       "position": [
         672,
-        1760
+        1696
       ],
       "typeVersion": 1.5
     },
@@ -238,7 +237,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "position": [
         640,
-        1984
+        1920
       ],
       "typeVersion": 1,
       "credentials": {
@@ -257,7 +256,7 @@
       "type": "@n8n/n8n-nodes-langchain.retrieverVectorStore",
       "position": [
         768,
-        1984
+        1920
       ],
       "typeVersion": 1
     },
@@ -275,7 +274,7 @@
       "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
       "position": [
         768,
-        2192
+        2128
       ],
       "typeVersion": 1.1,
       "credentials": {
@@ -296,7 +295,7 @@
       "type": "n8n-nodes-base.merge",
       "position": [
         1136,
-        1520
+        1540
       ],
       "typeVersion": 3.1
     },
@@ -318,8 +317,8 @@
       "name": "Aggregate",
       "type": "n8n-nodes-base.aggregate",
       "position": [
-        784,
-        1264
+        776,
+        1192
       ],
       "typeVersion": 1
     },
@@ -348,7 +347,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "position": [
         64,
-        960
+        896
       ],
       "typeVersion": 4.2,
       "retryOnFail": false,
@@ -375,7 +374,7 @@
       "type": "n8n-nodes-base.set",
       "position": [
         1584,
-        1520
+        1540
       ],
       "typeVersion": 3.4
     },
@@ -388,7 +387,7 @@
       "type": "n8n-nodes-base.code",
       "position": [
         1360,
-        1520
+        1540
       ],
       "typeVersion": 2
     },
@@ -416,7 +415,7 @@
       "typeVersion": 3.4,
       "position": [
         352,
-        960
+        896
       ],
       "id": "9f9b5121-2980-48c3-9d0b-81187e1a6df6",
       "name": "Edit Fields"
@@ -434,8 +433,8 @@
       "type": "n8n-nodes-paragon-os.jsonDocumentLoader",
       "typeVersion": 1,
       "position": [
-        784,
-        960
+        776,
+        896
       ],
       "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
       "name": "JSON Document Loader"
@@ -464,7 +463,7 @@
       "typeVersion": 3.4,
       "position": [
         1136,
-        960
+        896
       ],
       "id": "b2c3d4e5-f678-9012-bcde-f23456789abc",
       "name": "Map to Vector Store Format"
@@ -474,8 +473,8 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
       "typeVersion": 1,
       "position": [
-        368,
-        1488
+        360,
+        1416
       ],
       "id": "e873c882-2217-4bde-920a-06bc481ea5db",
       "name": "Embeddings Google Gemini1",
@@ -492,7 +491,7 @@
       "typeVersion": 1,
       "position": [
         848,
-        2400
+        2336
       ],
       "id": "1428525f-8265-4b91-ab83-3a82696e8348",
       "name": "Embeddings Google Gemini2",
@@ -520,7 +519,7 @@
       "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
       "position": [
         288,
-        1264
+        1192
       ],
       "typeVersion": 1.3,
       "alwaysOutputData": true,
@@ -537,7 +536,7 @@
       "typeVersion": 1,
       "position": [
         64,
-        1520
+        1540
       ],
       "id": "1286b78a-a4ba-429c-83cc-911c058e1bd1",
       "name": "No Operation, do nothing"
@@ -563,7 +562,7 @@
       "typeVersion": 1.1,
       "position": [
         -832,
-        2032
+        2056
       ],
       "id": "0daf4a1a-88cc-4f6f-b827-b663ba32c0b8",
       "name": "When Executed by Another Workflow"
@@ -727,7 +726,7 @@
       "typeVersion": 3.3,
       "position": [
         -160,
-        1952
+        1976
       ],
       "id": "ae868fcd-b699-437f-908b-bd9fd03b5941",
       "name": "Switch"
@@ -757,7 +756,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "position": [
         64,
-        1840
+        1864
       ],
       "typeVersion": 4.2,
       "credentials": {
@@ -780,7 +779,7 @@
       "typeVersion": 1,
       "position": [
         -608,
-        2032
+        2056
       ],
       "id": "337f0a5f-c7fc-4fe4-958c-39abd6c8b51c",
       "name": "Aggregate1"
@@ -795,7 +794,7 @@
       "typeVersion": 3.4,
       "position": [
         -384,
-        2032
+        2056
       ],
       "id": "53284e1b-b4b6-482d-bab8-d1a2a4897d15",
       "name": "Edit Fields1"
@@ -808,7 +807,7 @@
       "typeVersion": 1,
       "position": [
         352,
-        2032
+        2056
       ],
       "id": "7e1aac0a-a9f1-42b0-a631-d5a9bd8b10c9",
       "name": "Stop and Error"
@@ -839,7 +838,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "position": [
         64,
-        2224
+        2248
       ],
       "typeVersion": 4.2,
       "credentials": {
@@ -862,7 +861,7 @@
       "typeVersion": 1,
       "position": [
         352,
-        2224
+        2248
       ],
       "id": "dc3aa657-42cf-4efe-b45a-1c207bc801ee",
       "name": "Stop and Error1"
@@ -875,7 +874,7 @@
       "typeVersion": 1,
       "position": [
         64,
-        2416
+        2440
       ],
       "id": "8bc4d5f7-9756-4dc5-9d23-8f3b5172de31",
       "name": "Stop and Error2"
@@ -887,8 +886,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2256,
-        960
+        2704,
+        752
       ],
       "id": "5afa0640-f722-446e-a90a-f10bd2ed0f49",
       "name": "Edit Fields2"
@@ -914,7 +913,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "position": [
         64,
-        2608
+        2632
       ],
       "typeVersion": 4.2,
       "credentials": {
@@ -934,7 +933,7 @@
       "type": "n8n-nodes-base.code",
       "position": [
         352,
-        2512
+        2440
       ],
       "typeVersion": 2
     },
@@ -947,7 +946,7 @@
       "type": "n8n-nodes-base.code",
       "position": [
         352,
-        2704
+        2632
       ],
       "typeVersion": 2
     }
@@ -1030,14 +1029,14 @@
       "main": [
         [
           {
-            "node": "Prepare Chunk for Embed",
+            "node": "Merge All Embeddings",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Merge All Embeddings",
+            "node": "Prepare Chunk for Embed",
             "type": "main",
             "index": 0
           }
@@ -1392,27 +1391,9 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "mode": "CLEAR",
-          "collectionId": "paragon-os-contacts"
-        }
-      },
-      {
-        "json": {
-          "=": "============================================================="
-        }
-      },
-      {
-        "json": {
-          "mode": "SEARCH",
-          "collectionId": "paragon-os-contacts",
-          "input": "lanka"
-        }
-      },
-      {
-        "json": {
           "input": {
             "content": {
-              "allContacts": [
+              "contacts": [
                 {
                   "id": 333000,
                   "displayName": "Kids",
@@ -2053,6 +2034,636 @@
                   "displayName": "Amayuru Amarasinghe",
                   "contactType": "user",
                   "phone": "94741112634"
+                },
+                {
+                  "id": 1543386737,
+                  "username": "AdinZee",
+                  "displayName": "Adin Zweigbaum",
+                  "contactType": "user",
+                  "phone": "16123541473"
+                },
+                {
+                  "id": 1550582226,
+                  "displayName": "Sanduni",
+                  "contactType": "user",
+                  "phone": "94712469800"
+                },
+                {
+                  "id": 1566304167,
+                  "username": "HNDRXX_X",
+                  "displayName": "HNDRXX",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1568195814,
+                  "displayName": "Hamna Fazeel",
+                  "contactType": "user",
+                  "phone": "94772864836"
+                },
+                {
+                  "id": 1571353384,
+                  "username": "xHuman77",
+                  "displayName": "xHuman (Stephan)",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1574388514,
+                  "username": "DESI_BOYYYYYYYYYY",
+                  "displayName": "Himali Nangi",
+                  "contactType": "user",
+                  "phone": "94714444881"
+                },
+                {
+                  "id": 1574878325,
+                  "displayName": "Wp",
+                  "contactType": "user",
+                  "phone": "94770244460"
+                },
+                {
+                  "id": 1577411517,
+                  "displayName": "Rusith Vibhashitha Singer",
+                  "contactType": "user",
+                  "phone": "94764575607"
+                },
+                {
+                  "id": 1587002388,
+                  "username": "Mi_Shoo",
+                  "displayName": "Misho",
+                  "contactType": "user",
+                  "phone": "94712929826"
+                },
+                {
+                  "id": 1611367513,
+                  "username": "Nico_Halborn",
+                  "displayName": "Nico Semmonella",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1614902095,
+                  "username": "swabhanu",
+                  "displayName": "Swabhanu | CoinDCX",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1623578700,
+                  "username": "ninipun",
+                  "displayName": "Defyn Isuru",
+                  "contactType": "user",
+                  "phone": "94716003239"
+                },
+                {
+                  "id": 1628136276,
+                  "displayName": "Adi anjana",
+                  "contactType": "user",
+                  "phone": "94774673291"
+                },
+                {
+                  "id": 1632710827,
+                  "displayName": "Chanuki",
+                  "contactType": "user",
+                  "phone": "94716988608"
+                },
+                {
+                  "id": 1679892302,
+                  "username": "fluwho",
+                  "displayName": "Flu | OnlySANs.Eth",
+                  "contactType": "user",
+                  "phone": "19729552319"
+                },
+                {
+                  "id": 1688618565,
+                  "username": "shrrherycf",
+                  "displayName": "Athuraliya Ayya",
+                  "contactType": "user",
+                  "phone": "94777854156"
+                },
+                {
+                  "id": 1689576709,
+                  "username": "Tenith",
+                  "displayName": "Tenith Hasintha",
+                  "contactType": "user",
+                  "phone": "94702988309"
+                },
+                {
+                  "id": 1691244570,
+                  "username": "LL123123Gg",
+                  "displayName": "Team - Narangoda",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1700137815,
+                  "username": "ashcooperkerns",
+                  "displayName": "Ash Cooper Kerns",
+                  "contactType": "user",
+                  "phone": "13104975725"
+                },
+                {
+                  "id": 1706247377,
+                  "displayName": "Nadugala Paragaha",
+                  "contactType": "user",
+                  "phone": "94712779765"
+                },
+                {
+                  "id": 1737601317,
+                  "username": "unreal0044",
+                  "displayName": "Asanka Anuruddha",
+                  "contactType": "user",
+                  "phone": "94760437037"
+                },
+                {
+                  "id": 1749087672,
+                  "displayName": "Harsha Senadeera",
+                  "contactType": "user",
+                  "phone": "94777454885"
+                },
+                {
+                  "id": 1757388775,
+                  "username": "ajjday",
+                  "displayName": "Ajjday",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1775838144,
+                  "username": "rangatechnologies_dev",
+                  "displayName": "Upul Oppo",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1777975234,
+                  "username": "Dila143CG",
+                  "displayName": "Defyn Chandika",
+                  "contactType": "user",
+                  "phone": "94713488381"
+                },
+                {
+                  "id": 1778653124,
+                  "username": "Sudarshan_sumathipala",
+                  "displayName": "Sudarshan Sumathipala",
+                  "contactType": "user",
+                  "phone": "94762165346"
+                },
+                {
+                  "id": 1787345138,
+                  "displayName": "Nadee Teacher",
+                  "contactType": "user",
+                  "phone": "94718336968"
+                },
+                {
+                  "id": 1804468280,
+                  "displayName": "Defyn Sandaruwan",
+                  "contactType": "user",
+                  "phone": "94713223225"
+                },
+                {
+                  "id": 1821292248,
+                  "username": "kalanaM",
+                  "displayName": "Kalana Muthumuni",
+                  "contactType": "user",
+                  "phone": "94779022046"
+                },
+                {
+                  "id": 1823143286,
+                  "displayName": "Hem ❤️",
+                  "contactType": "user",
+                  "phone": "94702126911"
+                },
+                {
+                  "id": 1823492984,
+                  "username": "Sathsarani_28",
+                  "displayName": "S. Sathsarani",
+                  "contactType": "user",
+                  "phone": "94703376980"
+                },
+                {
+                  "id": 1841739751,
+                  "displayName": "Udan Malli",
+                  "contactType": "user",
+                  "phone": "94716768847"
+                },
+                {
+                  "id": 1842091437,
+                  "displayName": "Rajapaksha's Wife",
+                  "contactType": "user",
+                  "phone": "94711266458"
+                },
+                {
+                  "id": 1844003876,
+                  "username": "Sazy_Zain",
+                  "displayName": "Rain Malli",
+                  "contactType": "user",
+                  "phone": "94775217044"
+                },
+                {
+                  "id": 1846944946,
+                  "username": "Cummft",
+                  "displayName": "Isuru Randika",
+                  "contactType": "user",
+                  "phone": "94715125842"
+                },
+                {
+                  "id": 1855474189,
+                  "displayName": "Indika Sir",
+                  "contactType": "user",
+                  "phone": "94714388788"
+                },
+                {
+                  "id": 1861483243,
+                  "username": "thamudithaX",
+                  "displayName": "Thamuditha",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1861915538,
+                  "username": "Nggpe4",
+                  "displayName": "Gihan Prabuddha",
+                  "contactType": "user",
+                  "phone": "94702996084"
+                },
+                {
+                  "id": 1867587744,
+                  "displayName": "Wimalasiri mobile",
+                  "contactType": "user",
+                  "phone": "94779609677"
+                },
+                {
+                  "id": 1869293322,
+                  "displayName": "Jayani New",
+                  "contactType": "user",
+                  "phone": "94779494643"
+                },
+                {
+                  "id": 1895955355,
+                  "username": "LauraTardivo",
+                  "displayName": "Laura",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1896920514,
+                  "username": "CrisblancOG",
+                  "displayName": "Cris - Temporarily Offgrid",
+                  "contactType": "user"
+                },
+                {
+                  "id": 1940144799,
+                  "displayName": "CHaRLiE",
+                  "contactType": "user",
+                  "phone": "94778652805"
+                },
+                {
+                  "id": 1953256580,
+                  "username": "WTF4RESA4",
+                  "displayName": "Deepthi Teacher",
+                  "contactType": "user",
+                  "phone": "94763161029"
+                },
+                {
+                  "id": 1991174353,
+                  "displayName": "Jayabima",
+                  "contactType": "user",
+                  "phone": "94717576702"
+                },
+                {
+                  "id": 1992977161,
+                  "displayName": "Malsha Weerasinghe",
+                  "contactType": "user",
+                  "phone": "94704109463"
+                },
+                {
+                  "id": 1997456420,
+                  "displayName": "Southern Service",
+                  "contactType": "user",
+                  "phone": "94719503474"
+                },
+                {
+                  "id": 2008062821,
+                  "username": "Pahansithh",
+                  "displayName": "Malitha",
+                  "contactType": "user",
+                  "phone": "94765544675"
+                },
+                {
+                  "id": 2018659314,
+                  "username": "yzndu",
+                  "displayName": "Yzk New",
+                  "contactType": "user",
+                  "phone": "94715409305"
+                },
+                {
+                  "id": 2026601881,
+                  "username": "GM18895",
+                  "displayName": "Uduwana Uber Car Taxi",
+                  "contactType": "user",
+                  "phone": "94771889501"
+                },
+                {
+                  "id": 2047220020,
+                  "displayName": "Viranga HARISCHANDRA",
+                  "contactType": "user",
+                  "phone": "94767775656"
+                },
+                {
+                  "id": 2052530096,
+                  "username": "bladeb0ss",
+                  "displayName": "Defyn Ayesh",
+                  "contactType": "user",
+                  "phone": "94773269713"
+                },
+                {
+                  "id": 2066440973,
+                  "username": "EranthaU",
+                  "displayName": "Erantha",
+                  "contactType": "user"
+                },
+                {
+                  "id": 2069887811,
+                  "username": "Muthuu1",
+                  "displayName": "Bishani",
+                  "contactType": "user",
+                  "phone": "94766843123"
+                },
+                {
+                  "id": 2074176354,
+                  "username": "JeewanthaW",
+                  "displayName": "CJ Chamod Weerasinghe",
+                  "contactType": "user",
+                  "phone": "94774823233"
+                },
+                {
+                  "id": 2084935500,
+                  "displayName": "Sudeepa Teacher",
+                  "contactType": "user"
+                },
+                {
+                  "id": 2107377386,
+                  "username": "jayaniperera816",
+                  "displayName": "Jayani Perera",
+                  "contactType": "user",
+                  "phone": "94774090044"
+                },
+                {
+                  "id": 5008283745,
+                  "username": "paragonthedev",
+                  "displayName": "ParagonTheDev | CTO | metarunelabs.dev",
+                  "contactType": "user",
+                  "phone": "94718857105"
+                },
+                {
+                  "id": 5008826597,
+                  "displayName": "Uber Courier",
+                  "contactType": "user",
+                  "phone": "94773602288"
+                },
+                {
+                  "id": 5033447276,
+                  "displayName": "Sudaraka Jayathilaka",
+                  "contactType": "user",
+                  "phone": "94715271890"
+                },
+                {
+                  "id": 5043000472,
+                  "displayName": "Shanaka Metaroon",
+                  "contactType": "user",
+                  "phone": "94771606441"
+                },
+                {
+                  "id": 5056647875,
+                  "displayName": "Manduli Katugampola",
+                  "contactType": "user",
+                  "phone": "94773020119"
+                },
+                {
+                  "id": 5067834638,
+                  "username": "asanka18",
+                  "displayName": "Ace Switchboards Asanka",
+                  "contactType": "user",
+                  "phone": "61450106580"
+                },
+                {
+                  "id": 5068140278,
+                  "username": "Tbssssssssss",
+                  "displayName": "Thisara",
+                  "contactType": "user"
+                },
+                {
+                  "id": 5078066011,
+                  "username": "roman_hacken",
+                  "displayName": "Roman K. | Hacken",
+                  "contactType": "user"
+                },
+                {
+                  "id": 5080904586,
+                  "displayName": "Sinthuvamsan",
+                  "contactType": "user"
+                },
+                {
+                  "id": 5084130231,
+                  "displayName": "Dulhasa Malli",
+                  "contactType": "user",
+                  "phone": "94705171579"
+                },
+                {
+                  "id": 5087636133,
+                  "username": "Tedneto",
+                  "displayName": "Sandun Dissanayake",
+                  "contactType": "user"
+                },
+                {
+                  "id": 5104721679,
+                  "username": "vlad_hacken",
+                  "displayName": "Vlad | Hacken 🇺🇦",
+                  "contactType": "user",
+                  "phone": "380678819642"
+                },
+                {
+                  "id": 5106305479,
+                  "displayName": "Anurada Teacher",
+                  "contactType": "user",
+                  "phone": "94715169659"
+                },
+                {
+                  "id": 5125950529,
+                  "displayName": "Visal",
+                  "contactType": "user",
+                  "phone": "94774644589"
+                },
+                {
+                  "id": 5127547619,
+                  "username": "Shelby7179",
+                  "displayName": "Thilan New",
+                  "contactType": "user",
+                  "phone": "94766008797"
+                },
+                {
+                  "id": 5143364519,
+                  "username": "nipunajayanath",
+                  "displayName": "Nipuna Uom",
+                  "contactType": "user"
+                },
+                {
+                  "id": 5150140770,
+                  "displayName": "Janitha Dananjana",
+                  "contactType": "user"
+                },
+                {
+                  "id": 5159964284,
+                  "displayName": "Dinusha",
+                  "contactType": "user",
+                  "phone": "94770071912"
+                },
+                {
+                  "id": 5166087495,
+                  "displayName": "Madam Siribaddana",
+                  "contactType": "user",
+                  "phone": "94712838006"
+                },
+                {
+                  "id": 5166457578,
+                  "username": "MetaruneCEO",
+                  "displayName": "Bhathiya Dialog",
+                  "contactType": "user",
+                  "phone": "94775555525"
+                },
+                {
+                  "id": 5169466592,
+                  "username": "stephmcarlson",
+                  "displayName": "Stephanie",
+                  "contactType": "user"
+                },
+                {
+                  "id": 5170887553,
+                  "username": "chanux5",
+                  "displayName": "Chanaka SYN",
+                  "contactType": "user"
+                },
+                {
+                  "id": 5171040643,
+                  "displayName": "Muthumala Metaroon",
+                  "contactType": "user",
+                  "phone": "94768639987"
+                },
+                {
+                  "id": 5210173202,
+                  "username": "dana4601",
+                  "displayName": "Dulaj Malli",
+                  "contactType": "user"
+                },
+                {
+                  "id": 5213517215,
+                  "username": "AgnesSere",
+                  "displayName": "AgnesS",
+                  "contactType": "user"
+                },
+                {
+                  "id": 5225880378,
+                  "username": "Workhorse_Ian",
+                  "displayName": "Ian Anderson",
+                  "contactType": "user"
+                },
+                {
+                  "id": 5229284998,
+                  "username": "Ranvidu",
+                  "displayName": "Thirasara",
+                  "contactType": "user",
+                  "phone": "94704463167"
+                },
+                {
+                  "id": 5261572300,
+                  "displayName": "Vihangi Chooti",
+                  "contactType": "user",
+                  "phone": "94719077596"
+                },
+                {
+                  "id": 5307488448,
+                  "displayName": "Darshana New",
+                  "contactType": "user",
+                  "phone": "94711249636"
+                },
+                {
+                  "id": 5318812973,
+                  "username": "jonharges",
+                  "displayName": "Jon Hargreaves",
+                  "contactType": "user",
+                  "phone": "447887345841"
+                },
+                {
+                  "id": 5320488935,
+                  "displayName": "Ishara Hostel",
+                  "contactType": "user",
+                  "phone": "94702470224"
+                },
+                {
+                  "id": 5332995208,
+                  "displayName": "Malmi Duwa",
+                  "contactType": "user",
+                  "phone": "94717905447"
+                },
+                {
+                  "id": 5340383915,
+                  "username": "RossBrian",
+                  "displayName": "Brian Ross",
+                  "contactType": "user",
+                  "phone": "13107336371"
+                },
+                {
+                  "id": 5345152903,
+                  "displayName": "Amaa Hasini",
+                  "contactType": "user"
+                },
+                {
+                  "id": 5392012508,
+                  "username": "Banula_25",
+                  "displayName": "Banula Perera",
+                  "contactType": "user",
+                  "phone": "94712610600"
+                },
+                {
+                  "id": 5406722448,
+                  "displayName": "Dinesha QA",
+                  "contactType": "user"
+                },
+                {
+                  "id": 5417171680,
+                  "username": "MAD_DOG_357",
+                  "displayName": "Hivin",
+                  "contactType": "user",
+                  "phone": "94743092299"
+                },
+                {
+                  "id": 5422470361,
+                  "username": "ranaistic",
+                  "displayName": "Rajat",
+                  "contactType": "user"
+                },
+                {
+                  "id": 5433678045,
+                  "username": "BubbaMeme",
+                  "displayName": "Bubba",
+                  "contactType": "user"
+                },
+                {
+                  "id": 5474922911,
+                  "displayName": "Vikasitha Pomegranate",
+                  "contactType": "user",
+                  "phone": "94770342050"
+                },
+                {
+                  "id": 5480425917,
+                  "displayName": "Chandana Sir",
+                  "contactType": "user",
+                  "phone": "94777483643"
+                },
+                {
+                  "id": 5507607192,
+                  "username": "EndableAlthein1912",
+                  "displayName": "Dasun Pubudumal",
+                  "contactType": "user",
+                  "phone": "94712143308"
+                },
+                {
+                  "id": 5512741837,
+                  "displayName": "Nanda Teacher",
+                  "contactType": "user",
+                  "phone": "94763708622"
                 }
               ]
             }
@@ -2060,59 +2671,12 @@
           "mode": "INSERT",
           "collectionId": "paragon-os-contacts"
         }
-      },
-      {
-        "json": {
-          "mode": "INSERT",
-          "collectionId": "paragon-os-knowledge",
-          "input": {
-            "content": {
-              "page 1": "Metarune Labs is a Sri Lanka based B2B software development studio that blends deep engineering expertise with practical product thinking to build future ready digital solutions for global clients. Specializing in Web3, mobile, AI, AR and VR, the team partners with startups and enterprises across North America and Europe to design and ship custom platforms, games, and tools that are actually used in the wild, not just in pitch decks. ([metarunelabs.dev][1]) From blockchain powered experiences like Draftables and DeFi Kingdoms to creator platforms, productivity tools, and immersive apps, Metarune Labs focuses on turning ambitious ideas into scalable, market ready products while staying lean, collaborative, and highly communicative throughout every engagement. ([metarunelabs.dev][1])\n\n[1]: https://www.metarunelabs.dev/?utm_source=chatgpt.com \"Metarune Labs - Web3 Innovation & AI-Powered Solutions\""
-            },
-            "metadata": {
-              "topic": [
-                "metarune"
-              ]
-            }
-          }
-        }
-      },
-      {
-        "json": {
-          "mode": "CREATE",
-          "collectionId": "paragon-os-contacts"
-        }
-      },
-      {
-        "json": {
-          "mode": "SEARCH",
-          "collectionId": "paragon-os-knowledge",
-          "input": "metarune"
-        }
-      },
-      {
-        "json": {
-          "mode": "DELETE",
-          "collectionId": "paragon-os-knowledge"
-        }
-      },
-      {
-        "json": {
-          "mode": "CLEAR",
-          "collectionId": "paragon-os-knowledge"
-        }
-      },
-      {
-        "json": {
-          "mode": "STATUS",
-          "collectionId": "paragon-os-contacts"
-        }
       }
     ]
   },
-  "versionId": "85857884-ec84-4eef-a9c0-1fcd3fa03d99",
+  "versionId": "91ab4eec-4b70-4572-9dba-0b096f08a1af",
   "activeVersionId": null,
-  "versionCounter": 126,
+  "versionCounter": 130,
   "triggerCount": 0,
   "tags": [],
   "shared": [
