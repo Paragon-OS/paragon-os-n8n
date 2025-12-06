@@ -242,8 +242,7 @@
           "value": {
             "query": "={{ $json.query }}",
             "entity": "={{ $json.entity }}",
-            "mode": "={{ $json.mode }}",
-            "testMode": true
+            "mode": "={{ $json.mode }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -273,15 +272,6 @@
               "display": true,
               "canBeUsedToMatch": true,
               "type": "string"
-            },
-            {
-              "id": "testMode",
-              "displayName": "testMode",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "boolean"
             }
           ],
           "attemptToConvertTypes": false,

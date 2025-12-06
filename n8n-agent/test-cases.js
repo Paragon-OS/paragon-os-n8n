@@ -37,22 +37,14 @@ const TESTS = {
       entity: 'knowledge-rag',
       mode: 'INSERT'
     },
-    'knowledge-rag-with-testmode': {
-      query: 'test knowledge with testMode',
-      entity: 'knowledge-rag',
-      mode: 'SEARCH',
-      testMode: true
-    },
     'chat-with-all-params': {
       query: 'metarune management',
-      entity: 'chat',
-      testMode: false
+      entity: 'chat'
     },
     // Test all entity types to ensure schema compatibility
     'all-entities-test': {
       query: 'test',
-      entity: 'contact',
-      testMode: false
+      entity: 'contact'
     },
     'knowledge-rag-default-mode': {
       query: 'default mode test',
@@ -92,7 +84,7 @@ const TESTS = {
     },
     'search-metarune': {
       mode: 'SEARCH',
-      collectionId: 'paragon-os-knowledge-dev',
+      collectionId: 'paragon-os-knowledge',
       input: 'metarune'
     },
     'create-collection': {

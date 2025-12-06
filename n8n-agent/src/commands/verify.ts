@@ -6,7 +6,6 @@ import type { WorkflowObject } from "../types/index";
 
 /**
  * Verify that workflow trigger inputs in the database match the JSON files.
- * Specifically checks for testMode parameter leakage.
  * 
  * Usage:
  *   npm run n8n:verify
@@ -84,16 +83,6 @@ function compareInputs(
         `JSON file has input "${jsonInput.name}" but database doesn't`
       );
     }
-  }
-
-  // Check for testMode specifically
-  const hasTestModeInDb = dbNames.has("testMode");
-  const hasTestModeInJson = jsonNames.has("testMode");
-
-  if (hasTestModeInDb && !hasTestModeInJson) {
-    differences.push(
-      `⚠️  CRITICAL: Database has "testMode" input but JSON file doesn't!`
-    );
   }
 
   return differences;
@@ -260,7 +249,6 @@ export async function executeVerify(flags: string[]): Promise<void> {
 
   if (mismatchCount > 0) {
     console.log(`⚠️  Found ${mismatchCount} workflow(s) with mismatched trigger inputs.`);
-    console.log(`   This may cause testMode parameter leakage in toolWorkflow nodes.`);
     console.log(`   Recommendation: Delete and re-import affected workflows.\n`);
     process.exit(1);
   }
