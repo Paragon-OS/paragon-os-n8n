@@ -3,7 +3,7 @@
   "createdAt": "2025-11-30T21:00:00.000Z",
   "id": "TelegramContextScout",
   "name": "Telegram Context Scout",
-  "description": "This workflow provides a fast, consistent lookup system for Telegram data by combining MCP tools, structured normalization, caching, and fuzzy search.\n\nIt supports seven entity types:\n\n**contact**\nRepresents a Telegram contact returned by the `telegram_list_contacts` MCP tool. The workflow normalizes each contact to include id, username, displayName, lastMessage, contactType, and phone.\n\n**chat**\nRepresents a Telegram chat (DM, group, channel) returned by the `telegram_list_chats` MCP tool. Each chat is normalized to include id, name, members, kind, and unread.\n\n**tool**\nRepresents an MCP tool exposed by the Telegram MCP server. Each item includes the tool name, description and the exact tool call schema.\n\n**self**\nRepresents current user's own Telegram profile. It's a single item including id, username, and other profile details. This entity ignores the `query` parameter.\n\n**contact-rag**\nSearches Telegram contacts using RAG (semantic search) for better matching on names, usernames, and context. Uses the `paragon-os-contacts` collection internally.\n\n**message-rag**\nSearches Telegram messages using RAG (semantic search) for finding messages by content, sender, or context. Uses the `paragon-os-messages` collection internally.\n\n**knowledge-rag**\nSearches or stores information in a persistent knowledge base using RAG. Supports SEARCH (query stored knowledge) and INSERT (store new knowledge) modes via the optional `mode` parameter. Uses the `paragon-os-knowledge` collection internally. Default mode is SEARCH if not specified.\n\n### What the workflow does\n\n**1. Retrieval**\nWhen an entity type is requested, the workflow fetches the relevant raw data from the appropriate MCP tool unless valid cached data is already available.\n\n**2. Normalization**\nFetched data is transformed into a predictable format for each entity category, enabling reliable fuzzy matching downstream.\n\n**3. Caching**\nAll data types are cached independently with a TTL to reduce repeated MCP calls and improve tool execution speed.\n\n**4. Query Processing**\nThe workflow accepts a search query along with an entity type, then performs fuzzy matching over the appropriate cached dataset and returns the most relevant matches along with match scores.\n\n**5. RAG Operations**\nFor RAG-based entity types (contact-rag, message-rag, knowledge-rag), the workflow uses semantic search and can store/retrieve information from vector collections.\n\nUse this tool whenever a workflow needs structured Telegram data lookup for contacts, chats, Telegram MCP tools, or persistent knowledge storage.",
+  "description": "This workflow provides a fast, consistent lookup system for Telegram data by combining MCP tools, structured normalization, caching, and fuzzy search.\n\nIt supports six entity types:\n\n**contact**\nRepresents a Telegram contact returned by the `telegram_list_contacts` MCP tool. The workflow normalizes each contact to include id, username, displayName, lastMessage, contactType, and phone.\n\n**chat**\nRepresents a Telegram chat (DM, group, channel) returned by the `telegram_list_chats` MCP tool. Each chat is normalized to include id, name, members, kind, and unread.\n\n**tool**\nRepresents an MCP tool exposed by the Telegram MCP server. Each item includes the tool name, description and the exact tool call schema.\n\n**self**\nRepresents current user's own Telegram profile. It's a single item including id, username, and other profile details. This entity ignores the `query` parameter.\n\n**contact-rag**\nSearches Telegram contacts using RAG (semantic search) for better matching on names, usernames, and context. Uses the `paragon-os-contacts` collection internally.\n\n**message-rag**\nSearches Telegram messages using RAG (semantic search) for finding messages by content, sender, or context. Uses the `paragon-os-messages` collection internally.\n\n### What the workflow does\n\n**1. Retrieval**\nWhen an entity type is requested, the workflow fetches the relevant raw data from the appropriate MCP tool unless valid cached data is already available.\n\n**2. Normalization**\nFetched data is transformed into a predictable format for each entity category, enabling reliable fuzzy matching downstream.\n\n**3. Caching**\nAll data types are cached independently with a TTL to reduce repeated MCP calls and improve tool execution speed.\n\n**4. Query Processing**\nThe workflow accepts a search query along with an entity type, then performs fuzzy matching over the appropriate cached dataset and returns the most relevant matches along with match scores.\n\n**5. RAG Operations**\nFor RAG-based entity types (contact-rag, message-rag), the workflow uses semantic search and can store/retrieve information from vector collections.\n\nUse this tool whenever a workflow needs structured Telegram data lookup for contacts, chats, or Telegram MCP tools.",
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -16,9 +16,6 @@
             },
             {
               "name": "entity"
-            },
-            {
-              "name": "mode"
             }
           ]
         }
@@ -37,7 +34,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Normalize inputs\nconst input = $input.first().json;\n\nreturn {\n  query: input.query || '',\n  entity: input.entity || '',\n  mode: input.mode || ''\n};"
+        "jsCode": "// Normalize inputs\nconst input = $input.first().json;\n\nreturn {\n  query: input.query || '',\n  entity: input.entity || ''\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1065,30 +1062,6 @@
               },
               "renameOutput": true,
               "outputKey": "MESSAGE_RAG"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "id": "telegram-switch-knowledge-rag",
-                    "leftValue": "={{ $json.entity }}",
-                    "rightValue": "knowledge-rag",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "KNOWLEDGE_RAG"
             }
           ]
         },
@@ -1105,7 +1078,7 @@
     },
     {
       "parameters": {
-        "numberInputs": 7
+        "numberInputs": 6
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
@@ -1574,188 +1547,6 @@
       "name": "All Messages"
     },
     {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "IZa7S90Z9W1qxysr",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/IZa7S90Z9W1qxysr",
-          "cachedResultName": "[HELPERS] Dynamic RAG"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "mode": "STATUS",
-            "collectionId": "paragon-os-knowledge"
-          },
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "input",
-              "displayName": "input",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "mode",
-              "displayName": "mode",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "collectionId",
-              "displayName": "collectionId",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        416,
-        1456
-      ],
-      "id": "check-knowledge-rag-status",
-      "name": "Check Knowledge RAG Status",
-      "retryOnFail": false,
-      "onError": "continueErrorOutput"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "knowledge-rag-ready-check",
-              "leftValue": "={{ $json.ready }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "true"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "knowledge-rag-ready-router",
-      "name": "Knowledge RAG Ready Router",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.1,
-      "position": [
-        640,
-        1456
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const triggerData = $('When Executed by Another Workflow').first().json;\nconst mode = triggerData.mode || 'SEARCH';\nconst query = triggerData.query || '';\n\n// For INSERT mode, wrap query in proper structure\n// For SEARCH mode, use query as-is\nconst input = mode === 'INSERT' \n  ? { content: { text: query }, metadata: {} }\n  : query;\n\nreturn {\n  mode: mode,\n  collectionId: 'paragon-os-knowledge',\n  input: input\n};"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        864,
-        1528
-      ],
-      "id": "prepare-knowledge-rag-input",
-      "name": "Prepare Knowledge RAG Input"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "IZa7S90Z9W1qxysr",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/IZa7S90Z9W1qxysr",
-          "cachedResultName": "[HELPERS] Dynamic RAG"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "mode": "={{ $json.mode }}",
-            "collectionId": "={{ $json.collectionId }}",
-            "input": "={{ $json.input }}"
-          },
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "input",
-              "displayName": "input",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "mode",
-              "displayName": "mode",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "collectionId",
-              "displayName": "collectionId",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        1088,
-        1456
-      ],
-      "id": "search-insert-knowledge",
-      "name": "Search/Insert Knowledge"
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [
-        1312,
-        1456
-      ],
-      "id": "knowledge-rag-result",
-      "name": "Knowledge RAG Result"
-    },
-    {
       "parameters": {},
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
@@ -2187,13 +1978,6 @@
             "type": "main",
             "index": 0
           }
-        ],
-        [
-          {
-            "node": "Check Knowledge RAG Status",
-            "type": "main",
-            "index": 0
-          }
         ]
       ]
     },
@@ -2343,68 +2127,6 @@
         ]
       ]
     },
-    "Check Knowledge RAG Status": {
-      "main": [
-        [
-          {
-            "node": "Knowledge RAG Ready Router",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Knowledge RAG Ready Router": {
-      "main": [
-        [
-          {
-            "node": "Search/Insert Knowledge",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Prepare Knowledge RAG Input",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Knowledge RAG Input": {
-      "main": [
-        [
-          {
-            "node": "Search/Insert Knowledge",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Search/Insert Knowledge": {
-      "main": [
-        [
-          {
-            "node": "Knowledge RAG Result",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Knowledge RAG Result": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 6
-          }
-        ]
-      ]
-    },
     "Contacts RAG results": {
       "main": [
         [
@@ -2433,16 +2155,7 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "query": "what do you know?",
-          "entity": "knowledge-rag"
-        }
-      }
-    ]
-  },
+  "pinData": null,
   "versionId": "4be01c6e-0088-417f-b9a3-acb88e06a3a3",
   "activeVersionId": null,
   "versionCounter": 46,
