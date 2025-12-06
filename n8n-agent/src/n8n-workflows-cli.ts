@@ -28,6 +28,10 @@ async function main() {
     case "verify":
       await executeVerify(flags);
       break;
+    default:
+      // This should never happen due to parseArgs validation, but TypeScript requires it
+      console.error(`Unknown command: ${command}`);
+      process.exit(1);
   }
 }
 
