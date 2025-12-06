@@ -232,7 +232,9 @@
           "mappingMode": "defineBelow",
           "value": {
             "query": "={{ $json.query }}",
-            "entity": "={{ $json.entity }}"
+            "entity": "={{ $json.entity }}",
+            "mode": "={{ $json.mode }}",
+            "testMode": true
           },
           "matchingColumns": [],
           "schema": [
@@ -253,6 +255,24 @@
               "display": true,
               "canBeUsedToMatch": true,
               "type": "string"
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "testMode",
+              "displayName": "testMode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean"
             }
           ],
           "attemptToConvertTypes": false,

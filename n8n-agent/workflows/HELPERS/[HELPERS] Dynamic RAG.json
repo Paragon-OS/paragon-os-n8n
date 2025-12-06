@@ -1905,7 +1905,7 @@
       {
         "json": {
           "mode": "INSERT",
-          "collectionId": "chat-agent-experiment-1",
+          "collectionId": "paragon-os-knowledge-dev",
           "input": {
             "content": {
               "page 1": "Metarune Labs is a Sri Lanka based B2B software development studio that blends deep engineering expertise with practical product thinking to build future ready digital solutions for global clients. Specializing in Web3, mobile, AI, AR and VR, the team partners with startups and enterprises across North America and Europe to design and ship custom platforms, games, and tools that are actually used in the wild, not just in pitch decks. ([metarunelabs.dev][1]) From blockchain powered experiences like Draftables and DeFi Kingdoms to creator platforms, productivity tools, and immersive apps, Metarune Labs focuses on turning ambitious ideas into scalable, market ready products while staying lean, collaborative, and highly communicative throughout every engagement. ([metarunelabs.dev][1])\n\n[1]: https://www.metarunelabs.dev/?utm_source=chatgpt.com \"Metarune Labs - Web3 Innovation & AI-Powered Solutions\""
@@ -1927,20 +1927,20 @@
       {
         "json": {
           "mode": "SEARCH",
-          "collectionId": "chat-agent-experiment-1",
+          "collectionId": "paragon-os-knowledge-dev",
           "input": "metarune"
         }
       },
       {
         "json": {
           "mode": "DELETE",
-          "collectionId": "chat-agent-experiment-1"
+          "collectionId": "paragon-os-knowledge-dev"
         }
       },
       {
         "json": {
           "mode": "CLEAR",
-          "collectionId": "chat-agent-experiment-1"
+          "collectionId": "paragon-os-knowledge-dev"
         }
       },
       {

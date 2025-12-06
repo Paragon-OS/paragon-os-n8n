@@ -17,6 +17,15 @@ const TESTS = {
       query: 'meeting',
       entity: 'message-rag'
     },
+    'knowledge-rag-search': {
+      query: 'what do you know about X?',
+      entity: 'knowledge-rag'
+    },
+    'knowledge-rag-insert': {
+      query: 'remember that Y is important',
+      entity: 'knowledge-rag',
+      mode: 'INSERT'
+    },
     'contact-fuzzy': {
       query: 'lanka',
       entity: 'contact'
@@ -50,7 +59,7 @@ const TESTS = {
     },
     'search-metarune': {
       mode: 'SEARCH',
-      collectionId: 'chat-agent-experiment-1',
+      collectionId: 'paragon-os-knowledge-dev',
       input: 'metarune'
     },
     'create-collection': {
