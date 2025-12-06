@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import { getRemainingArgs } from "./cli";
 import { executeBackup } from "./commands/backup";
 import { executeRestore } from "./commands/restore";
 import { executeTree } from "./commands/tree";
@@ -12,13 +13,6 @@ program
   .name("n8n-workflows-cli")
   .description("CLI tool for managing n8n workflows")
   .version("1.0.0");
-
-// Helper to extract remaining args after commander parsing
-function getRemainingArgs(command: any): string[] {
-  // commander stores unknown options in command.args
-  // For commands with allowUnknownOption, these are the unparsed arguments
-  return command.args || [];
-}
 
 program
   .command("backup")

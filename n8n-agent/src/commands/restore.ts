@@ -1,10 +1,9 @@
 import fs from "fs";
-import { resolveDir, getPassthroughArgs } from "../utils/args";
+import { resolveDir, getPassthroughArgs, confirm } from "../cli";
 import { runN8nQuiet } from "../utils/n8n";
 import { collectJsonFilesRecursive } from "../utils/file";
 import { normalizeWorkflowForCompare } from "../utils/workflow";
 import { deepEqual, exportCurrentWorkflowsForCompare } from "../utils/compare";
-import { confirm } from "../utils/prompt";
 import type { BackupWorkflowForRestore, WorkflowObject } from "../types/index";
 
 interface RestoreOptions {

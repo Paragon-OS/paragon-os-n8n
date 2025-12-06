@@ -1,6 +1,6 @@
 import path from "path";
 import fs from "fs";
-import { resolveDir } from "../utils/args";
+import { resolveDir } from "../cli";
 import { parseTagFromName } from "../utils/workflow";
 
 interface OrganizeOptions {

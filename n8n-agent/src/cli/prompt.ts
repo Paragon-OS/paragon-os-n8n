@@ -3,6 +3,10 @@ import prompts from "prompts";
 /**
  * Prompt user for confirmation. Returns true if user confirms, false otherwise.
  * Supports yes option from commander to skip prompt and auto-confirm.
+ * 
+ * @param message - The confirmation message to display
+ * @param yes - If true, skip prompt and auto-confirm
+ * @returns Promise resolving to true if confirmed, false otherwise
  */
 export async function confirm(
   message: string,

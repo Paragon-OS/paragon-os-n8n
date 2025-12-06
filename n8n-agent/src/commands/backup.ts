@@ -1,10 +1,9 @@
 import path from "path";
 import fs from "fs";
-import { resolveDir, getPassthroughArgs } from "../utils/args";
+import { resolveDir, getPassthroughArgs, confirm } from "../cli";
 import { runN8n } from "../utils/n8n";
 import { collectJsonFilesRecursive, removeEmptyDirectoriesUnder } from "../utils/file";
 import { parseTagFromName, sanitizeWorkflowName } from "../utils/workflow";
-import { confirm } from "../utils/prompt";
 import type { WorkflowFile } from "../types/index";
 
 interface BackupOptions {

@@ -1,7 +1,11 @@
 import path from "path";
 
 /**
- * Resolve directory path from commander option or use fallback
+ * Resolve directory path from commander option or use fallback.
+ * 
+ * @param optionValue - The value from a commander option (may be undefined)
+ * @param fallback - Fallback path to use if optionValue is not provided
+ * @returns Resolved absolute path
  */
 export function resolveDir(optionValue: string | undefined, fallback: string): string {
   if (optionValue) {
@@ -11,7 +15,11 @@ export function resolveDir(optionValue: string | undefined, fallback: string): s
 }
 
 /**
- * Get passthrough args for n8n CLI (filters out our custom flags)
+ * Get passthrough args for n8n CLI (filters out our custom flags).
+ * 
+ * @param args - Array of command-line arguments
+ * @param excludeFlags - Additional flags to exclude from passthrough
+ * @returns Filtered array of arguments to pass through to n8n
  */
 export function getPassthroughArgs(args: string[], excludeFlags: string[] = []): string[] {
   const excludeSet = new Set([
