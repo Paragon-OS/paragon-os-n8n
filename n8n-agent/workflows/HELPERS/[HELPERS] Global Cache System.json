@@ -5,6 +5,55 @@
   "versionId": "b52e1436-15f5-4f64-bb07-d22b694bf58e",
   "nodes": [
     {
+      "parameters": {},
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "Clear All Cache (Manual)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        304,
+        -200
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "command": "podman exec n8n-redis redis-cli FLUSHDB"
+      },
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "name": "Flush Redis Cache",
+      "type": "n8n-nodes-base.executeCommand",
+      "position": [
+        528,
+        -200
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "success"
+            },
+            {
+              "name": "message",
+              "value": "All cache entries have been cleared"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+      "name": "Cache Cleared Response",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        752,
+        -200
+      ],
+      "typeVersion": 3.4
+    },
+    {
       "parameters": {
         "workflowInputs": {
           "values": [
@@ -192,6 +241,28 @@
     }
   ],
   "connections": {
+    "Clear All Cache (Manual)": {
+      "main": [
+        [
+          {
+            "node": "Flush Redis Cache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flush Redis Cache": {
+      "main": [
+        [
+          {
+            "node": "Cache Cleared Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "When Executed by Another Workflow": {
       "main": [
         [

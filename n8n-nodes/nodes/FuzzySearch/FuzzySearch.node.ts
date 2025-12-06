@@ -292,9 +292,32 @@ export class FuzzySearch implements INodeType {
 				// Index all search targets
 				miniSearch.addAll(searchTargets);
 
+				// Helper function to calculate prefix/substring boost for ranking
+				const calculatePrefixBoost = (searchableText: string, queryLower: string): number => {
+					const textLower = searchableText.toLowerCase();
+					const words = textLower.split(/\s+/);
+					
+					// Check if any word starts with the query (strongest match)
+					for (const word of words) {
+						if (word.startsWith(queryLower)) {
+							// Exact prefix match - huge boost
+							// Shorter words that match get higher boost (more specific)
+							return 100 + (50 / Math.max(1, word.length - queryLower.length));
+						}
+					}
+					
+					// Check if query appears as substring anywhere
+					if (textLower.includes(queryLower)) {
+						return 50; // Substring match - moderate boost
+					}
+					
+					return 0; // No direct match
+				};
+
 				// Perform fuzzy search with progressive fuzzy level increasing
 				let results: any[];
 				let usedFallbackThreshold = false;
+				const queryLower = query.toLowerCase().trim();
 
 				if (matchIndividualWords) {
 					// Split query into individual words and search for each
@@ -378,7 +401,7 @@ export class FuzzySearch implements INodeType {
 					// Single query search
 					const searchResults = miniSearch.search(query, {
 						fuzzy: fuzzyLevel,
-						prefix: fuzzyLevel > 0.5, // Only use prefix for lenient searches
+						prefix: true, // Always enable prefix matching for better substring detection
 					});
 
 					// Transform results to match expected format
@@ -395,12 +418,17 @@ export class FuzzySearch implements INodeType {
 							const searchTarget = searchTargets[result.id];
 							// MiniSearch returns score as a number (higher is better)
 							// Ensure score is always a number, default to 0 if missing
-							const score = typeof result.score === 'number' ? result.score : (result.match || {}).score || 0;
+							const baseScore = typeof result.score === 'number' ? result.score : (result.match || {}).score || 0;
+							// Add prefix boost for better ranking of exact prefix matches
+							const prefixBoost = calculatePrefixBoost(searchTarget.searchableText, queryLower);
 							return {
 								obj: searchTarget,
-								score: score,
+								score: baseScore + prefixBoost,
+								_prefixBoost: prefixBoost,
 							};
-						});
+						})
+						// Re-sort with boosted scores
+						.sort((a: any, b: any) => b.score - a.score);
 
 					// Apply limit
 					if (limit > 0 && results.length > limit) {
@@ -554,9 +582,32 @@ export class FuzzySearch implements INodeType {
 			// Index all search targets
 			miniSearch.addAll(searchTargets);
 
+			// Helper function to calculate prefix/substring boost for ranking
+			const calculatePrefixBoost = (searchableText: string, queryLower: string): number => {
+				const textLower = searchableText.toLowerCase();
+				const words = textLower.split(/\s+/);
+				
+				// Check if any word starts with the query (strongest match)
+				for (const word of words) {
+					if (word.startsWith(queryLower)) {
+						// Exact prefix match - huge boost
+						// Shorter words that match get higher boost (more specific)
+						return 100 + (50 / Math.max(1, word.length - queryLower.length));
+					}
+				}
+				
+				// Check if query appears as substring anywhere
+				if (textLower.includes(queryLower)) {
+					return 50; // Substring match - moderate boost
+				}
+				
+				return 0; // No direct match
+			};
+
 			// Perform fuzzy search with progressive fuzzy level increasing
 			let results: any[];
 			let usedFallbackThreshold = false;
+			const queryLower = query.toLowerCase().trim();
 
 			if (matchIndividualWords) {
 				// Split query into individual words and search for each
@@ -640,7 +691,7 @@ export class FuzzySearch implements INodeType {
 				// Single query search
 				const searchResults = miniSearch.search(query, {
 					fuzzy: fuzzyLevel,
-					prefix: fuzzyLevel > 0.5, // Only use prefix for lenient searches
+					prefix: true, // Always enable prefix matching for better substring detection
 				});
 
 				// Transform results to match expected format
@@ -657,12 +708,17 @@ export class FuzzySearch implements INodeType {
 					.map((result: any) => {
 						const searchTarget = searchTargets[result.id];
 						// Ensure score is a number (MiniSearch returns numeric scores)
-						const score = typeof result.score === 'number' ? result.score : 0;
+						const baseScore = typeof result.score === 'number' ? result.score : 0;
+						// Add prefix boost for better ranking of exact prefix matches
+						const prefixBoost = calculatePrefixBoost(searchTarget.searchableText, queryLower);
 						return {
 							obj: searchTarget,
-							score: score,
+							score: baseScore + prefixBoost,
+							_prefixBoost: prefixBoost,
 						};
-					});
+					})
+					// Re-sort with boosted scores
+					.sort((a: any, b: any) => b.score - a.score);
 
 				// Apply limit
 				if (limit > 0 && results.length > limit) {
