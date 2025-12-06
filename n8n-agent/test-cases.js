@@ -13,6 +13,10 @@ const TESTS = {
       query: 'sebastian',
       entity: 'contact-rag'
     },
+    'message-rag': {
+      query: 'meeting',
+      entity: 'message-rag'
+    },
     'contact-fuzzy': {
       query: 'lanka',
       entity: 'contact'

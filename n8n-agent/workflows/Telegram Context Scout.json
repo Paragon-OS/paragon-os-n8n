@@ -1025,6 +1025,30 @@
               },
               "renameOutput": true,
               "outputKey": "CONTACT_RAG"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "telegram-switch-message-rag",
+                    "leftValue": "={{ $json.entity }}",
+                    "rightValue": "message-rag",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "MESSAGE_RAG"
             }
           ]
         },
@@ -1041,7 +1065,7 @@
     },
     {
       "parameters": {
-        "numberInputs": 5
+        "numberInputs": 6
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
@@ -1317,6 +1341,272 @@
       "name": "Check RAG Status",
       "retryOnFail": false,
       "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "IZa7S90Z9W1qxysr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/IZa7S90Z9W1qxysr",
+          "cachedResultName": "[HELPERS] Dynamic RAG"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "mode": "STATUS",
+            "collectionId": "paragon-os-messages"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "input",
+              "displayName": "input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "collectionId",
+              "displayName": "collectionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -256,
+        1040
+      ],
+      "id": "check-message-rag-status",
+      "name": "Check Message RAG Status",
+      "retryOnFail": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "=telegram_list_messages",
+        "toolParameters": "={\n  \"limit\": 100\n}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        1112
+      ],
+      "id": "list-messages",
+      "name": "List Messages",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "aiYCclLDUqob5iQ0",
+          "name": "Telegram MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nfunction simplifyMCPData(input, dataKey, mcpDataKey, mapper, errorMsg) {\n  let rawData = [];\n  try {\n    if (input.result?.content?.[0]) {\n      const parsed = JSON.parse(input.result.content[0].text);\n      rawData = parsed?.[mcpDataKey] || [];\n    } else if (input[dataKey]) {\n      rawData = Array.isArray(input[dataKey]) ? input[dataKey] : [];\n    } else if (input.output?.[dataKey]) {\n      rawData = Array.isArray(input.output[dataKey]) ? input.output[dataKey] : [];\n    }\n    \n    if (!Array.isArray(rawData) || rawData.length === 0) {\n      return { [dataKey]: [], error: errorMsg, shouldFetch: true };\n    }\n    \n    return { [dataKey]: rawData.map(mapper) };\n  } catch (error) {\n    return { [dataKey]: [], error: error.message, shouldFetch: true };\n  }\n}\n\nreturn simplifyMCPData(\n  input,\n  'messages',\n  'messages',\n  (m) => ({\n    id: m.id,\n    chatId: m.chatId,\n    text: m.text || '',\n    senderId: m.senderId,\n    senderName: m.senderName || m.from?.name || '',\n    date: m.date || m.timestamp,\n    kind: m.kind || 'message'\n  }),\n  'No valid messages found'\n);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        1112
+      ],
+      "id": "message-data-simplifier",
+      "name": "Message Data Simplifier"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "IZa7S90Z9W1qxysr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/IZa7S90Z9W1qxysr",
+          "cachedResultName": "[HELPERS] Dynamic RAG"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "collectionId": "paragon-os-messages",
+            "mode": "INSERT",
+            "input": "={{ \n  ({\n    content: {\n      messages: $json.messages\n    }\n  })\n}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "input",
+              "displayName": "input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "collectionId",
+              "displayName": "collectionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        416,
+        1112
+      ],
+      "id": "messages-dynamic-rag",
+      "name": "Messages Dynamic RAG"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "IZa7S90Z9W1qxysr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/IZa7S90Z9W1qxysr",
+          "cachedResultName": "[HELPERS] Dynamic RAG"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "mode": "SEARCH",
+            "collectionId": "paragon-os-messages",
+            "input": "={{ $('When Executed by Another Workflow').item.json.query }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "input",
+              "displayName": "input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "collectionId",
+              "displayName": "collectionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        640,
+        1040
+      ],
+      "id": "search-rag-messages",
+      "name": "Search RAG Messages"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nlet telegramMessages = [];\n\ntry {\n  if (input.results && Array.isArray(input.results)) {\n    for (const result of input.results) {\n      if (result.content && result.content.messages && Array.isArray(result.content.messages)) {\n        telegramMessages.push(...result.content.messages);\n      }\n    }\n  } else if (input.messages && Array.isArray(input.messages)) {\n    telegramMessages = input.messages;\n  } else if (Array.isArray(input)) {\n    telegramMessages = input;\n  }\n} catch (error) {\n  telegramMessages = [];\n}\n\nreturn {\n  telegramMessages: telegramMessages\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        1040
+      ],
+      "id": "transform-rag-message-results",
+      "name": "Transform RAG Message Results"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        1040
+      ],
+      "id": "all-messages",
+      "name": "All Messages"
+    },
+    {
+      "parameters": {
+        "query": "={{ $('When Executed by Another Workflow').item.json.query }}",
+        "arrayField": "telegramMessages",
+        "searchKeys": "text\nsenderName",
+        "matchQuality": 50,
+        "limit": 10,
+        "advancedOptions": {
+          "includeScore": true,
+          "matchIndividualWords": false
+        }
+      },
+      "type": "n8n-nodes-paragon-os.fuzzySearch",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        1040
+      ],
+      "id": "fuzzysearch-messages",
+      "name": "FuzzySearch (Messages)"
     }
   ],
   "connections": {
@@ -1659,6 +1949,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Check Message RAG Status",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -1753,6 +2050,101 @@
             "node": "List Contacts1",
             "type": "main",
             "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Message RAG Status": {
+      "main": [
+        [
+          {
+            "node": "Search RAG Messages",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "List Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Messages": {
+      "main": [
+        [
+          {
+            "node": "Message Data Simplifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message Data Simplifier": {
+      "main": [
+        [
+          {
+            "node": "Messages Dynamic RAG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Messages Dynamic RAG": {
+      "main": [
+        [
+          {
+            "node": "Search RAG Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search RAG Messages": {
+      "main": [
+        [
+          {
+            "node": "Transform RAG Message Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform RAG Message Results": {
+      "main": [
+        [
+          {
+            "node": "All Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "All Messages": {
+      "main": [
+        [
+          {
+            "node": "FuzzySearch (Messages)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FuzzySearch (Messages)": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 5
           }
         ]
       ]
