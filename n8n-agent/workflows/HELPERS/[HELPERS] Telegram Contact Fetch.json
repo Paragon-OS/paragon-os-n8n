@@ -1,17 +1,16 @@
 {
-  "updatedAt": "2025-12-06T17:30:00.000Z",
+  "updatedAt": "2025-12-07T00:40:28.000Z",
   "createdAt": "2025-12-06T17:30:00.000Z",
-  "id": "DiscordContactFetch",
-  "name": "[HELPERS] Discord Contact Fetch",
-  "description": "Fetches and normalizes Discord contacts from MCP",
+  "id": "TelegramContactFetch",
+  "name": "[HELPERS] Telegram Contact Fetch",
+  "description": "Fetches and normalizes Telegram contacts from MCP",
   "active": false,
   "isArchived": false,
   "nodes": [
     {
       "parameters": {
-        "workflowInputs": {
-          "values": []
-        }
+        "inputSource": "jsonExample",
+        "jsonExample": "{}"
       },
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
@@ -25,8 +24,8 @@
     {
       "parameters": {
         "operation": "executeTool",
-        "toolName": "=discord_list_contacts",
-        "toolParameters": "={\n  \"limit\": 100\n}"
+        "toolName": "=telegram_list_contacts",
+        "toolParameters": "={\n  \"limit\": 200\n}"
       },
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
@@ -38,8 +37,8 @@
       "name": "List Contacts",
       "credentials": {
         "mcpClientApi": {
-          "id": "ZFofx3k2ze1wsifx",
-          "name": "Discord MCP Client (STDIO) account"
+          "id": "aiYCclLDUqob5iQ0",
+          "name": "Telegram MCP Client (STDIO) account"
         }
       }
     },
@@ -56,7 +55,7 @@
             "rawData": "={{ $json }}",
             "dataKey": "contacts",
             "mcpDataKey": "contacts",
-            "mapper": "(c) => ({ id: c.id, username: c.tag, displayName: c.displayName, lastMessage: c.lastMessageAtRelative, contactType: c.type })",
+            "mapper": "(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone })",
             "errorMsg": "No valid contacts found"
           },
           "matchingColumns": [],
@@ -155,11 +154,28 @@
   },
   "staticData": null,
   "meta": null,
-  "versionId": "discord-contact-fetch-v1",
+  "pinData": {},
+  "versionId": "d30fd087-61f1-4d97-981f-414fd0981393",
   "activeVersionId": null,
-  "versionCounter": 1,
+  "versionCounter": 3,
   "triggerCount": 0,
   "tags": [],
-  "shared": []
+  "shared": [
+    {
+      "updatedAt": "2025-12-07T00:23:58.813Z",
+      "createdAt": "2025-12-07T00:23:58.813Z",
+      "role": "workflow:owner",
+      "workflowId": "TelegramContactFetch",
+      "projectId": "GEUEn6ArNROzJ5FY",
+      "project": {
+        "updatedAt": "2025-10-28T15:11:59.092Z",
+        "createdAt": "2025-10-28T15:08:17.462Z",
+        "id": "GEUEn6ArNROzJ5FY",
+        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null
+      }
+    }
+  ]
 }
-

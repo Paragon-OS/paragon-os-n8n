@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-06T17:30:00.000Z",
+  "updatedAt": "2025-12-07T00:43:44.000Z",
   "createdAt": "2025-12-06T17:30:00.000Z",
   "id": "GenericContextScoutCore",
   "name": "[HELPERS] Generic Context Scout Core",
@@ -35,7 +35,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.first().json;\nconst { query, entity, platformConfig } = input;\n\n// Validate entity exists in config\nif (!platformConfig.entities || !platformConfig.entities[entity]) {\n  throw new Error(`Entity type '${entity}' not found in platform config`);\n}\n\nconst entityConfig = platformConfig.entities[entity];\n\n// Build fetch workflow inputs\nconst fetchWorkflowInputs = {};\n\n// If entity has special parameters, pass them\nif (entityConfig.mcpTool?.parameters) {\n  Object.assign(fetchWorkflowInputs, entityConfig.mcpTool.parameters);\n}\n\nreturn {\n  query: query || '',\n  entity: entity,\n  entityConfig: entityConfig,\n  platformConfig: platformConfig,\n  fetchWorkflowInputs: fetchWorkflowInputs\n};"
+        "jsCode": "const input = $input.first().json;\n\n// Debug: Log what we received\nif (!input.entity) {\n  throw new Error(`Entity is missing. Received input: ${JSON.stringify(input, null, 2)}`);\n}\n\nconst { query, entity, platformConfig } = input;\n\n// Validate entity exists in config\nif (!platformConfig || !platformConfig.entities || !platformConfig.entities[entity]) {\n  throw new Error(`Entity type '${entity}' not found in platform config. Input keys: ${Object.keys(input).join(', ')}`);\n}\n\nconst entityConfig = platformConfig.entities[entity];\n\n// Build fetch workflow inputs\nconst fetchWorkflowInputs = {};\n\n// If entity has special parameters, pass them\nif (entityConfig.mcpTool?.parameters) {\n  Object.assign(fetchWorkflowInputs, entityConfig.mcpTool.parameters);\n}\n\nreturn {\n  query: query || '',\n  entity: entity,\n  entityConfig: entityConfig,\n  platformConfig: platformConfig,\n  fetchWorkflowInputs: fetchWorkflowInputs\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -107,7 +107,7 @@
       "typeVersion": 2.1,
       "position": [
         976,
-        300
+        304
       ],
       "id": "check-rag-status",
       "name": "Check RAG Status Required"
@@ -178,10 +178,23 @@
       "typeVersion": 1.3,
       "position": [
         1200,
-        300
+        304
       ],
       "id": "get-entity-data",
       "name": "Get Entity Data (Cache or Fetch)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract entity data from cache handler output\nconst cacheHandlerOutput = $input.first().json;\nconst entityConfig = $('Prepare Entity Config').item.json.entityConfig;\nconst dataKey = entityConfig.dataKey;\n\n// Cache handler returns the data directly (from cache or fetch)\n// Extract the data using the dataKey\nlet entityData = cacheHandlerOutput;\n\n// If the data is nested under dataKey, extract it\nif (entityData && entityData[dataKey] !== undefined) {\n  entityData = entityData[dataKey];\n}\n\n// Return data in format expected by search nodes\nreturn {\n  [dataKey]: Array.isArray(entityData) ? entityData : (entityData ? [entityData] : []),\n  entityConfig: entityConfig,\n  query: $('Prepare Entity Config').item.json.query\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1424,
+        304
+      ],
+      "id": "extract-entity-data",
+      "name": "Extract Entity Data"
     },
     {
       "parameters": {
@@ -266,8 +279,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        1424,
-        300
+        1648,
+        304
       ],
       "id": "route-search-type",
       "name": "Route Search Type"
@@ -287,8 +300,8 @@
       "type": "n8n-nodes-paragon-os.fuzzySearch",
       "typeVersion": 1,
       "position": [
-        1648,
-        200
+        1872,
+        208
       ],
       "id": "fuzzy-search",
       "name": "Fuzzy Search"
@@ -349,7 +362,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        1648,
+        1872,
         400
       ],
       "id": "rag-search",
@@ -362,11 +375,24 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1872,
-        300
+        2096,
+        304
       ],
       "id": "merge-results",
       "name": "Merge Results"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format final output based on search type\nconst input = $input.first().json;\nconst entityConfig = $('Prepare Entity Config').item.json.entityConfig;\nconst searchType = entityConfig.searchType;\n\n// Handle different output formats\nif (searchType === 'none' || entityConfig.skipQuery) {\n  // For skipQuery entities (like 'self'), return the data directly\n  const dataKey = entityConfig.dataKey;\n  return input[dataKey] || input;\n} else if (searchType === 'fuzzy') {\n  // Fuzzy search returns results with scores\n  return input;\n} else if (searchType === 'rag') {\n  // RAG search returns { results, count, answer }\n  // Extract results array\n  return input.results || input;\n}\n\n// Fallback: return as-is\nreturn input;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2320,
+        304
+      ],
+      "id": "format-output",
+      "name": "Format Output"
     }
   ],
   "connections": {
@@ -432,6 +458,17 @@
       "main": [
         [
           {
+            "node": "Extract Entity Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Entity Data": {
+      "main": [
+        [
+          {
             "node": "Route Search Type",
             "type": "main",
             "index": 0
@@ -485,6 +522,17 @@
           }
         ]
       ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Format Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -492,11 +540,148 @@
   },
   "staticData": null,
   "meta": null,
-  "versionId": "generic-context-scout-core-v1",
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "query": "pasindu",
+          "entity": "contact-rag",
+          "platformConfig": {
+            "platform": "TELEGRAM",
+            "mcpCredentialId": "aiYCclLDUqob5iQ0",
+            "cacheKeyPrefix": "telegram",
+            "defaultTTL": 21600000,
+            "entities": {
+              "contact": {
+                "cacheKey": "telegramContacts",
+                "fetchWorkflowId": "TelegramContactFetch",
+                "mcpTool": {
+                  "name": "telegram_list_contacts",
+                  "parameters": {
+                    "limit": 200
+                  },
+                  "mcpDataKey": "contacts"
+                },
+                "mapper": "(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone })",
+                "dataKey": "contacts",
+                "searchType": "rag",
+                "ragConfig": {
+                  "collectionId": "paragon-os-contacts",
+                  "autoIngest": true
+                },
+                "requiresRAGStatusCheck": true
+              },
+              "contact-rag": {
+                "cacheKey": "telegramContacts",
+                "fetchWorkflowId": "TelegramContactFetch",
+                "mcpTool": {
+                  "name": "telegram_list_contacts",
+                  "parameters": {
+                    "limit": 200
+                  },
+                  "mcpDataKey": "contacts"
+                },
+                "mapper": "(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone })",
+                "dataKey": "contacts",
+                "searchType": "rag",
+                "ragConfig": {
+                  "collectionId": "paragon-os-contacts",
+                  "autoIngest": true
+                },
+                "requiresRAGStatusCheck": true
+              },
+              "chat": {
+                "cacheKey": "telegramChannels",
+                "fetchWorkflowId": "TelegramChatFetch",
+                "mcpTool": {
+                  "name": "telegram_list_chats",
+                  "parameters": {
+                    "limit": 50
+                  },
+                  "mcpDataKey": "items"
+                },
+                "mapper": "(g) => ({ id: g.id, name: g.name, members: g.memberCount, kind: g.kind, unread: g.unread })",
+                "dataKey": "channels",
+                "searchType": "fuzzy",
+                "fuzzyConfig": {
+                  "searchKeys": [
+                    "name",
+                    "kind"
+                  ],
+                  "matchQuality": 50,
+                  "limit": 10
+                }
+              },
+              "tool": {
+                "cacheKey": "telegramTools",
+                "fetchWorkflowId": "TelegramToolFetch",
+                "mapper": "(t) => t",
+                "dataKey": "tools",
+                "searchType": "fuzzy",
+                "fuzzyConfig": {
+                  "searchKeys": [
+                    "name",
+                    "description"
+                  ],
+                  "matchQuality": 50,
+                  "limit": 10
+                }
+              },
+              "self": {
+                "cacheKey": "telegramProfile",
+                "fetchWorkflowId": "TelegramProfileFetch",
+                "mapper": "(p) => p",
+                "dataKey": "myProfile",
+                "searchType": "none",
+                "skipQuery": true
+              },
+              "message-rag": {
+                "cacheKey": "telegramMessages",
+                "fetchWorkflowId": "TelegramMessageFetch",
+                "mcpTool": {
+                  "name": "telegram_list_messages",
+                  "parameters": {
+                    "chat_id": "4000551178",
+                    "limit": 100
+                  },
+                  "mcpDataKey": ""
+                },
+                "mapper": "(m) => ({ id: m.id, chatId: m.chatId, text: m.text || '', senderId: m.senderId, senderName: m.senderName || m.from?.name || '', date: m.date || m.timestamp, kind: m.kind || 'message' })",
+                "dataKey": "messages",
+                "searchType": "rag",
+                "ragConfig": {
+                  "collectionId": "paragon-os-messages",
+                  "autoIngest": true
+                },
+                "requiresRAGStatusCheck": true
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "162f70a3-0902-4cb3-9021-600a6a45adc1",
   "activeVersionId": null,
-  "versionCounter": 1,
+  "versionCounter": 2,
   "triggerCount": 0,
   "tags": [],
-  "shared": []
+  "shared": [
+    {
+      "updatedAt": "2025-12-07T00:23:48.980Z",
+      "createdAt": "2025-12-07T00:23:48.980Z",
+      "role": "workflow:owner",
+      "workflowId": "GenericContextScoutCore",
+      "projectId": "GEUEn6ArNROzJ5FY",
+      "project": {
+        "updatedAt": "2025-10-28T15:11:59.092Z",
+        "createdAt": "2025-10-28T15:08:17.462Z",
+        "id": "GEUEn6ArNROzJ5FY",
+        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null
+      }
+    }
+  ]
 }
-

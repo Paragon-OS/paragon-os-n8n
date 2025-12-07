@@ -132,6 +132,15 @@
   },
   "staticData": null,
   "meta": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "entity": "self"
+        }
+      }
+    ]
+  },
   "versionId": "discord-context-scout-wrapper-v1",
   "activeVersionId": null,
   "versionCounter": 55,

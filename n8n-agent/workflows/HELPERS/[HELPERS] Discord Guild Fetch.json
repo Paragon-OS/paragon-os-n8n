@@ -1,9 +1,9 @@
 {
   "updatedAt": "2025-12-06T17:30:00.000Z",
   "createdAt": "2025-12-06T17:30:00.000Z",
-  "id": "TelegramContactFetch",
-  "name": "[HELPERS] Telegram Contact Fetch",
-  "description": "Fetches and normalizes Telegram contacts from MCP",
+  "id": "DiscordGuildFetch",
+  "name": "[HELPERS] Discord Guild Fetch",
+  "description": "Fetches and normalizes Discord guilds from MCP",
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -25,8 +25,8 @@
     {
       "parameters": {
         "operation": "executeTool",
-        "toolName": "=telegram_list_contacts",
-        "toolParameters": "={\n  \"limit\": 200\n}"
+        "toolName": "=discord_list_guilds",
+        "toolParameters": "={}"
       },
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
@@ -35,11 +35,11 @@
         400
       ],
       "id": "mcp-call",
-      "name": "List Contacts",
+      "name": "List Guilds/Servers",
       "credentials": {
         "mcpClientApi": {
-          "id": "aiYCclLDUqob5iQ0",
-          "name": "Telegram MCP Client (STDIO) account"
+          "id": "ZFofx3k2ze1wsifx",
+          "name": "Discord MCP Client (STDIO) account"
         }
       }
     },
@@ -54,10 +54,10 @@
           "mappingMode": "defineBelow",
           "value": {
             "rawData": "={{ $json }}",
-            "dataKey": "contacts",
-            "mcpDataKey": "contacts",
-            "mapper": "(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone })",
-            "errorMsg": "No valid contacts found"
+            "dataKey": "guilds",
+            "mcpDataKey": "guilds",
+            "mapper": "(g) => ({ id: g.id, name: g.name, members: g.memberCount, channels: g.channels ?? [] })",
+            "errorMsg": "No valid guilds found"
           },
           "matchingColumns": [],
           "schema": [
@@ -131,14 +131,14 @@
       "main": [
         [
           {
-            "node": "List Contacts",
+            "node": "List Guilds/Servers",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "List Contacts": {
+    "List Guilds/Servers": {
       "main": [
         [
           {
@@ -155,11 +155,28 @@
   },
   "staticData": null,
   "meta": null,
-  "versionId": "telegram-contact-fetch-v1",
+  "pinData": null,
+  "versionId": "discord-guild-fetch-v1",
   "activeVersionId": null,
-  "versionCounter": 1,
+  "versionCounter": 2,
   "triggerCount": 0,
   "tags": [],
-  "shared": []
+  "shared": [
+    {
+      "updatedAt": "2025-12-07T00:23:53.181Z",
+      "createdAt": "2025-12-07T00:23:53.181Z",
+      "role": "workflow:owner",
+      "workflowId": "DiscordGuildFetch",
+      "projectId": "GEUEn6ArNROzJ5FY",
+      "project": {
+        "updatedAt": "2025-10-28T15:11:59.092Z",
+        "createdAt": "2025-10-28T15:08:17.462Z",
+        "id": "GEUEn6ArNROzJ5FY",
+        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null
+      }
+    }
+  ]
 }
-

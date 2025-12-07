@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-06T17:30:00.000Z",
+  "updatedAt": "2025-12-07T00:43:51.000Z",
   "createdAt": "2025-12-06T17:30:00.000Z",
   "id": "EntityCacheHandler",
   "name": "[HELPERS] Entity Cache Handler",
@@ -116,7 +116,7 @@
       "typeVersion": 1,
       "position": [
         752,
-        300
+        304
       ],
       "id": "cache-hit",
       "name": "Cache Hit"
@@ -142,7 +142,7 @@
       "typeVersion": 1.3,
       "position": [
         752,
-        500
+        512
       ],
       "id": "fetch-data",
       "name": "Fetch Data"
@@ -215,15 +215,13 @@
       "typeVersion": 1.3,
       "position": [
         976,
-        500
+        512
       ],
       "id": "update-cache",
       "name": "Update Cache"
     },
     {
-      "parameters": {
-        "numberInputs": 2
-      },
+      "parameters": {},
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
@@ -303,11 +301,41 @@
   },
   "staticData": null,
   "meta": null,
-  "versionId": "entity-cache-handler-v1",
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "cacheKey": "telegramContacts",
+          "ttl": 21600000,
+          "fetchWorkflowId": "TelegramContactFetch",
+          "fetchWorkflowInputs": {
+            "limit": 200
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "515e3356-0bdc-4217-9a10-58d8de17efeb",
   "activeVersionId": null,
-  "versionCounter": 1,
+  "versionCounter": 2,
   "triggerCount": 0,
   "tags": [],
-  "shared": []
+  "shared": [
+    {
+      "updatedAt": "2025-12-07T00:23:47.318Z",
+      "createdAt": "2025-12-07T00:23:47.318Z",
+      "role": "workflow:owner",
+      "workflowId": "EntityCacheHandler",
+      "projectId": "GEUEn6ArNROzJ5FY",
+      "project": {
+        "updatedAt": "2025-10-28T15:11:59.092Z",
+        "createdAt": "2025-10-28T15:08:17.462Z",
+        "id": "GEUEn6ArNROzJ5FY",
+        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null
+      }
+    }
+  ]
 }
-

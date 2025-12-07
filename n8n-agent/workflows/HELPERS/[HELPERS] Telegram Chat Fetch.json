@@ -1,9 +1,9 @@
 {
   "updatedAt": "2025-12-06T17:30:00.000Z",
   "createdAt": "2025-12-06T17:30:00.000Z",
-  "id": "DiscordGuildFetch",
-  "name": "[HELPERS] Discord Guild Fetch",
-  "description": "Fetches and normalizes Discord guilds from MCP",
+  "id": "TelegramChatFetch",
+  "name": "[HELPERS] Telegram Chat Fetch",
+  "description": "Fetches and normalizes Telegram chats from MCP",
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -25,8 +25,8 @@
     {
       "parameters": {
         "operation": "executeTool",
-        "toolName": "=discord_list_guilds",
-        "toolParameters": "={}"
+        "toolName": "=telegram_list_chats",
+        "toolParameters": "={\n  \"limit\": 50\n}"
       },
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
@@ -35,11 +35,11 @@
         400
       ],
       "id": "mcp-call",
-      "name": "List Guilds/Servers",
+      "name": "List Chats",
       "credentials": {
         "mcpClientApi": {
-          "id": "ZFofx3k2ze1wsifx",
-          "name": "Discord MCP Client (STDIO) account"
+          "id": "aiYCclLDUqob5iQ0",
+          "name": "Telegram MCP Client (STDIO) account"
         }
       }
     },
@@ -54,10 +54,10 @@
           "mappingMode": "defineBelow",
           "value": {
             "rawData": "={{ $json }}",
-            "dataKey": "guilds",
-            "mcpDataKey": "guilds",
-            "mapper": "(g) => ({ id: g.id, name: g.name, members: g.memberCount, channels: g.channels ?? [] })",
-            "errorMsg": "No valid guilds found"
+            "dataKey": "channels",
+            "mcpDataKey": "items",
+            "mapper": "(g) => ({ id: g.id, name: g.name, members: g.memberCount, kind: g.kind, unread: g.unread })",
+            "errorMsg": "No valid chats found"
           },
           "matchingColumns": [],
           "schema": [
@@ -131,14 +131,14 @@
       "main": [
         [
           {
-            "node": "List Guilds/Servers",
+            "node": "List Chats",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "List Guilds/Servers": {
+    "List Chats": {
       "main": [
         [
           {
@@ -155,11 +155,28 @@
   },
   "staticData": null,
   "meta": null,
-  "versionId": "discord-guild-fetch-v1",
+  "pinData": null,
+  "versionId": "telegram-chat-fetch-v1",
   "activeVersionId": null,
-  "versionCounter": 1,
+  "versionCounter": 2,
   "triggerCount": 0,
   "tags": [],
-  "shared": []
+  "shared": [
+    {
+      "updatedAt": "2025-12-07T00:23:57.379Z",
+      "createdAt": "2025-12-07T00:23:57.379Z",
+      "role": "workflow:owner",
+      "workflowId": "TelegramChatFetch",
+      "projectId": "GEUEn6ArNROzJ5FY",
+      "project": {
+        "updatedAt": "2025-10-28T15:11:59.092Z",
+        "createdAt": "2025-10-28T15:08:17.462Z",
+        "id": "GEUEn6ArNROzJ5FY",
+        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null
+      }
+    }
+  ]
 }
-

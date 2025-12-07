@@ -1,16 +1,24 @@
 {
   "updatedAt": "2025-12-06T17:30:00.000Z",
   "createdAt": "2025-12-06T17:30:00.000Z",
-  "id": "TelegramChatFetch",
-  "name": "[HELPERS] Telegram Chat Fetch",
-  "description": "Fetches and normalizes Telegram chats from MCP",
+  "id": "TelegramMessageFetch",
+  "name": "[HELPERS] Telegram Message Fetch",
+  "description": "Fetches and normalizes Telegram messages from a chat (requires chat_id parameter)",
   "active": false,
   "isArchived": false,
   "nodes": [
     {
       "parameters": {
         "workflowInputs": {
-          "values": []
+          "values": [
+            {
+              "name": "chat_id"
+            },
+            {
+              "name": "limit",
+              "type": "number"
+            }
+          ]
         }
       },
       "type": "n8n-nodes-base.executeWorkflowTrigger",
@@ -25,8 +33,8 @@
     {
       "parameters": {
         "operation": "executeTool",
-        "toolName": "=telegram_list_chats",
-        "toolParameters": "={\n  \"limit\": 50\n}"
+        "toolName": "=telegram_list_messages",
+        "toolParameters": "={{\n  \"chat_id\": $json.chat_id || \"4000551178\",\n  \"limit\": $json.limit || 100\n}}"
       },
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
@@ -35,7 +43,7 @@
         400
       ],
       "id": "mcp-call",
-      "name": "List Chats",
+      "name": "List Messages",
       "credentials": {
         "mcpClientApi": {
           "id": "aiYCclLDUqob5iQ0",
@@ -54,10 +62,10 @@
           "mappingMode": "defineBelow",
           "value": {
             "rawData": "={{ $json }}",
-            "dataKey": "channels",
-            "mcpDataKey": "items",
-            "mapper": "(g) => ({ id: g.id, name: g.name, members: g.memberCount, kind: g.kind, unread: g.unread })",
-            "errorMsg": "No valid chats found"
+            "dataKey": "messages",
+            "mcpDataKey": "",
+            "mapper": "(m) => ({ id: m.id, chatId: m.chatId, text: m.text || '', senderId: m.senderId, senderName: m.senderName || m.from?.name || '', date: m.date || m.timestamp, kind: m.kind || 'message' })",
+            "errorMsg": "No valid messages found"
           },
           "matchingColumns": [],
           "schema": [
@@ -123,7 +131,7 @@
         400
       ],
       "id": "normalize",
-      "name": "Normalize Data"
+      "name": "Normalize Messages"
     }
   ],
   "connections": {
@@ -131,18 +139,18 @@
       "main": [
         [
           {
-            "node": "List Chats",
+            "node": "List Messages",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "List Chats": {
+    "List Messages": {
       "main": [
         [
           {
-            "node": "Normalize Data",
+            "node": "Normalize Messages",
             "type": "main",
             "index": 0
           }
@@ -155,11 +163,28 @@
   },
   "staticData": null,
   "meta": null,
-  "versionId": "telegram-chat-fetch-v1",
+  "pinData": null,
+  "versionId": "telegram-message-fetch-v1",
   "activeVersionId": null,
-  "versionCounter": 1,
+  "versionCounter": 2,
   "triggerCount": 0,
   "tags": [],
-  "shared": []
+  "shared": [
+    {
+      "updatedAt": "2025-12-07T00:24:00.209Z",
+      "createdAt": "2025-12-07T00:24:00.209Z",
+      "role": "workflow:owner",
+      "workflowId": "TelegramMessageFetch",
+      "projectId": "GEUEn6ArNROzJ5FY",
+      "project": {
+        "updatedAt": "2025-10-28T15:11:59.092Z",
+        "createdAt": "2025-10-28T15:08:17.462Z",
+        "id": "GEUEn6ArNROzJ5FY",
+        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null
+      }
+    }
+  ]
 }
-

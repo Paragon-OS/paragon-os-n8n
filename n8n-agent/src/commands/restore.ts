@@ -100,7 +100,8 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
     toImport.push(backup);
   }
 
-  logger.info({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (logger.info as any)({
     total: backups.length,
     unchanged: unchangedCount,
     toImport: toImport.length,
@@ -139,7 +140,8 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
    */
   for (const backup of toImport) {
     const args = ["import:workflow", `--input=${backup.filePath}`, ...passthroughFlags];
-    logger.info({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (logger.info as any)({
       filePath: backup.filePath,
       workflowId: backup.id,
       workflowName: backup.name

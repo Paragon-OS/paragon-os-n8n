@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-06T17:30:00.000Z",
+  "updatedAt": "2025-12-07T00:43:47.000Z",
   "createdAt": "2025-11-30T21:00:00.000Z",
   "id": "TelegramContextScout",
   "name": "Telegram Context Scout",
@@ -34,7 +34,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Telegram Platform Configuration\nconst TELEGRAM_CONFIG = {\n  platform: \"TELEGRAM\",\n  mcpCredentialId: \"aiYCclLDUqob5iQ0\",\n  cacheKeyPrefix: \"telegram\",\n  defaultTTL: 6 * 60 * 60 * 1000, // 6 hours\n  \n  entities: {\n    \"contact\": {\n      cacheKey: \"telegramContacts\",\n      fetchWorkflowId: \"TelegramContactFetch\",\n      mcpTool: {\n        name: \"telegram_list_contacts\",\n        parameters: { limit: 200 },\n        mcpDataKey: \"contacts\"\n      },\n      mapper: \"(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone })\",\n      dataKey: \"contacts\",\n      searchType: \"rag\",\n      ragConfig: {\n        collectionId: \"paragon-os-contacts\",\n        autoIngest: true\n      },\n      requiresRAGStatusCheck: true\n    },\n    \"contact-rag\": {\n      cacheKey: \"telegramContacts\",\n      fetchWorkflowId: \"TelegramContactFetch\",\n      mcpTool: {\n        name: \"telegram_list_contacts\",\n        parameters: { limit: 200 },\n        mcpDataKey: \"contacts\"\n      },\n      mapper: \"(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone })\",\n      dataKey: \"contacts\",\n      searchType: \"rag\",\n      ragConfig: {\n        collectionId: \"paragon-os-contacts\",\n        autoIngest: true\n      },\n      requiresRAGStatusCheck: true\n    },\n    \"chat\": {\n      cacheKey: \"telegramChannels\",\n      fetchWorkflowId: \"TelegramChatFetch\",\n      mcpTool: {\n        name: \"telegram_list_chats\",\n        parameters: { limit: 50 },\n        mcpDataKey: \"items\"\n      },\n      mapper: \"(g) => ({ id: g.id, name: g.name, members: g.memberCount, kind: g.kind, unread: g.unread })\",\n      dataKey: \"channels\",\n      searchType: \"fuzzy\",\n      fuzzyConfig: {\n        searchKeys: [\"name\", \"kind\"],\n        matchQuality: 50,\n        limit: 10\n      }\n    },\n    \"tool\": {\n      cacheKey: \"telegramTools\",\n      fetchWorkflowId: \"TelegramToolFetch\",\n      mapper: \"(t) => t\",\n      dataKey: \"tools\",\n      searchType: \"fuzzy\",\n      fuzzyConfig: {\n        searchKeys: [\"name\", \"description\"],\n        matchQuality: 50,\n        limit: 10\n      }\n    },\n    \"self\": {\n      cacheKey: \"telegramProfile\",\n      fetchWorkflowId: \"TelegramProfileFetch\",\n      mapper: \"(p) => p\",\n      dataKey: \"myProfile\",\n      searchType: \"none\",\n      skipQuery: true\n    },\n    \"message-rag\": {\n      cacheKey: \"telegramMessages\",\n      fetchWorkflowId: \"TelegramMessageFetch\",\n      mcpTool: {\n        name: \"telegram_list_messages\",\n        parameters: { chat_id: \"4000551178\", limit: 100 },\n        mcpDataKey: \"\"\n      },\n      mapper: \"(m) => ({ id: m.id, chatId: m.chatId, text: m.text || '', senderId: m.senderId, senderName: m.senderName || m.from?.name || '', date: m.date || m.timestamp, kind: m.kind || 'message' })\",\n      dataKey: \"messages\",\n      searchType: \"rag\",\n      ragConfig: {\n        collectionId: \"paragon-os-messages\",\n        autoIngest: true\n      },\n      requiresRAGStatusCheck: true\n    }\n  }\n};\n\nconst input = $input.first().json;\n\nreturn {\n  query: input.query || '',\n  entity: input.entity || '',\n  platformConfig: TELEGRAM_CONFIG\n};"
+        "jsCode": "// Telegram Platform Configuration\nconst TELEGRAM_CONFIG = {\n  platform: \"TELEGRAM\",\n  mcpCredentialId: \"aiYCclLDUqob5iQ0\",\n  cacheKeyPrefix: \"telegram\",\n  defaultTTL: 6 * 60 * 60 * 1000, // 6 hours\n  \n  entities: {\n    \"contact\": {\n      cacheKey: \"telegramContacts\",\n      fetchWorkflowId: \"TelegramContactFetch\",\n      mcpTool: {\n        name: \"telegram_list_contacts\",\n        parameters: { limit: 200 },\n        mcpDataKey: \"contacts\"\n      },\n      mapper: \"(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone })\",\n      dataKey: \"contacts\",\n      searchType: \"rag\",\n      ragConfig: {\n        collectionId: \"paragon-os-contacts\",\n        autoIngest: true\n      },\n      requiresRAGStatusCheck: true\n    },\n    \"contact-rag\": {\n      cacheKey: \"telegramContacts\",\n      fetchWorkflowId: \"TelegramContactFetch\",\n      mcpTool: {\n        name: \"telegram_list_contacts\",\n        parameters: { limit: 200 },\n        mcpDataKey: \"contacts\"\n      },\n      mapper: \"(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone })\",\n      dataKey: \"contacts\",\n      searchType: \"rag\",\n      ragConfig: {\n        collectionId: \"paragon-os-contacts\",\n        autoIngest: true\n      },\n      requiresRAGStatusCheck: true\n    },\n    \"chat\": {\n      cacheKey: \"telegramChannels\",\n      fetchWorkflowId: \"TelegramChatFetch\",\n      mcpTool: {\n        name: \"telegram_list_chats\",\n        parameters: { limit: 50 },\n        mcpDataKey: \"items\"\n      },\n      mapper: \"(g) => ({ id: g.id, name: g.name, members: g.memberCount, kind: g.kind, unread: g.unread })\",\n      dataKey: \"channels\",\n      searchType: \"fuzzy\",\n      fuzzyConfig: {\n        searchKeys: [\"name\", \"kind\"],\n        matchQuality: 50,\n        limit: 10\n      }\n    },\n    \"tool\": {\n      cacheKey: \"telegramTools\",\n      fetchWorkflowId: \"TelegramToolFetch\",\n      mapper: \"(t) => t\",\n      dataKey: \"tools\",\n      searchType: \"fuzzy\",\n      fuzzyConfig: {\n        searchKeys: [\"name\", \"description\"],\n        matchQuality: 50,\n        limit: 10\n      }\n    },\n    \"self\": {\n      cacheKey: \"telegramProfile\",\n      fetchWorkflowId: \"TelegramProfileFetch\",\n      mapper: \"(p) => p\",\n      dataKey: \"myProfile\",\n      searchType: \"none\",\n      skipQuery: true\n    },\n    \"message-rag\": {\n      cacheKey: \"telegramMessages\",\n      fetchWorkflowId: \"TelegramMessageFetch\",\n      mcpTool: {\n        name: \"telegram_list_messages\",\n        parameters: { chat_id: \"4000551178\", limit: 100 },\n        mcpDataKey: \"\"\n      },\n      mapper: \"(m) => ({ id: m.id, chatId: m.chatId, text: m.text || '', senderId: m.senderId, senderName: m.senderName || m.from?.name || '', date: m.date || m.timestamp, kind: m.kind || 'message' })\",\n      dataKey: \"messages\",\n      searchType: \"rag\",\n      ragConfig: {\n        collectionId: \"paragon-os-messages\",\n        autoIngest: true\n      },\n      requiresRAGStatusCheck: true\n    }\n  }\n};\n\nconst input = $input.first().json;\n\n// Debug: Log input to see what we're receiving\nif (!input.entity) {\n  throw new Error(`Entity is missing from input. Received: ${JSON.stringify(input)}`);\n}\n\nreturn {\n  query: input.query || '',\n  entity: input.entity,\n  platformConfig: TELEGRAM_CONFIG\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -47,13 +47,26 @@
     },
     {
       "parameters": {
+        "jsCode": "// Explicitly structure data for executeWorkflow\nconst input = $input.first().json;\n\n// Ensure entity is present\nif (!input.entity || input.entity === '') {\n  throw new Error(`Entity is missing or empty. Input: ${JSON.stringify(input)}`);\n}\n\n// Return structured data\nreturn {\n  query: input.query || '',\n  entity: input.entity,\n  platformConfig: input.platformConfig\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        400
+      ],
+      "id": "prepare-input",
+      "name": "Prepare Input"
+    },
+    {
+      "parameters": {
         "workflowId": {
           "__rl": true,
           "value": "GenericContextScoutCore",
           "mode": "id"
         },
         "workflowInputs": {
-          "mappingMode": "defineBelow",
+          "mappingMode": "mapEachItem",
           "value": {
             "query": "={{ $json.query }}",
             "entity": "={{ $json.entity }}",
@@ -68,8 +81,7 @@
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
+              "type": "string"
             },
             {
               "id": "entity",
@@ -78,8 +90,7 @@
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
+              "type": "string"
             },
             {
               "id": "platformConfig",
@@ -88,7 +99,7 @@
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
-              "removed": false
+              "type": "object"
             }
           ],
           "attemptToConvertTypes": false,
@@ -99,7 +110,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        752,
+        976,
         400
       ],
       "id": "execute-core",
@@ -122,6 +133,17 @@
       "main": [
         [
           {
+            "node": "Prepare Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Input": {
+      "main": [
+        [
+          {
             "node": "Execute Core",
             "type": "main",
             "index": 0
@@ -135,9 +157,19 @@
   },
   "staticData": null,
   "meta": null,
-  "versionId": "telegram-context-scout-wrapper-v1",
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "query": "pasindu",
+          "entity": "contact-rag"
+        }
+      }
+    ]
+  },
+  "versionId": "b06f1c1c-96f3-484a-b646-ec2bdb63e330",
   "activeVersionId": null,
-  "versionCounter": 52,
+  "versionCounter": 54,
   "triggerCount": 0,
   "tags": [
     {

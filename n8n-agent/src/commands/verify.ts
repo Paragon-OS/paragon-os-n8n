@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import fs from "fs";
 import boxen from "boxen";
 import chalk from "chalk";
 import { runN8nCapture } from "../utils/n8n";

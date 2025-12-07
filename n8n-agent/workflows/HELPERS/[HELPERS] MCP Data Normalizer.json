@@ -72,11 +72,28 @@
   },
   "staticData": null,
   "meta": null,
+  "pinData": null,
   "versionId": "mcp-normalizer-v1",
   "activeVersionId": null,
-  "versionCounter": 1,
+  "versionCounter": 2,
   "triggerCount": 0,
   "tags": [],
-  "shared": []
+  "shared": [
+    {
+      "updatedAt": "2025-12-07T00:23:50.371Z",
+      "createdAt": "2025-12-07T00:23:50.371Z",
+      "role": "workflow:owner",
+      "workflowId": "MCPDataNormalizer",
+      "projectId": "GEUEn6ArNROzJ5FY",
+      "project": {
+        "updatedAt": "2025-10-28T15:11:59.092Z",
+        "createdAt": "2025-10-28T15:08:17.462Z",
+        "id": "GEUEn6ArNROzJ5FY",
+        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null
+      }
+    }
+  ]
 }
-

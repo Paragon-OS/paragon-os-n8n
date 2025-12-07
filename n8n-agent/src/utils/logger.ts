@@ -182,7 +182,13 @@ export class ProgressLogger {
   }
   
   step(step: string, details?: Record<string, unknown>): void {
-    this.logger.info({ step, ...details }, `[${this.operation}] ${step}`);
+    const message = `[${this.operation}] ${step}`;
+    if (details && Object.keys(details).length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this.logger.info as any)({ step, ...details }, message);
+    } else {
+      this.logger.info(message);
+    }
   }
   
   success(message?: string): void {
@@ -190,11 +196,23 @@ export class ProgressLogger {
   }
   
   error(message: string, error?: Error | unknown): void {
-    this.logger.error(`[${this.operation}] ${message}`, error);
+    const errorMessage = `[${this.operation}] ${message}`;
+    if (error) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this.logger.error as any)(error, errorMessage);
+    } else {
+      this.logger.error(errorMessage);
+    }
   }
   
   warn(message: string, details?: Record<string, unknown>): void {
-    this.logger.warn({ ...details }, `[${this.operation}] ${message}`);
+    const warnMessage = `[${this.operation}] ${message}`;
+    if (details && Object.keys(details).length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this.logger.warn as any)({ ...details }, warnMessage);
+    } else {
+      this.logger.warn(warnMessage);
+    }
   }
 }
 
