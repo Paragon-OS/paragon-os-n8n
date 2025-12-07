@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-07T09:55:32.000Z",
+  "updatedAt": "2025-12-07T13:33:11.000Z",
   "createdAt": "2025-11-12T21:20:27.994Z",
   "id": "zBL0JT7t26pK2x95",
   "name": "Discord Smart Agent",
@@ -65,7 +65,7 @@
     },
     {
       "parameters": {
-        "modelName": "models/gemini-2.5-pro",
+        "modelName": "models/gemini-2.5-flash-lite",
         "options": {
           "temperature": 0.2
         }
@@ -372,14 +372,14 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "userPrompt": "who is metaops"
+          "userPrompt": "Search for contacts named Sano or Pasindu on Discord."
         }
       }
     ]
   },
-  "versionId": "4dcb39b8-add6-45c4-a877-f48f4d2112eb",
+  "versionId": "65f7c09d-6da6-45cc-9a03-ea335459f0b8",
   "activeVersionId": null,
-  "versionCounter": 273,
+  "versionCounter": 276,
   "triggerCount": 0,
   "tags": [
     {

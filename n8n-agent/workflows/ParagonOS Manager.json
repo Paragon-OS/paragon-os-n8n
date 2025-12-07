@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-07T02:17:47.000Z",
+  "updatedAt": "2025-12-07T12:01:21.000Z",
   "createdAt": "2025-11-06T23:04:10.688Z",
   "id": "z1Ry4y4k5dGR0BqR",
   "name": "ParagonOS Manager",
@@ -23,6 +23,7 @@
     },
     {
       "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
         "options": {
           "temperature": 0.3
         }
@@ -54,7 +55,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3,
       "position": [
-        -168,
+        -176,
         -832
       ],
       "id": "e572d52c-0585-473c-84aa-34fc1b8ee691",
@@ -189,7 +190,7 @@
     {
       "parameters": {
         "sessionIdType": "customKey",
-        "sessionKey": "={{ $workflow.id }} v2.17",
+        "sessionKey": "={{ $workflow.id }} v2.18",
         "contextWindowLength": 10
       },
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
@@ -243,6 +244,17 @@
       ],
       "id": "a85ea5f0-1f3f-4d39-af49-35e27cade5b4",
       "name": "Discord Smart Agent Tool"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        -464
+      ],
+      "id": "e2e89a62-59c1-4fe1-ba66-9388d12c532f",
+      "name": "Test Admin Agent"
     }
   ],
   "connections": {
@@ -349,6 +361,17 @@
           }
         ]
       ]
+    },
+    "Test Admin Agent": {
+      "main": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -379,11 +402,29 @@
           }
         }
       }
+    ],
+    "When chat message received": [
+      {
+        "json": {
+          "sessionId": "c7c92ef4ad0e4f31926488306cb9eddd",
+          "action": "sendMessage",
+          "chatInput": "is there anyone named like sano or pasindu on discord or telegram?"
+        }
+      }
+    ],
+    "Test Admin Agent": [
+      {
+        "json": {
+          "sessionId": "c7c92ef4ad0e4f31926488306cb9eddd",
+          "action": "sendMessage",
+          "chatInput": "is there anyone named like sano or pasindu on discord or telegram?"
+        }
+      }
     ]
   },
-  "versionId": "06fbfa56-c213-44e6-b552-fd8fe227381c",
+  "versionId": "b42f9196-0d54-4710-97e0-7b7dcf318533",
   "activeVersionId": null,
-  "versionCounter": 333,
+  "versionCounter": 337,
   "triggerCount": 1,
   "tags": [
     {
