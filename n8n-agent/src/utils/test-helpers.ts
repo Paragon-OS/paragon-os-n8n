@@ -32,6 +32,13 @@ export interface ExecutionResult {
 }
 
 /**
+ * Normalize workflow name for comparison (remove spaces, case-insensitive)
+ */
+function normalizeWorkflowName(name: string): string {
+  return name.toLowerCase().replace(/\s+/g, '').replace(/\[.*?\]/g, '');
+}
+
+/**
  * Find workflow file by matching ID, name, or basename
  * @param workflowIdentifier - Workflow ID, name, or basename to match
  * @param workflowFiles - Array of workflow file objects to search
@@ -41,6 +48,8 @@ export function findWorkflowFile(
   workflowIdentifier: string,
   workflowFiles: WorkflowFile[]
 ): string | undefined {
+  const normalizedIdentifier = normalizeWorkflowName(workflowIdentifier);
+  
   for (const file of workflowFiles) {
     // Match by ID (most reliable)
     if (file.content.id === workflowIdentifier) {
@@ -52,9 +61,19 @@ export function findWorkflowFile(
       return file.path;
     }
 
+    // Match by normalized name (handles spaces, case differences)
+    if (file.content.name && normalizeWorkflowName(file.content.name) === normalizedIdentifier) {
+      return file.path;
+    }
+
     // Match by basename (fallback for workflows without proper name/ID)
     const basenameWithoutTag = file.basename.replace(/\[.*?\]\s*/, '');
     if (file.basename === workflowIdentifier || basenameWithoutTag === workflowIdentifier) {
+      return file.path;
+    }
+    
+    // Match by normalized basename
+    if (normalizeWorkflowName(basenameWithoutTag) === normalizedIdentifier) {
       return file.path;
     }
   }

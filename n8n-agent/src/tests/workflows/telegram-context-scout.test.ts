@@ -65,11 +65,11 @@ describe('TelegramContextScout', () => {
     }
   ])('$testCase', async ({ testCase, testData }) => {
     const result = await executeWorkflowTest('TelegramContextScout', testCase, testData);
+    if (!result.success) {
+      throw new Error(result.error || 'Test failed with unknown error');
+    }
     expect(result.success).toBe(true);
     expect(result.output).toBeDefined();
-    if (result.error) {
-      throw new Error(result.error);
-    }
   });
 });
 

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-07T12:00:26.000Z",
+  "updatedAt": "2025-12-07T15:09:06.000Z",
   "createdAt": "2025-11-30T21:05:00.000Z",
   "id": "TelegramSmartAgent",
   "name": "Telegram Smart Agent",
@@ -76,7 +76,6 @@
     },
     {
       "parameters": {
-        "modelName": "models/gemini-2.5-flash-lite",
         "options": {
           "temperature": 0.2
         }
@@ -352,9 +351,9 @@
       }
     ]
   },
-  "versionId": "69f16110-ab52-42e7-80b9-f237cd0df03d",
+  "versionId": "a136ff18-9fc9-4315-94f1-b6e86dc2ad31",
   "activeVersionId": null,
-  "versionCounter": 35,
+  "versionCounter": 36,
   "triggerCount": 0,
   "tags": [
     {
