@@ -153,22 +153,30 @@ const TELEGRAM_CONFIG = {
 ## Implementation Status
 
 ### ✅ Completed
-- MCP Data Normalizer helper
-- Entity Cache Handler helper
-- Generic Context Scout Core (basic structure)
-- 3 entity fetch workflows (Telegram Contact, Telegram Chat, Discord Contact)
+- ✅ MCP Data Normalizer helper
+- ✅ Entity Cache Handler helper
+- ✅ Generic Context Scout Core (basic structure)
+- ✅ All entity fetch workflows:
+  - Telegram: Contact, Chat, Tool, Profile, Message
+  - Discord: Contact, Guild, Tool, Profile
+- ✅ Platform wrapper workflows:
+  - Telegram Context Scout (preserves ID: `TelegramContextScout`)
+  - Discord Context Scout (preserves ID: `BB1zsros5LmyJO9N`)
 
-### ⏳ In Progress
-- Remaining entity fetch workflows (7 more needed)
-- Platform wrapper workflows
-- Core workflow refinement (RAG status checking, message handling)
+### ⚠️ Needs Refinement
+- Core workflow RAG status checking logic (for entities with `requiresRAGStatusCheck`)
+- Message entity handling (requires chat_id parameter)
+- Profile entity special handling (skipQuery - returns data without search)
+- Data flow from cache handler to search nodes
 
 ### 📋 Next Steps
-1. Complete remaining entity fetch workflows
-2. Create Telegram wrapper workflow with full config
-3. Create Discord wrapper workflow with full config
-4. Test end-to-end with existing test cases
-5. Refine core workflow based on testing
+1. Test end-to-end with existing test cases
+2. Refine core workflow based on testing:
+   - Add RAG status check workflow calls
+   - Handle message entity chat_id parameter
+   - Implement skipQuery logic for "self" entity
+3. Verify backward compatibility with existing workflows
+4. Update test cases if needed
 
 ## File Structure
 
@@ -181,15 +189,15 @@ workflows/
 │   └── Entity Fetch Workflows/
 │       ├── [HELPERS] Telegram Contact Fetch.json ✅
 │       ├── [HELPERS] Telegram Chat Fetch.json ✅
-│       ├── [HELPERS] Telegram Tool Fetch.json ⏳
-│       ├── [HELPERS] Telegram Profile Fetch.json ⏳
-│       ├── [HELPERS] Telegram Message Fetch.json ⏳
+│       ├── [HELPERS] Telegram Tool Fetch.json ✅
+│       ├── [HELPERS] Telegram Profile Fetch.json ✅
+│       ├── [HELPERS] Telegram Message Fetch.json ✅
 │       ├── [HELPERS] Discord Contact Fetch.json ✅
-│       ├── [HELPERS] Discord Guild Fetch.json ⏳
-│       ├── [HELPERS] Discord Tool Fetch.json ⏳
-│       └── [HELPERS] Discord Profile Fetch.json ⏳
-├── Telegram Context Scout.json ⏳ (to be replaced with wrapper)
-└── Discord Context Scout.json ⏳ (to be replaced with wrapper)
+│       ├── [HELPERS] Discord Guild Fetch.json ✅
+│       ├── [HELPERS] Discord Tool Fetch.json ✅
+│       └── [HELPERS] Discord Profile Fetch.json ✅
+├── Telegram Context Scout.json ✅ (wrapper - preserves ID)
+└── Discord Context Scout.json ✅ (wrapper - preserves ID)
 ```
 
 ## Notes

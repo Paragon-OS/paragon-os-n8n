@@ -1,0 +1,96 @@
+{
+  "updatedAt": "2025-12-06T17:30:00.000Z",
+  "createdAt": "2025-12-06T17:30:00.000Z",
+  "id": "TelegramProfileFetch",
+  "name": "[HELPERS] Telegram Profile Fetch",
+  "description": "Fetches and normalizes Telegram user profile",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": []
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        400
+      ],
+      "id": "trigger",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "=telegram_get_me",
+        "toolParameters": "={}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        528,
+        400
+      ],
+      "id": "mcp-call",
+      "name": "Get My Profile",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "aiYCclLDUqob5iQ0",
+          "name": "Telegram MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\n// Profile is returned as a single object in result.content[0].text\nlet profile;\n\ntry {\n  if (input.result?.content?.[0]?.text) {\n    profile = JSON.parse(input.result.content[0].text);\n  } else if (input.myProfile) {\n    profile = input.myProfile;\n  } else {\n    throw new Error('No profile found');\n  }\n  \n  return {\n    myProfile: profile\n  };\n} catch (error) {\n  return {\n    myProfile: null,\n    error: error.message\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        400
+      ],
+      "id": "normalize",
+      "name": "Normalize Profile"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get My Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get My Profile": {
+      "main": [
+        [
+          {
+            "node": "Normalize Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "versionId": "telegram-profile-fetch-v1",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": []
+}
+
