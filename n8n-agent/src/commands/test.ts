@@ -283,17 +283,16 @@ async function runSingleTest(
       console.log('');
     }
 
+    // Use full execution JSON format (without --rawOutput) for better error detection
+    // This provides runData with executionStatus for each node, allowing us to detect
+    // sub-workflow errors even when the Test Runner workflow completes successfully
     const { code: exitCode, stdout, stderr } = await runN8nCapture([
       'execute',
-      `--id=${TEST_RUNNER_ID}`,
-      '--rawOutput' // Use raw output for cleaner JSON parsing
+      `--id=${TEST_RUNNER_ID}`
+      // Removed --rawOutput to get full execution JSON with error details
     ]);
 
     const filteredStderr = filterVersionWarnings(stderr);
-    if (verbose && filteredStderr.trim()) {
-      logger.warn(filteredStderr);
-    }
-
     const filteredStdout = filterVersionWarnings(stdout);
 
     // Handle timeout (exit code 124)
@@ -306,19 +305,109 @@ async function runSingleTest(
       };
     }
 
+    // If exit code is non-zero, try to extract error information
     if (exitCode !== 0) {
+      // Try to parse stdout for error details even if exit code is non-zero
+      let errorDetails = '';
+      let errorMessage = '';
+      
+      if (filteredStdout.trim()) {
+        // First, try to extract error message from the text before JSON
+        // n8n outputs error messages like: "Error message\nExecution error:\n====================================\n{json}"
+        const lines = filteredStdout.split('\n');
+        const errorLineIndex = lines.findIndex(line => 
+          line.includes('Testing error detection') || 
+          line.includes('INTENTIONAL TEST ERROR') ||
+          line.includes('Execution was NOT successful')
+        );
+        
+        if (errorLineIndex >= 0) {
+          // Get the error message line
+          errorMessage = lines[errorLineIndex].trim();
+        }
+        
+        // Then try to parse the JSON for more details
+        try {
+          const executionJson = parseExecutionOutput(filteredStdout);
+          const result = extractWorkflowResults(executionJson);
+          if (!result.success && result.error) {
+            // Use the extracted error if we didn't find one in text, or combine them
+            if (!errorMessage) {
+              errorMessage = result.error;
+            } else if (result.error !== errorMessage) {
+              // Combine both if they're different
+              errorMessage = `${errorMessage} (${result.error})`;
+            }
+            errorDetails = result.errorDetails ? JSON.stringify(result.errorDetails).substring(0, 500) : '';
+          }
+        } catch (parseError) {
+          // If JSON parsing fails, try to extract from the text we already found
+          if (!errorMessage) {
+            // Look for error in the first few lines
+            errorMessage = lines.slice(0, 5).find(l => l.trim() && !l.includes('==='))?.trim() || 
+                          `Failed to parse execution output: ${parseError instanceof Error ? parseError.message : String(parseError)}`;
+          }
+        }
+      }
+      
+      const finalErrorMessage = errorMessage 
+        ? errorMessage
+        : `Test failed with exit code: ${exitCode}${filteredStderr.trim() ? ` - ${filteredStderr.trim()}` : ''}`;
+      
+      // Always display error, not just when verbose
+      const errorBox = boxen(
+        chalk.bold("Error:") + " " + finalErrorMessage,
+        {
+          title: "Test Failed",
+          titleAlignment: "center",
+          padding: 1,
+          borderColor: "red",
+          borderStyle: "round",
+        }
+      );
+      console.error(errorBox);
+      
+      if (errorDetails) {
+        logger.error('Error Details:', errorDetails);
+      }
+      
       return {
         testCase,
         success: false,
-        error: `Test failed with exit code: ${exitCode}${stderr ? ` - ${stderr}` : ''}`,
+        error: finalErrorMessage,
         output: filteredStdout.trim() || undefined
       };
     }
 
+    // Exit code is 0, but we still need to check for errors in the output
+    // (sub-workflow errors might not cause non-zero exit code)
     let executionJson;
     try {
       executionJson = parseExecutionOutput(filteredStdout);
     } catch (parseError) {
+      // If stdout is empty, this might indicate a silent failure
+      if (!filteredStdout.trim()) {
+        return {
+          testCase,
+          success: false,
+          error: 'Workflow returned no output (possible error in sub-workflow). Check n8n execution logs for details.',
+        };
+      }
+      
+      // Check if stdout contains error messages even if not parseable as JSON
+      const errorMatch = filteredStdout.match(/Execution error:[\s\S]*?message["\s:]+([^"}\n]+)/i) ||
+                        filteredStdout.match(/Error:[\s\S]*?message["\s:]+([^"}\n]+)/i) ||
+                        filteredStdout.match(/INTENTIONAL TEST ERROR[^\n]*/i) ||
+                        filteredStdout.match(/Testing error detection[^\n]*/i);
+      
+      if (errorMatch) {
+        return {
+          testCase,
+          success: false,
+          error: errorMatch[1] || errorMatch[0] || 'Workflow execution failed',
+        };
+      }
+      
       return {
         testCase,
         success: false,
@@ -326,11 +415,45 @@ async function runSingleTest(
           parseError instanceof Error
             ? parseError.message
             : String(parseError)
-        }`,
+        }${filteredStdout.trim() ? `\nRaw output: ${filteredStdout.substring(0, 200)}` : ''}`,
       };
     }
-
+    
+    // Check for empty output (might indicate failure)
+    if (
+      executionJson === null ||
+      (Array.isArray(executionJson) && executionJson.length === 0) ||
+      (typeof executionJson === 'object' && !Array.isArray(executionJson) && Object.keys(executionJson).length === 0)
+    ) {
+      return {
+        testCase,
+        success: false,
+        error: 'Workflow returned empty output (possible error in sub-workflow). Check n8n execution logs for details.',
+      };
+    }
+    
     const { success, output, error, errorDetails } = extractWorkflowResults(executionJson);
+    
+    // Log execution JSON for debugging - always log if there's an error
+    if (!success) {
+      const execJson = executionJson as { data?: { resultData?: { runData?: unknown } } };
+      logger.warn('Execution JSON structure:', {
+        hasData: execJson && 'data' in execJson,
+        hasResultData: execJson?.data?.resultData !== undefined,
+        hasRunData: execJson?.data?.resultData && 'runData' in (execJson.data.resultData as object),
+        keys: execJson ? Object.keys(execJson).slice(0, 10) : [],
+        extractedError: error,
+        extractedSuccess: success,
+      });
+      if (execJson && execJson.data?.resultData) {
+        logger.warn('ResultData keys:', Object.keys(execJson.data.resultData));
+        if ('runData' in execJson.data.resultData) {
+          const runData = execJson.data.resultData.runData as Record<string, unknown>;
+          logger.warn('RunData node names:', Object.keys(runData));
+        }
+      }
+      logger.warn('Execution JSON (first 2000 chars):', JSON.stringify(executionJson).substring(0, 2000));
+    }
 
     if (success) {
       if (verbose) {
@@ -339,24 +462,25 @@ async function runSingleTest(
       }
       return { testCase, success: true, output };
     } else {
-      if (verbose) {
-        const errorBox = boxen(
-          chalk.bold("Error:") + " " + (error || 'Unknown error'),
-          {
-            title: "Test Failed",
-            titleAlignment: "center",
-            padding: 1,
-            borderColor: "red",
-            borderStyle: "round",
-          }
-        );
-        console.error(errorBox);
-
-        if (errorDetails) {
-          logger.error('Error Details:', errorDetails);
+      // Always display error, even if not verbose
+      const errorMsg = error || 'Unknown error';
+      const errorBox = boxen(
+        chalk.bold("Error:") + " " + errorMsg,
+        {
+          title: "Test Failed",
+          titleAlignment: "center",
+          padding: 1,
+          borderColor: "red",
+          borderStyle: "round",
         }
+      );
+      console.error(errorBox);
+
+      if (errorDetails) {
+        logger.error('Error Details:', errorDetails);
       }
-      return { testCase, success: false, error: error || 'Unknown error' };
+      
+      return { testCase, success: false, error: errorMsg };
     }
 
   } finally {

@@ -135,19 +135,56 @@ export function extractWorkflowResults(
   try {
     // Handle --rawOutput format: direct workflow output (array)
     if (isN8nRawOutputArray(executionJson)) {
-      const firstItem = executionJson[0];
-      // Check if it looks like workflow output (has 'output' field)
-      if (
-        firstItem &&
-        typeof firstItem === 'object' &&
-        'output' in firstItem
-      ) {
-        return { success: true, output: firstItem };
+      // Empty array indicates failure or no output
+      if (executionJson.length === 0) {
+        return { 
+          success: false, 
+          error: 'Workflow returned empty output (possible error in sub-workflow)' 
+        };
       }
+      
+      const firstItem = executionJson[0];
+      
+      // Check for error indicators in raw output
+      if (firstItem && typeof firstItem === 'object') {
+        // Check for error fields
+        if ('error' in firstItem || 'errorMessage' in firstItem || 'message' in firstItem) {
+          const errorMsg = 
+            (firstItem as { error?: { message?: string }; errorMessage?: string; message?: string }).error?.message ||
+            (firstItem as { errorMessage?: string }).errorMessage ||
+            (firstItem as { message?: string }).message ||
+            'Unknown error in workflow execution';
+          return {
+            success: false,
+            error: errorMsg,
+            errorDetails: firstItem as N8nExecutionError,
+          };
+        }
+        
+        // Check if it looks like workflow output (has 'output' field)
+        if ('output' in firstItem) {
+          return { success: true, output: firstItem };
+        }
+      }
+      
+      // If we have items but they don't match expected format, return them
+      return { success: true, output: executionJson };
     }
 
     // Handle direct object output (--rawOutput single object)
     if (isN8nRawOutputObject(executionJson)) {
+      // Check for error indicators
+      if ('error' in executionJson || 'errorMessage' in executionJson) {
+        const errorMsg = 
+          (executionJson as { error?: { message?: string }; errorMessage?: string }).error?.message ||
+          (executionJson as { errorMessage?: string }).errorMessage ||
+          'Unknown error in workflow execution';
+        return {
+          success: false,
+          error: errorMsg,
+          errorDetails: executionJson as unknown as N8nExecutionError,
+        };
+      }
       return { success: true, output: executionJson };
     }
 
@@ -155,35 +192,60 @@ export function extractWorkflowResults(
     if (isN8nFullExecutionJson(executionJson)) {
       const runData = executionJson.data?.resultData?.runData;
       if (!runData) {
+        // Check if there's a top-level error in resultData
+        const topLevelError = executionJson.data?.resultData?.error;
+        if (topLevelError) {
+          const errorMsg = 
+            (topLevelError && typeof topLevelError === 'object' && 'message' in topLevelError
+              ? (topLevelError as { message?: string }).message
+              : undefined) ||
+            (typeof topLevelError === 'string' ? topLevelError : 'Workflow execution failed');
+          return {
+            success: false,
+            error: errorMsg,
+            errorDetails: topLevelError as N8nExecutionError,
+          };
+        }
         return { success: false, error: 'No execution data found' };
       }
 
-      // Find the workflow execution node (starts with "Run: ")
+      // FIRST: Check ALL nodes for errors (including sub-workflow nodes)
+      const errorNodes = Object.entries(runData).filter(
+        ([, data]) =>
+          Array.isArray(data) &&
+          data.some((exec) => exec.executionStatus === 'error')
+      );
+      
+      if (errorNodes.length > 0) {
+        // Find the most relevant error (prefer "Run: " nodes, but any error is important)
+        const runNodeError = errorNodes.find(([name]) => name.startsWith('Run: '));
+        const [nodeName, nodeData] = runNodeError || errorNodes[0];
+        
+        if (Array.isArray(nodeData)) {
+          const errorExec = nodeData.find(
+            (exec) => exec.executionStatus === 'error'
+          );
+          if (errorExec) {
+            const errorObj = errorExec.error;
+            const errorMessage = 
+              (errorObj && typeof errorObj === 'object' && 'message' in errorObj 
+                ? (errorObj as { message?: string }).message 
+                : undefined) ||
+              (typeof errorObj === 'string' ? errorObj : 'Unknown error');
+            return {
+              success: false,
+              error: `Error in ${nodeName}: ${errorMessage}`,
+              errorDetails: errorObj as N8nExecutionError,
+            };
+          }
+        }
+      }
+
+      // SECOND: Find the workflow execution node (starts with "Run: ")
       const workflowNodeName = Object.keys(runData).find((name) =>
         name.startsWith('Run: ')
       );
       if (!workflowNodeName) {
-        // Check for errors in other nodes
-        const errorNodes = Object.entries(runData).filter(
-          ([, data]) =>
-            Array.isArray(data) &&
-            data.some((exec) => exec.executionStatus === 'error')
-        );
-        if (errorNodes.length > 0) {
-          const [nodeName, nodeData] = errorNodes[0];
-          if (Array.isArray(nodeData)) {
-            const errorExec = nodeData.find(
-              (exec) => exec.executionStatus === 'error'
-            );
-            return {
-              success: false,
-              error: `Error in ${nodeName}: ${
-                errorExec?.error?.message || 'Unknown error'
-              }`,
-              errorDetails: errorExec?.error,
-            };
-          }
-        }
         return {
           success: false,
           error: 'Workflow execution node not found',
