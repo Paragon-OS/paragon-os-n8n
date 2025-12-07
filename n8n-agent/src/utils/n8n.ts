@@ -53,8 +53,15 @@ export async function runN8nCapture(
   const defaultTimeout = args.includes('execute') ? 2 * 60 * 1000 : undefined;
   const timeout = timeoutMs ?? defaultTimeout;
 
-  // Check if we're in test environment
-  const isTestEnv = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true' || process.env.VITEST;
+  // Check if we're in test environment (vitest or other test runners)
+  // More robust detection to handle various test runner scenarios
+  // Vitest sets VITEST env var, and we also set it explicitly in vitest.config.ts
+  const isTestEnv = 
+    process.env.NODE_ENV === 'test' || 
+    process.env.VITEST === 'true' || 
+    (typeof process.env.VITEST !== 'undefined' && process.env.VITEST !== 'false') ||
+    // Fallback: check if vitest is in process args (e.g., when running via npm test)
+    (process.argv.some(arg => /vitest/i.test(arg)) && process.argv.some(arg => /test/i.test(arg)));
   
   // For execute commands, use streaming to detect completion early (unless in test env)
   // In test environments, use simple execa buffering for reliability
