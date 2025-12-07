@@ -81,69 +81,111 @@ function createLogger(context?: Record<string, unknown>): Logger {
   
   return {
     trace: (message: string, context?: Record<string, unknown>, ...args: unknown[]) => {
-      const merged = context ? { ...context, args } : { args };
-      logger.trace(merged, message);
+      if (context) {
+        const merged = args.length > 0 ? { ...context, args } : context;
+        logger.trace(merged, message);
+      } else if (args.length > 0) {
+        logger.trace({ args }, message);
+      } else {
+        logger.trace(message);
+      }
     },
     debug: (message: string, context?: Record<string, unknown>, ...args: unknown[]) => {
-      const merged = context ? { ...context, args } : { args };
-      logger.debug(merged, message);
+      if (context) {
+        const merged = args.length > 0 ? { ...context, args } : context;
+        logger.debug(merged, message);
+      } else if (args.length > 0) {
+        logger.debug({ args }, message);
+      } else {
+        logger.debug(message);
+      }
     },
     info: (message: string, context?: Record<string, unknown>, ...args: unknown[]) => {
-      const merged = context ? { ...context, args } : { args };
-      logger.info(merged, message);
+      if (context) {
+        const merged = args.length > 0 ? { ...context, args } : context;
+        logger.info(merged, message);
+      } else if (args.length > 0) {
+        logger.info({ args }, message);
+      } else {
+        logger.info(message);
+      }
     },
     warn: (message: string, contextOrError?: Record<string, unknown> | Error | unknown, error?: Error | unknown, ...args: unknown[]) => {
       // Handle case where context is actually an error (backward compatibility)
       if (contextOrError instanceof Error) {
-        logger.warn({ err: contextOrError, args }, message);
+        const merged = args.length > 0 ? { err: contextOrError, args } : { err: contextOrError };
+        logger.warn(merged, message);
       } else if (contextOrError && typeof contextOrError === 'object' && !Array.isArray(contextOrError)) {
         // It's a context object
-        const merged = error instanceof Error 
-          ? { ...contextOrError as Record<string, unknown>, err: error, args }
-          : { ...contextOrError as Record<string, unknown>, error, args };
+        const baseMerged = error instanceof Error 
+          ? { ...contextOrError as Record<string, unknown>, err: error }
+          : { ...contextOrError as Record<string, unknown>, error };
+        const merged = args.length > 0 ? { ...baseMerged, args } : baseMerged;
         logger.warn(merged, message);
       } else {
         // No context, just error or args
-        const merged = error instanceof Error 
-          ? { err: error, args: [contextOrError, ...args] }
-          : { error: contextOrError, args };
-        logger.warn(merged, message);
+        const allArgs = contextOrError !== undefined ? [contextOrError, ...args] : args;
+        if (error instanceof Error) {
+          const merged = allArgs.length > 0 ? { err: error, args: allArgs } : { err: error };
+          logger.warn(merged, message);
+        } else if (contextOrError !== undefined || error !== undefined || args.length > 0) {
+          const merged = allArgs.length > 0 ? { error: contextOrError || error, args: allArgs } : { error: contextOrError || error };
+          logger.warn(merged, message);
+        } else {
+          logger.warn(message);
+        }
       }
     },
     error: (message: string, contextOrError?: Record<string, unknown> | Error | unknown, error?: Error | unknown, ...args: unknown[]) => {
       // Handle case where context is actually an error (backward compatibility)
       if (contextOrError instanceof Error) {
-        logger.error({ err: contextOrError, args }, message);
+        const merged = args.length > 0 ? { err: contextOrError, args } : { err: contextOrError };
+        logger.error(merged, message);
       } else if (contextOrError && typeof contextOrError === 'object' && !Array.isArray(contextOrError)) {
         // It's a context object
-        const merged = error instanceof Error 
-          ? { ...contextOrError as Record<string, unknown>, err: error, args }
-          : { ...contextOrError as Record<string, unknown>, error, args };
+        const baseMerged = error instanceof Error 
+          ? { ...contextOrError as Record<string, unknown>, err: error }
+          : { ...contextOrError as Record<string, unknown>, error };
+        const merged = args.length > 0 ? { ...baseMerged, args } : baseMerged;
         logger.error(merged, message);
       } else {
         // No context, just error or args
-        const merged = error instanceof Error 
-          ? { err: error, args: [contextOrError, ...args] }
-          : { error: contextOrError, args };
-        logger.error(merged, message);
+        const allArgs = contextOrError !== undefined ? [contextOrError, ...args] : args;
+        if (error instanceof Error) {
+          const merged = allArgs.length > 0 ? { err: error, args: allArgs } : { err: error };
+          logger.error(merged, message);
+        } else if (contextOrError !== undefined || error !== undefined || args.length > 0) {
+          const merged = allArgs.length > 0 ? { error: contextOrError || error, args: allArgs } : { error: contextOrError || error };
+          logger.error(merged, message);
+        } else {
+          logger.error(message);
+        }
       }
     },
     fatal: (message: string, contextOrError?: Record<string, unknown> | Error | unknown, error?: Error | unknown, ...args: unknown[]) => {
       // Handle case where context is actually an error (backward compatibility)
       if (contextOrError instanceof Error) {
-        logger.fatal({ err: contextOrError, args }, message);
+        const merged = args.length > 0 ? { err: contextOrError, args } : { err: contextOrError };
+        logger.fatal(merged, message);
       } else if (contextOrError && typeof contextOrError === 'object' && !Array.isArray(contextOrError)) {
         // It's a context object
-        const merged = error instanceof Error 
-          ? { ...contextOrError as Record<string, unknown>, err: error, args }
-          : { ...contextOrError as Record<string, unknown>, error, args };
+        const baseMerged = error instanceof Error 
+          ? { ...contextOrError as Record<string, unknown>, err: error }
+          : { ...contextOrError as Record<string, unknown>, error };
+        const merged = args.length > 0 ? { ...baseMerged, args } : baseMerged;
         logger.fatal(merged, message);
       } else {
         // No context, just error or args
-        const merged = error instanceof Error 
-          ? { err: error, args: [contextOrError, ...args] }
-          : { error: contextOrError, args };
-        logger.fatal(merged, message);
+        const allArgs = contextOrError !== undefined ? [contextOrError, ...args] : args;
+        if (error instanceof Error) {
+          const merged = allArgs.length > 0 ? { err: error, args: allArgs } : { err: error };
+          logger.fatal(merged, message);
+        } else if (contextOrError !== undefined || error !== undefined || args.length > 0) {
+          const merged = allArgs.length > 0 ? { error: contextOrError || error, args: allArgs } : { error: contextOrError || error };
+          logger.fatal(merged, message);
+        } else {
+          logger.fatal(message);
+        }
       }
     },
     child: (bindings: Record<string, unknown>) => {

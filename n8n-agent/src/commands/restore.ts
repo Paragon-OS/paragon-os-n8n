@@ -100,13 +100,15 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
     toImport.push(backup);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (logger.info as any)({
-    total: backups.length,
-    unchanged: unchangedCount,
-    toImport: toImport.length,
-    new: newCount
-  }, `Found ${backups.length} workflow JSON file(s) in backup. Unchanged on server (skipped): ${unchangedCount}. New or changed (to import): ${toImport.length} (including ${newCount} without existing live workflows).`);
+  logger.info(
+    `Found ${backups.length} workflow JSON file(s) in backup. Unchanged on server (skipped): ${unchangedCount}. New or changed (to import): ${toImport.length} (including ${newCount} without existing live workflows).`,
+    {
+      total: backups.length,
+      unchanged: unchangedCount,
+      toImport: toImport.length,
+      new: newCount
+    }
+  );
 
   if (toImport.length === 0) {
     logger.info("All workflows in the backup already match the current n8n instance. Nothing to restore.");
@@ -140,12 +142,14 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
    */
   for (const backup of toImport) {
     const args = ["import:workflow", `--input=${backup.filePath}`, ...passthroughFlags];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (logger.info as any)({
-      filePath: backup.filePath,
-      workflowId: backup.id,
-      workflowName: backup.name
-    }, `Importing workflow from "${backup.filePath}"${backup.id ? ` (id: ${backup.id}, name: ${backup.name})` : ` (name: ${backup.name})`}`);
+    logger.info(
+      `Importing workflow from "${backup.filePath}"${backup.id ? ` (id: ${backup.id}, name: ${backup.name})` : ` (name: ${backup.name})`}`,
+      {
+        filePath: backup.filePath,
+        workflowId: backup.id,
+        workflowName: backup.name
+      }
+    );
     const exitCode = await runN8nQuiet(args);
 
     if (exitCode !== 0) {
