@@ -181,7 +181,8 @@
         352
       ],
       "id": "get-entity-data",
-      "name": "Get Entity Data (Cache or Fetch)"
+      "name": "Get Entity Data (Cache or Fetch)",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -216,7 +217,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract entity data from cache handler output and merge with entityConfig\nconst cacheHandlerOutput = $input.first().json;\nconst entityConfig = $json.entityConfig;\nconst query = $json.query || '';\n\nif (!entityConfig) {\n  throw new Error(`entityConfig is missing. Available keys: ${JSON.stringify(Object.keys($json || {}))}`);\n}\n\nconst dataKey = entityConfig.dataKey;\n\n// Cache handler returns the data directly (from cache or fetch)\n// The data might be the array itself, or nested under dataKey\nlet entityData = cacheHandlerOutput;\n\n// If cacheHandlerOutput is an array, use it directly\n// Otherwise, check if it's nested under dataKey\nif (!Array.isArray(entityData) && entityData && entityData[dataKey] !== undefined) {\n  entityData = entityData[dataKey];\n}\n\n// Ensure entityData is an array\nif (!Array.isArray(entityData)) {\n  entityData = entityData ? [entityData] : [];\n}\n\n// Return data in format expected by search nodes\nreturn {\n  [dataKey]: entityData,\n  entityConfig: entityConfig,\n  query: query\n};"
+        "jsCode": "// Extract entity data from cache handler output and merge with entityConfig\nconst cacheHandlerOutput = $input.first().json;\nconst entityConfig = $json.entityConfig;\nconst query = $json.query || '';\n\n// Handle error cases from cache handler\nif (cacheHandlerOutput.error) {\n  throw new Error(`Failed to fetch entity data: ${cacheHandlerOutput.error}`);\n}\n\nif (!entityConfig) {\n  throw new Error(`entityConfig is missing. Available keys: ${JSON.stringify(Object.keys($json || {}))}`);\n}\n\nconst dataKey = entityConfig.dataKey;\n\n// Cache handler returns the data directly (from cache or fetch)\n// The data might be the array itself, or nested under dataKey\nlet entityData = cacheHandlerOutput;\n\n// If cacheHandlerOutput is an array, use it directly\n// Otherwise, check if it's nested under dataKey\nif (!Array.isArray(entityData) && entityData && entityData[dataKey] !== undefined) {\n  entityData = entityData[dataKey];\n}\n\n// Ensure entityData is an array\nif (!Array.isArray(entityData)) {\n  entityData = entityData ? [entityData] : [];\n}\n\n// Return data in format expected by search nodes\nreturn {\n  [dataKey]: entityData,\n  entityConfig: entityConfig,\n  query: query\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -414,7 +415,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Format final output based on search type\nconst input = $input.first().json;\nconst entityConfig = $('Prepare Entity Config').first().json.entityConfig;\nconst searchType = entityConfig.searchType;\n\n// Handle different output formats\nif (searchType === 'none' || entityConfig.skipQuery) {\n  // For skipQuery entities (like 'self'), return the data directly\n  const dataKey = entityConfig.dataKey;\n  return input[dataKey] || input;\n} else if (searchType === 'fuzzy') {\n  // Fuzzy search returns results with scores\n  return input;\n} else if (searchType === 'rag') {\n  // RAG search returns { results, count, answer }\n  // Extract results array\n  return input.results || input;\n}\n\n// Fallback: return as-is\nreturn input;"
+        "jsCode": "// Format final output based on search type\nconst input = $input.first().json;\n\n// Handle error cases\nif (input.error) {\n  throw new Error(input.error);\n}\n\nconst entityConfig = $('Prepare Entity Config').first().json.entityConfig;\nconst searchType = entityConfig.searchType;\n\n// Handle different output formats\nif (searchType === 'none' || entityConfig.skipQuery) {\n  // For skipQuery entities (like 'self'), return the data directly\n  const dataKey = entityConfig.dataKey;\n  return input[dataKey] || input;\n} else if (searchType === 'fuzzy') {\n  // Fuzzy search returns results with scores\n  return input;\n} else if (searchType === 'rag') {\n  // RAG search returns { results, count, answer }\n  // Extract results array\n  return input.results || input;\n}\n\n// Fallback: return as-is\nreturn input;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,

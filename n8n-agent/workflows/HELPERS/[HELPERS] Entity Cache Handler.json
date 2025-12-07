@@ -145,7 +145,8 @@
         512
       ],
       "id": "fetch-data",
-      "name": "Fetch Data"
+      "name": "Fetch Data",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -218,7 +219,8 @@
         512
       ],
       "id": "update-cache",
-      "name": "Update Cache"
+      "name": "Update Cache",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {},
@@ -230,6 +232,19 @@
       ],
       "id": "merge-results",
       "name": "Merge Results"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle errors from either cache hit or fetch path\nconst input = $input.first().json;\n\n// If there's an error, return it in a structured format\nif (input.error) {\n  const errorMsg = typeof input.error === 'string' ? input.error : (input.error.message || JSON.stringify(input.error));\n  return {\n    error: errorMsg\n  };\n}\n\n// Return the data as-is if no error\nreturn input;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1424,
+        400
+      ],
+      "id": "handle-errors",
+      "name": "Handle Errors"
     }
   ],
   "connections": {
@@ -293,6 +308,22 @@
             "index": 1
           }
         ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Handle Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Errors": {
+      "main": [
+        []
       ]
     }
   },

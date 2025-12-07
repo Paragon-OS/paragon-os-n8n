@@ -36,6 +36,7 @@
       ],
       "id": "mcp-call",
       "name": "Get My Profile",
+      "onError": "continueErrorOutput",
       "credentials": {
         "mcpClientApi": {
           "id": "aiYCclLDUqob5iQ0",
@@ -45,7 +46,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.first().json;\n\n// Profile is returned as a single object in result.content[0].text\nlet profile;\n\ntry {\n  if (input.result?.content?.[0]?.text) {\n    profile = JSON.parse(input.result.content[0].text);\n  } else if (input.myProfile) {\n    profile = input.myProfile;\n  } else {\n    throw new Error('No profile found');\n  }\n  \n  return {\n    myProfile: profile\n  };\n} catch (error) {\n  return {\n    myProfile: null,\n    error: error.message\n  };\n}"
+        "jsCode": "const input = $input.first().json;\n\n// Handle error cases from MCP call\nif (input.error) {\n  const errorMsg = typeof input.error === 'string' ? input.error : (input.error.message || JSON.stringify(input.error));\n  return {\n    myProfile: null,\n    error: `MCP call failed: ${errorMsg}`\n  };\n}\n\n// Profile is returned as a single object in result.content[0].text\nlet profile;\n\ntry {\n  if (input.result?.content?.[0]?.text) {\n    profile = JSON.parse(input.result.content[0].text);\n  } else if (input.myProfile) {\n    profile = input.myProfile;\n  } else {\n    throw new Error('No profile found in MCP response');\n  }\n  \n  return {\n    myProfile: profile\n  };\n} catch (error) {\n  return {\n    myProfile: null,\n    error: error.message || String(error)\n  };\n}"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
