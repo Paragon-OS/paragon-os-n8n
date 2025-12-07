@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-07T00:43:47.000Z",
+  "updatedAt": "2025-12-07T01:23:19.000Z",
   "createdAt": "2025-11-30T21:00:00.000Z",
   "id": "TelegramContextScout",
   "name": "Telegram Context Scout",
@@ -11,9 +11,6 @@
       "parameters": {
         "workflowInputs": {
           "values": [
-            {
-              "name": "query"
-            },
             {
               "name": "entity"
             }
@@ -161,15 +158,14 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "query": "pasindu",
-          "entity": "contact-rag"
+          "entity": "self"
         }
       }
     ]
   },
-  "versionId": "b06f1c1c-96f3-484a-b646-ec2bdb63e330",
+  "versionId": "9bf137f6-1590-41b4-b991-2b58e8a4ff84",
   "activeVersionId": null,
-  "versionCounter": 54,
+  "versionCounter": 56,
   "triggerCount": 0,
   "tags": [
     {

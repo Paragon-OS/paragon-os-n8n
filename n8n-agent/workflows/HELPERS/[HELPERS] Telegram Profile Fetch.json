@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-06T17:30:00.000Z",
+  "updatedAt": "2025-12-07T01:20:50.000Z",
   "createdAt": "2025-12-06T17:30:00.000Z",
   "id": "TelegramProfileFetch",
   "name": "[HELPERS] Telegram Profile Fetch",
@@ -9,9 +9,8 @@
   "nodes": [
     {
       "parameters": {
-        "workflowInputs": {
-          "values": []
-        }
+        "inputSource": "jsonExample",
+        "jsonExample": "{}"
       },
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
@@ -36,13 +35,13 @@
       ],
       "id": "mcp-call",
       "name": "Get My Profile",
-      "onError": "continueErrorOutput",
       "credentials": {
         "mcpClientApi": {
           "id": "aiYCclLDUqob5iQ0",
           "name": "Telegram MCP Client (STDIO) account"
         }
-      }
+      },
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -87,10 +86,10 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": null,
-  "versionId": "telegram-profile-fetch-v1",
+  "pinData": {},
+  "versionId": "c4c23a3e-f770-4303-9041-4b5d25dc04fa",
   "activeVersionId": null,
-  "versionCounter": 2,
+  "versionCounter": 4,
   "triggerCount": 0,
   "tags": [],
   "shared": [

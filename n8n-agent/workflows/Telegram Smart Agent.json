@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-07T00:38:56.000Z",
+  "updatedAt": "2025-12-07T01:24:03.000Z",
   "createdAt": "2025-11-30T21:05:00.000Z",
   "id": "TelegramSmartAgent",
   "name": "Telegram Smart Agent",
@@ -347,14 +347,14 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "userPrompt": "who is cody?"
+          "userPrompt": "What is my Telegram profile?"
         }
       }
     ]
   },
-  "versionId": "f7670261-a3ad-4423-99ca-f875ca8438b0",
+  "versionId": "a7112596-b80a-485a-933c-2e6a912b1aa7",
   "activeVersionId": null,
-  "versionCounter": 25,
+  "versionCounter": 27,
   "triggerCount": 0,
   "tags": [
     {
