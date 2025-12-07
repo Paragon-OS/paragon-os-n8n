@@ -1,4 +1,8 @@
 import { execa } from "execa";
+import { spawn } from "child_process";
+import * as fs from "fs";
+import * as path from "path";
+import * as os from "os";
 import { logger } from "./logger";
 
 /**
@@ -49,16 +53,30 @@ export async function runN8nCapture(
   const defaultTimeout = args.includes('execute') ? 2 * 60 * 1000 : undefined;
   const timeout = timeoutMs ?? defaultTimeout;
 
-  // For execute commands, use streaming to detect completion early
-  if (args.includes('execute')) {
+  // Check if we're in test environment
+  const isTestEnv = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true' || process.env.VITEST;
+  
+  // For execute commands, use streaming to detect completion early (unless in test env)
+  // In test environments, use simple execa buffering for reliability
+  if (args.includes('execute') && !isTestEnv) {
     return runN8nExecuteWithStreaming(args, timeout);
   }
+  
 
   try {
+    // In test environments, use "ignore" for stdin to avoid interference
+    // from vitest's test runner stdin handling
+    const stdinMode = isTestEnv ? "ignore" : "inherit";
+    
+    // Use 'pipe' for stdout/stderr to capture all output
+    // execa will automatically buffer all output when using 'pipe'
     const result = await execa("n8n", args, {
-      stdio: ["inherit", "pipe", "pipe"],
+      stdio: [stdinMode, "pipe", "pipe"],
       reject: false,
       timeout,
+      // These are execa defaults but being explicit
+      all: false, // Keep stdout and stderr separate
+      stripFinalNewline: false, // Keep newlines as-is
     });
 
     // Check if process was killed due to timeout
@@ -112,6 +130,38 @@ async function runN8nExecuteWithStreaming(
     let stderr = "";
     let completed = false;
     let timeoutId: NodeJS.Timeout | undefined;
+    let exitCode: number | null = null;
+    let exitSignal: string | null = null;
+    let stdoutEnded = false;
+    let stderrEnded = false;
+
+    // Helper to resolve when everything is done
+    const tryResolve = () => {
+      if (completed) return;
+      
+      // Wait for both process exit AND streams to close
+      if (exitCode !== null && stdoutEnded && stderrEnded) {
+        completed = true;
+        
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+
+        if (exitSignal === 'SIGTERM' && timeoutMs) {
+          resolve({
+            code: 124,
+            stdout,
+            stderr: stderr || `Command timed out after ${timeoutMs}ms`,
+          });
+        } else {
+          resolve({
+            code: exitCode ?? 1,
+            stdout,
+            stderr,
+          });
+        }
+      }
+    };
 
     // Set up timeout
     if (timeoutMs) {
@@ -128,69 +178,61 @@ async function runN8nExecuteWithStreaming(
       }, timeoutMs);
     }
 
-    // Stream stdout
+    // Stream stdout - wait for 'end' event
     if (child.stdout) {
       child.stdout.on("data", (data: Buffer) => {
         const chunk = data.toString();
         stdout += chunk;
-
-        // Try to detect if we have complete JSON output
-        // Look for valid JSON objects/arrays that might indicate completion
-        if (chunk.includes('}') || chunk.includes(']')) {
-          // Check if we have a complete JSON structure
-          try {
-            // Try to parse the accumulated stdout as JSON
-            const trimmed = stdout.trim();
-            if (trimmed) {
-              // Look for JSON after separator or at the end
-              const jsonMatch = trimmed.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
-              if (jsonMatch) {
-                try {
-                  JSON.parse(jsonMatch[0]);
-                  // If we successfully parsed JSON and haven't seen new output in a bit,
-                  // the workflow might be done. But we'll still wait for the process to exit
-                  // to be safe, unless it's taking too long.
-                } catch {
-                  // Not complete JSON yet, continue
-                }
-              }
-            }
-          } catch {
-            // Continue streaming
-          }
-        }
       });
+      
+      child.stdout.on("end", () => {
+        stdoutEnded = true;
+        tryResolve();
+      });
+      
+      child.stdout.on("error", () => {
+        stdoutEnded = true;
+        tryResolve();
+      });
+    } else {
+      stdoutEnded = true;
     }
 
-    // Stream stderr
+    // Stream stderr - wait for 'end' event
     if (child.stderr) {
       child.stderr.on("data", (data: Buffer) => {
         stderr += data.toString();
       });
+      
+      child.stderr.on("end", () => {
+        stderrEnded = true;
+        tryResolve();
+      });
+      
+      child.stderr.on("error", () => {
+        stderrEnded = true;
+        tryResolve();
+      });
+    } else {
+      stderrEnded = true;
     }
 
-    // Wait for process to complete
-    child.on("exit", (exitCode, signal) => {
-      if (completed) return;
-      completed = true;
-
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-
-      if (signal === 'SIGTERM' && timeoutMs) {
-        resolve({
-          code: 124,
-          stdout,
-          stderr: stderr || `Command timed out after ${timeoutMs}ms`,
-        });
-      } else {
-        resolve({
-          code: exitCode ?? 1,
-          stdout,
-          stderr,
-        });
-      }
+    // Wait for process to complete (but don't resolve until streams close)
+    child.on("exit", (code, signal) => {
+      exitCode = code ?? 1;
+      exitSignal = signal;
+      
+      // Give streams a chance to finish, but don't wait forever
+      // If streams don't close within 1 second, resolve anyway
+      setTimeout(() => {
+        if (!completed) {
+          stdoutEnded = true;
+          stderrEnded = true;
+          tryResolve();
+        }
+      }, 1000);
+      
+      tryResolve();
     });
 
     child.on("error", (error) => {

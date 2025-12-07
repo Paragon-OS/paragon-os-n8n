@@ -21,6 +21,37 @@ const TEST_RUNNER_ID = 'TestRunnerHelper001';
 const TEST_CONFIG_NODE = '⚙️ Test Config';
 
 /**
+ * Resolve workflows directory path.
+ * Works in both compiled (CLI) and test (vitest) environments.
+ * Tests run from the n8n-agent directory, so we resolve relative to cwd.
+ */
+function resolveWorkflowsDir(): string {
+  // When running tests, process.cwd() should be the n8n-agent directory
+  // When running CLI (compiled), __dirname points to dist/utils
+  const cwd = process.cwd();
+  
+  // Check if workflows directory exists in cwd (for vitest/test runs)
+  const workflowsInCwd = path.join(cwd, 'workflows');
+  if (fs.existsSync(workflowsInCwd)) {
+    return workflowsInCwd;
+  }
+  
+  // Fallback: try resolving from __dirname (for compiled CLI code)
+  try {
+    const fromDirname = path.resolve(__dirname, '../../workflows');
+    if (fs.existsSync(fromDirname)) {
+      return fromDirname;
+    }
+  } catch {
+    // __dirname might not work in all environments
+  }
+  
+  // Last resort: return the expected path relative to cwd
+  // (will fail later if it doesn't exist, but at least we have a path)
+  return workflowsInCwd;
+}
+
+/**
  * Filter out version compatibility warnings from output
  */
 function filterVersionWarnings(output: string): string {
@@ -97,7 +128,7 @@ export async function syncWorkflow(
   workflowName: string,
   workflowsDir?: string
 ): Promise<void> {
-  const workflowsPath = workflowsDir || path.resolve(__dirname, '../../workflows');
+  const workflowsPath = workflowsDir || resolveWorkflowsDir();
   const allWorkflowFiles = await collectJsonFilesRecursive(workflowsPath);
 
   const workflowFiles: WorkflowFile[] = [];
@@ -142,7 +173,17 @@ export async function executeWorkflowTest(
   testData: Record<string, unknown>,
   workflowsDir?: string
 ): Promise<WorkflowTestResult> {
-  const workflowsPath = workflowsDir || path.resolve(__dirname, '../../workflows');
+  const workflowsPath = workflowsDir || resolveWorkflowsDir();
+  
+  // Verify workflows directory exists
+  if (!fs.existsSync(workflowsPath)) {
+    return {
+      testCase,
+      success: false,
+      error: `Workflows directory not found: ${workflowsPath}. Current working directory: ${process.cwd()}`,
+    };
+  }
+  
   const context = await initTestContext(workflowsPath);
 
   try {
@@ -203,6 +244,22 @@ export async function executeWorkflowTest(
 
     const filteredStderr = filterVersionWarnings(stderr);
     const filteredStdout = filterVersionWarnings(stdout);
+    
+    // Debug: Log raw stdout/stderr for troubleshooting in test env
+    if (process.env.NODE_ENV === 'test' && (!stdout || stdout.trim().length === 0)) {
+      // Write debug info to a file so we can inspect it
+      const debugInfo = {
+        workflow: workflowName,
+        testCase,
+        exitCode,
+        stdoutLength: stdout?.length || 0,
+        stderrLength: stderr?.length || 0,
+        stdoutPreview: stdout?.substring(0, 500) || 'empty',
+        stderrPreview: stderr?.substring(0, 500) || 'empty',
+        timestamp: new Date().toISOString()
+      };
+      console.error('[DEBUG] Empty stdout detected:', JSON.stringify(debugInfo, null, 2));
+    }
 
     // Handle timeout (exit code 124)
     if (exitCode === 124) {
@@ -269,10 +326,18 @@ export async function executeWorkflowTest(
       executionJson = parseExecutionOutput(filteredStdout);
     } catch (parseError) {
       if (!filteredStdout.trim()) {
+        // Provide more diagnostic information
+        const diagnosticInfo = [
+          `Workflow: ${workflowName}`,
+          `Test case: ${testCase}`,
+          `Exit code: ${exitCode}`,
+          filteredStderr.trim() ? `Stderr: ${filteredStderr.trim().substring(0, 200)}` : 'No stderr output',
+        ].join('\n');
+        
         return {
           testCase,
           success: false,
-          error: 'Workflow returned no output (possible error in sub-workflow). Check n8n execution logs for details.',
+          error: `Workflow returned no output (possible error in sub-workflow).\n\n${diagnosticInfo}\n\nCheck n8n execution logs for details.`,
         };
       }
       
@@ -306,10 +371,31 @@ export async function executeWorkflowTest(
       (Array.isArray(executionJson) && executionJson.length === 0) ||
       (typeof executionJson === 'object' && !Array.isArray(executionJson) && Object.keys(executionJson).length === 0)
     ) {
+      // Try to extract more information from the execution JSON before it was determined to be empty
+      let additionalInfo = '';
+      
+      // If we have execution JSON structure, try to extract node information
+      if (typeof executionJson === 'object' && executionJson !== null) {
+        const execJson = executionJson as { data?: { resultData?: { runData?: Record<string, unknown> } } };
+        if (execJson.data?.resultData?.runData) {
+          const nodeNames = Object.keys(execJson.data.resultData.runData);
+          if (nodeNames.length > 0) {
+            additionalInfo = `\nExecuted nodes: ${nodeNames.join(', ')}`;
+          }
+        }
+      }
+      
+      const diagnosticInfo = [
+        `Workflow: ${workflowName}`,
+        `Test case: ${testCase}`,
+        `Exit code: ${exitCode}`,
+        additionalInfo,
+      ].filter(Boolean).join('\n');
+      
       return {
         testCase,
         success: false,
-        error: 'Workflow returned empty output (possible error in sub-workflow). Check n8n execution logs for details.',
+        error: `Workflow returned empty output (possible error in sub-workflow).\n\n${diagnosticInfo}\n\nCheck n8n execution logs for details.`,
       };
     }
     

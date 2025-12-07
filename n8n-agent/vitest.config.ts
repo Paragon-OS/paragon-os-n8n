@@ -13,6 +13,11 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'],
       exclude: ['node_modules/', 'dist/', '**/*.test.ts', '**/*.spec.ts'],
     },
+    // Disable logger pretty printing to avoid interfering with stdout capture
+    env: {
+      LOG_PRETTY: 'false',
+      NODE_ENV: 'test',
+    },
   },
 });
 

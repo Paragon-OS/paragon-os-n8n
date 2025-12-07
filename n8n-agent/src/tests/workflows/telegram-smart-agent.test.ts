@@ -39,11 +39,15 @@ describe('TelegramSmartAgent', () => {
     }
   ])('$testCase', async ({ testCase, testData }) => {
     const result = await executeWorkflowTest('TelegramSmartAgent', testCase, testData);
+    
+    if (!result.success) {
+      const errorMsg = result.error || 'Test failed with unknown error';
+      const details = result.errorDetails ? `\nError details: ${JSON.stringify(result.errorDetails, null, 2)}` : '';
+      throw new Error(`${errorMsg}${details}`);
+    }
+    
     expect(result.success).toBe(true);
     expect(result.output).toBeDefined();
-    if (result.error) {
-      throw new Error(result.error);
-    }
   });
 });
 
