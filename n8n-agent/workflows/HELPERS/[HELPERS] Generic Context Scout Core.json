@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-07T09:28:22.000Z",
+  "updatedAt": "2025-12-07T09:54:59.000Z",
   "createdAt": "2025-12-06T17:30:00.000Z",
   "id": "GenericContextScoutCore",
   "name": "[HELPERS] Generic Context Scout Core",
@@ -201,10 +201,10 @@
               "type": "string"
             },
             {
-              "id": "8eb5443d-26c1-432c-b60d-b8261ec5b36d",
+              "id": "9c04271a-c2fc-4370-82c4-c16f1c1f4d12",
               "name": "={{ $('Prepare Entity Config').first().json.entityConfig.dataKey }}",
-              "value": "={{ $json.output?.tools ?? $json.myProfile.user }}",
-              "type": "array"
+              "value": "={{ $json.myProfile }}",
+              "type": "object"
             }
           ]
         },
@@ -223,7 +223,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract entity data from cache handler output and merge with entityConfig\nconst cacheHandlerOutput = $input.first().json;\nconst entityConfig = $json.entityConfig;\nconst query = $json.query || '';\n\nconsole.log(1, cacheHandlerOutput)\nconsole.log(2, entityConfig)\nconsole.log(3, query)\n\n// Handle error cases from cache handler\nif (cacheHandlerOutput.error) {\n  throw new Error(`Failed to fetch entity data: ${cacheHandlerOutput.error}`);\n}\n\nif (!entityConfig) {\n  throw new Error(`entityConfig is missing. Available keys: ${JSON.stringify(Object.keys($json || {}))}`);\n}\n\nconst dataKey = entityConfig.dataKey;\n\n// Cache handler returns the data directly (from cache or fetch)\n// The data might be the array itself, or nested under dataKey\nlet entityData = cacheHandlerOutput;\n\n// If cacheHandlerOutput is an array, use it directly\n// Otherwise, check if it's nested under dataKey\nif (!Array.isArray(entityData) && entityData && entityData[dataKey] !== undefined) {\n  entityData = entityData[dataKey];\n}\n\n// Ensure entityData is an array\nif (!Array.isArray(entityData)) {\n  entityData = entityData ? [entityData] : [];\n}\n\n// Return data in format expected by search nodes\nreturn {\n  [dataKey]: entityData,\n  entityConfig: entityConfig,\n  query: query,\n};"
+        "jsCode": "// Extract entity data from cache handler output and merge with entityConfig\n// The input from Merge Entity Config contains: cache handler output + entityConfig + query\nconst mergedInput = $input.first().json;\nconst entityConfig = $json.entityConfig;\nconst query = $json.query || '';\n\n// Handle error cases from cache handler\nif (mergedInput.error) {\n  throw new Error(`Failed to fetch entity data: ${mergedInput.error}`);\n}\n\nif (!entityConfig) {\n  throw new Error(`entityConfig is missing. Available keys: ${JSON.stringify(Object.keys($json || {}))}`);\n}\n\nconst dataKey = entityConfig.dataKey;\n\n// Extract the cache handler output by removing the fields we added in Merge Entity Config\n// The cache handler output is everything except entityConfig and query\nconst cacheHandlerOutput = {};\nfor (const key in mergedInput) {\n  if (key !== 'entityConfig' && key !== 'query') {\n    cacheHandlerOutput[key] = mergedInput[key];\n  }\n}\n\n// Cache handler returns the fetch workflow output directly\n// Fetch workflows return data in format: { [dataKey]: data }\n// For example: { contacts: [...] }, { tools: [...] }, { myProfile: {...} }\n\nlet entityData = null;\n\n// Strategy 1: Check if dataKey exists directly in cacheHandlerOutput (most common case)\nif (cacheHandlerOutput && cacheHandlerOutput[dataKey] !== undefined) {\n  entityData = cacheHandlerOutput[dataKey];\n}\n// Strategy 2: Check if the entire cacheHandlerOutput is an array (direct array return)\nelse if (Array.isArray(cacheHandlerOutput)) {\n  entityData = cacheHandlerOutput;\n}\n// Strategy 3: For skipQuery entities, check if cacheHandlerOutput itself is the data\nelse if (entityConfig.skipQuery && cacheHandlerOutput && typeof cacheHandlerOutput === 'object' && !Array.isArray(cacheHandlerOutput)) {\n  // For profile, the data might be the object itself if fetch workflow didn't wrap it\n  // Check if it looks like profile data (has common profile fields)\n  const hasProfileFields = cacheHandlerOutput.id || cacheHandlerOutput.userId || cacheHandlerOutput.username || cacheHandlerOutput.displayName;\n  if (hasProfileFields) {\n    entityData = cacheHandlerOutput;\n  }\n}\n\n// If still no data found, return empty array\nif (entityData === null || entityData === undefined) {\n  entityData = entityConfig.skipQuery ? null : [];\n}\n\n// Ensure entityData is an array (except for skipQuery entities which might be single objects)\nif (entityConfig.skipQuery) {\n  // For skipQuery entities (like 'self'), return as array with single item or empty\n  return {\n    [dataKey]: Array.isArray(entityData) ? entityData : (entityData ? [entityData] : []),\n    entityConfig: entityConfig,\n    query: query,\n  };\n}\n\n// For searchable entities, ensure it's an array\nif (!Array.isArray(entityData)) {\n  entityData = entityData ? [entityData] : [];\n}\n\n// Return data in format expected by search nodes\nreturn {\n  [dataKey]: entityData,\n  entityConfig: entityConfig,\n  query: query,\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -611,18 +611,14 @@
                   },
                   "mcpDataKey": "contacts"
                 },
-                "mapper": "(c) => ({ id: c.id, username: c.tag, displayName: c.displayName, lastMessage: c.lastMessageAtRelative, contactType: c.type })",
+                "mapper": "(c) => ({ id: c.id, username: c.tag, displayName: c.displayName, lastMessage: c.lastMessageAtRelative, contactType: c.type, platform: 'DISCORD' })",
                 "dataKey": "contacts",
-                "searchType": "fuzzy",
-                "fuzzyConfig": {
-                  "searchKeys": [
-                    "username",
-                    "displayName",
-                    "contactType"
-                  ],
-                  "matchQuality": 60,
-                  "limit": 10
-                }
+                "searchType": "rag",
+                "ragConfig": {
+                  "collectionId": "paragon-os-contacts",
+                  "autoIngest": true
+                },
+                "requiresRAGStatusCheck": true
               },
               "guild": {
                 "cacheKey": "discordGuilds",
@@ -673,9 +669,9 @@
       }
     ]
   },
-  "versionId": "80f4cd21-300a-45dc-b99b-dbf1607221b5",
+  "versionId": "1ffa136b-ff8b-4a65-9314-fef78585c0c0",
   "activeVersionId": null,
-  "versionCounter": 21,
+  "versionCounter": 23,
   "triggerCount": 0,
   "tags": [],
   "shared": [

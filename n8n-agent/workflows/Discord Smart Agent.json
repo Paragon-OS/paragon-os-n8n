@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-07T09:35:14.000Z",
+  "updatedAt": "2025-12-07T09:55:32.000Z",
   "createdAt": "2025-11-12T21:20:27.994Z",
   "id": "zBL0JT7t26pK2x95",
   "name": "Discord Smart Agent",
@@ -57,7 +57,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        -1208,
+        -1216,
         112
       ],
       "id": "5b3749cc-4b46-4285-988a-1c91cbaf9928",
@@ -72,7 +72,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        -1076,
+        -1072,
         544
       ],
       "id": "10bb4322-a169-4562-b993-64d4a576a396",
@@ -371,14 +371,14 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "userPrompt": "What did I message last in my Discord DMs with metaops"
+          "userPrompt": "who is metaops"
         }
       }
     ]
   },
-  "versionId": "63cf97d9-8cc9-4084-8ca9-fcacf0b0997f",
+  "versionId": "4dcb39b8-add6-45c4-a877-f48f4d2112eb",
   "activeVersionId": null,
-  "versionCounter": 271,
+  "versionCounter": 273,
   "triggerCount": 0,
   "tags": [
     {

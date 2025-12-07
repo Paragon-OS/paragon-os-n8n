@@ -55,7 +55,7 @@
             "rawData": "={{ $json }}",
             "dataKey": "contacts",
             "mcpDataKey": "contacts",
-            "mapper": "(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone })",
+            "mapper": "(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone, platform: 'TELEGRAM' })",
             "errorMsg": "No valid contacts found"
           },
           "matchingColumns": [],
@@ -157,7 +157,7 @@
   "pinData": {},
   "versionId": "d30fd087-61f1-4d97-981f-414fd0981393",
   "activeVersionId": null,
-  "versionCounter": 5,
+  "versionCounter": 6,
   "triggerCount": 0,
   "tags": [],
   "shared": [

@@ -55,7 +55,7 @@
             "rawData": "={{ $json }}",
             "dataKey": "contacts",
             "mcpDataKey": "contacts",
-            "mapper": "(c) => ({ id: c.id, username: c.tag, displayName: c.displayName, lastMessage: c.lastMessageAtRelative, contactType: c.type })",
+            "mapper": "(c) => ({ id: c.id, username: c.tag, displayName: c.displayName, lastMessage: c.lastMessageAtRelative, contactType: c.type, platform: 'DISCORD' })",
             "errorMsg": "No valid contacts found"
           },
           "matchingColumns": [],
@@ -157,7 +157,7 @@
   "pinData": {},
   "versionId": "de0db0f4-daf2-4097-bd31-dddebc612e9c",
   "activeVersionId": null,
-  "versionCounter": 6,
+  "versionCounter": 7,
   "triggerCount": 0,
   "tags": [],
   "shared": [

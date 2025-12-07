@@ -119,7 +119,7 @@ const TELEGRAM_CONFIG = {
         parameters: { limit: 200 },
         mcpDataKey: "contacts"
       },
-      mapper: "(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone })",
+      mapper: "(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone, platform: 'TELEGRAM' })",
       dataKey: "contacts",
       searchType: "rag",
       ragConfig: {
@@ -141,6 +141,55 @@ const TELEGRAM_CONFIG = {
       searchType: "fuzzy",
       fuzzyConfig: {
         searchKeys: ["name", "kind"],
+        matchQuality: 50,
+        limit: 10
+      }
+    },
+    // ... other entities
+  }
+};
+```
+
+## Example: Discord Platform Config
+
+```javascript
+const DISCORD_CONFIG = {
+  platform: "DISCORD",
+  mcpCredentialId: "ZFofx3k2ze1wsifx",
+  cacheKeyPrefix: "discord",
+  defaultTTL: 6 * 60 * 60 * 1000, // 6 hours
+  
+  entities: {
+    "contact": {
+      cacheKey: "discordContacts",
+      fetchWorkflowId: "DiscordContactFetch",
+      mcpTool: {
+        name: "discord_list_contacts",
+        parameters: { limit: 100 },
+        mcpDataKey: "contacts"
+      },
+      mapper: "(c) => ({ id: c.id, username: c.tag, displayName: c.displayName, lastMessage: c.lastMessageAtRelative, contactType: c.type, platform: 'DISCORD' })",
+      dataKey: "contacts",
+      searchType: "rag",
+      ragConfig: {
+        collectionId: "paragon-os-contacts",
+        autoIngest: true
+      },
+      requiresRAGStatusCheck: true
+    },
+    "guild": {
+      cacheKey: "discordGuilds",
+      fetchWorkflowId: "DiscordGuildFetch",
+      mcpTool: {
+        name: "discord_list_guilds",
+        parameters: {},
+        mcpDataKey: "guilds"
+      },
+      mapper: "(g) => ({ id: g.id, name: g.name, members: g.memberCount, channels: g.channels ?? [] })",
+      dataKey: "guilds",
+      searchType: "fuzzy",
+      fuzzyConfig: {
+        searchKeys: ["name", "channels"],
         matchQuality: 50,
         limit: 10
       }

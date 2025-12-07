@@ -101,7 +101,7 @@
       "credentials": {
         "mcpClientApi": {
           "id": "ZFofx3k2ze1wsifx",
-          "name": "Discord MCP Server"
+          "name": "Discord MCP Client (STDIO) account"
         }
       }
     },
@@ -122,13 +122,13 @@
       "credentials": {
         "mcpClientApi": {
           "id": "ZFofx3k2ze1wsifx",
-          "name": "Discord MCP Server"
+          "name": "Discord MCP Client (STDIO) account"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "const rawContacts = JSON.parse($input.first().json.result.content[0].text)?.contacts;\n\nreturn {\n  contacts: rawContacts.map(contact=>({\n    id: contact.id,\n    username: contact.tag,\n    displayName: contact.displayName,\n    lastMessage: contact.lastMessageAtRelative,\n    contactType: contact.type\n  }))\n}"
+        "jsCode": "const rawContacts = JSON.parse($input.first().json.result.content[0].text)?.contacts;\n\nreturn {\n  contacts: rawContacts.map(contact=>({\n    id: contact.id,\n    username: contact.tag,\n    displayName: contact.displayName,\n    lastMessage: contact.lastMessageAtRelative,\n    contactType: contact.type,\n    platform: 'DISCORD'\n  }))\n}"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -156,7 +156,7 @@
       "credentials": {
         "mcpClientApi": {
           "id": "ZFofx3k2ze1wsifx",
-          "name": "Discord MCP Server"
+          "name": "Discord MCP Client (STDIO) account"
         }
       }
     },
@@ -324,7 +324,7 @@
       "credentials": {
         "mcpClientApi": {
           "id": "ZFofx3k2ze1wsifx",
-          "name": "Discord MCP Server"
+          "name": "Discord MCP Client (STDIO) account"
         }
       }
     }
@@ -541,7 +541,7 @@
   },
   "versionId": "d934bc82-7027-4978-8044-b2bdc3261aa6",
   "activeVersionId": null,
-  "versionCounter": 2,
+  "versionCounter": 3,
   "triggerCount": 0,
   "tags": [
     {
