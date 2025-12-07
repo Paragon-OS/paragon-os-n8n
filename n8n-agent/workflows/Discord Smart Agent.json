@@ -65,6 +65,7 @@
     },
     {
       "parameters": {
+        "modelName": "models/gemini-2.5-pro",
         "options": {
           "temperature": 0.2
         }
