@@ -1,4 +1,6 @@
 import fs from "fs";
+import path from "path";
+import os from "os";
 import { resolveDir, getPassthroughArgs, confirm } from "../cli";
 import { runN8nQuiet } from "../utils/n8n";
 import { collectJsonFilesRecursive } from "../utils/file";
@@ -73,6 +75,7 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
   const toImport: BackupWorkflowForRestore[] = [];
   let unchangedCount = 0;
   let newCount = 0;
+  const deletedWorkflowIds = new Set<string>();
 
   for (const backup of backups) {
     if (!backup.id) {
@@ -84,6 +87,8 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
 
     const live = currentWorkflows.get(backup.id);
     if (!live) {
+      // Workflow was deleted from n8n - need to remove ID before importing
+      deletedWorkflowIds.add(backup.id);
       toImport.push(backup);
       newCount++;
       continue;
@@ -139,22 +144,72 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
    *   nested/tag-based directory structures created by the backup/organize
    *   commands), so we call "import:workflow" once per file without
    *   "--separate".
+   *
+   *   IMPORTANT: For workflows that were deleted from n8n, we need to remove
+   *   the ID field before importing, otherwise n8n may fail to import or create
+   *   a workflow with a different ID. We create a temporary file without the ID.
    */
-  for (const backup of toImport) {
-    const args = ["import:workflow", `--input=${backup.filePath}`, ...passthroughFlags];
-    logger.info(
-      `Importing workflow from "${backup.filePath}"${backup.id ? ` (id: ${backup.id}, name: ${backup.name})` : ` (name: ${backup.name})`}`,
-      {
-        filePath: backup.filePath,
-        workflowId: backup.id,
-        workflowName: backup.name
-      }
-    );
-    const exitCode = await runN8nQuiet(args);
+  const tempFiles: string[] = [];
 
-    if (exitCode !== 0) {
-      logger.error(`n8n import:workflow failed for "${backup.filePath}" with code ${exitCode}`, undefined, { filePath: backup.filePath, exitCode });
-      process.exit(exitCode);
+  try {
+    for (const backup of toImport) {
+      let importFilePath = backup.filePath;
+      const isDeleted = backup.id ? deletedWorkflowIds.has(backup.id) : false;
+
+      // For deleted workflows, create a temporary file without the ID field
+      if (isDeleted && backup.id) {
+        const tempDir = os.tmpdir();
+        const tempFileName = `n8n-restore-${Date.now()}-${Math.random().toString(36).substring(7)}.json`;
+        const tempFilePath = path.join(tempDir, tempFileName);
+        tempFiles.push(tempFilePath);
+
+        // Create a copy of the workflow without the ID field
+        const workflowWithoutId = { ...backup.workflow };
+        delete workflowWithoutId.id;
+        // Also remove other volatile fields that might cause issues
+        delete (workflowWithoutId as any).updatedAt;
+        delete (workflowWithoutId as any).createdAt;
+        delete (workflowWithoutId as any).versionId;
+
+        await fs.promises.writeFile(tempFilePath, JSON.stringify(workflowWithoutId, null, 2), "utf8");
+        importFilePath = tempFilePath;
+
+        logger.info(
+          `Importing deleted workflow "${backup.name}" (removed ID ${backup.id} to create as new workflow)`,
+          {
+            filePath: backup.filePath,
+            originalId: backup.id,
+            workflowName: backup.name,
+            tempFile: tempFilePath
+          }
+        );
+      } else {
+        logger.info(
+          `Importing workflow from "${backup.filePath}"${backup.id ? ` (id: ${backup.id}, name: ${backup.name})` : ` (name: ${backup.name})`}`,
+          {
+            filePath: backup.filePath,
+            workflowId: backup.id,
+            workflowName: backup.name
+          }
+        );
+      }
+
+      const args = ["import:workflow", `--input=${importFilePath}`, ...passthroughFlags];
+      const exitCode = await runN8nQuiet(args);
+
+      if (exitCode !== 0) {
+        logger.error(`n8n import:workflow failed for "${backup.filePath}" with code ${exitCode}`, undefined, { filePath: backup.filePath, exitCode });
+        process.exit(exitCode);
+      }
+    }
+  } finally {
+    // Clean up temporary files
+    for (const tempFile of tempFiles) {
+      try {
+        await fs.promises.unlink(tempFile);
+      } catch (err) {
+        logger.warn("Failed to clean up temporary file", { tempFile }, err);
+      }
     }
   }
 
