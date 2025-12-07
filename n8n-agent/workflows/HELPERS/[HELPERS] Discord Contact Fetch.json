@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-06T17:30:00.000Z",
+  "updatedAt": "2025-12-07T01:42:21.000Z",
   "createdAt": "2025-12-06T17:30:00.000Z",
   "id": "DiscordContactFetch",
   "name": "[HELPERS] Discord Contact Fetch",
@@ -158,7 +158,7 @@
   "pinData": null,
   "versionId": "discord-contact-fetch-v1",
   "activeVersionId": null,
-  "versionCounter": 2,
+  "versionCounter": 5,
   "triggerCount": 0,
   "tags": [],
   "shared": [
