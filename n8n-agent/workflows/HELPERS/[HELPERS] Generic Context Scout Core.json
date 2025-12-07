@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-07T01:41:50.000Z",
+  "updatedAt": "2025-12-07T09:28:22.000Z",
   "createdAt": "2025-12-06T17:30:00.000Z",
   "id": "GenericContextScoutCore",
   "name": "[HELPERS] Generic Context Scout Core",
@@ -107,7 +107,7 @@
       "typeVersion": 2.1,
       "position": [
         976,
-        280
+        288
       ],
       "id": "check-rag-status",
       "name": "Check RAG Status Required"
@@ -199,6 +199,12 @@
               "name": "query",
               "value": "={{ $('Prepare Entity Config').first().json.query }}",
               "type": "string"
+            },
+            {
+              "id": "8eb5443d-26c1-432c-b60d-b8261ec5b36d",
+              "name": "={{ $('Prepare Entity Config').first().json.entityConfig.dataKey }}",
+              "value": "={{ $json.output?.tools ?? $json.myProfile.user }}",
+              "type": "array"
             }
           ]
         },
@@ -217,7 +223,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract entity data from cache handler output and merge with entityConfig\nconst cacheHandlerOutput = $input.first().json;\nconst entityConfig = $json.entityConfig;\nconst query = $json.query || '';\n\n// Handle error cases from cache handler\nif (cacheHandlerOutput.error) {\n  throw new Error(`Failed to fetch entity data: ${cacheHandlerOutput.error}`);\n}\n\nif (!entityConfig) {\n  throw new Error(`entityConfig is missing. Available keys: ${JSON.stringify(Object.keys($json || {}))}`);\n}\n\nconst dataKey = entityConfig.dataKey;\n\n// Cache handler returns the data directly (from cache or fetch)\n// The data might be the array itself, or nested under dataKey\nlet entityData = cacheHandlerOutput;\n\n// If cacheHandlerOutput is an array, use it directly\n// Otherwise, check if it's nested under dataKey\nif (!Array.isArray(entityData) && entityData && entityData[dataKey] !== undefined) {\n  entityData = entityData[dataKey];\n}\n\n// Ensure entityData is an array\nif (!Array.isArray(entityData)) {\n  entityData = entityData ? [entityData] : [];\n}\n\n// Return data in format expected by search nodes\nreturn {\n  [dataKey]: entityData,\n  entityConfig: entityConfig,\n  query: query\n};"
+        "jsCode": "// Extract entity data from cache handler output and merge with entityConfig\nconst cacheHandlerOutput = $input.first().json;\nconst entityConfig = $json.entityConfig;\nconst query = $json.query || '';\n\nconsole.log(1, cacheHandlerOutput)\nconsole.log(2, entityConfig)\nconsole.log(3, query)\n\n// Handle error cases from cache handler\nif (cacheHandlerOutput.error) {\n  throw new Error(`Failed to fetch entity data: ${cacheHandlerOutput.error}`);\n}\n\nif (!entityConfig) {\n  throw new Error(`entityConfig is missing. Available keys: ${JSON.stringify(Object.keys($json || {}))}`);\n}\n\nconst dataKey = entityConfig.dataKey;\n\n// Cache handler returns the data directly (from cache or fetch)\n// The data might be the array itself, or nested under dataKey\nlet entityData = cacheHandlerOutput;\n\n// If cacheHandlerOutput is an array, use it directly\n// Otherwise, check if it's nested under dataKey\nif (!Array.isArray(entityData) && entityData && entityData[dataKey] !== undefined) {\n  entityData = entityData[dataKey];\n}\n\n// Ensure entityData is an array\nif (!Array.isArray(entityData)) {\n  entityData = entityData ? [entityData] : [];\n}\n\n// Return data in format expected by search nodes\nreturn {\n  [dataKey]: entityData,\n  entityConfig: entityConfig,\n  query: query,\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -319,11 +325,11 @@
     },
     {
       "parameters": {
-        "query": "={{ $('Prepare Entity Config').item.json.query }}",
-        "arrayField": "={{ $('Prepare Entity Config').item.json.entityConfig.dataKey }}",
-        "searchKeys": "={{ $('Prepare Entity Config').item.json.entityConfig.fuzzyConfig.searchKeys.join('\\n') }}",
-        "matchQuality": "={{ $('Prepare Entity Config').item.json.entityConfig.fuzzyConfig.matchQuality }}",
-        "limit": "={{ $('Prepare Entity Config').item.json.entityConfig.fuzzyConfig.limit }}",
+        "query": "={{ $('Prepare Entity Config').first().json.query }}",
+        "arrayField": "={{ $json.entityConfig.dataKey }}",
+        "searchKeys": "={{ $('Prepare Entity Config').first().json.entityConfig.fuzzyConfig.searchKeys.join('\\n') }}",
+        "matchQuality": "={{ $('Prepare Entity Config').first().json.entityConfig.fuzzyConfig.matchQuality }}",
+        "limit": "={{ $('Prepare Entity Config').first().json.entityConfig.fuzzyConfig.limit }}",
         "advancedOptions": {
           "includeScore": true,
           "matchIndividualWords": false
@@ -587,77 +593,60 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "query": "pasindu",
-          "entity": "contact-rag",
+          "query": "",
+          "entity": "self",
           "platformConfig": {
-            "platform": "TELEGRAM",
-            "mcpCredentialId": "aiYCclLDUqob5iQ0",
-            "cacheKeyPrefix": "telegram",
+            "platform": "DISCORD",
+            "mcpCredentialId": "ZFofx3k2ze1wsifx",
+            "cacheKeyPrefix": "discord",
             "defaultTTL": 21600000,
             "entities": {
               "contact": {
-                "cacheKey": "telegramContacts",
-                "fetchWorkflowId": "TelegramContactFetch",
+                "cacheKey": "discordContacts",
+                "fetchWorkflowId": "DiscordContactFetch",
                 "mcpTool": {
-                  "name": "telegram_list_contacts",
+                  "name": "discord_list_contacts",
                   "parameters": {
-                    "limit": 200
+                    "limit": 100
                   },
                   "mcpDataKey": "contacts"
                 },
-                "mapper": "(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone })",
+                "mapper": "(c) => ({ id: c.id, username: c.tag, displayName: c.displayName, lastMessage: c.lastMessageAtRelative, contactType: c.type })",
                 "dataKey": "contacts",
-                "searchType": "rag",
-                "ragConfig": {
-                  "collectionId": "paragon-os-contacts",
-                  "autoIngest": true
-                },
-                "requiresRAGStatusCheck": true
+                "searchType": "fuzzy",
+                "fuzzyConfig": {
+                  "searchKeys": [
+                    "username",
+                    "displayName",
+                    "contactType"
+                  ],
+                  "matchQuality": 60,
+                  "limit": 10
+                }
               },
-              "contact-rag": {
-                "cacheKey": "telegramContacts",
-                "fetchWorkflowId": "TelegramContactFetch",
+              "guild": {
+                "cacheKey": "discordGuilds",
+                "fetchWorkflowId": "DiscordGuildFetch",
                 "mcpTool": {
-                  "name": "telegram_list_contacts",
-                  "parameters": {
-                    "limit": 200
-                  },
-                  "mcpDataKey": "contacts"
+                  "name": "discord_list_guilds",
+                  "parameters": {},
+                  "mcpDataKey": "guilds"
                 },
-                "mapper": "(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone })",
-                "dataKey": "contacts",
-                "searchType": "rag",
-                "ragConfig": {
-                  "collectionId": "paragon-os-contacts",
-                  "autoIngest": true
-                },
-                "requiresRAGStatusCheck": true
-              },
-              "chat": {
-                "cacheKey": "telegramChannels",
-                "fetchWorkflowId": "TelegramChatFetch",
-                "mcpTool": {
-                  "name": "telegram_list_chats",
-                  "parameters": {
-                    "limit": 50
-                  },
-                  "mcpDataKey": "items"
-                },
-                "mapper": "(g) => ({ id: g.id, name: g.name, members: g.memberCount, kind: g.kind, unread: g.unread })",
-                "dataKey": "channels",
+                "mapper": "(g) => ({ id: g.id, name: g.name, members: g.memberCount, channels: g.channels ?? [] })",
+                "dataKey": "guilds",
                 "searchType": "fuzzy",
                 "fuzzyConfig": {
                   "searchKeys": [
                     "name",
-                    "kind"
+                    "channels"
                   ],
                   "matchQuality": 50,
                   "limit": 10
                 }
               },
               "tool": {
-                "cacheKey": "telegramTools",
-                "fetchWorkflowId": "TelegramToolFetch",
+                "cacheKey": "discordTools",
+                "fetchWorkflowId": "DiscordToolFetch",
                 "mapper": "(t) => t",
                 "dataKey": "tools",
                 "searchType": "fuzzy",
@@ -671,32 +660,12 @@
                 }
               },
               "self": {
-                "cacheKey": "telegramProfile",
-                "fetchWorkflowId": "TelegramProfileFetch",
+                "cacheKey": "discordProfile",
+                "fetchWorkflowId": "DiscordProfileFetch",
                 "mapper": "(p) => p",
                 "dataKey": "myProfile",
                 "searchType": "none",
                 "skipQuery": true
-              },
-              "message-rag": {
-                "cacheKey": "telegramMessages",
-                "fetchWorkflowId": "TelegramMessageFetch",
-                "mcpTool": {
-                  "name": "telegram_list_messages",
-                  "parameters": {
-                    "chat_id": "4000551178",
-                    "limit": 100
-                  },
-                  "mcpDataKey": ""
-                },
-                "mapper": "(m) => ({ id: m.id, chatId: m.chatId, text: m.text || '', senderId: m.senderId, senderName: m.senderName || m.from?.name || '', date: m.date || m.timestamp, kind: m.kind || 'message' })",
-                "dataKey": "messages",
-                "searchType": "rag",
-                "ragConfig": {
-                  "collectionId": "paragon-os-messages",
-                  "autoIngest": true
-                },
-                "requiresRAGStatusCheck": true
               }
             }
           }
@@ -704,9 +673,9 @@
       }
     ]
   },
-  "versionId": "e642b54f-e3c2-4f84-a375-dab838152794",
+  "versionId": "80f4cd21-300a-45dc-b99b-dbf1607221b5",
   "activeVersionId": null,
-  "versionCounter": 8,
+  "versionCounter": 21,
   "triggerCount": 0,
   "tags": [],
   "shared": [

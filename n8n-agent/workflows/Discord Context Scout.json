@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-07T01:41:15.000Z",
+  "updatedAt": "2025-12-07T09:25:51.000Z",
   "createdAt": "2025-11-30T05:19:38.311Z",
   "id": "BB1zsros5LmyJO9N",
   "name": "Discord Context Scout",
@@ -136,14 +136,15 @@
     "When Executed by Another Workflow": [
       {
         "json": {
+          "query": "",
           "entity": "self"
         }
       }
     ]
   },
-  "versionId": "discord-context-scout-wrapper-v1",
+  "versionId": "4f285889-e988-4e5c-be86-3d9850b9672f",
   "activeVersionId": null,
-  "versionCounter": 56,
+  "versionCounter": 57,
   "triggerCount": 0,
   "tags": [],
   "shared": [

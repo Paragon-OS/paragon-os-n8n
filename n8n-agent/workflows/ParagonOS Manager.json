@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-07T01:41:21.000Z",
+  "updatedAt": "2025-12-07T02:17:47.000Z",
   "createdAt": "2025-11-06T23:04:10.688Z",
   "id": "z1Ry4y4k5dGR0BqR",
   "name": "ParagonOS Manager",
@@ -54,7 +54,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3,
       "position": [
-        -176,
+        -168,
         -832
       ],
       "id": "e572d52c-0585-473c-84aa-34fc1b8ee691",
@@ -381,9 +381,9 @@
       }
     ]
   },
-  "versionId": "7966d8d9-861b-447e-86e1-3b56b854b39d",
+  "versionId": "06fbfa56-c213-44e6-b552-fd8fe227381c",
   "activeVersionId": null,
-  "versionCounter": 332,
+  "versionCounter": 333,
   "triggerCount": 1,
   "tags": [
     {

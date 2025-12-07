@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-07T01:42:24.000Z",
+  "updatedAt": "2025-12-07T01:45:59.000Z",
   "createdAt": "2025-12-06T17:30:00.000Z",
   "id": "DiscordProfileFetch",
   "name": "[HELPERS] Discord Profile Fetch",
@@ -9,9 +9,8 @@
   "nodes": [
     {
       "parameters": {
-        "workflowInputs": {
-          "values": []
-        }
+        "inputSource": "jsonExample",
+        "jsonExample": "{}"
       },
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
@@ -86,10 +85,10 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": null,
-  "versionId": "discord-profile-fetch-v1",
+  "pinData": {},
+  "versionId": "8c6d7112-560f-45d6-9ff6-aa1d84f6a8a9",
   "activeVersionId": null,
-  "versionCounter": 5,
+  "versionCounter": 6,
   "triggerCount": 0,
   "tags": [],
   "shared": [

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-07T01:42:43.000Z",
+  "updatedAt": "2025-12-07T01:46:56.000Z",
   "createdAt": "2025-12-06T17:30:00.000Z",
   "id": "TelegramToolFetch",
   "name": "[HELPERS] Telegram Tool Fetch",
@@ -9,9 +9,8 @@
   "nodes": [
     {
       "parameters": {
-        "workflowInputs": {
-          "values": []
-        }
+        "inputSource": "jsonExample",
+        "jsonExample": "{}"
       },
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
@@ -82,10 +81,10 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": null,
-  "versionId": "telegram-tool-fetch-v1",
+  "pinData": {},
+  "versionId": "7b698747-c801-42d4-ae91-ec31f3c0ad6a",
   "activeVersionId": null,
-  "versionCounter": 5,
+  "versionCounter": 6,
   "triggerCount": 0,
   "tags": [],
   "shared": [

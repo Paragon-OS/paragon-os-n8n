@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-07T01:42:21.000Z",
+  "updatedAt": "2025-12-07T01:45:33.000Z",
   "createdAt": "2025-12-06T17:30:00.000Z",
   "id": "DiscordContactFetch",
   "name": "[HELPERS] Discord Contact Fetch",
@@ -9,9 +9,8 @@
   "nodes": [
     {
       "parameters": {
-        "workflowInputs": {
-          "values": []
-        }
+        "inputSource": "jsonExample",
+        "jsonExample": "{}"
       },
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
@@ -155,10 +154,10 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": null,
-  "versionId": "discord-contact-fetch-v1",
+  "pinData": {},
+  "versionId": "de0db0f4-daf2-4097-bd31-dddebc612e9c",
   "activeVersionId": null,
-  "versionCounter": 5,
+  "versionCounter": 6,
   "triggerCount": 0,
   "tags": [],
   "shared": [

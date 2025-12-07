@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-07T01:42:25.000Z",
+  "updatedAt": "2025-12-07T01:45:43.000Z",
   "createdAt": "2025-12-06T17:30:00.000Z",
   "id": "DiscordToolFetch",
   "name": "[HELPERS] Discord Tool Fetch",
@@ -9,9 +9,8 @@
   "nodes": [
     {
       "parameters": {
-        "workflowInputs": {
-          "values": []
-        }
+        "inputSource": "jsonExample",
+        "jsonExample": "{}"
       },
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
@@ -82,10 +81,10 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": null,
-  "versionId": "discord-tool-fetch-v1",
+  "pinData": {},
+  "versionId": "491f1702-f833-4363-b8f1-69713414c020",
   "activeVersionId": null,
-  "versionCounter": 5,
+  "versionCounter": 6,
   "triggerCount": 0,
   "tags": [],
   "shared": [
