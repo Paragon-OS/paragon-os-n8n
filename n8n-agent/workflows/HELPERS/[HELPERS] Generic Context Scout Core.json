@@ -346,6 +346,52 @@
     },
     {
       "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-empty-query",
+              "leftValue": "={{ ($('Prepare Entity Config').first().json.query || '').trim() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        2096,
+        400
+      ],
+      "id": "check-empty-query-rag",
+      "name": "Check Empty Query for RAG"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Return empty result for empty query instead of calling RAG API\nconst entityConfig = $('Prepare Entity Config').first().json.entityConfig;\nconst dataKey = entityConfig.dataKey;\n\nreturn {\n  results: [],\n  count: 0,\n  answer: \"Query is empty. Please provide a search query.\"\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2320,
+        320
+      ],
+      "id": "empty-query-response",
+      "name": "Empty Query Response"
+    },
+    {
+      "parameters": {
         "workflowId": {
           "__rl": true,
           "value": "IZa7S90Z9W1qxysr",
@@ -400,8 +446,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        2096,
-        496
+        2320,
+        480
       ],
       "id": "rag-search",
       "name": "RAG Search"
@@ -536,7 +582,7 @@
         ],
         [
           {
-            "node": "RAG Search",
+            "node": "Check Empty Query for RAG",
             "type": "main",
             "index": 0
           }
@@ -546,6 +592,35 @@
             "node": "Merge Results",
             "type": "main",
             "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Empty Query for RAG": {
+      "main": [
+        [
+          {
+            "node": "Empty Query Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "RAG Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Empty Query Response": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 2
           }
         ]
       ]
