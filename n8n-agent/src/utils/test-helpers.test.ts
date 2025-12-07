@@ -236,7 +236,8 @@ describe('extractWorkflowResults', () => {
 
     const result = extractWorkflowResults(executionJson);
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Workflow failed');
+    // Implementation includes node name in error message for better context
+    expect(result.error).toBe('Error in Run: TestWorkflow: Workflow failed');
     expect(result.errorDetails).toEqual({ message: 'Workflow failed' });
   });
 
@@ -334,7 +335,8 @@ describe('extractWorkflowResults', () => {
 
     const result = extractWorkflowResults(executionJson);
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Simple error string');
+    // Implementation includes node name in error message for better context
+    expect(result.error).toBe('Error in Run: TestWorkflow: Simple error string');
   });
 
   it('should handle error with unknown format', () => {
@@ -352,7 +354,8 @@ describe('extractWorkflowResults', () => {
 
     const result = extractWorkflowResults(executionJson);
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Workflow execution failed');
+    // Implementation includes node name and uses 'Unknown error' when error format is unknown
+    expect(result.error).toBe('Error in Run: TestWorkflow: Unknown error');
   });
 
   it('should handle empty workflow node data', () => {
