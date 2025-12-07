@@ -9,7 +9,8 @@ import {
   importWorkflowFromFile, 
   executeWorkflow, 
   formatExecutionResult,
-  type ExecutionResult 
+  getWorkflow,
+  type N8nExecutionResponse 
 } from "./n8n-api";
 import { collectJsonFilesRecursive } from "./file";
 import { logger } from "./logger";
@@ -227,9 +228,14 @@ export async function executeWorkflowTest(
     // Write modified workflow to temp file
     fs.writeFileSync(context.tempPath, JSON.stringify(testRunnerJson, null, 2));
 
-    // Import modified Test Runner using API
+    // Import modified Test Runner using API and get workflow name (CLI uses name, not database ID)
+    let testRunnerWorkflowName: string;
     try {
-      await importWorkflowFromFile(context.tempPath);
+      const importedWorkflow = await importWorkflowFromFile(context.tempPath);
+      // CLI execute command works with workflow name, not database UUID
+      // Use the workflow name (which matches what's in the JSON file)
+      testRunnerWorkflowName = importedWorkflow.name || '[HELPERS] Test Runner';
+      logger.debug(`Test Runner workflow imported: ${testRunnerWorkflowName} (ID: ${importedWorkflow.id})`);
     } catch (error) {
       return {
         testCase,
@@ -238,10 +244,10 @@ export async function executeWorkflowTest(
       };
     }
 
-    // Execute Test Runner using API
-    let executionResult: ExecutionResult;
+    // Execute Test Runner using workflow name (CLI prefers name over database ID)
+    let executionResult: N8nExecutionResponse;
     try {
-      executionResult = await executeWorkflow(TEST_RUNNER_ID, undefined, { timeout: 2 * 60 * 1000 });
+      executionResult = await executeWorkflow(testRunnerWorkflowName, undefined, { timeout: 2 * 60 * 1000 });
     } catch (error) {
       // Handle timeout or execution errors
       if (error instanceof Error && error.message.includes('timed out')) {
