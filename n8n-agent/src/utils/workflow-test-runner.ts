@@ -5,7 +5,12 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { runN8nCapture, runN8nQuiet } from "./n8n";
+import { 
+  importWorkflowFromFile, 
+  executeWorkflow, 
+  formatExecutionResult,
+  type ExecutionResult 
+} from "./n8n-api";
 import { collectJsonFilesRecursive } from "./file";
 import { logger } from "./logger";
 import { 
@@ -49,18 +54,6 @@ function resolveWorkflowsDir(): string {
   // Last resort: return the expected path relative to cwd
   // (will fail later if it doesn't exist, but at least we have a path)
   return workflowsInCwd;
-}
-
-/**
- * Filter out version compatibility warnings from output
- */
-function filterVersionWarnings(output: string): string {
-  const lines = output.split('\n');
-  return lines
-    .filter(line => !line.includes('Client version') && !line.includes('is incompatible with server version'))
-    .filter(line => !line.includes('checkCompatibility=false'))
-    .filter(line => !line.includes('Major versions should match'))
-    .join('\n');
 }
 
 export interface WorkflowTestResult {
@@ -152,11 +145,11 @@ export async function syncWorkflow(
 
   if (workflowFile) {
     try {
-      await runN8nQuiet(['import:workflow', `--input=${workflowFile}`]);
+      await importWorkflowFromFile(workflowFile);
       logger.debug(`Workflow "${workflowName}" synced successfully`);
     } catch (error) {
       logger.warn(`Warning: Failed to auto-sync workflow "${workflowName}"`, error, { workflow: workflowName });
-      throw new Error(`Failed to sync workflow "${workflowName}"`);
+      throw new Error(`Failed to sync workflow "${workflowName}": ${error instanceof Error ? error.message : String(error)}`);
     }
   } else {
     logger.warn(`Warning: Workflow file for "${workflowName}" not found`, { workflow: workflowName, workflowsDir: workflowsPath });
@@ -192,7 +185,7 @@ export async function executeWorkflowTest(
 
     if (workflowFile) {
       try {
-        await runN8nQuiet(['import:workflow', `--input=${workflowFile}`]);
+        await importWorkflowFromFile(workflowFile);
       } catch (error) {
         logger.warn(`Warning: Failed to auto-sync workflow "${workflowName}"`, error, { workflow: workflowName });
         // Continue with test anyway
@@ -204,6 +197,7 @@ export async function executeWorkflowTest(
       context.originalTestRunnerContent
     ) as {
       nodes?: Array<{ name?: string; parameters?: Record<string, unknown> }>;
+      id?: string;
       [key: string]: unknown;
     };
 
@@ -233,137 +227,39 @@ export async function executeWorkflowTest(
     // Write modified workflow to temp file
     fs.writeFileSync(context.tempPath, JSON.stringify(testRunnerJson, null, 2));
 
-    // Import modified Test Runner
-    await runN8nQuiet(['import:workflow', `--input=${context.tempPath}`]);
-
-    // Execute Test Runner
-    const { code: exitCode, stdout, stderr } = await runN8nCapture([
-      'execute',
-      `--id=${TEST_RUNNER_ID}`
-    ]);
-
-    const filteredStderr = filterVersionWarnings(stderr);
-    const filteredStdout = filterVersionWarnings(stdout);
-    
-    // Debug: Log raw stdout/stderr for troubleshooting in test env
-    if (process.env.NODE_ENV === 'test' && (!stdout || stdout.trim().length === 0)) {
-      // Write debug info to a file so we can inspect it
-      const debugInfo = {
-        workflow: workflowName,
-        testCase,
-        exitCode,
-        stdoutLength: stdout?.length || 0,
-        stderrLength: stderr?.length || 0,
-        stdoutPreview: stdout?.substring(0, 500) || 'empty',
-        stderrPreview: stderr?.substring(0, 500) || 'empty',
-        timestamp: new Date().toISOString()
-      };
-      console.error('[DEBUG] Empty stdout detected:', JSON.stringify(debugInfo, null, 2));
-    }
-
-    // Handle timeout (exit code 124)
-    if (exitCode === 124) {
-      return {
-        testCase,
-        success: false,
-        error: `Test timed out after 2 minutes. The workflow may be stuck or taking too long to execute.`,
-        output: filteredStdout.trim() || undefined
-      };
-    }
-
-    // If exit code is non-zero, try to extract error information
-    if (exitCode !== 0) {
-      let errorDetails = '';
-      let errorMessage = '';
-      
-      if (filteredStdout.trim()) {
-        const lines = filteredStdout.split('\n');
-        const errorLineIndex = lines.findIndex(line => 
-          line.includes('Testing error detection') || 
-          line.includes('INTENTIONAL TEST ERROR') ||
-          line.includes('Execution was NOT successful')
-        );
-        
-        if (errorLineIndex >= 0) {
-          errorMessage = lines[errorLineIndex].trim();
-        }
-        
-        try {
-          const executionJson = parseExecutionOutput(filteredStdout);
-          const result = extractWorkflowResults(executionJson);
-          if (!result.success && result.error) {
-            if (!errorMessage) {
-              errorMessage = result.error;
-            } else if (result.error !== errorMessage) {
-              errorMessage = `${errorMessage} (${result.error})`;
-            }
-            errorDetails = result.errorDetails ? JSON.stringify(result.errorDetails).substring(0, 500) : '';
-          }
-        } catch (parseError) {
-          if (!errorMessage) {
-            errorMessage = lines.slice(0, 5).find(l => l.trim() && !l.includes('==='))?.trim() || 
-                          `Failed to parse execution output: ${parseError instanceof Error ? parseError.message : String(parseError)}`;
-          }
-        }
-      }
-      
-      const finalErrorMessage = errorMessage 
-        ? errorMessage
-        : `Test failed with exit code: ${exitCode}${filteredStderr.trim() ? ` - ${filteredStderr.trim()}` : ''}`;
-      
-      return {
-        testCase,
-        success: false,
-        error: finalErrorMessage,
-        output: filteredStdout.trim() || undefined,
-        errorDetails: errorDetails || undefined
-      };
-    }
-
-    // Exit code is 0, parse the output
-    let executionJson;
+    // Import modified Test Runner using API
     try {
-      executionJson = parseExecutionOutput(filteredStdout);
-    } catch (parseError) {
-      if (!filteredStdout.trim()) {
-        // Provide more diagnostic information
-        const diagnosticInfo = [
-          `Workflow: ${workflowName}`,
-          `Test case: ${testCase}`,
-          `Exit code: ${exitCode}`,
-          filteredStderr.trim() ? `Stderr: ${filteredStderr.trim().substring(0, 200)}` : 'No stderr output',
-        ].join('\n');
-        
-        return {
-          testCase,
-          success: false,
-          error: `Workflow returned no output (possible error in sub-workflow).\n\n${diagnosticInfo}\n\nCheck n8n execution logs for details.`,
-        };
-      }
-      
-      const errorMatch = filteredStdout.match(/Execution error:[\s\S]*?message["\s:]+([^"}\n]+)/i) ||
-                        filteredStdout.match(/Error:[\s\S]*?message["\s:]+([^"}\n]+)/i) ||
-                        filteredStdout.match(/INTENTIONAL TEST ERROR[^\n]*/i) ||
-                        filteredStdout.match(/Testing error detection[^\n]*/i);
-      
-      if (errorMatch) {
-        return {
-          testCase,
-          success: false,
-          error: errorMatch[1] || errorMatch[0] || 'Workflow execution failed',
-        };
-      }
-      
+      await importWorkflowFromFile(context.tempPath);
+    } catch (error) {
       return {
         testCase,
         success: false,
-        error: `Failed to parse execution output: ${
-          parseError instanceof Error
-            ? parseError.message
-            : String(parseError)
-        }${filteredStdout.trim() ? `\nRaw output: ${filteredStdout.substring(0, 200)}` : ''}`,
+        error: `Failed to import test runner workflow: ${error instanceof Error ? error.message : String(error)}`,
       };
     }
+
+    // Execute Test Runner using API
+    let executionResult: ExecutionResult;
+    try {
+      executionResult = await executeWorkflow(TEST_RUNNER_ID, undefined, { timeout: 2 * 60 * 1000 });
+    } catch (error) {
+      // Handle timeout or execution errors
+      if (error instanceof Error && error.message.includes('timed out')) {
+        return {
+          testCase,
+          success: false,
+          error: `Test timed out after 2 minutes. The workflow may be stuck or taking too long to execute.`,
+        };
+      }
+      return {
+        testCase,
+        success: false,
+        error: `Failed to execute workflow: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
+
+    // Format execution result to match expected format
+    const executionJson = formatExecutionResult(executionResult);
     
     // Check for empty output
     if (
@@ -371,10 +267,9 @@ export async function executeWorkflowTest(
       (Array.isArray(executionJson) && executionJson.length === 0) ||
       (typeof executionJson === 'object' && !Array.isArray(executionJson) && Object.keys(executionJson).length === 0)
     ) {
-      // Try to extract more information from the execution JSON before it was determined to be empty
+      // Try to extract more information from the execution JSON
       let additionalInfo = '';
       
-      // If we have execution JSON structure, try to extract node information
       if (typeof executionJson === 'object' && executionJson !== null) {
         const execJson = executionJson as { data?: { resultData?: { runData?: Record<string, unknown> } } };
         if (execJson.data?.resultData?.runData) {
@@ -388,7 +283,6 @@ export async function executeWorkflowTest(
       const diagnosticInfo = [
         `Workflow: ${workflowName}`,
         `Test case: ${testCase}`,
-        `Exit code: ${exitCode}`,
         additionalInfo,
       ].filter(Boolean).join('\n');
       
@@ -415,8 +309,8 @@ export async function executeWorkflowTest(
   } finally {
     // Restore original Test Runner configuration by importing the original file
     try {
-      // Restore from the original test runner file path
-      await runN8nQuiet(['import:workflow', `--input=${context.testRunnerPath}`]);
+      // Restore from the original test runner file path using API
+      await importWorkflowFromFile(context.testRunnerPath);
     } catch {
       // Ignore cleanup errors - Test Runner will be restored on next test or can be manually restored
       logger.debug('Failed to restore Test Runner configuration during cleanup');

@@ -1,3 +1,6 @@
+// Load environment variables from .env file
+import 'dotenv/config';
+
 import { Command } from "commander";
 import { getRemainingArgs } from "./cli";
 import { executeBackup } from "./commands/backup";
