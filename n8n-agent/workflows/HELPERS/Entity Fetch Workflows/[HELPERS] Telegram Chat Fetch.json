@@ -1,0 +1,165 @@
+{
+  "updatedAt": "2025-12-06T17:30:00.000Z",
+  "createdAt": "2025-12-06T17:30:00.000Z",
+  "id": "TelegramChatFetch",
+  "name": "[HELPERS] Telegram Chat Fetch",
+  "description": "Fetches and normalizes Telegram chats from MCP",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": []
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        400
+      ],
+      "id": "trigger",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "=telegram_list_chats",
+        "toolParameters": "={\n  \"limit\": 50\n}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        528,
+        400
+      ],
+      "id": "mcp-call",
+      "name": "List Chats",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "aiYCclLDUqob5iQ0",
+          "name": "Telegram MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "MCPDataNormalizer",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "rawData": "={{ $json }}",
+            "dataKey": "channels",
+            "mcpDataKey": "items",
+            "mapper": "(g) => ({ id: g.id, name: g.name, members: g.memberCount, kind: g.kind, unread: g.unread })",
+            "errorMsg": "No valid chats found"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "rawData",
+              "displayName": "rawData",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dataKey",
+              "displayName": "dataKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "mcpDataKey",
+              "displayName": "mcpDataKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "mapper",
+              "displayName": "mapper",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "errorMsg",
+              "displayName": "errorMsg",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        400
+      ],
+      "id": "normalize",
+      "name": "Normalize Data"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "List Chats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Chats": {
+      "main": [
+        [
+          {
+            "node": "Normalize Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "versionId": "telegram-chat-fetch-v1",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": []
+}
+

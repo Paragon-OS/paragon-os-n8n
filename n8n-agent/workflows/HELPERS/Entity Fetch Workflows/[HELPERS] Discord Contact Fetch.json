@@ -1,0 +1,165 @@
+{
+  "updatedAt": "2025-12-06T17:30:00.000Z",
+  "createdAt": "2025-12-06T17:30:00.000Z",
+  "id": "DiscordContactFetch",
+  "name": "[HELPERS] Discord Contact Fetch",
+  "description": "Fetches and normalizes Discord contacts from MCP",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": []
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        400
+      ],
+      "id": "trigger",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "=discord_list_contacts",
+        "toolParameters": "={\n  \"limit\": 100\n}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        528,
+        400
+      ],
+      "id": "mcp-call",
+      "name": "List Contacts",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ZFofx3k2ze1wsifx",
+          "name": "Discord MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "MCPDataNormalizer",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "rawData": "={{ $json }}",
+            "dataKey": "contacts",
+            "mcpDataKey": "contacts",
+            "mapper": "(c) => ({ id: c.id, username: c.tag, displayName: c.displayName, lastMessage: c.lastMessageAtRelative, contactType: c.type })",
+            "errorMsg": "No valid contacts found"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "rawData",
+              "displayName": "rawData",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dataKey",
+              "displayName": "dataKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "mcpDataKey",
+              "displayName": "mcpDataKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "mapper",
+              "displayName": "mapper",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "errorMsg",
+              "displayName": "errorMsg",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        400
+      ],
+      "id": "normalize",
+      "name": "Normalize Data"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "List Contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Contacts": {
+      "main": [
+        [
+          {
+            "node": "Normalize Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "versionId": "discord-contact-fetch-v1",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": []
+}
+

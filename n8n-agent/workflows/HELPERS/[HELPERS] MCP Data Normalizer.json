@@ -1,0 +1,82 @@
+{
+  "updatedAt": "2025-12-06T17:30:00.000Z",
+  "createdAt": "2025-12-06T17:30:00.000Z",
+  "id": "MCPDataNormalizer",
+  "name": "[HELPERS] MCP Data Normalizer",
+  "description": "Normalizes MCP response data using a configurable mapper function. Extracts data from MCP response format and transforms it using the provided mapper.",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "rawData",
+              "type": "any"
+            },
+            {
+              "name": "dataKey"
+            },
+            {
+              "name": "mcpDataKey"
+            },
+            {
+              "name": "mapper",
+              "type": "string"
+            },
+            {
+              "name": "errorMsg"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        400
+      ],
+      "id": "trigger",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst { rawData, dataKey, mcpDataKey, mapper, errorMsg } = input;\n\n// Generic helper function\nfunction simplifyMCPData(input, dataKey, mcpDataKey, mapper, errorMsg) {\n  let extractedData = [];\n  try {\n    // Handle different MCP response formats\n    if (input.result?.content?.[0]) {\n      const parsed = JSON.parse(input.result.content[0].text);\n      extractedData = parsed?.[mcpDataKey] || [];\n    } else if (input[dataKey]) {\n      extractedData = Array.isArray(input[dataKey]) ? input[dataKey] : [];\n    } else if (input.output?.[dataKey]) {\n      extractedData = Array.isArray(input.output[dataKey]) ? input.output[dataKey] : [];\n    } else if (Array.isArray(input)) {\n      // Handle case where input is directly an array\n      extractedData = input;\n    } else if (mcpDataKey && input[mcpDataKey]) {\n      extractedData = Array.isArray(input[mcpDataKey]) ? input[mcpDataKey] : [];\n    }\n    \n    if (!Array.isArray(extractedData) || extractedData.length === 0) {\n      return { [dataKey]: [], error: errorMsg, shouldFetch: true };\n    }\n    \n    // Execute mapper function (stored as string - e.g., \"(item) => ({ id: item.id })\")\n    let mapperFunc;\n    try {\n      // Try to evaluate mapper as a function\n      mapperFunc = new Function('item', `return (${mapper})(item)`);\n    } catch (e) {\n      // If that fails, try as a direct expression\n      mapperFunc = new Function('item', `return ${mapper}`);\n    }\n    \n    return { [dataKey]: extractedData.map(mapperFunc) };\n  } catch (error) {\n    return { [dataKey]: [], error: error.message, shouldFetch: true };\n  }\n}\n\nreturn simplifyMCPData(rawData, dataKey, mcpDataKey, mapper, errorMsg);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        400
+      ],
+      "id": "normalize",
+      "name": "Normalize MCP Data"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Normalize MCP Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "versionId": "mcp-normalizer-v1",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": []
+}
+
