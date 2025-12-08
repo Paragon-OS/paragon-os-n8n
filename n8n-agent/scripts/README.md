@@ -1,249 +1,81 @@
-# Workflow Reference Management Scripts
+# n8n Agent Scripts
 
-This directory contains TypeScript scripts for managing and validating n8n workflow references, specifically for `@n8n/n8n-nodes-langchain.toolWorkflow` nodes.
+Utility scripts for managing n8n workflows.
 
-## Problem
-
-When n8n workflows use the `toolWorkflow` node with `"mode": "list"`, the workflow references can break when workflows are backed up and restored because:
-
-1. n8n generates new random IDs for workflows on restore
-2. The `toolWorkflow` nodes store workflow IDs, not names
-3. When IDs don't match, the tool references break silently
-
-## The Critical Problem
-
-**When you restore workflows to n8n, n8n assigns NEW workflow IDs!**
-
-This means:
-1. You backup workflows from n8n → local JSON files have IDs like `sO4VcVy2m7hOCbJI`
-2. You restore workflows to n8n → n8n assigns NEW IDs like `GwCBsdxV4CkAQPPf`
-3. Your local files still reference the OLD IDs → **all toolWorkflow references are broken!**
-
-## The Solution
-
-**Both restore and backup commands now automatically sync workflow IDs!**
-
-### After Restore (Most Common):
-```bash
-npm run n8n:workflows:upsync
-```
-
-This will:
-1. Import workflows to n8n (n8n assigns NEW IDs)
-2. Automatically sync local files to match n8n's NEW IDs
-3. Log the number of references fixed
-
-### Regular Backup:
-```bash
-npm run n8n:workflows:downsync
-```
-
-This will:
-1. Download workflows from n8n
-2. Remove duplicate " (2).json" files
-3. Automatically sync all toolWorkflow references to match n8n's current IDs
-
-No manual intervention needed!
-
-## Scripts
-
-### 🔥 1. `sync-workflow-ids-from-n8n.ts` (MOST IMPORTANT)
-
-**Syncs workflow IDs from your live n8n instance to local files.**
-
-This is the script you need after every restore!
+## 🚀 Quick Start
 
 ```bash
-# Preview what will be synced
-npx ts-node scripts/sync-workflow-ids-from-n8n.ts
+# Fix all workflow reference issues
+npm run n8n:db:fix
 
-# Apply the sync
-npx ts-node scripts/sync-workflow-ids-from-n8n.ts --sync
+# Check for issues without fixing
+npm run n8n:db:check
 ```
 
-**Requirements:**
-- n8n must be running
-- Set environment variables (in `.env` or shell):
-  - `N8N_BASE_URL` (e.g., `http://localhost:5678`)
-  - `N8N_API_KEY` or session cookie
+---
 
-**What it does:**
-1. Fetches all workflows from n8n via API
-2. Compares workflow names between n8n and local files
-3. Updates local file references to match n8n's actual IDs
+## 📁 Scripts
 
-**Example output:**
-```
-[SYNC] Telegram Smart Agent
-  Node: "Telegram Context Scout Tool"
-  Target: Telegram Context Scout
-  Local ID:  sO4VcVy2m7hOCbJI  ← OLD (from previous restore)
-  n8n ID:    GwCBsdxV4CkAQPPf  ← NEW (current n8n instance)
-```
+### Database Fixes
 
-### 2. `scan-tool-workflows.ts`
+**`fix-workflow-references.py`** - All-in-one workflow reference fixer
 
-Scans all workflows and lists detailed information about `toolWorkflow` nodes.
+Fixes:
+- Missing `cachedResultUrl` in toolWorkflow nodes
+- Wrong references in executeWorkflow nodes
+- Hardcoded old workflow IDs
+- Friendly names in fetchWorkflowId configs
 
 ```bash
-npx ts-node scripts/scan-tool-workflows.ts
+python3 scripts/fix-workflow-references.py           # Fix all issues
+python3 scripts/fix-workflow-references.py --check-only  # Check only
 ```
 
-**Output:**
-- Source workflow information
-- Tool node names and IDs
-- Target workflow IDs and names
-- Summary of all unique target workflows
+### Workflow Management
 
-### 2. `scan-tool-workflows-simple.ts`
+**TypeScript utilities** for workflow sync and validation:
+- `post-backup-sync.ts` - Post-backup tasks
+- `sync-workflow-ids-from-n8n.ts` - Sync workflow IDs
+- `fix-tool-workflow-references.ts` - Fix tool references
+- `validate-tool-workflow-references.ts` - Validate references
+- `scan-tool-workflows.ts` - Scan for tool workflows
 
-Simple list of unique workflow IDs referenced by `toolWorkflow` nodes.
+---
+
+## 📋 NPM Scripts
 
 ```bash
-npx ts-node scripts/scan-tool-workflows-simple.ts
+npm run n8n:workflows:downsync  # Export from n8n
+npm run n8n:workflows:upsync    # Import to n8n
+npm run n8n:db:fix              # Fix workflow references
+npm run n8n:db:check            # Check for issues
 ```
 
-**Output:**
-- Alphabetically sorted list of workflow IDs
-- Total count
+---
 
-### 3. `validate-tool-workflow-references.ts`
+## 🔧 Customization
 
-Validates all `toolWorkflow` references and identifies broken ones.
+To add custom ID replacements, edit `fix-workflow-references.py`:
 
-```bash
-npx ts-node scripts/validate-tool-workflow-references.ts
-```
+```python
+ID_REPLACEMENTS = {
+    'oldId123': 'New Workflow Name',  # Will look up ID
+    'oldId456': 'newId789',           # Direct replacement
+}
 
-**Output:**
-- ✅ Valid references (workflow exists)
-- ❌ Broken references (workflow missing)
-- 💡 Suggestions for fixing (finds workflows by name)
-- Summary statistics
-
-**Exit codes:**
-- `0` - All references valid
-- `1` - Broken references found
-
-### 4. `fix-tool-workflow-references.ts`
-
-Automatically fixes broken `toolWorkflow` references by matching workflow names.
-
-```bash
-# Dry run (preview changes)
-npx ts-node scripts/fix-tool-workflow-references.ts
-
-# Apply fixes
-npx ts-node scripts/fix-tool-workflow-references.ts --fix
-```
-
-**Features:**
-- Matches workflows by exact name
-- Tries common prefixes: `[LAB]`, `[HELPERS]`, `[LEGACY]`
-- Updates workflow ID, cached URL, and cached name
-- Preserves JSON formatting
-
-## Recommended Workflows
-
-### After Restoring Workflows to n8n (Most Common)
-
-**The restore command now handles syncing automatically!**
-
-```bash
-# 1. Restore workflows to n8n (automatically syncs local files!)
-npm run n8n:workflows:upsync
-
-# 2. Commit the updated workflow files
-git add workflows/
-git commit -m "Sync workflow IDs after restore"
-```
-
-The restore command will automatically:
-- Import workflows to n8n (n8n assigns NEW IDs)
-- Sync all toolWorkflow references in local files to match n8n's NEW IDs
-- Log the number of references fixed
-
-### Regular Backup (Without Restore)
-
-```bash
-# 1. Backup workflows from n8n (automatically syncs!)
-npm run n8n:workflows:downsync
-
-# 2. Commit the updated workflow files
-git add workflows/
-git commit -m "Backup workflows"
-```
-
-The backup command will automatically:
-- Download workflows from n8n
-- Remove duplicate " (2).json" files
-- Sync all toolWorkflow references to match n8n's current IDs
-- Log the number of references fixed
-
-### When Working with Local Files Only
-
-If you're just fixing references between local files (not syncing with n8n):
-
-```bash
-# 1. Validate current state
-npx ts-node scripts/validate-tool-workflow-references.ts
-
-# 2. Preview fixes
-npx ts-node scripts/fix-tool-workflow-references.ts
-
-# 3. Apply fixes
-npx ts-node scripts/fix-tool-workflow-references.ts --fix
-
-# 4. Verify all references are valid
-npx ts-node scripts/validate-tool-workflow-references.ts
-```
-
-## Example Fix
-
-**Before (Broken):**
-```json
-{
-  "workflowId": {
-    "__rl": true,
-    "value": "TelegramContextScout",
-    "mode": "list",
-    "cachedResultUrl": "/workflow/TelegramContextScout",
-    "cachedResultName": "Telegram Context Scout"
-  }
+FRIENDLY_NAME_TO_WORKFLOW = {
+    'MyFriendlyName': '[HELPERS] Actual Workflow Name',
 }
 ```
 
-**After (Fixed):**
-```json
-{
-  "workflowId": {
-    "__rl": true,
-    "value": "sO4VcVy2m7hOCbJI",
-    "mode": "list",
-    "cachedResultUrl": "/workflow/sO4VcVy2m7hOCbJI",
-    "cachedResultName": "Telegram Context Scout"
-  }
-}
-```
+---
 
-## CI/CD Integration
+## ⚠️ Important
 
-Add validation to your CI pipeline:
+- Always restart n8n after running fixes
+- Scripts are safe and idempotent
+- Backup recommended: `cp ~/.n8n/database.sqlite ~/.n8n/database.sqlite.backup`
 
-```bash
-# In your CI script
-npx ts-node scripts/validate-tool-workflow-references.ts
-if [ $? -ne 0 ]; then
-  echo "❌ Broken workflow references detected!"
-  echo "Run: npx ts-node scripts/fix-tool-workflow-references.ts --fix"
-  exit 1
-fi
-```
+---
 
-## Notes
-
-- All scripts recursively scan the `workflows/` directory
-- Scripts handle workflows in subdirectories (LAB, HELPERS, LEGACY)
-- JSON files are preserved with 2-space indentation
-- Scripts are safe to run multiple times (idempotent)
-
+**See also**: `../README.md` for main documentation
