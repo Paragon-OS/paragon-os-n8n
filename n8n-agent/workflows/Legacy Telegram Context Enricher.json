@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T18:55:41.525Z",
-  "createdAt": "2025-12-08T18:55:41.525Z",
-  "id": "PGWItkiZ3L5bX0kE",
+  "updatedAt": "2025-12-08T21:25:05.283Z",
+  "createdAt": "2025-12-08T21:19:49.306Z",
+  "id": "BBswBEX4iGcIsLzj",
   "name": "Legacy Telegram Context Enricher",
   "active": false,
   "isArchived": false,
@@ -1282,15 +1282,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "8c00f3ee-78e4-4c1b-822e-0b211aa14460",
+  "versionId": "cba826ec-0aad-4bb2-ae94-7fcace987bce",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T18:55:41.526Z",
-      "createdAt": "2025-12-08T18:55:41.526Z",
+      "updatedAt": "2025-12-08T21:19:49.306Z",
+      "createdAt": "2025-12-08T21:19:49.306Z",
       "role": "workflow:owner",
-      "workflowId": "PGWItkiZ3L5bX0kE",
+      "workflowId": "BBswBEX4iGcIsLzj",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T18:55:41.640Z",
-  "createdAt": "2025-12-08T18:55:41.640Z",
-  "id": "GwCBsdxV4CkAQPPf",
+  "updatedAt": "2025-12-08T21:25:59.272Z",
+  "createdAt": "2025-12-08T21:19:49.332Z",
+  "id": "neiUMoN5ABLkLukN",
   "name": "Telegram Context Scout",
   "active": false,
   "isArchived": false,
@@ -161,15 +161,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "c373cfa2-ea04-4c81-8f6b-7c441f13affb",
+  "versionId": "74a5d447-10c5-4f82-b23f-bc1227228e03",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T18:55:41.642Z",
-      "createdAt": "2025-12-08T18:55:41.642Z",
+      "updatedAt": "2025-12-08T21:19:49.332Z",
+      "createdAt": "2025-12-08T21:19:49.332Z",
       "role": "workflow:owner",
-      "workflowId": "GwCBsdxV4CkAQPPf",
+      "workflowId": "neiUMoN5ABLkLukN",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

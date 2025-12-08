@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T18:36:58.793Z",
-  "createdAt": "2025-12-08T18:36:58.793Z",
-  "id": "GQDpRwZQkYPAJhNT",
+  "updatedAt": "2025-12-08T21:25:06.406Z",
+  "createdAt": "2025-12-08T21:19:49.808Z",
+  "id": "bQw8m5KzBqNrepRy",
   "name": "[LAB] MCP Server",
   "active": false,
   "isArchived": false,
@@ -85,15 +85,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "469b659e-22e5-4f10-8fcc-5b7967fe850f",
+  "versionId": "cd03446d-7c53-484c-b42d-429b720e2e15",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T18:36:58.794Z",
-      "createdAt": "2025-12-08T18:36:58.794Z",
+      "updatedAt": "2025-12-08T21:19:49.811Z",
+      "createdAt": "2025-12-08T21:19:49.811Z",
       "role": "workflow:owner",
-      "workflowId": "GQDpRwZQkYPAJhNT",
+      "workflowId": "bQw8m5KzBqNrepRy",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

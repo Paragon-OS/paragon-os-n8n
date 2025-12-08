@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T18:36:58.732Z",
-  "createdAt": "2025-12-08T18:36:58.732Z",
-  "id": "jLWlKlBN82kYTXxr",
+  "updatedAt": "2025-12-08T21:25:06.294Z",
+  "createdAt": "2025-12-08T21:19:49.727Z",
+  "id": "0qLEmBLABU6LT7TC",
   "name": "[LAB] Discord Message Retriever",
   "active": false,
   "isArchived": false,
@@ -549,15 +549,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "50338e0c-5acc-4b69-8233-492cf7790fee",
+  "versionId": "9d0be690-2dbc-4cf3-be65-b231b6af57e4",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T18:36:58.733Z",
-      "createdAt": "2025-12-08T18:36:58.733Z",
+      "updatedAt": "2025-12-08T21:19:49.728Z",
+      "createdAt": "2025-12-08T21:19:49.728Z",
       "role": "workflow:owner",
-      "workflowId": "jLWlKlBN82kYTXxr",
+      "workflowId": "0qLEmBLABU6LT7TC",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

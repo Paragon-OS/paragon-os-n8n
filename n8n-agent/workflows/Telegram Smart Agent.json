@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T18:36:58.474Z",
-  "createdAt": "2025-12-08T18:36:58.474Z",
-  "id": "CO0VXGivAsYQ9c6P",
+  "updatedAt": "2025-12-08T21:25:59.292Z",
+  "createdAt": "2025-12-08T21:19:49.342Z",
+  "id": "nZTUa5bPxY6Ft6er",
   "name": "Telegram Smart Agent",
   "active": false,
   "isArchived": false,
@@ -343,16 +343,24 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": null,
-  "versionId": "b46ddcf0-e852-4a27-86a8-ad405fbc9403",
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "userPrompt": "Who is Pasindu?"
+        }
+      }
+    ]
+  },
+  "versionId": "217fc6f3-699c-4d2d-80ca-c5f930436297",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T18:36:58.474Z",
-      "createdAt": "2025-12-08T18:36:58.474Z",
+      "updatedAt": "2025-12-08T21:19:49.344Z",
+      "createdAt": "2025-12-08T21:19:49.344Z",
       "role": "workflow:owner",
-      "workflowId": "CO0VXGivAsYQ9c6P",
+      "workflowId": "nZTUa5bPxY6Ft6er",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

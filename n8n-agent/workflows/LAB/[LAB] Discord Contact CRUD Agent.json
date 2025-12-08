@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T18:36:58.656Z",
-  "createdAt": "2025-12-08T18:36:58.656Z",
-  "id": "rTEquT4sS2RsfqCy",
+  "updatedAt": "2025-12-08T21:25:05.843Z",
+  "createdAt": "2025-12-08T21:19:49.640Z",
+  "id": "6XRPDLSHwMZZTK8C",
   "name": "[LAB] Discord Contact CRUD Agent",
   "active": false,
   "isArchived": false,
@@ -453,15 +453,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "c3438838-7614-44f6-af73-4b27501d3add",
+  "versionId": "2b3c19ed-6472-45e9-89ad-2c49a632bf4e",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T18:36:58.656Z",
-      "createdAt": "2025-12-08T18:36:58.656Z",
+      "updatedAt": "2025-12-08T21:19:49.641Z",
+      "createdAt": "2025-12-08T21:19:49.641Z",
       "role": "workflow:owner",
-      "workflowId": "rTEquT4sS2RsfqCy",
+      "workflowId": "6XRPDLSHwMZZTK8C",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],
