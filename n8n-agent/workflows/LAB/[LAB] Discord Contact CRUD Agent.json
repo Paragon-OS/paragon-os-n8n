@@ -179,9 +179,9 @@
         "description": "Call this tool to retrieve a user profile from a discord username or user ID",
         "workflowId": {
           "__rl": true,
-          "value": "6gtq7qBAYQCuJBvY",
+          "value": "lTpkDHGkyxmzz6yr",
           "mode": "list",
-          "cachedResultUrl": "/workflow/6gtq7qBAYQCuJBvY",
+          "cachedResultUrl": "/workflow/lTpkDHGkyxmzz6yr",
           "cachedResultName": "[LAB] Discord MCP Client"
         },
         "workflowInputs": {

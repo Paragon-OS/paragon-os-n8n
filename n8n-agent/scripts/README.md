@@ -21,8 +21,19 @@ This means:
 
 ## The Solution
 
-**The backup command now automatically syncs workflow IDs!** Just run:
+**Both restore and backup commands now automatically sync workflow IDs!**
 
+### After Restore (Most Common):
+```bash
+npm run n8n:workflows:upsync
+```
+
+This will:
+1. Import workflows to n8n (n8n assigns NEW IDs)
+2. Automatically sync local files to match n8n's NEW IDs
+3. Log the number of references fixed
+
+### Regular Backup:
 ```bash
 npm run n8n:workflows:downsync
 ```
@@ -134,23 +145,37 @@ npx ts-node scripts/fix-tool-workflow-references.ts --fix
 
 ## Recommended Workflows
 
-### After Restoring Workflows to n8n
+### After Restoring Workflows to n8n (Most Common)
 
-**The backup command now handles syncing automatically!**
+**The restore command now handles syncing automatically!**
 
 ```bash
-# 1. Restore workflows to n8n
+# 1. Restore workflows to n8n (automatically syncs local files!)
 npm run n8n:workflows:upsync
 
-# 2. Backup workflows from n8n (automatically syncs IDs!)
+# 2. Commit the updated workflow files
+git add workflows/
+git commit -m "Sync workflow IDs after restore"
+```
+
+The restore command will automatically:
+- Import workflows to n8n (n8n assigns NEW IDs)
+- Sync all toolWorkflow references in local files to match n8n's NEW IDs
+- Log the number of references fixed
+
+### Regular Backup (Without Restore)
+
+```bash
+# 1. Backup workflows from n8n (automatically syncs!)
 npm run n8n:workflows:downsync
 
-# 3. Commit the updated workflow files
+# 2. Commit the updated workflow files
 git add workflows/
-git commit -m "Sync workflow IDs after backup/restore"
+git commit -m "Backup workflows"
 ```
 
 The backup command will automatically:
+- Download workflows from n8n
 - Remove duplicate " (2).json" files
 - Sync all toolWorkflow references to match n8n's current IDs
 - Log the number of references fixed

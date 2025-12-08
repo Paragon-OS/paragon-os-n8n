@@ -26,27 +26,29 @@
 
 ## The Solution
 
-**The backup command now automatically syncs workflow IDs!**
+**Both restore and backup commands now automatically sync workflow IDs!**
 
 ### Correct Workflow (Use This Always):
 
 ```bash
-# 1. Restore workflows to n8n
+# 1. Restore workflows to n8n (automatically syncs local files!)
 npm run n8n:workflows:upsync
 
-# 2. Backup workflows from n8n (automatically syncs!)
-npm run n8n:workflows:downsync
-
-# 3. Commit the corrected files
+# 2. Commit the synced files
 git add -A
-git commit -m "Sync workflow IDs after backup/restore"
+git commit -m "Sync workflow IDs after restore"
 ```
 
-The backup command automatically:
+The restore command automatically:
+1. ✅ Imports workflows to n8n (n8n assigns NEW IDs)
+2. ✅ Fetches the NEW workflow IDs from n8n
+3. ✅ Updates all toolWorkflow references in local files to match n8n's IDs
+4. ✅ Logs the number of references fixed
+
+The backup command also syncs (for regular backups):
 1. ✅ Downloads workflows from n8n
 2. ✅ Removes duplicate " (2).json" files
-3. ✅ Fetches ACTUAL workflow IDs from running n8n instance
-4. ✅ Updates all toolWorkflow references to match n8n's current IDs
+3. ✅ Updates all toolWorkflow references to match n8n's current IDs
 
 ### Manual Sync (If Needed):
 
@@ -151,9 +153,28 @@ After running the sync script, all 25 toolWorkflow references now point to the c
 
 ## Remember
 
-**The backup command now handles this automatically!**
+**Both restore and backup commands now handle this automatically!**
 
-Just run `npm run n8n:workflows:downsync` and workflow IDs will be synced automatically.
+- **After restore**: Run `npm run n8n:workflows:upsync` - syncs local files to match n8n's new IDs
+- **Regular backups**: Run `npm run n8n:workflows:downsync` - syncs during backup
 
-No manual intervention needed - the sync happens as part of the backup process.
+No manual intervention needed - the sync happens automatically in both commands.
+
+### Your Workflow (Delete All → Restore):
+
+```bash
+# 1. Delete all workflows in n8n UI (if needed)
+
+# 2. Restore workflows (automatically syncs local files!)
+npm run n8n:workflows:upsync
+
+# 3. Done! Local files now have correct IDs matching n8n
+```
+
+The restore command will log something like:
+```
+Syncing workflow references in local files to match n8n...
+✓ Fixed 25 workflow reference(s) to match new n8n IDs
+Local workflow files have been updated with correct IDs
+```
 

@@ -6,6 +6,7 @@ import { normalizeWorkflowForCompare } from "../utils/workflow";
 import { deepEqual, exportCurrentWorkflowsForCompare } from "../utils/compare";
 import { logger } from "../utils/logger";
 import { importWorkflow, exportWorkflows } from "../utils/n8n-api";
+import { syncWorkflowReferences } from "../utils/workflow-id-sync";
 import type { BackupWorkflowForRestore, WorkflowObject } from "../types/index";
 
 interface RestoreOptions {
@@ -236,18 +237,38 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
   }
 
   /**
-   * Reference fixing is no longer needed!
+   * Sync workflow IDs in local files to match the NEW IDs assigned by n8n during restore.
    * 
-   * Workflow references are now automatically converted to name-based references
-   * during import (in importWorkflow function). This means:
-   * - References use workflow names instead of IDs
-   * - Names are stable and never change
-   * - No need for complex reference fixing logic
-   * 
-   * The convertWorkflowReferencesToNames function handles this conversion
-   * automatically when workflows are imported.
+   * This is critical because:
+   * 1. n8n assigns NEW random IDs when workflows are restored
+   * 2. toolWorkflow nodes in local files still reference OLD IDs
+   * 3. We need to update local files to match n8n's new IDs
    */
-  logger.debug("Workflow references are automatically converted to name-based during import - no post-processing needed");
+  logger.info("Syncing workflow references in local files to match n8n...");
+  
+  try {
+    // Fetch the workflows from n8n with their NEW IDs
+    const n8nWorkflows = await exportWorkflows();
+    
+    // Sync local files to match n8n's IDs
+    const syncResult = await syncWorkflowReferences(inputDir, n8nWorkflows);
+    
+    if (syncResult.fixed > 0) {
+      logger.info(`✓ Fixed ${syncResult.fixed} workflow reference(s) to match new n8n IDs`);
+      logger.info("Local workflow files have been updated with correct IDs");
+    }
+    
+    if (syncResult.notFound > 0) {
+      logger.warn(`⚠ ${syncResult.notFound} referenced workflow(s) not found in n8n`);
+    }
+    
+    if (syncResult.fixed === 0 && syncResult.notFound === 0) {
+      logger.info("✓ All workflow references are already in sync");
+    }
+  } catch (err) {
+    logger.warn("Failed to sync workflow references after restore", err);
+    logger.info("You can manually sync later using: npm run n8n:workflows:downsync");
+  }
 
   process.exit(0);
 }
