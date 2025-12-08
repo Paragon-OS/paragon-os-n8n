@@ -25,9 +25,9 @@
         "description": "Call this tool to use paragonOS",
         "workflowId": {
           "__rl": true,
-          "value": "EaYVXYgGuWQQrzZm",
+          "value": "ParagonOS Manager",
           "mode": "list",
-          "cachedResultUrl": "/workflow/EaYVXYgGuWQQrzZm",
+          "cachedResultUrl": "/workflow/DUgD58sbg7awuW8O",
           "cachedResultName": "ParagonOS Manager"
         },
         "workflowInputs": {
