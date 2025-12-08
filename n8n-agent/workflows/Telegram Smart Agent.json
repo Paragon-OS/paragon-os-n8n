@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-08T21:25:59.292Z",
+  "updatedAt": "2025-12-08T22:11:27.686Z",
   "createdAt": "2025-12-08T21:19:49.342Z",
   "id": "nZTUa5bPxY6Ft6er",
   "name": "Telegram Smart Agent",
@@ -352,7 +352,7 @@
       }
     ]
   },
-  "versionId": "217fc6f3-699c-4d2d-80ca-c5f930436297",
+  "versionId": "e755813d-cd73-4224-a894-8f3a7308fc70",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

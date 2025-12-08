@@ -13,7 +13,13 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:select": "ts-node src/scripts/test-selector.ts",
-    "n8n:db:fix-cached-urls": "python3 scripts/fix-cached-result-url.py"
+    "n8n:db:fix-cached-urls": "python3 scripts/fix-cached-result-url.py",
+    "n8n:db:fix-execute-refs": "python3 scripts/fix-execute-workflow-references.py",
+    "n8n:db:fix-hardcoded-ids": "python3 scripts/fix-hardcoded-workflow-ids.py",
+    "n8n:db:fix-fetch-names": "python3 scripts/fix-fetch-workflow-names.py",
+    "n8n:db:regenerate-cached-urls": "ts-node scripts/regenerate-cached-urls.ts",
+    "n8n:db:fix-and-regenerate": "python3 scripts/fix-and-regenerate-cached-urls.py",
+    "n8n:db:fix-all": "python3 scripts/fix-cached-result-url.py && python3 scripts/fix-execute-workflow-references.py && python3 scripts/fix-hardcoded-workflow-ids.py && python3 scripts/fix-fetch-workflow-names.py"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.21",
