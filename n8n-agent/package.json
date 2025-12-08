@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:select": "ts-node src/scripts/test-selector.ts"
+    "test:select": "ts-node src/scripts/test-selector.ts",
+    "n8n:db:fix-cached-urls": "python3 scripts/fix-cached-result-url.py"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.21",
