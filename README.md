@@ -86,12 +86,18 @@ npm run n8n:workflows:downsync -- --output=./my-backups
 - Only imports workflows that are new or have changed
 - Uses workflow IDs for correlation
 - Normalizes workflows before comparison (removes volatile fields: `updatedAt`, `createdAt`, `versionId`, `meta`)
+- **Unified API import**: Uses n8n REST API for all workflow imports (consistent schema handling)
+- **ID mapping during import**: Builds accurate old ID → new ID mappings as workflows are imported
+- **Automatic reference fixing**: Updates `Execute Workflow` and `Tool Workflow` node references after import
 
 **Key Features**:
 - Selective restore: skips unchanged workflows
 - Shows summary: unchanged vs. changed vs. new
 - Handles workflows without IDs (always imports)
-- Uses `n8n import:workflow` (without `--separate` flag, processes files individually)
+- Handles deleted workflows: removes old ID to force creation of new workflow
+- **Accurate reference resolution**: Uses ID mappings from import process (not fragile name-based matching)
+- **Subworkflow pointer repair**: Automatically fixes broken workflow references after restore
+- **Schema validation**: All workflows go through API schema cleaning (`cleanWorkflowForApi`)
 
 **Usage**:
 ```bash
@@ -192,6 +198,14 @@ npm run n8n:verify -- --workflow TelegramContextScout
 - `runN8nCapture()`: Execute n8n command and capture stdout/stderr
 - `runN8nQuiet()`: Execute n8n command with filtered warnings
 - Special handling for `execute` commands: 2-minute timeout, streaming detection
+
+#### `src/utils/n8n-api.ts`
+- `exportWorkflows()`: Export all workflows from n8n via REST API (with pagination support)
+- `importWorkflow()`: Import/update workflow via REST API (handles schema cleaning, creates or updates)
+- `importWorkflowFromFile()`: Import workflow from file path via REST API
+- `deleteWorkflow()`: Delete workflow via REST API
+- `cleanWorkflowForApi()`: Clean workflow data for API requests (removes read-only fields)
+- Handles authentication via `N8N_API_KEY` or `N8N_SESSION_COOKIE` environment variables
 
 #### `src/utils/workflow.ts`
 - `parseTagFromName()`: Extract `[TAG]` prefix from workflow names
@@ -608,7 +622,12 @@ workflows/
 2. **Backup**: `npm run n8n:workflows:downsync`
 3. **Commit**: Git commit workflow JSON files
 4. **Restore** (on other instance): `npm run n8n:workflows:upsync`
+   - Automatically fixes subworkflow references after import
+   - Handles deleted workflows by creating new ones with updated IDs
+   - Maps old workflow IDs to new IDs during import
 5. **Verify**: `npm run n8n:verify` to check trigger inputs match
+
+**Note**: The restore process uses the n8n REST API for all imports, ensuring consistent schema handling and accurate ID mapping. Subworkflow references (`Execute Workflow` and `Tool Workflow` nodes) are automatically updated after import.
 
 ---
 
