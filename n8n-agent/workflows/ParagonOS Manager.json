@@ -96,9 +96,9 @@
         "description": "High-level Telegram Smart Agent that uses Telegram Context Scout and a shared Step Executor to plan and execute Telegram operations.\n\n# How It Works:\n\n1. **Context Lookup via Telegram Context Scout**: Searches and normalizes Telegram contacts, chats (DMs/groups/channels), available MCP tools, and your own profile using caching and fuzzy search.\n\n2. **AI Planning**: Given a natural language Telegram request, the agent decides which chats/contacts/tools are relevant and constructs a fully-resolved sequence of Telegram MCP tool calls (`executionSteps`) with concrete ids and parameters.\n\n3. **Sequential Execution**: Executes the planned steps using the shared Step Executor with `targetMcp = \"TELEGRAM\"`, passing data between steps automatically.\n\n4. **Provenance & Answering**: Returns a final markdown answer together with metadata about which chats, contacts, and tools were actually used to satisfy the request.",
         "workflowId": {
           "__rl": true,
-          "value": "TelegramSmartAgent",
+          "value": "CO0VXGivAsYQ9c6P",
           "mode": "list",
-          "cachedResultUrl": "/workflow/TelegramSmartAgent",
+          "cachedResultUrl": "/workflow/CO0VXGivAsYQ9c6P",
           "cachedResultName": "Telegram Smart Agent"
         },
         "workflowInputs": {
@@ -206,9 +206,9 @@
         "description": "={{ `\nIntelligently plans and executes Discord operations using cached context and AI-powered sequencing.\\n\\n# How It Works:\\n\\n1. **Context Enrichment**: Automatically retrieves and caches Discord contacts, guilds/servers, channels, available MCP tools, and your profile. Uses a 6-hour cache to minimize API calls.\\n\\n2. **AI Planning**: Analyzes your request against a Discord playbook of common workflows (DMing contacts, catching up on channels, replying messages, searching topics, editing/deleting messages, downloading attachments, triaging guild channels). Recommends relevant tools and generates either:\\n   - A direct answer (if no API calls needed)\\n   - A sequential execution plan with specific MCP tool calls\\n\\n3. **Sequential Execution**: Executes planned steps in order, passing data between steps automatically.\\n\\n4. **Validation & Retry**: Validates execution results against your original request. Automatically retries with refined approach if needed.\\n\\n# Capabilities:\\n\\nRead messages (channels/DMs with pagination, date filtering), search messages, send/edit/delete messages with attachments, download attachments, list guilds/servers/channels/contacts/members, search contacts, manage whitelist/blacklist filters. Supports both server channels and direct messages.\n`}}",
         "workflowId": {
           "__rl": true,
-          "value": "zBL0JT7t26pK2x95",
+          "value": "UTz2UUDkV6DZEpvT",
           "mode": "list",
-          "cachedResultUrl": "/workflow/zBL0JT7t26pK2x95",
+          "cachedResultUrl": "/workflow/UTz2UUDkV6DZEpvT",
           "cachedResultName": "Discord Smart Agent"
         },
         "workflowInputs": {

@@ -139,9 +139,9 @@
         "description": "This sub-workflow provides a fast, consistent lookup system for Discord data by combining MCP tools, structured normalization, caching, and fuzzy search.\n\nIt supports four entity types:\n\n**contact**\nSearches Discord contacts using RAG (semantic search) for better matching on names, usernames, and context. Uses the `paragon-os-contacts` collection internally. The workflow normalizes each contact to include id, username, displayName, lastMessage, and contactType.\n\n**guild**\nRepresents a Discord server returned by the `discord_list_guilds` MCP tool. Each guild is normalized to include id, name, memberCount, and channels.\n\n**tool**\nRepresents an MCP tool exposed by the Discord MCP server. Each item includes the tool name, description and the exact tool call schema.\n\n**self**\nRepresents current user's own discord profile. It's a single item includes the displayName, userId, username etc. This entity ignores the `query` parameter.\n\n### What the workflow does\n\n**1. Retrieval**\nWhen an entity type is requested, the workflow fetches the relevant raw data from the appropriate MCP tool unless valid cached data is already available.\n\n**2. Normalization**\nFetched data is transformed into a predictable format for each entity category, enabling reliable fuzzy matching downstream.\n\n**3. Caching**\nAll data types are cached independently with a TTL to reduce repeated MCP calls and improve tool execution speed.\n\n**4. Query Processing**\nThe workflow accepts a search query along with an entity type, then performs RAG-based semantic search for contacts or fuzzy matching for other entity types, returning the most relevant matches along with match scores.\n\n**5. RAG Operations**\nFor RAG-based entity types (contact), the workflow uses semantic search and can store/retrieve information from vector collections.\n\nUse this tool whenever a workflow needs structured Discord data lookup for contacts, guilds, or discord MCP tools.\n",
         "workflowId": {
           "__rl": true,
-          "value": "BB1zsros5LmyJO9N",
+          "value": "Qp9xNaJkQraiWaP6",
           "mode": "list",
-          "cachedResultUrl": "/workflow/BB1zsros5LmyJO9N",
+          "cachedResultUrl": "/workflow/Qp9xNaJkQraiWaP6",
           "cachedResultName": "Discord Context Scout"
         },
         "workflowInputs": {
@@ -193,9 +193,9 @@
         "description": "Call this tool with a valid executionSteps array to execute a sequence of MCP calls and get results from Discord or Telegram",
         "workflowId": {
           "__rl": true,
-          "value": "uoYXevOl4ePWKeNx",
+          "value": "s2NhwrkH9FPXGCwN",
           "mode": "list",
-          "cachedResultUrl": "/workflow/uoYXevOl4ePWKeNx",
+          "cachedResultUrl": "/workflow/s2NhwrkH9FPXGCwN",
           "cachedResultName": "[HELPERS] Discord & Telegram Step Executor"
         },
         "workflowInputs": {

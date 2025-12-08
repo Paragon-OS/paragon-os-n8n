@@ -139,9 +139,9 @@
         "description": "Unified Telegram Context Scout search tool for contacts, chats, tools, self profile, and persistent knowledge base.",
         "workflowId": {
           "__rl": true,
-          "value": "TelegramContextScout",
+          "value": "sO4VcVy2m7hOCbJI",
           "mode": "list",
-          "cachedResultUrl": "/workflow/TelegramContextScout",
+          "cachedResultUrl": "/workflow/sO4VcVy2m7hOCbJI",
           "cachedResultName": "Telegram Context Scout"
         },
         "workflowInputs": {
@@ -193,9 +193,9 @@
         "description": "Call this tool with a valid executionSteps array to execute a sequence of MCP calls and get results from Telegram or Discord.",
         "workflowId": {
           "__rl": true,
-          "value": "uoYXevOl4ePWKeNx",
+          "value": "s2NhwrkH9FPXGCwN",
           "mode": "list",
-          "cachedResultUrl": "/workflow/uoYXevOl4ePWKeNx",
+          "cachedResultUrl": "/workflow/s2NhwrkH9FPXGCwN",
           "cachedResultName": "[HELPERS] Discord & Telegram Step Executor"
         },
         "workflowInputs": {

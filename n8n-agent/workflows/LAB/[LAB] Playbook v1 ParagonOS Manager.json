@@ -185,10 +185,10 @@
         "description": "Executes Discord operations. Supports both single operations and multi-step sequential operations.\n\n# Capabilities: \n\nThe Discord MCP tools enable comprehensive Discord integration including reading messages from channels and DMs (with pagination and date filtering), searching message content, sending/editing/deleting messages with file attachment support, downloading attachments, and managing server/channel access. You can list guilds/servers you are part of, list channels, contacts, member counts and guild/server members, search for specific contacts, configure whitelist/blacklist filters for channels and DMs, and retrieve pending channels or DMs that need attention (unread messages or mentions). The tools support both server channels and direct messages, with automatic DM channel creation when sending to users.\n\nSINGLE operations (examples):\n- \"find channel ID for dev-chat in metarune homies guild\"\n- \"send message 'hello' to channel ID 1234567890\"\n- \"list all channels in metarune homies guild\"\n- \"list all guilds i'm in\"\n\nMULTI-STEP operations (the tool will break these down automatically):\n- \"find dev-chat channel and send a message\"\n- \"get channel ID for general then send message 'hello'\"\n- \"list members in server X and find user Y\"\n\nThe tool intelligently plans and executes sequences of Discord operations. For multi-step operations, it will automatically break them down, execute steps sequentially, and pass data between steps.",
         "workflowId": {
           "__rl": true,
-          "value": "vfcxqLBDDMKL5lnG",
+          "value": "RImj9SkyH8aLV1Rg",
           "mode": "list",
-          "cachedResultUrl": "/workflow/vfcxqLBDDMKL5lnG",
-          "cachedResultName": "Discord MCP Client Sequencer"
+          "cachedResultUrl": "/workflow/RImj9SkyH8aLV1Rg",
+          "cachedResultName": "[LAB] Discord MCP Client Sequencer"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
