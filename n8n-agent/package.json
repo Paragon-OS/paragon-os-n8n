@@ -7,6 +7,7 @@
     "n8n:workflows:upsync": "ts-node src/n8n-workflows-cli.ts restore",
     "n8n:workflows:tree": "ts-node src/n8n-workflows-cli.ts tree --all",
     "n8n:verify": "ts-node src/n8n-workflows-cli.ts verify",
+    "n8n:delete-all": "ts-node src/n8n-workflows-cli.ts delete-all",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

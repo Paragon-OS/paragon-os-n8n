@@ -146,11 +146,28 @@ export async function exportWorkflows(config?: N8nApiConfig): Promise<Workflow[]
   const client = config ? createApiClient(config) : getDefaultClient();
 
   try {
-    const response = await client.get<Workflow[]>('/workflows');
+    const response = await client.get<unknown>('/workflows');
     if (response.status !== 200) {
       throw new Error(`Failed to export workflows: ${response.status} ${response.statusText}`);
     }
-    return Array.isArray(response.data) ? response.data : [response.data];
+    
+    // Handle both direct array and paginated response formats
+    let workflows: Workflow[];
+    if (Array.isArray(response.data)) {
+      workflows = response.data as Workflow[];
+    } else if (response.data && typeof response.data === 'object' && response.data !== null && 'data' in response.data) {
+      const dataObj = response.data as { data: unknown };
+      if (Array.isArray(dataObj.data)) {
+        workflows = dataObj.data as Workflow[];
+      } else {
+        workflows = [];
+      }
+    } else {
+      // Single workflow object
+      workflows = [response.data as Workflow];
+    }
+    
+    return workflows;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const message = error.response?.data?.message || error.message;
@@ -519,6 +536,91 @@ export async function getWorkflow(
     if (axios.isAxiosError(error)) {
       const message = error.response?.data?.message || error.message;
       throw new Error(`Failed to get workflow ${workflowId}: ${message}`);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Delete workflow by ID
+ */
+export async function deleteWorkflow(
+  workflowId: string,
+  config?: N8nApiConfig
+): Promise<void> {
+  const client = config ? createApiClient(config) : getDefaultClient();
+
+  try {
+    logger.debug(`Attempting to delete workflow ${workflowId}`);
+    const response = await client.delete(`/workflows/${workflowId}`);
+    
+    // Log full response for debugging
+    logger.debug(`Delete response for workflow ${workflowId}`, undefined, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+      data: response.data,
+    });
+    
+    // n8n API returns 200 or 204 on successful deletion
+    // 404 means workflow doesn't exist (already deleted) - treat as success
+    if (response.status === 404) {
+      logger.debug(`Workflow ${workflowId} not found (may already be deleted) - treating as success`);
+      return;
+    }
+    
+    if (response.status !== 200 && response.status !== 204) {
+      const errorMessage = response.data?.message || response.statusText || 'Unknown error';
+      const errorDetails = response.data ? JSON.stringify(response.data).substring(0, 200) : '';
+      logger.error(`Delete failed for workflow ${workflowId}`, undefined, {
+        status: response.status,
+        statusText: response.statusText,
+        errorMessage,
+        errorDetails,
+      });
+      throw new Error(`Failed to delete workflow: ${response.status} ${errorMessage}${errorDetails ? ` - ${errorDetails}` : ''}`);
+    }
+    
+    // Verify the workflow was actually deleted by trying to fetch it
+    // Wait a small amount to allow the deletion to propagate
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    try {
+      const verifyResponse = await client.get(`/workflows/${workflowId}`);
+      if (verifyResponse.status === 200) {
+        logger.warn(`Workflow ${workflowId} still exists after delete request (status: ${verifyResponse.status})`);
+        // Don't throw - let the verification step at the end catch this
+      }
+    } catch (verifyError) {
+      if (axios.isAxiosError(verifyError) && verifyError.response?.status === 404) {
+        // 404 means deletion succeeded - this is expected
+        logger.debug(`Verified: workflow ${workflowId} was successfully deleted (404 on verify)`);
+      } else {
+        logger.debug(`Could not verify deletion of ${workflowId}: ${verifyError instanceof Error ? verifyError.message : String(verifyError)}`);
+      }
+    }
+    
+    logger.debug(`Delete request successful for workflow ${workflowId} (status: ${response.status})`);
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 401) {
+        throw new Error(
+          `Authentication required. Please set N8N_API_KEY or N8N_SESSION_COOKIE environment variable.`
+        );
+      }
+      if (error.response?.status === 404) {
+        // Workflow doesn't exist - might already be deleted, treat as success
+        logger.debug(`Workflow ${workflowId} not found (may already be deleted) - treating as success`);
+        return;
+      }
+      const message = error.response?.data?.message || error.message;
+      const errorDetails = error.response?.data ? JSON.stringify(error.response.data).substring(0, 200) : '';
+      logger.error(`Delete error for workflow ${workflowId}`, error, {
+        status: error.response?.status,
+        message,
+        errorDetails,
+      });
+      throw new Error(`Failed to delete workflow ${workflowId}: ${message}${errorDetails ? ` - ${errorDetails}` : ''}`);
     }
     throw error;
   }

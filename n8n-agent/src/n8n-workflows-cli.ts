@@ -8,6 +8,7 @@ import { executeRestore } from "./commands/restore";
 import { executeTree } from "./commands/tree";
 import { executeOrganize } from "./commands/organize";
 import { executeVerify } from "./commands/verify";
+import { executeDeleteAll } from "./commands/delete-all";
 
 const program = new Command();
 
@@ -62,6 +63,14 @@ program
   .option("-w, --workflow <name>", "Specific workflow to verify")
   .action(async (options) => {
     await executeVerify(options);
+  });
+
+program
+  .command("delete-all")
+  .description("Delete all workflows from n8n instance")
+  .option("-y, --yes", "Skip confirmation prompt")
+  .action(async (options) => {
+    await executeDeleteAll(options);
   });
 
 // Parse arguments
