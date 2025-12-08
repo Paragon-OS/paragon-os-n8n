@@ -7,6 +7,7 @@ import { collectJsonFilesRecursive } from "../utils/file";
 import { normalizeWorkflowForCompare } from "../utils/workflow";
 import { deepEqual, exportCurrentWorkflowsForCompare } from "../utils/compare";
 import { logger } from "../utils/logger";
+import { importWorkflow } from "../utils/n8n-api";
 import type { BackupWorkflowForRestore, WorkflowObject } from "../types/index";
 
 interface RestoreOptions {
@@ -156,33 +157,39 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
       let importFilePath = backup.filePath;
       const isDeleted = backup.id ? deletedWorkflowIds.has(backup.id) : false;
 
-      // For deleted workflows, create a temporary file without the ID field
+      // For deleted workflows, use API import instead of CLI (handles schema better)
       if (isDeleted && backup.id) {
-        const tempDir = os.tmpdir();
-        const tempFileName = `n8n-restore-${Date.now()}-${Math.random().toString(36).substring(7)}.json`;
-        const tempFilePath = path.join(tempDir, tempFileName);
-        tempFiles.push(tempFilePath);
-
-        // Create a copy of the workflow without the ID field
-        const workflowWithoutId = { ...backup.workflow };
-        delete workflowWithoutId.id;
-        // Also remove other volatile fields that might cause issues
-        delete (workflowWithoutId as any).updatedAt;
-        delete (workflowWithoutId as any).createdAt;
-        delete (workflowWithoutId as any).versionId;
-
-        await fs.promises.writeFile(tempFilePath, JSON.stringify(workflowWithoutId, null, 2), "utf8");
-        importFilePath = tempFilePath;
-
         logger.info(
-          `Importing deleted workflow "${backup.name}" (removed ID ${backup.id} to create as new workflow)`,
+          `Importing deleted workflow "${backup.name}" via API (removed ID ${backup.id} to create as new workflow)`,
           {
             filePath: backup.filePath,
             originalId: backup.id,
             workflowName: backup.name,
-            tempFile: tempFilePath
           }
         );
+
+        try {
+          // For deleted workflows, we need to ensure we create a new one
+          // Remove the ID completely and any name-based lookup will fail, forcing creation
+          const workflowForImport = { ...backup.workflow };
+          delete workflowForImport.id;
+          
+          // Use API import which handles schema validation better
+          // Force create new workflow (don't try to update by name)
+          // The importWorkflow function already handles cleaning the workflow data
+          // Cast to Workflow type - importWorkflow will handle missing required fields
+          await importWorkflow(workflowForImport as any, undefined, true);
+          logger.info(`✓ Successfully imported "${backup.name}" via API`);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          logger.error(`Failed to import deleted workflow "${backup.name}" via API: ${errorMessage}`, error instanceof Error ? error : undefined, {
+            filePath: backup.filePath,
+            originalId: backup.id,
+            workflowName: backup.name,
+          });
+          process.exit(1);
+        }
+        continue; // Skip CLI import for deleted workflows
       } else {
         logger.info(
           `Importing workflow from "${backup.filePath}"${backup.id ? ` (id: ${backup.id}, name: ${backup.name})` : ` (name: ${backup.name})`}`,

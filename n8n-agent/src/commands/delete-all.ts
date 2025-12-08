@@ -37,49 +37,64 @@ export async function executeDeleteAll(options: DeleteAllOptions): Promise<void>
     // Skip test deletion - proceed directly with bulk deletion
     // 404 errors will be treated as success (workflow already deleted)
 
-    // Delete each workflow
+    // Delete workflows in batches to avoid overwhelming the API
+    const batchSize = 50;
     let deletedCount = 0;
     let failedCount = 0;
     const failedWorkflows: Array<{ id: string; name: string; error: string }> = [];
 
-    for (const workflow of workflows) {
-      // Handle different possible ID field names (id, workflowId, etc.)
-      const workflowId = workflow.id || (workflow as { workflowId?: string }).workflowId || (workflow as { _id?: string })._id;
-      const workflowName = workflow.name || workflowId || "unnamed-workflow";
+    for (let i = 0; i < workflows.length; i += batchSize) {
+      const batch = workflows.slice(i, i + batchSize);
+      const batchNum = Math.floor(i / batchSize) + 1;
+      const totalBatches = Math.ceil(workflows.length / batchSize);
+      
+      logger.info(`Processing batch ${batchNum}/${totalBatches} (${batch.length} workflows)...`);
 
-      if (!workflowId || typeof workflowId !== 'string') {
-        failedCount++;
-        const errorMessage = "Workflow missing ID";
-        failedWorkflows.push({
-          id: "unknown",
-          name: workflowName,
-          error: errorMessage,
-        });
-        // Log the workflow structure for debugging (first 500 chars)
-        const workflowStr = JSON.stringify(workflow, null, 2);
-        logger.debug(`Workflow structure (first 500 chars): ${workflowStr.substring(0, 500)}`);
-        logger.error(`✗ Skipping workflow without ID: ${workflowName}`, undefined, { 
-          workflowKeys: Object.keys(workflow).join(', '),
-          hasId: 'id' in workflow,
-          hasWorkflowId: 'workflowId' in workflow,
-        });
-        continue;
+      for (const workflow of batch) {
+        // Handle different possible ID field names (id, workflowId, etc.)
+        const workflowId = workflow.id || (workflow as { workflowId?: string }).workflowId || (workflow as { _id?: string })._id;
+        const workflowName = workflow.name || workflowId || "unnamed-workflow";
+
+        if (!workflowId || typeof workflowId !== 'string') {
+          failedCount++;
+          const errorMessage = "Workflow missing ID";
+          failedWorkflows.push({
+            id: "unknown",
+            name: workflowName,
+            error: errorMessage,
+          });
+          // Log the workflow structure for debugging (first 500 chars)
+          const workflowStr = JSON.stringify(workflow, null, 2);
+          logger.debug(`Workflow structure (first 500 chars): ${workflowStr.substring(0, 500)}`);
+          logger.error(`✗ Skipping workflow without ID: ${workflowName}`, undefined, { 
+            workflowKeys: Object.keys(workflow).join(', '),
+            hasId: 'id' in workflow,
+            hasWorkflowId: 'workflowId' in workflow,
+          });
+          continue;
+        }
+
+        try {
+          logger.info(`Deleting: ${workflowName} (${workflowId})...`);
+          await deleteWorkflow(workflowId);
+          deletedCount++;
+          logger.info(`✓ Deleted: ${workflowName}`);
+        } catch (error) {
+          failedCount++;
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          failedWorkflows.push({
+            id: workflowId,
+            name: workflowName,
+            error: errorMessage,
+          });
+          logger.error(`✗ Failed to delete: ${workflowName} - ${errorMessage}`);
+        }
       }
 
-      try {
-        logger.info(`Deleting: ${workflowName} (${workflowId})...`);
-        await deleteWorkflow(workflowId);
-        deletedCount++;
-        logger.info(`✓ Deleted: ${workflowName}`);
-      } catch (error) {
-        failedCount++;
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        failedWorkflows.push({
-          id: workflowId,
-          name: workflowName,
-          error: errorMessage,
-        });
-        logger.error(`✗ Failed to delete: ${workflowName} - ${errorMessage}`);
+      // Small delay between batches to avoid rate limiting
+      if (i + batchSize < workflows.length) {
+        logger.debug(`Waiting 500ms before next batch...`);
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
 

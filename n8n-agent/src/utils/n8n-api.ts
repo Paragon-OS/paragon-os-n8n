@@ -140,34 +140,61 @@ function getDefaultClient(): AxiosInstance {
 }
 
 /**
- * Export all workflows from n8n
+ * Export all workflows from n8n (handles pagination)
  */
 export async function exportWorkflows(config?: N8nApiConfig): Promise<Workflow[]> {
   const client = config ? createApiClient(config) : getDefaultClient();
 
   try {
-    const response = await client.get<unknown>('/workflows');
-    if (response.status !== 200) {
-      throw new Error(`Failed to export workflows: ${response.status} ${response.statusText}`);
-    }
-    
-    // Handle both direct array and paginated response formats
-    let workflows: Workflow[];
-    if (Array.isArray(response.data)) {
-      workflows = response.data as Workflow[];
-    } else if (response.data && typeof response.data === 'object' && response.data !== null && 'data' in response.data) {
-      const dataObj = response.data as { data: unknown };
-      if (Array.isArray(dataObj.data)) {
-        workflows = dataObj.data as Workflow[];
-      } else {
-        workflows = [];
+    const allWorkflows: Workflow[] = [];
+    let cursor: string | null = null;
+    const limit = 250; // Maximum allowed by n8n API
+
+    do {
+      const params: Record<string, string | number> = { limit };
+      if (cursor) {
+        params.cursor = cursor;
       }
-    } else {
-      // Single workflow object
-      workflows = [response.data as Workflow];
-    }
-    
-    return workflows;
+
+      const response = await client.get<unknown>('/workflows', { params });
+      if (response.status !== 200) {
+        throw new Error(`Failed to export workflows: ${response.status} ${response.statusText}`);
+      }
+      
+      // Handle both direct array and paginated response formats
+      let workflows: Workflow[] = [];
+      let nextCursor: string | null = null;
+
+      if (Array.isArray(response.data)) {
+        // Direct array format (legacy or non-paginated)
+        workflows = response.data as Workflow[];
+      } else if (response.data && typeof response.data === 'object' && response.data !== null) {
+        const dataObj = response.data as { data?: unknown; nextCursor?: string | null };
+        
+        if ('data' in dataObj && Array.isArray(dataObj.data)) {
+          // Paginated format: { data: [...], nextCursor: "..." }
+          workflows = dataObj.data as Workflow[];
+          nextCursor = dataObj.nextCursor || null;
+        } else if ('data' in dataObj) {
+          // Single workflow in data field
+          workflows = [dataObj.data as Workflow];
+        } else {
+          // Might be a single workflow object
+          workflows = [response.data as Workflow];
+        }
+      } else {
+        // Single workflow object
+        workflows = [response.data as Workflow];
+      }
+
+      allWorkflows.push(...workflows);
+      cursor = nextCursor;
+
+      logger.debug(`Fetched ${workflows.length} workflows (total so far: ${allWorkflows.length})${cursor ? `, next cursor: ${cursor.substring(0, 20)}...` : ''}`);
+    } while (cursor);
+
+    logger.debug(`Total workflows fetched: ${allWorkflows.length}`);
+    return allWorkflows;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const message = error.response?.data?.message || error.message;
@@ -236,7 +263,8 @@ function cleanWorkflowForApi(workflowData: Workflow): Record<string, unknown> {
  */
 export async function importWorkflow(
   workflowData: Workflow,
-  config?: N8nApiConfig
+  config?: N8nApiConfig,
+  forceCreate: boolean = false
 ): Promise<Workflow> {
   const client = config ? createApiClient(config) : getDefaultClient();
 
@@ -244,13 +272,13 @@ export async function importWorkflow(
     // Clean workflow data before sending to API
     const cleanedData = cleanWorkflowForApi(workflowData);
     
-    // Check if workflow exists by searching by name
+    // Check if workflow exists by searching by name (unless forceCreate is true)
     // We can't use the 'id' from workflowData because:
     // 1. It might be a custom ID (like "TestRunnerHelper001") which is not a database ID
     // 2. Even if it's a database ID, we shouldn't use it in request bodies
     // 3. We need to find the actual database ID (UUID or NanoID) by searching by name
     let existingWorkflow: Workflow | null = null;
-    if (workflowData.name) {
+    if (!forceCreate && workflowData.name) {
       try {
         const workflows = await exportWorkflows(config);
         const byName = workflows.find(w => w.name === workflowData.name);
@@ -264,7 +292,7 @@ export async function importWorkflow(
     }
 
     let response;
-    if (existingWorkflow && isValidDatabaseId(existingWorkflow.id)) {
+    if (!forceCreate && existingWorkflow && isValidDatabaseId(existingWorkflow.id)) {
       // Update existing workflow - use the database ID (UUID or NanoID) in URL path
       const workflowId = existingWorkflow.id;
       // For PUT, the id goes in the URL path, NOT in the request body
