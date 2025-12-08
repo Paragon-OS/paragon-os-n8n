@@ -142,6 +142,13 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
     logger.warn("Failed to fetch existing workflows for duplicate check, proceeding anyway", err);
   }
 
+  // Prepare all backup workflows for reference resolution
+  // This allows the reference converter to resolve references by name even if
+  // the target workflow hasn't been imported yet (critical for fixing old IDs)
+  // Cast to Workflow[] since WorkflowObject is compatible (has id, name, and all other fields)
+  const allBackupWorkflows = backups.map(b => b.workflow) as any[];
+  logger.debug(`Prepared ${allBackupWorkflows.length} backup workflows for reference resolution`);
+
   for (const backup of toImport) {
     const oldId = backup.id;
     const isDeletedWorkflow = isDeleted(oldId);
@@ -205,12 +212,15 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
 
       // Import workflow via API (handles schema cleaning, creates or updates as needed)
       // References are automatically converted to name-based during import
+      // Pass all backup workflows so references can be resolved even if target workflows
+      // haven't been imported yet (fixes broken old IDs from VCS upgrade)
       // Pass the existing workflow ID if we found one to ensure we update the correct workflow
       const importedWorkflow = await importWorkflow(
         workflowForImport as any,
         undefined,
         shouldForceCreate, // Only force create if truly new (no existing workflow by name)
-        existingWorkflowId // Pass the ID we found to avoid duplicate lookup issues
+        existingWorkflowId, // Pass the ID we found to avoid duplicate lookup issues
+        allBackupWorkflows // Pass all backup workflows for reference resolution
       );
 
       logger.info(`✓ Successfully imported "${backup.name}"${importedWorkflow.id ? ` (ID: ${importedWorkflow.id})` : ""}`);

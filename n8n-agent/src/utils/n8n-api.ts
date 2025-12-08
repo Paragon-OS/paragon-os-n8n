@@ -265,15 +265,18 @@ export async function importWorkflow(
   workflowData: Workflow,
   config?: N8nApiConfig,
   forceCreate: boolean = false,
-  existingWorkflowId?: string
+  existingWorkflowId?: string,
+  allBackupWorkflows?: Workflow[]
 ): Promise<Workflow> {
   const client = config ? createApiClient(config) : getDefaultClient();
 
   try {
     // Convert Execute Workflow node references from ID-based to name-based
     // This eliminates the need for reference fixing - names are stable, IDs are not
+    // Pass all backup workflows so references can be resolved even if target workflows
+    // haven't been imported yet (they'll be matched by name from backup files)
     const { convertWorkflowReferencesToNames } = await import('./workflow-reference-converter');
-    const workflowWithNameReferences = await convertWorkflowReferencesToNames(workflowData);
+    const workflowWithNameReferences = await convertWorkflowReferencesToNames(workflowData, allBackupWorkflows);
     
     // Clean workflow data before sending to API
     const cleanedData = cleanWorkflowForApi(workflowWithNameReferences);

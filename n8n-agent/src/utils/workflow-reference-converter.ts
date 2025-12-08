@@ -19,14 +19,20 @@ export async function convertWorkflowReferencesToNames(
   }
 
   // Get all workflows if not provided (needed to resolve workflow names)
+  // Priority: use provided workflows (from backup files), then try to fetch from n8n
+  // This allows resolving references by name from backup files even if workflows
+  // haven't been imported yet (critical for fixing old IDs after VCS upgrade)
   let workflows = allWorkflows;
-  if (!workflows) {
+  if (!workflows || workflows.length === 0) {
     try {
       workflows = await exportWorkflows();
+      logger.debug(`Fetched ${workflows.length} workflows from n8n for reference resolution`);
     } catch (error) {
       logger.warn('Failed to fetch workflows for reference conversion, skipping', error);
       return workflow;
     }
+  } else {
+    logger.info(`📋 Using ${workflows.length} provided workflows (from backup files) for reference resolution`);
   }
 
   const updatedNodes = workflow.nodes.map((node: any) => {
@@ -59,15 +65,19 @@ export async function convertWorkflowReferencesToNames(
       // Find workflow by ID or custom ID
       let targetWorkflow: Workflow | undefined;
       
-      // Try to find by database ID first
+      // Try to find by database ID first (only works if workflows are from n8n API)
       targetWorkflow = workflows?.find(w => w.id === currentValue);
       
-      // If not found, try to find by name (in case value is a custom ID like "TestDataHelper001")
+      // If not found, try to find by name or custom ID
+      // This handles both:
+      // 1. Custom IDs like "TestDataHelper001" (match by workflow name patterns)
+      // 2. Old database IDs that don't exist anymore (match by workflow name from backup)
       if (!targetWorkflow && currentValue) {
         targetWorkflow = workflows?.find(w => {
           if (!w.name) return false;
           // Exact name match
           if (w.name === currentValue) return true;
+          
           // Check if workflow has this as a custom ID (stored in JSON file)
           // Custom IDs are often stored in the workflow JSON but not in the API response
           // So we need to match by name patterns
@@ -97,6 +107,11 @@ export async function convertWorkflowReferencesToNames(
           return false;
         });
       }
+      
+      // Log ID rewrites (when old ID doesn't match new ID)
+      if (targetWorkflow && currentValue !== targetWorkflow.name) {
+        logger.info(`🔄 Rewriting workflow reference: "${currentValue}" → "${targetWorkflow.name}"`);
+      }
 
       if (targetWorkflow && targetWorkflow.name) {
         // Convert to name-based reference
@@ -120,7 +135,7 @@ export async function convertWorkflowReferencesToNames(
           },
         };
       } else {
-        logger.debug(`Could not resolve workflow reference "${currentValue}" to a name, keeping as-is`);
+        logger.warn(`⚠️  Could not resolve workflow reference "${currentValue}" to a name, keeping as-is. This may cause broken references.`);
         return node;
       }
     }
@@ -148,7 +163,7 @@ export async function convertWorkflowReferencesToNames(
           },
         };
       } else {
-        logger.debug(`Could not resolve workflow reference "${currentValue}" to a name, keeping as-is`);
+        logger.warn(`⚠️  Could not resolve workflow reference "${currentValue}" to a name, keeping as-is. This may cause broken references.`);
         return node;
       }
     }
