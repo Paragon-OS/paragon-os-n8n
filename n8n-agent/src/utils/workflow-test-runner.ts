@@ -22,7 +22,7 @@ import {
 } from "./test-helpers";
 
 // Test Runner workflow configuration
-const TEST_RUNNER_FILE = 'HELPERS/[HELPERS] Test Runner.json';
+const TEST_RUNNER_FILE = 'HELPERS/Test Runner.json';
 const TEST_RUNNER_ID = 'TestRunnerHelper001';
 const TEST_CONFIG_NODE = '⚙️ Test Config';
 
