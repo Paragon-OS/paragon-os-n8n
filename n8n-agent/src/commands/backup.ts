@@ -6,7 +6,6 @@ import { collectJsonFilesRecursive, removeEmptyDirectoriesUnder } from "../utils
 import { parseTagFromName, sanitizeWorkflowName } from "../utils/workflow";
 import { logger } from "../utils/logger";
 import { syncWorkflowReferences, removeDuplicateWorkflowFiles } from "../utils/workflow-id-sync";
-import type { WorkflowFile } from "../types/index";
 import type { Workflow } from "../utils/n8n-api";
 
 interface BackupOptions {
@@ -14,23 +13,22 @@ interface BackupOptions {
   yes?: boolean;
 }
 
-async function renameExportedWorkflowsToNames(
-  outputDir: string,
-  tempDir?: string
-): Promise<void> {
-  const normalizedOutputDir = path.resolve(outputDir);
-
+/**
+ * Simplified workflow renaming function
+ * 
+ * Renames workflow files from ID-based names to human-readable names
+ * in a single directory, without comparing to old files.
+ * 
+ * @param dir - Directory containing workflow JSON files (named by ID)
+ */
+async function renameWorkflowsByName(dir: string): Promise<void> {
+  const normalizedDir = path.resolve(dir);
+  
   let jsonPaths: string[];
   try {
-    jsonPaths = await collectJsonFilesRecursive(normalizedOutputDir);
-    
-    // If there's a temp directory with old files, include those too
-    if (tempDir) {
-      const tempPaths = await collectJsonFilesRecursive(tempDir);
-      jsonPaths.push(...tempPaths);
-    }
+    jsonPaths = await collectJsonFilesRecursive(normalizedDir);
   } catch (err) {
-    logger.warn("Failed to collect workflow JSON files", { outputDir: normalizedOutputDir }, err);
+    logger.warn("Failed to collect workflow JSON files", { dir: normalizedDir }, err);
     return;
   }
 
@@ -38,22 +36,21 @@ async function renameExportedWorkflowsToNames(
     return;
   }
 
-  const workflowFiles: WorkflowFile[] = [];
+  // Parse all workflows and group by ID
+  const workflows: Array<{
+    id: string;
+    name: string;
+    tag: string | undefined;
+    baseName: string;
+    filePath: string;
+  }> = [];
 
-  for (const fullPath of jsonPaths) {
-    const file = path.basename(fullPath);
-    const parentDir = path.dirname(fullPath);
-    // Files from the current run are those in the root output directory.
-    // Files in the temp directory are from previous backups and should not be
-    // considered as from the current run.
-    const isInTempDir = tempDir && fullPath.startsWith(path.resolve(tempDir) + path.sep);
-    const fromCurrentRun = !isInTempDir && path.resolve(parentDir) === normalizedOutputDir;
-
+  for (const filePath of jsonPaths) {
     let content: string;
     try {
-      content = await fs.promises.readFile(fullPath, "utf8");
+      content = await fs.promises.readFile(filePath, "utf8");
     } catch (err) {
-      logger.warn("Failed to read workflow file", { filePath: fullPath }, err);
+      logger.warn("Failed to read workflow file", { filePath }, err);
       continue;
     }
 
@@ -61,12 +58,12 @@ async function renameExportedWorkflowsToNames(
     try {
       parsed = JSON.parse(content);
     } catch (err) {
-      logger.warn("Skipping non-JSON file", { filePath: fullPath }, err);
+      logger.warn("Skipping non-JSON file", { filePath }, err);
       continue;
     }
 
     if (!parsed || typeof parsed !== "object") {
-      logger.warn("Skipping unexpected workflow format", { filePath: fullPath });
+      logger.warn("Skipping unexpected workflow format", { filePath });
       continue;
     }
 
@@ -81,9 +78,9 @@ async function renameExportedWorkflowsToNames(
 
     if (isArchived) {
       try {
-        await fs.promises.unlink(fullPath);
+        await fs.promises.unlink(filePath);
       } catch (err) {
-        logger.warn("Failed to remove archived workflow file", { filePath: fullPath }, err);
+        logger.warn("Failed to remove archived workflow file", { filePath }, err);
       }
       continue;
     }
@@ -91,237 +88,101 @@ async function renameExportedWorkflowsToNames(
     const id = typeof wf.id === "string" ? wf.id : undefined;
     const rawName = typeof wf.name === "string" ? wf.name : "unnamed-workflow";
 
+    if (!id) {
+      logger.warn("Skipping workflow without ID", { name: rawName, filePath });
+      continue;
+    }
+
     const { tag, baseName: taglessName } = parseTagFromName(rawName);
     const baseName = sanitizeWorkflowName(taglessName || rawName);
-    const fileBaseName = sanitizeWorkflowName(rawName);
 
-    workflowFiles.push({
-      file,
-      fullPath,
+    workflows.push({
       id,
       name: rawName,
-      baseName,
-      fileBaseName,
       tag,
-      fromCurrentRun,
+      baseName,
+      filePath,
     });
   }
 
-  // Group files by workflow ID so we end up with exactly one file per workflow ID.
-  const filesById = new Map<
-    string,
-    {
-      baseName: string;
-      files: WorkflowFile[];
-    }
-  >();
-
-  for (const wfFile of workflowFiles) {
-    if (!wfFile.id) {
-      // If a workflow file has no ID, leave it as-is.
-      continue;
-    }
-
-    const existing = filesById.get(wfFile.id);
-    if (!existing) {
-      filesById.set(wfFile.id, { baseName: wfFile.baseName, files: [wfFile] });
-    } else {
-      existing.files.push(wfFile);
-    }
-  }
-
-  // Assign stable, unique filenames based on sanitized names and numeric suffixes.
-  const usedNames = new Map<string, number>();
-  type Target = {
-    id: string;
-    baseName: string;
-    targetFilename: string;
-    files: WorkflowFile[];
-  };
-
-  const targets: Target[] = [];
-
-  const sortedIds = Array.from(filesById.entries()).sort(([idA, a], [idB, b]) => {
+  // Sort workflows by name for stable ordering
+  workflows.sort((a, b) => {
     const nameCompare = a.baseName.localeCompare(b.baseName);
     if (nameCompare !== 0) return nameCompare;
-    return idA.localeCompare(idB);
+    return a.id.localeCompare(b.id);
   });
 
-  for (const [id, group] of sortedIds) {
-    const baseName = group.baseName;
+  // Track used names to handle duplicates
+  const nameCounter = new Map<string, number>();
 
-    // Use the tag and fileBaseName of the first file in the group as the
-    // canonical source for the target directory and filename.
-    const sample = group.files[0];
-    const tag = sample.tag;
-    const fileBaseName = sample.fileBaseName || baseName || "unnamed-workflow";
+  // Rename each workflow file
+  for (const workflow of workflows) {
+    const key = `${workflow.tag || ""}/${workflow.baseName}`;
+    const count = (nameCounter.get(key) || 0) + 1;
+    nameCounter.set(key, count);
 
-    const usedKey = `${tag ?? ""}/${fileBaseName}`;
-    const existingCount = usedNames.get(usedKey) ?? 0;
-    const nextCount = existingCount + 1;
-    usedNames.set(usedKey, nextCount);
+    const finalName = count === 1 
+      ? `${workflow.baseName}.json`
+      : `${workflow.baseName} (${count}).json`;
 
-    const finalBase = nextCount === 1 ? fileBaseName : `${fileBaseName} (${nextCount})`;
-    const targetFilename = `${finalBase}.json`;
+    const targetDir = workflow.tag 
+      ? path.join(normalizedDir, workflow.tag)
+      : normalizedDir;
+    const targetPath = path.join(targetDir, finalName);
 
-    targets.push({
-      id,
-      baseName,
-      targetFilename,
-      files: group.files,
-    });
-  }
-
-  // For each workflow ID:
-  // - Pick one canonical file to keep (prefer a file that already has the target filename).
-  // - Delete any other files for the same ID.
-  // - Rename the canonical file to the target filename if needed.
-  for (const target of targets) {
-    const sample = target.files[0];
-    const tag = sample.tag;
-    const targetDir = tag ? path.join(normalizedOutputDir, tag) : normalizedOutputDir;
-    const targetFullPath = path.join(targetDir, target.targetFilename);
-
-    try {
-      await fs.promises.mkdir(path.dirname(targetFullPath), { recursive: true });
-    } catch (err) {
-      logger.warn("Failed to ensure directory", { targetPath: targetFullPath }, err);
+    // Skip if already at target location
+    if (workflow.filePath === targetPath) {
       continue;
     }
 
-    // Always prefer a file from the current backup run when choosing a canonical
-    // representative for this workflow ID. This ensures that when a workflow's
-    // [TAG] or name has changed, we keep the most recent export (which lives at
-    // the root of the backup directory) and treat older copies under previous
-    // tag subdirectories as duplicates to delete. This also ensures that the
-    // backup always overwrites existing files with fresh exports from n8n.
-    const fromCurrentRunCandidates = target.files.filter((f) => f.fromCurrentRun);
+    try {
+      // Ensure target directory exists
+      await fs.promises.mkdir(path.dirname(targetPath), { recursive: true });
 
-    let canonical: WorkflowFile;
-    if (fromCurrentRunCandidates.length > 0) {
-      // Use a stable order when multiple current-run candidates exist.
-      canonical = fromCurrentRunCandidates.sort((a, b) =>
-        a.fullPath.localeCompare(b.fullPath)
-      )[0];
-    } else {
-      // Fall back to a stable deterministic selection among all files.
-      // This case only happens when no files were exported in the current run
-      // (e.g., when the workflow already exists and n8n skipped it).
-      canonical = [...target.files].sort((a, b) => a.fullPath.localeCompare(b.fullPath))[0];
-    }
-
-    // Delete all non-canonical files for this workflow ID.
-    for (const wfFile of target.files) {
-      if (wfFile.fullPath === canonical.fullPath) {
-        continue;
-      }
-
+      // If target already exists, remove it
       try {
-        // Check if file still exists before trying to delete it (it may have
-        // already been moved/renamed by a previous operation)
-        try {
-          await fs.promises.access(wfFile.fullPath);
-        } catch {
-          // File doesn't exist, skip it
-          continue;
-        }
-        
-        await fs.promises.unlink(wfFile.fullPath);
-      } catch (err) {
-        logger.warn("Failed to remove duplicate workflow file", {
-          filePath: wfFile.fullPath,
-          workflowId: target.id
-        }, err);
+        await fs.promises.access(targetPath);
+        await fs.promises.unlink(targetPath);
+      } catch {
+        // Target doesn't exist, that's fine
       }
-    }
 
-    // Rename canonical file if needed.
-    if (canonical.fullPath !== targetFullPath) {
-      try {
-        // If a different file somehow already exists at the target path, remove it.
-        try {
-          const stat = await fs.promises.stat(targetFullPath);
-          if (stat.isFile()) {
-            await fs.promises.unlink(targetFullPath);
-          }
-        } catch {
-          // Does not exist; nothing to remove.
-        }
-
-        await fs.promises.rename(canonical.fullPath, targetFullPath);
-      } catch (err) {
-        logger.warn("Failed to rename workflow file", {
-          from: canonical.fullPath,
-          to: targetFullPath
-        }, err);
-      }
+      // Rename file
+      await fs.promises.rename(workflow.filePath, targetPath);
+    } catch (err) {
+      logger.warn("Failed to rename workflow file", {
+        from: workflow.filePath,
+        to: targetPath,
+        workflowId: workflow.id,
+      }, err);
     }
   }
 
-  // After renaming/deleting files, remove any now-empty directories beneath the
-  // backup root (excluding the root itself).
-  try {
-    await removeEmptyDirectoriesUnder(normalizedOutputDir);
-  } catch (err) {
-    logger.warn("Failed to remove empty directories", { outputDir: normalizedOutputDir }, err);
-  }
+  // Clean up empty directories
+  await removeEmptyDirectoriesUnder(normalizedDir);
 }
 
 export async function executeBackup(options: BackupOptions, remainingArgs: string[] = []): Promise<void> {
   const outputDir = resolveDir(options.output, "./workflows");
   const normalizedOutputDir = path.resolve(outputDir);
+  const parentDir = path.dirname(normalizedOutputDir);
+  const tempDir = path.join(parentDir, ".backup-temp");
+  const oldBackupDir = `${normalizedOutputDir}.old`;
 
-  // Show what will be backed up and ask for confirmation
   logger.info(`📦 Backup target: ${normalizedOutputDir}`);
-  logger.info(`   This will export all workflows from n8n to the backup directory.\n`);
+  logger.info("   This will export all workflows from n8n to the backup directory.\n");
 
-  const confirmed = await confirm("Do you want to proceed with the backup?", options.yes || false);
-  if (!confirmed) {
-    logger.info("Backup cancelled.");
-    process.exit(0);
-  }
-
-  logger.info(""); // Empty line after confirmation
-
-  // Ensure output directory exists
-  try {
-    await fs.promises.mkdir(normalizedOutputDir, { recursive: true });
-  } catch (err) {
-    logger.error("Failed to create output directory", err, { outputDir: normalizedOutputDir });
-    process.exit(1);
-    return;
-  }
-
-  // To ensure we always get fresh exports, temporarily move existing workflow
-  // files to a staging area, export via API, then let our renaming logic merge
-  // the new exports with any existing files.
-  const tempDir = path.join(normalizedOutputDir, ".backup-temp");
-  let movedFiles = false;
-
-  try {
-    // Collect existing JSON files before export
-    const existingJsonPaths = await collectJsonFilesRecursive(normalizedOutputDir);
-    
-    if (existingJsonPaths.length > 0) {
-      // Create temp directory and move existing files there
-      await fs.promises.mkdir(tempDir, { recursive: true });
-      
-      for (const filePath of existingJsonPaths) {
-        const relativePath = path.relative(normalizedOutputDir, filePath);
-        const tempPath = path.join(tempDir, relativePath);
-        
-        await fs.promises.mkdir(path.dirname(tempPath), { recursive: true });
-        await fs.promises.rename(filePath, tempPath);
-      }
-      
-      movedFiles = true;
+  if (!options.yes) {
+    const shouldContinue = await confirm("Do you want to proceed with the backup?");
+    if (!shouldContinue) {
+      logger.info("Backup cancelled.");
+      process.exit(0);
     }
-  } catch (err) {
-    logger.warn("Failed to move existing workflow files to temp directory", { tempDir }, err);
-    // Continue anyway - we'll overwrite existing files
   }
 
-  // Export workflows using REST API
+  logger.info("");
+
+  // Step 1: Fetch workflows from n8n
   let workflows: Workflow[];
   try {
     logger.info("Fetching workflows from n8n...");
@@ -329,91 +190,69 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
     logger.info(`Fetched ${workflows.length} workflow(s) from n8n.`);
   } catch (err) {
     logger.error("Failed to export workflows from n8n API", err);
-    
-    // If export failed, restore files from temp directory
-    if (movedFiles) {
-      try {
-        const tempJsonPaths = await collectJsonFilesRecursive(tempDir);
-        
-        for (const tempPath of tempJsonPaths) {
-          const relativePath = path.relative(tempDir, tempPath);
-          const originalPath = path.join(normalizedOutputDir, relativePath);
-          
-          await fs.promises.mkdir(path.dirname(originalPath), { recursive: true });
-          await fs.promises.rename(tempPath, originalPath);
-        }
-        
-        await fs.promises.rm(tempDir, { recursive: true, force: true });
-      } catch (restoreErr) {
-        logger.error("Failed to restore files after export failure", restoreErr, { tempDir });
-      }
-    }
-    
     process.exit(1);
     return;
   }
 
-  // Write workflows to JSON files (using ID as filename, like n8n CLI does)
-  // Skip archived workflows
-  let exportedCount = 0;
-  for (const workflow of workflows) {
-    // Skip archived workflows
-    if ((workflow as { isArchived?: boolean }).isArchived === true) {
-      continue;
-    }
-
-    // Use workflow ID as filename (n8n CLI behavior)
-    // If no ID, skip this workflow
-    if (!workflow.id) {
-      logger.warn(`Skipping workflow "${workflow.name}" - no ID found`);
-      continue;
-    }
-
-    const filename = `${workflow.id}.json`;
-    const filePath = path.join(normalizedOutputDir, filename);
-
-    try {
-      // Ensure the directory exists (in case it was deleted)
-      await fs.promises.mkdir(path.dirname(filePath), { recursive: true });
-      
-      // Write workflow as JSON (pretty-printed like n8n CLI)
-      const jsonContent = JSON.stringify(workflow, null, 2);
-      await fs.promises.writeFile(filePath, jsonContent, "utf8");
-      exportedCount++;
-    } catch (err) {
-      logger.warn(`Failed to write workflow file: ${filePath}`, err);
-    }
-  }
-
-  logger.info(`Exported ${exportedCount} workflow(s) to ${normalizedOutputDir}`);
-
-  // Rename exported files to use workflow names while
-  // keeping restore/import behavior based solely on workflow IDs inside JSON.
-  // Pass the temp directory so the renaming logic can process both old and
-  // new files together, with new files taking precedence.
-  await renameExportedWorkflowsToNames(outputDir, movedFiles ? tempDir : undefined);
-  
-  // Clean up temp directory after renaming logic has processed everything
-  if (movedFiles) {
+  // Step 2: Write ALL workflows to temp directory
+  try {
+    // Clean up any existing temp directory
     try {
       await fs.promises.rm(tempDir, { recursive: true, force: true });
-    } catch (err) {
-      logger.warn("Failed to clean up temporary directory", { tempDir }, err);
+    } catch {
+      // Doesn't exist, that's fine
     }
+
+    await fs.promises.mkdir(tempDir, { recursive: true });
+
+    let exportedCount = 0;
+    for (const workflow of workflows) {
+      // Skip archived workflows
+      if ((workflow as { isArchived?: boolean }).isArchived === true) {
+        continue;
+      }
+
+      // Use workflow ID as filename
+      if (!workflow.id) {
+        logger.warn(`Skipping workflow "${workflow.name}" - no ID found`);
+        continue;
+      }
+
+      const filename = `${workflow.id}.json`;
+      const filePath = path.join(tempDir, filename);
+
+      try {
+        const jsonContent = JSON.stringify(workflow, null, 2) + '\n';
+        await fs.promises.writeFile(filePath, jsonContent, "utf8");
+        exportedCount++;
+      } catch (err) {
+        logger.warn(`Failed to write workflow file: ${filePath}`, err);
+      }
+    }
+
+    logger.info(`Exported ${exportedCount} workflow(s) to temp directory`);
+  } catch (err) {
+    logger.error("Failed to write workflows to temp directory", err);
+    process.exit(1);
+    return;
   }
 
-  // Sync workflow IDs in toolWorkflow references to match n8n
+  // Step 3: Rename files to human-readable names (in temp dir)
+  logger.info("Renaming workflows to human-readable names...");
+  await renameWorkflowsByName(tempDir);
+
+  // Step 4: Sync workflow references
   logger.info("Syncing workflow references...");
   
-  // Remove any duplicate files created by backup (e.g., " (2).json" files)
-  const duplicatesRemoved = removeDuplicateWorkflowFiles(normalizedOutputDir);
+  // Remove any duplicate files
+  const duplicatesRemoved = removeDuplicateWorkflowFiles(tempDir);
   if (duplicatesRemoved > 0) {
     logger.info(`Removed ${duplicatesRemoved} duplicate workflow file(s)`);
   }
   
   // Sync toolWorkflow node references to match actual n8n IDs
   try {
-    const syncResult = await syncWorkflowReferences(normalizedOutputDir, workflows);
+    const syncResult = await syncWorkflowReferences(tempDir, workflows);
     
     if (syncResult.fixed > 0) {
       logger.info(`Fixed ${syncResult.fixed} workflow reference(s) to match n8n IDs`);
@@ -428,9 +267,59 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
     }
   } catch (err) {
     logger.warn("Failed to sync workflow references", err);
-    logger.info("You can manually sync later using: npm run n8n:workflows:sync");
   }
+
+  // Step 5: Atomically replace workflows directory
+  logger.info("Replacing workflows directory...");
+  
+  try {
+    // Move current workflows to backup (if exists)
+    try {
+      await fs.promises.access(normalizedOutputDir);
+      
+      // Clean up any old backup first
+      try {
+        await fs.promises.rm(oldBackupDir, { recursive: true, force: true });
+      } catch {
+        // Doesn't exist, that's fine
+      }
+      
+      await fs.promises.rename(normalizedOutputDir, oldBackupDir);
+      logger.debug(`Moved existing workflows to ${oldBackupDir}`);
+    } catch {
+      // Directory doesn't exist, that's fine
+    }
+
+    // Move temp to workflows
+    await fs.promises.rename(tempDir, normalizedOutputDir);
+    logger.info(`✓ Workflows directory updated`);
+
+    // Clean up old backup
+    try {
+      await fs.promises.rm(oldBackupDir, { recursive: true, force: true });
+      logger.debug(`Cleaned up old backup directory`);
+    } catch {
+      // Doesn't exist or couldn't delete, that's fine
+    }
+  } catch (err) {
+    logger.error("Failed to replace workflows directory", err);
+    
+    // Try to restore from old backup
+    try {
+      await fs.promises.access(oldBackupDir);
+      await fs.promises.rename(oldBackupDir, normalizedOutputDir);
+      logger.info("Restored workflows from backup after error");
+    } catch {
+      // Couldn't restore
+    }
+    
+    process.exit(1);
+    return;
+  }
+
+  logger.info("");
+  logger.info("✅ Backup completed successfully!");
+  logger.info(`   ${workflows.length} workflow(s) backed up to ${normalizedOutputDir}`);
 
   process.exit(0);
 }
-

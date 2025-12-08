@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T18:36:58.454Z",
-  "createdAt": "2025-12-08T18:36:58.454Z",
-  "id": "b693RI56eldkhQEf",
+  "updatedAt": "2025-12-08T21:25:59.252Z",
+  "createdAt": "2025-12-08T21:19:49.320Z",
+  "id": "EaYVXYgGuWQQrzZm",
   "name": "ParagonOS Manager",
   "active": false,
   "isArchived": false,
@@ -381,15 +381,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "20bb460f-dc0f-42d1-9cdd-6fe392aab93c",
+  "versionId": "ae38b1c5-042b-4f53-a14c-b8ac51c2e18c",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T18:36:58.455Z",
-      "createdAt": "2025-12-08T18:36:58.455Z",
+      "updatedAt": "2025-12-08T21:19:49.321Z",
+      "createdAt": "2025-12-08T21:19:49.321Z",
       "role": "workflow:owner",
-      "workflowId": "b693RI56eldkhQEf",
+      "workflowId": "EaYVXYgGuWQQrzZm",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

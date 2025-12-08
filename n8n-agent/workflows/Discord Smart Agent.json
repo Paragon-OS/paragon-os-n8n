@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T19:06:21.188Z",
-  "createdAt": "2025-12-08T18:55:41.313Z",
-  "id": "BFbTKhLH4c3es8j3",
+  "updatedAt": "2025-12-08T21:25:59.228Z",
+  "createdAt": "2025-12-08T21:19:49.290Z",
+  "id": "oY8QyisyWYLJgkhr",
   "name": "Discord Smart Agent",
   "active": false,
   "isArchived": false,
@@ -369,15 +369,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "f0bf3a19-022a-4cee-afa0-02ac19e1dd17",
+  "versionId": "ec639c2b-b43a-4494-a9ff-2f69baf2e7e2",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T18:55:41.314Z",
-      "createdAt": "2025-12-08T18:55:41.314Z",
+      "updatedAt": "2025-12-08T21:19:49.291Z",
+      "createdAt": "2025-12-08T21:19:49.291Z",
       "role": "workflow:owner",
-      "workflowId": "BFbTKhLH4c3es8j3",
+      "workflowId": "oY8QyisyWYLJgkhr",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

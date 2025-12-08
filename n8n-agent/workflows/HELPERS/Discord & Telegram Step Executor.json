@@ -1,0 +1,477 @@
+{
+  "updatedAt": "2025-12-08T21:25:05.365Z",
+  "createdAt": "2025-12-08T21:19:49.390Z",
+  "id": "2qSxm847AzwQxyFd",
+  "name": "[HELPERS] Discord & Telegram Step Executor",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "executionSteps",
+              "type": "array"
+            },
+            {
+              "name": "targetMcp"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1616,
+        424
+      ],
+      "id": "dd089a93-3eb3-466d-9dd8-efc4a57a9e0e",
+      "name": "When Executed by Another Workflow",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "maxTries": 2
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        256
+      ],
+      "id": "90a8d7ee-6bb9-46b7-8e15-f8d8b17fd413",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "497d547e-48e4-4218-a02e-9648db9a4c93",
+              "name": "executionSteps",
+              "value": "={{ $json.executionSteps ?? [] }}",
+              "type": "array"
+            },
+            {
+              "id": "0e38eab1-172a-4f92-b8a2-9c5cc9164081",
+              "name": "targetMcp",
+              "value": "={{ $json.targetMcp }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1392,
+        424
+      ],
+      "id": "490cd53f-a549-4be3-888d-e9838dc053e8",
+      "name": "Prepare Execution Steps"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "executionSteps",
+        "include": "selectedOtherFields",
+        "fieldsToInclude": "targetMcp",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1168,
+        424
+      ],
+      "id": "b996eb98-f301-4d48-9b5a-999e52135faa",
+      "name": "Split Execution Steps"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": false
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -720,
+        256
+      ],
+      "id": "878574b5-68ac-4ce9-a9fc-dce16d283558",
+      "name": "Merge Step with Params"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -944,
+        664
+      ],
+      "id": "cd5a8d92-5e4f-4164-af15-6861fe96b4c4",
+      "name": "Loop Over Execution Steps"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "executionSteps",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        256
+      ],
+      "id": "cebbe5e6-8690-4a13-b927-0af6d2e757c5",
+      "name": "Aggregate Step Results"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bad98a97-9638-4b86-8bc3-f93523320a80",
+              "name": "stepResult.stepOutput",
+              "value": "={{ $json.result.isError?$json.result : JSON.parse($json.result.content[0].text) }}",
+              "type": "object"
+            },
+            {
+              "id": "bec043e7-22fd-4b23-a549-d1e81ec6bcb6",
+              "name": "stepResult.toolName",
+              "value": "={{ $json.executionSteps.toolName }}",
+              "type": "string"
+            },
+            {
+              "id": "3cbfb631-8642-43bb-82f4-1333495056f8",
+              "name": "stepResult.callParams",
+              "value": "={{ $json.executionSteps.callParams }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -496,
+        256
+      ],
+      "id": "73ffba95-efca-4332-aefc-34112a5152c2",
+      "name": "Format Step Results"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.targetMcp }}",
+                    "rightValue": "DISCORD",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "36eba5f2-818c-447e-86ac-accdaa6f2ef7"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DISCORD"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3d90bc7f-67a0-4e8c-be9f-785fc15c7b40",
+                    "leftValue": "={{ $json.targetMcp }}",
+                    "rightValue": "TELEGRAM",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TELEGRAM"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -720,
+        448
+      ],
+      "id": "a27c4d61-edcb-4f92-8f59-ed3dd8b09fcc",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $json.executionSteps.toolName }}",
+        "toolParameters": "={{ $json.executionSteps.callParams }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        544
+      ],
+      "id": "270e0f6f-4f16-4f79-b584-b01584a96185",
+      "name": "Discord Step Executor",
+      "executeOnce": false,
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ZFofx3k2ze1wsifx",
+          "name": "Discord MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $json.executionSteps.toolName }}",
+        "toolParameters": "={{ $json.executionSteps.callParams }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        736
+      ],
+      "id": "cbac631b-218c-438b-a039-331db550c36a",
+      "name": "Telegram Step Executor",
+      "executeOnce": false,
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "mcpClientApi": {
+          "id": "aiYCclLDUqob5iQ0",
+          "name": "Telegram MCP Client (STDIO) account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const jsonString = $input.first().json.result.content[0].text;\n\nif($input.first().json.result.isError){\n  return {\n    error: jsonString\n  }\n}\n\ntry{\n  const parsed = JSON.parse(jsonString);\n  // Check and wrap\n  const result = Array.isArray(parsed) \n    ? { data: parsed } \n    : parsed;\n  \n  $input.first().json.result.content[0].text = JSON.stringify(result);\n  return $input.first().json\n} catch (err){\n  $input.first().json.result.isError = true;\n  return {\n    result: {\n        ...$input.first().json.result,\n        error: `${jsonString} - ${err}`\n    }\n  }\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -272,
+        808
+      ],
+      "id": "070d5a92-aef4-4406-9c71-04252c3cd22a",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare Execution Steps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Execution Steps": {
+      "main": [
+        [
+          {
+            "node": "Split Execution Steps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Execution Steps": {
+      "main": [
+        [
+          {
+            "node": "Merge Step with Params",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over Execution Steps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Step with Params": {
+      "main": [
+        [
+          {
+            "node": "Format Step Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Execution Steps": {
+      "main": [
+        [
+          {
+            "node": "Merge Step with Params",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Step Results": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Step Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Step Results": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Discord Step Executor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram Step Executor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord Step Executor": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Execution Steps",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Telegram Step Executor": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Execution Steps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Execution Steps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "ca5676fe-32ea-4d1e-84dc-64aa52724079",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-08T21:19:49.390Z",
+      "createdAt": "2025-12-08T21:19:49.390Z",
+      "role": "workflow:owner",
+      "workflowId": "2qSxm847AzwQxyFd",
+      "projectId": "GEUEn6ArNROzJ5FY"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

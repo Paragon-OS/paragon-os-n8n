@@ -1,0 +1,664 @@
+{
+  "updatedAt": "2025-12-08T21:25:59.479Z",
+  "createdAt": "2025-12-08T21:19:49.603Z",
+  "id": "UBPIR2YorryCp5Ho",
+  "name": "[HELPERS] Test Runner",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "test-runner-trigger",
+      "name": "Run Test",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        240,
+        300
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"workflow\": \"TelegramContextScout\",\n  \"testCase\": \"self-profile\",\n  \"testData\": null\n}",
+        "options": {}
+      },
+      "id": "test-config",
+      "name": "⚙️ Test Config",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        460,
+        300
+      ],
+      "typeVersion": 3.4,
+      "notes": "╔════════════════════════════════════════╗\n║  CHANGE THESE VALUES TO SWITCH TESTS   ║\n╠════════════════════════════════════════╣\n║  workflow: Target workflow name        ║\n║  testCase: Test case ID from Test Data ║\n╚════════════════════════════════════════╝\n\nAvailable:\n• TelegramContextScout: contact-rag, message-rag, contact-fuzzy, chat-search, tool-lookup, self-profile\n• DynamicRAG: status, search-contacts, search-metarune, create-collection, delete-collection, clear-collection, insert, search-test\n• DiscordSmartAgent: simple-query, list-contacts, read-messages\n• TelegramSmartAgent: search-messages, find-message-content, list-contacts, simple-query"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "[HELPERS] Test Data",
+          "mode": "list",
+          "cachedResultName": "[HELPERS] Test Data",
+          "cachedResultUrl": "/workflow/5Lmo7lOjdgXnKSM9"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflow": "={{ $json.workflow }}",
+            "testCase": "={{ $json.testCase }}",
+            "testData": "={{ $json.testData }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "workflow",
+              "displayName": "workflow",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "testCase",
+              "displayName": "testCase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "testData",
+              "displayName": "testData",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "load-test-data",
+      "name": "Load Test Data",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "position": [
+        680,
+        300
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('⚙️ Test Config').item.json.workflow }}",
+                    "rightValue": "TelegramContextScout",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "route-telegram"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TelegramContextScout"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('⚙️ Test Config').item.json.workflow }}",
+                    "rightValue": "DynamicRAG",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "route-rag"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DynamicRAG"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('⚙️ Test Config').item.json.workflow }}",
+                    "rightValue": "DiscordContextScout",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "route-discord"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DiscordContextScout"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('⚙️ Test Config').item.json.workflow }}",
+                    "rightValue": "DiscordSmartAgent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "route-discord-smart-agent"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DiscordSmartAgent"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('⚙️ Test Config').item.json.workflow }}",
+                    "rightValue": "TelegramSmartAgent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "route-telegram-smart-agent"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TelegramSmartAgent"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "workflow-router",
+      "name": "Route to Workflow",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        900,
+        300
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Telegram Context Scout",
+          "mode": "list",
+          "cachedResultName": "Telegram Context Scout",
+          "cachedResultUrl": "/workflow/GwCBsdxV4CkAQPPf"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ $json.query }}",
+            "entity": "={{ $json.entity }}",
+            "mode": "={{ $json.mode }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "entity",
+              "displayName": "entity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "run-telegram-scout",
+      "name": "Run: Telegram Context Scout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "position": [
+        1140,
+        200
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "IZa7S90Z9W1qxysr",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "mode": "={{ $json.mode }}",
+            "collectionId": "={{ $json.collectionId }}",
+            "input": "={{ $json.input }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "collectionId",
+              "displayName": "collectionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "input",
+              "displayName": "input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "run-dynamic-rag",
+      "name": "Run: Dynamic RAG",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "position": [
+        1140,
+        400
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "BB1zsros5LmyJO9N",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ $json.query }}",
+            "entity": "={{ $json.entity }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "entity",
+              "displayName": "entity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "run-discord-scout",
+      "name": "Run: Discord Context Scout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "position": [
+        1140,
+        500
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "zBL0JT7t26pK2x95",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "userPrompt": "={{ $json.userPrompt }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "userPrompt",
+              "displayName": "userPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "run-discord-smart-agent",
+      "name": "Run: Discord Smart Agent",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "position": [
+        1140,
+        600
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Telegram Smart Agent",
+          "mode": "list",
+          "cachedResultName": "Telegram Smart Agent",
+          "cachedResultUrl": "/workflow/CO0VXGivAsYQ9c6P"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "userPrompt": "={{ $json.userPrompt || $json.testData?.userPrompt }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "userPrompt",
+              "displayName": "userPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "run-telegram-smart-agent",
+      "name": "Run: Telegram Smart Agent",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "position": [
+        1140,
+        700
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'Unknown workflow: ' + $('⚙️ Test Config').item.json.workflow }}"
+      },
+      "id": "unknown-workflow-error",
+      "name": "Unknown Workflow",
+      "type": "n8n-nodes-base.stopAndError",
+      "position": [
+        1140,
+        800
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "merge-results",
+      "name": "Results",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        1380,
+        300
+      ],
+      "typeVersion": 3.1
+    }
+  ],
+  "connections": {
+    "Run Test": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Test Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Test Config": {
+      "main": [
+        [
+          {
+            "node": "Load Test Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Test Data": {
+      "main": [
+        [
+          {
+            "node": "Route to Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route to Workflow": {
+      "main": [
+        [
+          {
+            "node": "Run: Telegram Context Scout",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Run: Dynamic RAG",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Run: Discord Context Scout",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Run: Discord Smart Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Run: Telegram Smart Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Unknown Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run: Telegram Context Scout": {
+      "main": [
+        [
+          {
+            "node": "Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run: Dynamic RAG": {
+      "main": [
+        [
+          {
+            "node": "Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run: Discord Context Scout": {
+      "main": [
+        [
+          {
+            "node": "Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run: Discord Smart Agent": {
+      "main": [
+        [
+          {
+            "node": "Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run: Telegram Smart Agent": {
+      "main": [
+        [
+          {
+            "node": "Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "e9dd10bc-1ed3-4b80-88f5-c507f94ca3e7",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-08T21:19:49.604Z",
+      "createdAt": "2025-12-08T21:19:49.604Z",
+      "role": "workflow:owner",
+      "workflowId": "UBPIR2YorryCp5Ho",
+      "projectId": "GEUEn6ArNROzJ5FY"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

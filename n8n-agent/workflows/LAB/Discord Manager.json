@@ -1,0 +1,566 @@
+{
+  "updatedAt": "2025-12-08T21:25:06.250Z",
+  "createdAt": "2025-12-08T21:19:49.707Z",
+  "id": "h28bjDC1oYeuJ4c6",
+  "name": "[LAB] Discord Manager",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "You are an expert Discord MCP assistant agent. Your role is to help users interact with Discord through workflow tools.\n\nIf you don't already know a server/guild ID, do a search for it."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -288,
+        -304
+      ],
+      "id": "d113adc9-916e-43fc-89e7-187d109d32c5",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $workflow.id }} v1",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -656,
+        -80
+      ],
+      "id": "e0e6e785-82e7-4d9b-8d15-3e553e014b52",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -784,
+        -80
+      ],
+      "id": "fb7b9a56-d23b-4f29-9cd7-41abed69e2e1",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to list messages from a discord username or user ID",
+        "workflowId": {
+          "__rl": true,
+          "value": "lTpkDHGkyxmzz6yr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/lTpkDHGkyxmzz6yr",
+          "cachedResultName": "[LAB] Discord MCP Client"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "discordRelatedPrompt": "=Fetch last {{ $fromAI('limit', ``, 'string') }} messages from the user {{ $fromAI('userId', ``, 'string') }}."
+          },
+          "matchingColumns": [
+            "discordRelatedPrompt"
+          ],
+          "schema": [
+            {
+              "id": "discordRelatedPrompt",
+              "displayName": "discordRelatedPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -528,
+        -80
+      ],
+      "id": "024ba43e-7de2-4746-9487-8b98ba6ce9d2",
+      "name": "List last messages"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to CRUD your discord contact database efficiently when you need to find a discord user contact/profile fast using a partial query.",
+        "workflowId": {
+          "__rl": true,
+          "value": "6XRPDLSHwMZZTK8C",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/6XRPDLSHwMZZTK8C",
+          "cachedResultName": "[LAB] Discord Contact CRUD Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "discordContactsRelatedPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('discordContactsRelatedPrompt', `Ask the tool to get the contact/profile of the partial user id`, 'string') }}"
+          },
+          "matchingColumns": [
+            "discordContactsRelatedPrompt"
+          ],
+          "schema": [
+            {
+              "id": "discordContactsRelatedPrompt",
+              "displayName": "discordContactsRelatedPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -400,
+        -80
+      ],
+      "id": "990b58ee-517e-4015-88be-a62d58f0fb23",
+      "name": "Call 'Discord Contact CRUD Agent'"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to find matching discord servers/guilds from a partial server name or ID.",
+        "workflowId": {
+          "__rl": true,
+          "value": "lTpkDHGkyxmzz6yr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/lTpkDHGkyxmzz6yr",
+          "cachedResultName": "[LAB] Discord MCP Client"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "discordRelatedPrompt": "=Fetch all matching servers/guilds from the partial identifier \"{{ $fromAI('partiallChannelId', ``, 'string') }}\"."
+          },
+          "matchingColumns": [
+            "discordRelatedPrompt"
+          ],
+          "schema": [
+            {
+              "id": "discordRelatedPrompt",
+              "displayName": "discordRelatedPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -272,
+        -80
+      ],
+      "id": "0f215f6c-64c6-4465-93fa-e6974fb9d139",
+      "name": "Search Discord Servers"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to list available discord servers/guilds.",
+        "workflowId": {
+          "__rl": true,
+          "value": "lTpkDHGkyxmzz6yr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/lTpkDHGkyxmzz6yr",
+          "cachedResultName": "[LAB] Discord MCP Client"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "discordRelatedPrompt": "=Fetch first {{ $fromAI('limit', ``, 'number', 10) }} servers/guilds"
+          },
+          "matchingColumns": [
+            "discordRelatedPrompt"
+          ],
+          "schema": [
+            {
+              "id": "discordRelatedPrompt",
+              "displayName": "discordRelatedPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -144,
+        -80
+      ],
+      "id": "96d83773-8abf-4b3f-ab64-d4048fb29e9b",
+      "name": "List Discord Servers"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1008,
+        -304
+      ],
+      "id": "54685de8-5efc-4e1a-a511-0b3f2187fa82",
+      "name": "When chat message received",
+      "webhookId": "b7a7dead-ba90-4ef1-8e6a-2222f40b67f3"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to list channels in a discord server/guild using server name or ID.",
+        "workflowId": {
+          "__rl": true,
+          "value": "lTpkDHGkyxmzz6yr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/lTpkDHGkyxmzz6yr",
+          "cachedResultName": "[LAB] Discord MCP Client"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "discordRelatedPrompt": "=List {{ $fromAI('limit', '','number', 10) }} TEXT channels from server/guild {{ $fromAI('guildId', ``, 'string') }}."
+          },
+          "matchingColumns": [
+            "discordRelatedPrompt"
+          ],
+          "schema": [
+            {
+              "id": "discordRelatedPrompt",
+              "displayName": "discordRelatedPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -16,
+        -80
+      ],
+      "id": "1fc13e38-a3a3-449b-b18b-e2135e041034",
+      "name": "List Discord Channels"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to read/fetch messages from a specific discord server channel using channel ID or channel name and guild ID",
+        "workflowId": {
+          "__rl": true,
+          "value": "lTpkDHGkyxmzz6yr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/lTpkDHGkyxmzz6yr",
+          "cachedResultName": "[LAB] Discord MCP Client"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "discordRelatedPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('discordRelatedPrompt', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "discordRelatedPrompt"
+          ],
+          "schema": [
+            {
+              "id": "discordRelatedPrompt",
+              "displayName": "discordRelatedPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        112,
+        -80
+      ],
+      "id": "3cc12775-83d8-444d-8663-dd746f620820",
+      "name": "Get Channel Messages"
+    },
+    {
+      "parameters": {
+        "description": "Send or reply to messages in Discord server channels. Requires channelId and message content. Optionally provide replyToMessageId to reply to a specific message.",
+        "workflowId": {
+          "__rl": true,
+          "value": "lTpkDHGkyxmzz6yr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/lTpkDHGkyxmzz6yr",
+          "cachedResultName": "[LAB] Discord MCP Client"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "discordRelatedPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('discordRelatedPrompt', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "discordRelatedPrompt"
+          ],
+          "schema": [
+            {
+              "id": "discordRelatedPrompt",
+              "displayName": "discordRelatedPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        -80
+      ],
+      "id": "5a0efc2a-0f2e-4285-b4f4-0c3e82403db4",
+      "name": "Send Discord Server Message"
+    },
+    {
+      "parameters": {
+        "description": "Send or reply to direct messages in Discord. Requires userId (not channelId) and message content. Optionally provide replyToMessageId to reply to a specific message.",
+        "workflowId": {
+          "__rl": true,
+          "value": "lTpkDHGkyxmzz6yr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/lTpkDHGkyxmzz6yr",
+          "cachedResultName": "[LAB] Discord MCP Client"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "discordRelatedPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('discordRelatedPrompt', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "discordRelatedPrompt"
+          ],
+          "schema": [
+            {
+              "id": "discordRelatedPrompt",
+              "displayName": "discordRelatedPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        368,
+        -80
+      ],
+      "id": "8de3a9b5-fed8-4ec6-97e7-8de855afc71b",
+      "name": "Send Discord DM"
+    }
+  ],
+  "connections": {
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List last messages": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Discord Contact CRUD Agent'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Discord Servers": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Discord Servers": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Discord Channels": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Channel Messages": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Discord Server Message": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Discord DM": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "9ae80c27-210b-46f1-b61d-ac39fb77aa0a",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-08T21:19:49.708Z",
+      "createdAt": "2025-12-08T21:19:49.708Z",
+      "role": "workflow:owner",
+      "workflowId": "h28bjDC1oYeuJ4c6",
+      "projectId": "GEUEn6ArNROzJ5FY"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

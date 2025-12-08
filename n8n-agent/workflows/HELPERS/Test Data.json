@@ -1,0 +1,88 @@
+{
+  "updatedAt": "2025-12-08T21:25:05.739Z",
+  "createdAt": "2025-12-08T21:19:49.592Z",
+  "id": "5Lmo7lOjdgXnKSM9",
+  "name": "[HELPERS] Test Data",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "workflow",
+              "type": "string"
+            },
+            {
+              "name": "testCase",
+              "type": "string"
+            },
+            {
+              "name": "testData",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "id": "test-data-trigger",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        240,
+        300
+      ],
+      "typeVersion": 1.1,
+      "notes": "Input:\n- workflow: Name of the workflow (e.g., 'TelegramContextScout')\n- testCase: ID of the test case (e.g., 'contact-rag')\n- testData: Test data object (passed directly from CLI)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ╔══════════════════════════════════════════════════════════════════╗\n// ║                    LOOKUP LOGIC (don't edit)                      ║\n// ╚══════════════════════════════════════════════════════════════════╝\n\n// Test data is passed directly from the CLI via testData parameter\n// This avoids file system access issues in n8n's Code node\n\nconst input = $input.first().json;\nconst { workflow, testCase, testData } = input;\n\n// If testData is provided directly, return it\nif (testData && typeof testData === 'object' && Object.keys(testData).length > 0) {\n  return testData;\n}\n\n// Otherwise, return an error\nreturn {\n  error: 'Test data not provided. The CLI should pass testData directly.',\n  workflow,\n  testCase,\n  received: { workflow, testCase, hasTestData: !!testData },\n  hint: 'Make sure the test CLI passes testData in the Test Config node'\n};"
+      },
+      "id": "test-cases-code",
+      "name": "Test Cases",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        480,
+        300
+      ],
+      "typeVersion": 2,
+      "notes": "Test cases are loaded from: n8n-agent/test-cases.js\n\nEdit that file to add/modify test cases.\n\nFormat:\n'WorkflowName': {\n  'test-id': { ...payload },\n  'another-test': { ...payload }\n}\n\nNote: The CLI passes testData directly, so file loading is not needed."
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Test Cases",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "c70f36e8-cfb2-4ef0-a058-d4b9c6b6412e",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-08T21:19:49.592Z",
+      "createdAt": "2025-12-08T21:19:49.592Z",
+      "role": "workflow:owner",
+      "workflowId": "5Lmo7lOjdgXnKSM9",
+      "projectId": "GEUEn6ArNROzJ5FY"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

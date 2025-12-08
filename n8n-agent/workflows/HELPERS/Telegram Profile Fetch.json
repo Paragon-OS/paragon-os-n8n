@@ -1,0 +1,105 @@
+{
+  "updatedAt": "2025-12-08T21:25:05.693Z",
+  "createdAt": "2025-12-08T21:19:49.572Z",
+  "id": "0O6vb0bzZBh8KmhH",
+  "name": "[HELPERS] Telegram Profile Fetch",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{}"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        400
+      ],
+      "id": "trigger",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "=telegram_get_me",
+        "toolParameters": "={}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        528,
+        400
+      ],
+      "id": "mcp-call",
+      "name": "Get My Profile",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "aiYCclLDUqob5iQ0",
+          "name": "Telegram MCP Client (STDIO) account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\n// Handle error cases from MCP call\nif (input.error) {\n  const errorMsg = typeof input.error === 'string' ? input.error : (input.error.message || JSON.stringify(input.error));\n  return {\n    myProfile: null,\n    error: `MCP call failed: ${errorMsg}`\n  };\n}\n\n// Profile is returned as a single object in result.content[0].text\nlet profile;\n\ntry {\n  if (input.result?.content?.[0]?.text) {\n    profile = JSON.parse(input.result.content[0].text);\n  } else if (input.myProfile) {\n    profile = input.myProfile;\n  } else {\n    throw new Error('No profile found in MCP response');\n  }\n  \n  return {\n    myProfile: profile\n  };\n} catch (error) {\n  return {\n    myProfile: null,\n    error: error.message || String(error)\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        400
+      ],
+      "id": "normalize",
+      "name": "Normalize Profile"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get My Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get My Profile": {
+      "main": [
+        [
+          {
+            "node": "Normalize Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "c00a3dfc-1fb6-4030-9139-87adb9654b6b",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-08T21:19:49.573Z",
+      "createdAt": "2025-12-08T21:19:49.573Z",
+      "role": "workflow:owner",
+      "workflowId": "0O6vb0bzZBh8KmhH",
+      "projectId": "GEUEn6ArNROzJ5FY"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
