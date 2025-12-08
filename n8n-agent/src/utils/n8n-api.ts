@@ -515,11 +515,13 @@ export async function executeWorkflow(
 
   try {
     // Use the EXACT same approach as working test.ts - direct runN8nCapture call
-    const args = ['execute', `--id=${workflowId}`];
+    // Add --rawOutput flag to ensure we get JSON output
+    const args = ['execute', `--id=${workflowId}`, '--rawOutput'];
     if (inputData) {
       args.push('--data', JSON.stringify(inputData));
     }
     
+    logger.debug(`Executing workflow with args: ${args.join(' ')}`);
     // This is what test.ts does and it works!
     const { code, stdout, stderr } = await runN8nCapture(args, timeout);
     
@@ -536,6 +538,8 @@ export async function executeWorkflow(
     const combinedOutput = filteredStdout + (filteredStderr ? '\n' + filteredStderr : '');
     
     logger.debug(`Captured output: code=${code}, stdout=${stdout.length}, stderr=${stderr.length}, filtered=${combinedOutput.length}`);
+    logger.debug(`Raw stdout (first 500 chars): ${stdout.substring(0, 500)}`);
+    logger.debug(`Raw stderr (first 500 chars): ${stderr.substring(0, 500)}`);
     if (combinedOutput.trim()) {
       logger.debug(`Output preview: ${combinedOutput.substring(0, 200)}`);
     }
@@ -550,6 +554,7 @@ export async function executeWorkflow(
       // OUTSIDE THE BOX: Maybe successful executions don't output JSON by default?
       // Try querying the executions API to get the result!
       logger.debug(`No CLI output, trying to get execution from API...`);
+      logger.debug(`Workflow ID provided: ${workflowId}`);
       const client = config ? createApiClient(config) : getDefaultClient();
       
       try {
@@ -559,45 +564,85 @@ export async function executeWorkflow(
         try {
           const workflow = await getWorkflow(workflowId, config);
           resolvedWorkflowId = workflow.id;
-        } catch {
+          logger.debug(`Resolved workflow ID: ${workflowId} -> ${resolvedWorkflowId}`);
+        } catch (getWorkflowError) {
+          logger.debug(`getWorkflow failed, trying name lookup: ${getWorkflowError instanceof Error ? getWorkflowError.message : String(getWorkflowError)}`);
           // If getWorkflow fails, try to resolve by name or use as-is
           try {
             const workflows = await exportWorkflows(config);
             const byName = workflows.find(w => w.name === workflowId);
             if (byName?.id) {
               resolvedWorkflowId = byName.id;
+              logger.debug(`Resolved by name: ${workflowId} -> ${resolvedWorkflowId}`);
+            } else {
+              logger.debug(`No workflow found with name: ${workflowId}`);
             }
-          } catch {
+          } catch (exportError) {
+            logger.debug(`exportWorkflows failed: ${exportError instanceof Error ? exportError.message : String(exportError)}`);
             // Use workflowId as-is
           }
         }
         
-        // Wait a bit for execution to be saved to database
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Wait longer for execution to be saved to database (executions might take time to persist)
+        logger.debug(`Waiting 2 seconds for execution to be saved to database...`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
         // Get most recent execution
+        logger.debug(`Querying executions API for workflow: ${resolvedWorkflowId}`);
         const execResponse = await client.get('/executions', {
           params: { workflowId: resolvedWorkflowId, limit: 1 },
         });
         
+        logger.debug(`Executions API response status: ${execResponse.status}`);
+        logger.debug(`Executions API response data type: ${typeof execResponse.data}, isArray: ${Array.isArray(execResponse.data)}`);
+        logger.debug(`Executions API response keys: ${Object.keys(execResponse.data || {}).join(', ')}`);
+        
         if (execResponse.status === 200) {
-          const executions = Array.isArray(execResponse.data) ? execResponse.data :
-                            execResponse.data?.data ? execResponse.data.data :
-                            execResponse.data?.executions || [];
+          // Handle paginated response format: { data: [...], nextCursor: "..." }
+          let executions: unknown[] = [];
+          if (Array.isArray(execResponse.data)) {
+            executions = execResponse.data;
+          } else if (execResponse.data && typeof execResponse.data === 'object') {
+            // Try different possible response structures
+            if ('data' in execResponse.data && Array.isArray(execResponse.data.data)) {
+              executions = execResponse.data.data;
+            } else if ('executions' in execResponse.data && Array.isArray(execResponse.data.executions)) {
+              executions = execResponse.data.executions;
+            } else if ('results' in execResponse.data && Array.isArray(execResponse.data.results)) {
+              executions = execResponse.data.results;
+            }
+          }
+          
+          logger.debug(`Found ${executions.length} execution(s) in response`);
+          if (executions.length === 0 && execResponse.data && typeof execResponse.data === 'object') {
+            logger.debug(`Full response structure: ${JSON.stringify(Object.keys(execResponse.data)).substring(0, 500)}`);
+            logger.debug(`Response data.data type: ${typeof (execResponse.data as any).data}, isArray: ${Array.isArray((execResponse.data as any).data)}`);
+            if ((execResponse.data as any).data) {
+              logger.debug(`data.data length: ${Array.isArray((execResponse.data as any).data) ? (execResponse.data as any).data.length : 'not an array'}`);
+            }
+          }
           
           if (executions.length > 0) {
             const exec = executions[0] as { id: string };
+            logger.debug(`Fetching execution details for: ${exec.id}`);
             const detailResponse = await client.get(`/executions/${exec.id}`);
             if (detailResponse.status === 200) {
               logger.debug(`Found execution via API: ${exec.id}`);
               return detailResponse.data as N8nExecutionResponse;
+            } else {
+              logger.debug(`Failed to get execution details: status ${detailResponse.status}`);
             }
           } else {
-            logger.debug(`No executions found for workflow ${resolvedWorkflowId}`);
+            logger.debug(`No executions found for workflow ${resolvedWorkflowId}. Response structure: ${JSON.stringify(Object.keys(execResponse.data || {})).substring(0, 200)}`);
           }
+        } else {
+          logger.debug(`Executions API returned non-200 status: ${execResponse.status}`);
         }
       } catch (apiError) {
         logger.debug(`API fallback failed: ${apiError instanceof Error ? apiError.message : String(apiError)}`);
+        if (apiError instanceof Error && apiError.stack) {
+          logger.debug(`API error stack: ${apiError.stack.substring(0, 500)}`);
+        }
       }
       
       // If API didn't work either, throw error

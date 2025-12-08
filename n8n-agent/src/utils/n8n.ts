@@ -63,10 +63,50 @@ export async function runN8nCapture(
     // Fallback: check if vitest is in process args (e.g., when running via npm test)
     (process.argv.some(arg => /vitest/i.test(arg)) && process.argv.some(arg => /test/i.test(arg)));
   
-  // For execute commands, ALWAYS use streaming to ensure we capture all output
-  // Streaming properly captures output that might be lost with simple buffering
+  // For execute commands, use non-streaming execa which properly buffers output
+  // The streaming version has issues with data events not firing
+  // execa's built-in buffering works better for n8n execute commands
   if (args.includes('execute')) {
-    return runN8nExecuteWithStreaming(args, timeout);
+    // Use execa's built-in buffering instead of streaming
+    // This is more reliable for n8n execute commands
+    const env = { 
+      ...process.env,
+      FORCE_COLOR: '0',
+      NO_COLOR: '1',
+      CI: 'true',
+    };
+    
+    logger.debug(`[EXECA] Executing n8n with args: ${args.join(' ')}`);
+    
+    return execa("n8n", args, {
+      stdio: ["ignore", "pipe", "pipe"],
+      reject: false,
+      timeout,
+      env,
+      all: false, // Keep stdout and stderr separate
+      stripFinalNewline: false,
+    }).then(result => {
+      logger.debug(`[EXECA] Captured: code=${result.exitCode}, stdout=${result.stdout?.length || 0}, stderr=${result.stderr?.length || 0}`);
+      return {
+        code: result.exitCode ?? 1,
+        stdout: result.stdout ?? "",
+        stderr: result.stderr ?? "",
+      };
+    }).catch(error => {
+      logger.debug(`[EXECA] Error: ${error instanceof Error ? error.message : String(error)}`);
+      if (error.signal === 'SIGTERM' && timeout) {
+        return {
+          code: 124,
+          stdout: "",
+          stderr: `Command timed out after ${timeout}ms`,
+        };
+      }
+      return {
+        code: 1,
+        stdout: "",
+        stderr: error instanceof Error ? error.message : String(error),
+      };
+    });
   }
   
 
@@ -140,9 +180,21 @@ async function runN8nExecuteWithStreaming(
   return new Promise((resolve) => {
     // For execute commands, ensure we capture output properly
     // Use 'pipe' for both stdout and stderr to capture all output
+    // Force output by setting environment variables
+    const env = { 
+      ...process.env,
+      FORCE_COLOR: '0',
+      NO_COLOR: '1',
+      // Force n8n to output even when not in TTY
+      CI: 'true',
+    };
+    
+    logger.debug(`[STREAM] Starting n8n with args: ${args.join(' ')}, env: ${JSON.stringify({ FORCE_COLOR: env.FORCE_COLOR, NO_COLOR: env.NO_COLOR, CI: env.CI })}`);
+    
     const child = execa("n8n", args, {
       stdio: ["ignore", "pipe", "pipe"], // Use ignore for stdin to avoid blocking
       reject: false,
+      env,
     });
 
     let stdout = "";
@@ -202,37 +254,46 @@ async function runN8nExecuteWithStreaming(
       child.stdout.on("data", (data: Buffer) => {
         const chunk = data.toString();
         stdout += chunk;
+        logger.debug(`[STREAM] stdout data chunk: ${chunk.length} chars, total: ${stdout.length}`);
       });
       
       child.stdout.on("end", () => {
+        logger.debug(`[STREAM] stdout ended, total captured: ${stdout.length} chars`);
         stdoutEnded = true;
         tryResolve();
       });
       
-      child.stdout.on("error", () => {
+      child.stdout.on("error", (err) => {
+        logger.debug(`[STREAM] stdout error: ${err instanceof Error ? err.message : String(err)}`);
         stdoutEnded = true;
         tryResolve();
       });
     } else {
+      logger.debug(`[STREAM] No stdout stream available`);
       stdoutEnded = true;
     }
 
     // Stream stderr - wait for 'end' event
     if (child.stderr) {
       child.stderr.on("data", (data: Buffer) => {
-        stderr += data.toString();
+        const chunk = data.toString();
+        stderr += chunk;
+        logger.debug(`[STREAM] stderr data chunk: ${chunk.length} chars, total: ${stderr.length}`);
       });
       
       child.stderr.on("end", () => {
+        logger.debug(`[STREAM] stderr ended, total captured: ${stderr.length} chars`);
         stderrEnded = true;
         tryResolve();
       });
       
-      child.stderr.on("error", () => {
+      child.stderr.on("error", (err) => {
+        logger.debug(`[STREAM] stderr error: ${err instanceof Error ? err.message : String(err)}`);
         stderrEnded = true;
         tryResolve();
       });
     } else {
+      logger.debug(`[STREAM] No stderr stream available`);
       stderrEnded = true;
     }
 
@@ -240,6 +301,7 @@ async function runN8nExecuteWithStreaming(
     child.on("exit", (code, signal) => {
       exitCode = code ?? 1;
       exitSignal = signal;
+      logger.debug(`[STREAM] Process exited with code=${exitCode}, signal=${signal}, stdout=${stdout.length}, stderr=${stderr.length}`);
       
       // For execute commands, wait longer for output to flush
       // Sometimes output is written asynchronously after process exit
@@ -250,8 +312,12 @@ async function runN8nExecuteWithStreaming(
       setTimeout(() => {
         if (!completed) {
           // Log what we captured before forcing resolution
-          if (stdout || stderr) {
-            logger.debug(`Forcing resolution after ${waitTime}ms. Captured: stdout=${stdout.length} chars, stderr=${stderr.length} chars`);
+          logger.debug(`[STREAM] Forcing resolution after ${waitTime}ms. Captured: stdout=${stdout.length} chars, stderr=${stderr.length} chars`);
+          if (stdout) {
+            logger.debug(`[STREAM] stdout content (first 200): ${stdout.substring(0, 200)}`);
+          }
+          if (stderr) {
+            logger.debug(`[STREAM] stderr content (first 200): ${stderr.substring(0, 200)}`);
           }
           stdoutEnded = true;
           stderrEnded = true;
