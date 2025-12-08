@@ -247,10 +247,16 @@ export async function executeWorkflowTest(
       };
     }
 
-    // Import modified Test Runner using API
+    // Import modified Test Runner using API and get the actual database ID
+    let testRunnerDatabaseId: string;
     try {
-      await importWorkflowFromFile(context.tempPath);
-      logger.debug(`Test Runner workflow imported successfully`);
+      const importedWorkflow = await importWorkflowFromFile(context.tempPath);
+      // After import, we get the actual database ID (not the custom ID from JSON)
+      if (!importedWorkflow.id) {
+        throw new Error('Imported workflow did not return an ID');
+      }
+      testRunnerDatabaseId = importedWorkflow.id;
+      logger.debug(`Test Runner workflow imported successfully with database ID: ${testRunnerDatabaseId}`);
     } catch (error) {
       return {
         testCase,
@@ -259,24 +265,11 @@ export async function executeWorkflowTest(
       };
     }
 
-    // Execute Test Runner using the custom ID from the JSON file
-    // The CLI --id flag expects the custom ID from the workflow JSON (TestRunnerHelper001),
-    // not the database UUID returned by the API
-    // We need to read the custom ID from the temp file since that's what we just imported
-    let testRunnerCustomId: string = TEST_RUNNER_ID; // Fallback to constant
-    try {
-      const testRunnerContent = JSON.parse(fs.readFileSync(context.tempPath, 'utf-8'));
-      if (testRunnerContent.id) {
-        testRunnerCustomId = testRunnerContent.id;
-      }
-    } catch {
-      // Use fallback ID
-    }
-
     let executionResult: N8nExecutionResponse;
     try {
-      // Use the custom ID from the JSON file (this is what CLI expects)
-      executionResult = await executeWorkflow(testRunnerCustomId, undefined, { timeout: 2 * 60 * 1000 });
+      // Use the database ID returned from import (this is what n8n CLI --id expects after restore)
+      // The custom ID (TestRunnerHelper001) won't work after workflows are restored with new IDs
+      executionResult = await executeWorkflow(testRunnerDatabaseId, undefined, { timeout: 2 * 60 * 1000 });
     } catch (error) {
       // Handle timeout or execution errors
       if (error instanceof Error && error.message.includes('timed out')) {
