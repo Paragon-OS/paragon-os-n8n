@@ -21,7 +21,18 @@ This means:
 
 ## The Solution
 
-Use `sync-workflow-ids-from-n8n.ts` to fetch the ACTUAL IDs from your running n8n instance and update your local files.
+**The backup command now automatically syncs workflow IDs!** Just run:
+
+```bash
+npm run n8n:workflows:downsync
+```
+
+This will:
+1. Download workflows from n8n
+2. Remove duplicate " (2).json" files
+3. Automatically sync all toolWorkflow references to match n8n's current IDs
+
+No manual intervention needed!
 
 ## Scripts
 
@@ -123,24 +134,26 @@ npx ts-node scripts/fix-tool-workflow-references.ts --fix
 
 ## Recommended Workflows
 
-### After Restoring Workflows to n8n (CRITICAL!)
+### After Restoring Workflows to n8n
 
-**This is the most important workflow** - run this every time you restore workflows:
+**The backup command now handles syncing automatically!**
 
 ```bash
-# 1. Restore workflows to n8n using your normal process
-npm run n8n:restore
+# 1. Restore workflows to n8n
+npm run n8n:workflows:upsync
 
-# 2. Sync workflow IDs from n8n to local files
-npx ts-node scripts/sync-workflow-ids-from-n8n.ts --sync
+# 2. Backup workflows from n8n (automatically syncs IDs!)
+npm run n8n:workflows:downsync
 
-# 3. Verify all references are valid
-npx ts-node scripts/validate-tool-workflow-references.ts
-
-# 4. Commit the updated workflow files
+# 3. Commit the updated workflow files
 git add workflows/
-git commit -m "Sync workflow IDs after restore"
+git commit -m "Sync workflow IDs after backup/restore"
 ```
+
+The backup command will automatically:
+- Remove duplicate " (2).json" files
+- Sync all toolWorkflow references to match n8n's current IDs
+- Log the number of references fixed
 
 ### When Working with Local Files Only
 

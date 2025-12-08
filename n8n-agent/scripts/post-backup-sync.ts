@@ -8,103 +8,14 @@
  * This script:
  * 1. Removes duplicate " (2).json" files created by backup
  * 2. Syncs workflow IDs from n8n to fix toolWorkflow references
- * 3. Backs up again to get clean files with correct references
+ * 
+ * NOTE: The backup command now does this automatically, so this script
+ * is mainly for manual cleanup if needed.
  */
 
-import * as fs from 'fs';
 import * as path from 'path';
-import { execSync } from 'child_process';
 import { exportWorkflows } from '../src/utils/n8n-api';
-
-interface WorkflowNode {
-  id: string;
-  name: string;
-  type: string;
-  parameters?: {
-    workflowId?: {
-      __rl?: boolean;
-      value?: string;
-      mode?: string;
-      cachedResultUrl?: string;
-      cachedResultName?: string;
-    };
-  };
-}
-
-interface Workflow {
-  id: string;
-  name: string;
-  nodes: WorkflowNode[];
-}
-
-function getAllWorkflowFiles(dir: string, pattern: RegExp): string[] {
-  const files: string[] = [];
-  
-  function scan(currentDir: string) {
-    const entries = fs.readdirSync(currentDir);
-    
-    for (const entry of entries) {
-      const fullPath = path.join(currentDir, entry);
-      const stat = fs.statSync(fullPath);
-      
-      if (stat.isDirectory()) {
-        scan(fullPath);
-      } else if (pattern.test(entry)) {
-        files.push(fullPath);
-      }
-    }
-  }
-  
-  scan(dir);
-  return files;
-}
-
-async function syncWorkflowReferences(workflowsDir: string): Promise<number> {
-  console.log('Fetching workflows from n8n...');
-  const n8nWorkflows = await exportWorkflows();
-  console.log(`✓ Fetched ${n8nWorkflows.length} workflows\n`);
-  
-  const n8nNameToId = new Map<string, string>();
-  n8nWorkflows.forEach(wf => n8nNameToId.set(wf.name, wf.id));
-  
-  const workflowFiles = getAllWorkflowFiles(workflowsDir, /\.json$/);
-  let fixedCount = 0;
-  
-  for (const filePath of workflowFiles) {
-    try {
-      const content = fs.readFileSync(filePath, 'utf-8');
-      const workflow: Workflow = JSON.parse(content);
-      let modified = false;
-      
-      for (const node of workflow.nodes) {
-        if (node.type === '@n8n/n8n-nodes-langchain.toolWorkflow') {
-          const workflowId = node.parameters?.workflowId;
-          
-          if (workflowId?.value && workflowId?.cachedResultName) {
-            const referencedName = workflowId.cachedResultName;
-            const currentId = workflowId.value;
-            const n8nId = n8nNameToId.get(referencedName);
-            
-            if (n8nId && currentId !== n8nId) {
-              workflowId.value = n8nId;
-              workflowId.cachedResultUrl = `/workflow/${n8nId}`;
-              modified = true;
-              fixedCount++;
-            }
-          }
-        }
-      }
-      
-      if (modified) {
-        fs.writeFileSync(filePath, JSON.stringify(workflow, null, 2) + '\n', 'utf-8');
-      }
-    } catch (error) {
-      console.error(`Error processing ${filePath}:`, error);
-    }
-  }
-  
-  return fixedCount;
-}
+import { syncWorkflowReferences, removeDuplicateWorkflowFiles } from '../src/utils/workflow-id-sync';
 
 async function main() {
   const workflowsDir = path.join(__dirname, '..', 'workflows');
@@ -113,28 +24,31 @@ async function main() {
   
   // Step 1: Find and remove duplicate " (2).json" files
   console.log('Step 1: Removing duplicate " (2).json" files...');
-  const duplicates = getAllWorkflowFiles(workflowsDir, / \(2\)\.json$/);
+  const duplicatesRemoved = removeDuplicateWorkflowFiles(workflowsDir);
   
-  if (duplicates.length > 0) {
-    console.log(`Found ${duplicates.length} duplicate files:`);
-    for (const dup of duplicates) {
-      const relativePath = path.relative(workflowsDir, dup);
-      console.log(`  - ${relativePath}`);
-      fs.unlinkSync(dup);
-    }
-    console.log(`✓ Removed ${duplicates.length} duplicate files\n`);
+  if (duplicatesRemoved > 0) {
+    console.log(`✓ Removed ${duplicatesRemoved} duplicate files\n`);
   } else {
     console.log('✓ No duplicate files found\n');
   }
   
   // Step 2: Sync workflow IDs
   console.log('Step 2: Syncing workflow IDs from n8n...');
-  const fixedCount = await syncWorkflowReferences(workflowsDir);
+  console.log('Fetching workflows from n8n...');
   
-  if (fixedCount > 0) {
-    console.log(`✓ Fixed ${fixedCount} workflow references\n`);
+  const n8nWorkflows = await exportWorkflows();
+  console.log(`✓ Fetched ${n8nWorkflows.length} workflows\n`);
+  
+  const syncResult = await syncWorkflowReferences(workflowsDir, n8nWorkflows);
+  
+  if (syncResult.fixed > 0) {
+    console.log(`✓ Fixed ${syncResult.fixed} workflow references\n`);
   } else {
     console.log('✓ All references already correct\n');
+  }
+  
+  if (syncResult.notFound > 0) {
+    console.log(`\x1b[33m⚠ ${syncResult.notFound} referenced workflow(s) not found in n8n\x1b[0m\n`);
   }
   
   console.log('\x1b[32m✓ Post-backup sync complete!\x1b[0m\n');

@@ -26,18 +26,7 @@
 
 ## The Solution
 
-Use the **post-backup sync script** after every backup/restore cycle.
-
-### Quick Fix (Run This Now):
-
-```bash
-npm run n8n:workflows:sync
-```
-
-This script:
-1. ✅ Removes duplicate " (2).json" files
-2. ✅ Fetches ACTUAL workflow IDs from running n8n instance
-3. ✅ Updates all toolWorkflow references to match n8n's current IDs
+**The backup command now automatically syncs workflow IDs!**
 
 ### Correct Workflow (Use This Always):
 
@@ -45,15 +34,26 @@ This script:
 # 1. Restore workflows to n8n
 npm run n8n:workflows:upsync
 
-# 2. Backup workflows from n8n (creates " (2).json" duplicates)
+# 2. Backup workflows from n8n (automatically syncs!)
 npm run n8n:workflows:downsync
 
-# 3. Sync and fix references (CRITICAL!)
-npm run n8n:workflows:sync
-
-# 4. Commit the corrected files
+# 3. Commit the corrected files
 git add -A
 git commit -m "Sync workflow IDs after backup/restore"
+```
+
+The backup command automatically:
+1. ✅ Downloads workflows from n8n
+2. ✅ Removes duplicate " (2).json" files
+3. ✅ Fetches ACTUAL workflow IDs from running n8n instance
+4. ✅ Updates all toolWorkflow references to match n8n's current IDs
+
+### Manual Sync (If Needed):
+
+If you need to manually sync without running a full backup:
+
+```bash
+npm run n8n:workflows:sync
 ```
 
 ## What Gets Fixed
@@ -151,7 +151,9 @@ After running the sync script, all 25 toolWorkflow references now point to the c
 
 ## Remember
 
-**Always run `npm run n8n:workflows:sync` after backup/restore!**
+**The backup command now handles this automatically!**
 
-This is not optional - without it, your toolWorkflow references will be broken.
+Just run `npm run n8n:workflows:downsync` and workflow IDs will be synced automatically.
+
+No manual intervention needed - the sync happens as part of the backup process.
 

@@ -5,6 +5,7 @@ import { exportWorkflows } from "../utils/n8n-api";
 import { collectJsonFilesRecursive, removeEmptyDirectoriesUnder } from "../utils/file";
 import { parseTagFromName, sanitizeWorkflowName } from "../utils/workflow";
 import { logger } from "../utils/logger";
+import { syncWorkflowReferences, removeDuplicateWorkflowFiles } from "../utils/workflow-id-sync";
 import type { WorkflowFile } from "../types/index";
 import type { Workflow } from "../utils/n8n-api";
 
@@ -399,6 +400,35 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
     } catch (err) {
       logger.warn("Failed to clean up temporary directory", { tempDir }, err);
     }
+  }
+
+  // Sync workflow IDs in toolWorkflow references to match n8n
+  logger.info("Syncing workflow references...");
+  
+  // Remove any duplicate files created by backup (e.g., " (2).json" files)
+  const duplicatesRemoved = removeDuplicateWorkflowFiles(normalizedOutputDir);
+  if (duplicatesRemoved > 0) {
+    logger.info(`Removed ${duplicatesRemoved} duplicate workflow file(s)`);
+  }
+  
+  // Sync toolWorkflow node references to match actual n8n IDs
+  try {
+    const syncResult = await syncWorkflowReferences(normalizedOutputDir, workflows);
+    
+    if (syncResult.fixed > 0) {
+      logger.info(`Fixed ${syncResult.fixed} workflow reference(s) to match n8n IDs`);
+    }
+    
+    if (syncResult.notFound > 0) {
+      logger.warn(`${syncResult.notFound} referenced workflow(s) not found in n8n`);
+    }
+    
+    if (syncResult.fixed === 0 && syncResult.notFound === 0) {
+      logger.info("All workflow references are already in sync");
+    }
+  } catch (err) {
+    logger.warn("Failed to sync workflow references", err);
+    logger.info("You can manually sync later using: npm run n8n:workflows:sync");
   }
 
   process.exit(0);
