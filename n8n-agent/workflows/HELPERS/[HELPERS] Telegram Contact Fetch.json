@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-12-07T01:41:48.000Z",
-  "createdAt": "2025-12-06T17:30:00.000Z",
-  "id": "TelegramContactFetch",
+  "updatedAt": "2025-12-08T18:28:23.850Z",
+  "createdAt": "2025-12-08T18:23:28.567Z",
+  "id": "dVQffEQKunDwjwOm",
   "name": "[HELPERS] Telegram Contact Fetch",
-  "description": "Fetches and normalizes Telegram contacts from MCP",
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -46,8 +45,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "MCPDataNormalizer",
-          "mode": "id"
+          "value": "[HELPERS] MCP Data Normalizer",
+          "mode": "list",
+          "cachedResultName": "[HELPERS] MCP Data Normalizer",
+          "cachedResultUrl": "/workflow/MCPDataNormalizer"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -150,32 +151,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
   "meta": null,
-  "pinData": {},
-  "versionId": "d30fd087-61f1-4d97-981f-414fd0981393",
+  "pinData": null,
+  "versionId": "26cfdb18-65c9-418b-96a8-cf3bdc07fade",
   "activeVersionId": null,
-  "versionCounter": 6,
   "triggerCount": 0,
-  "tags": [],
   "shared": [
     {
-      "updatedAt": "2025-12-07T00:23:58.813Z",
-      "createdAt": "2025-12-07T00:23:58.813Z",
+      "updatedAt": "2025-12-08T18:23:28.567Z",
+      "createdAt": "2025-12-08T18:23:28.567Z",
       "role": "workflow:owner",
-      "workflowId": "TelegramContactFetch",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "dVQffEQKunDwjwOm",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

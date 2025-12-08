@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-11-30T20:44:16.000Z",
-  "createdAt": "2025-11-30T20:44:16.168Z",
-  "id": "XDt7ltFgr0fOjso0",
+  "updatedAt": "2025-12-08T18:32:11.657Z",
+  "createdAt": "2025-12-08T18:32:11.657Z",
+  "id": "3XNjuJ0HRacYAuTc",
   "name": "[LEGACY] Discord Context Enricher",
-  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -1241,41 +1240,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
   "meta": null,
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "userPrompt": "who is sebastian",
-          "previousAttempt": {}
-        }
-      }
-    ]
-  },
-  "versionId": "0f38e6bb-2206-490c-9251-a50684048a5b",
+  "pinData": null,
+  "versionId": "d8a04906-8c43-4d8e-8ee1-e6755da5df4b",
   "activeVersionId": null,
-  "versionCounter": 2,
   "triggerCount": 0,
-  "tags": [],
   "shared": [
     {
-      "updatedAt": "2025-11-30T20:44:16.176Z",
-      "createdAt": "2025-11-30T20:44:16.176Z",
+      "updatedAt": "2025-12-08T18:32:11.658Z",
+      "createdAt": "2025-12-08T18:32:11.658Z",
       "role": "workflow:owner",
-      "workflowId": "XDt7ltFgr0fOjso0",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "3XNjuJ0HRacYAuTc",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

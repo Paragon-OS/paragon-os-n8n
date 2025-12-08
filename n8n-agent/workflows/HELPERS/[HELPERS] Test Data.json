@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-12-07T01:43:17.000Z",
-  "createdAt": "2025-12-05T18:00:00.000Z",
-  "id": "TestDataHelper001",
+  "updatedAt": "2025-12-08T18:32:11.808Z",
+  "createdAt": "2025-12-08T18:32:11.808Z",
+  "id": "ISXRfoMgdy2sHghB",
   "name": "[HELPERS] Test Data",
-  "description": "Centralized test case store for workflow testing. Call this workflow with { workflow: 'WorkflowName', testCase: 'test-id', testData: {...} } to get test input data. The CLI passes testData directly, so file loading is not needed.",
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -65,43 +64,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "workflow": "TelegramContextScout",
-          "testCase": "self-profile"
-        }
-      }
-    ]
-  },
-  "versionId": "a1b2c3d4-test-data-0001",
+  "meta": null,
+  "pinData": null,
+  "versionId": "fe50b22c-fa21-47ba-9d1a-cc35d5a453e9",
   "activeVersionId": null,
-  "versionCounter": 5,
   "triggerCount": 0,
-  "tags": [],
   "shared": [
     {
-      "updatedAt": "2025-12-05T18:15:25.207Z",
-      "createdAt": "2025-12-05T18:15:25.207Z",
+      "updatedAt": "2025-12-08T18:32:11.809Z",
+      "createdAt": "2025-12-08T18:32:11.809Z",
       "role": "workflow:owner",
-      "workflowId": "TestDataHelper001",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "ISXRfoMgdy2sHghB",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

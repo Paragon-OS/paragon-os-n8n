@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-12-07T01:41:16.000Z",
-  "createdAt": "2025-11-17T13:03:59.561Z",
-  "id": "uoYXevOl4ePWKeNx",
+  "updatedAt": "2025-12-08T18:32:11.679Z",
+  "createdAt": "2025-12-08T18:32:11.679Z",
+  "id": "5Xt5ac1g4ASf19My",
   "name": "[HELPERS] Discord & Telegram Step Executor",
-  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -454,111 +453,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
   "meta": null,
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "executionSteps": [
-            {
-              "callParams": {
-                "chat_id": 5047309757
-              },
-              "toolName": "telegram_list_messages",
-              "reasoning": "This step lists the messages from the 'Cool N8N' chat."
-            }
-          ],
-          "targetMcp": "TELEGRAM"
-        }
-      }
-    ],
-    "No Operation, do nothing": [
-      {
-        "json": {
-          "executionSteps": [
-            {
-              "stepResult": {
-                "stepOutput": {
-                  "data": [
-                    {
-                      "id": 358401,
-                      "date": "2025-12-01T16:52:26+00:00",
-                      "text": "This is the company logo",
-                      "from_id": 5008283745,
-                      "has_media": true,
-                      "media_type": "MessageMediaPhoto",
-                      "media": {
-                        "photo_id": 6154530162435886000,
-                        "dimensions": {
-                          "width": 320,
-                          "height": 320
-                        },
-                        "size": 5656,
-                        "resource_uri": "tgfile://-5047309757/358401"
-                      }
-                    },
-                    {
-                      "id": 358400,
-                      "date": "2025-12-01T16:51:37+00:00",
-                      "text": "Hey the next message to this one has a attachment image",
-                      "from_id": 5008283745
-                    },
-                    {
-                      "id": 358398,
-                      "date": "2025-12-01T16:50:46+00:00",
-                      "text": "",
-                      "from_id": 5008283745
-                    }
-                  ]
-                },
-                "toolName": "telegram_list_messages",
-                "callParams": {
-                  "chat_id": 5047309757
-                }
-              }
-            }
-          ]
-        }
-      }
-    ]
-  },
-  "versionId": "e02bd2fc-fc14-4f1c-9c8f-3811fa7e0235",
+  "pinData": null,
+  "versionId": "6ca915d5-ba77-4f69-838e-4d9693414cb0",
   "activeVersionId": null,
-  "versionCounter": 105,
   "triggerCount": 0,
-  "tags": [
-    {
-      "updatedAt": "2025-11-02T21:22:20.646Z",
-      "createdAt": "2025-11-02T21:22:20.646Z",
-      "id": "95mwWdOxtdnkFLhS",
-      "name": "Discord"
-    },
-    {
-      "updatedAt": "2025-11-02T21:22:14.342Z",
-      "createdAt": "2025-11-02T21:22:14.342Z",
-      "id": "w6FOnYOvODOXV9os",
-      "name": "MCP"
-    }
-  ],
   "shared": [
     {
-      "updatedAt": "2025-11-17T13:03:59.565Z",
-      "createdAt": "2025-11-17T13:03:59.565Z",
+      "updatedAt": "2025-12-08T18:32:11.679Z",
+      "createdAt": "2025-12-08T18:32:11.679Z",
       "role": "workflow:owner",
-      "workflowId": "uoYXevOl4ePWKeNx",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "5Xt5ac1g4ASf19My",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

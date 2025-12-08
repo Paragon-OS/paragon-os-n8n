@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-12-07T01:41:18.000Z",
-  "createdAt": "2025-11-12T21:13:55.082Z",
-  "id": "WFlhiFmm1Tt6ICRM",
+  "updatedAt": "2025-12-08T18:32:11.414Z",
+  "createdAt": "2025-12-08T18:32:11.414Z",
+  "id": "dG5m4mBSTPWRU3Se",
   "name": "Legacy Telegram Context Enricher",
-  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -1276,50 +1275,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "userPrompt": "Who is sebastian?",
-          "previousAttempt": {}
-        }
-      }
-    ]
-  },
-  "versionId": "89243791-aea4-40ed-b246-6261338f82f4",
+  "meta": null,
+  "pinData": null,
+  "versionId": "d12c8c2b-d4c0-4c74-83ef-3624c73e8a1d",
   "activeVersionId": null,
-  "versionCounter": 62,
   "triggerCount": 0,
-  "tags": [
-    {
-      "updatedAt": "2025-11-07T17:59:49.155Z",
-      "createdAt": "2025-11-07T17:59:49.155Z",
-      "id": "q6mxN2D7JQjPEzuF",
-      "name": "Telegram"
-    }
-  ],
   "shared": [
     {
-      "updatedAt": "2025-11-12T21:13:55.089Z",
-      "createdAt": "2025-11-12T21:13:55.089Z",
+      "updatedAt": "2025-12-08T18:32:11.415Z",
+      "createdAt": "2025-12-08T18:32:11.415Z",
       "role": "workflow:owner",
-      "workflowId": "WFlhiFmm1Tt6ICRM",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "dG5m4mBSTPWRU3Se",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

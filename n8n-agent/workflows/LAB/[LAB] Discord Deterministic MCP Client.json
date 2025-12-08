@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-11-07T12:43:20.000Z",
-  "createdAt": "2025-11-06T09:54:01.835Z",
-  "id": "aAlk41R6h4hhBalt",
+  "updatedAt": "2025-12-08T18:32:11.504Z",
+  "createdAt": "2025-12-08T18:32:11.504Z",
+  "id": "0X4lWT11JngwDmJE",
   "name": "[LAB] Discord Deterministic MCP Client",
-  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -524,61 +523,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
-  "pinData": {
-    "When clicking ‘Execute workflow’": [
-      {
-        "json": {
-          "userPrompt": "list main channels in wandrlust"
-        }
-      }
-    ]
-  },
-  "versionId": "d934bc82-7027-4978-8044-b2bdc3261aa6",
+  "meta": null,
+  "pinData": null,
+  "versionId": "af26e07e-1e51-4cd2-b203-16f815b7da48",
   "activeVersionId": null,
-  "versionCounter": 3,
   "triggerCount": 0,
-  "tags": [
-    {
-      "updatedAt": "2025-11-02T21:22:20.646Z",
-      "createdAt": "2025-11-02T21:22:20.646Z",
-      "id": "95mwWdOxtdnkFLhS",
-      "name": "Discord"
-    },
-    {
-      "updatedAt": "2025-11-07T12:42:46.406Z",
-      "createdAt": "2025-11-07T12:42:46.406Z",
-      "id": "nP0FjyF3pFepp7fe",
-      "name": "LAB"
-    },
-    {
-      "updatedAt": "2025-11-02T21:22:14.342Z",
-      "createdAt": "2025-11-02T21:22:14.342Z",
-      "id": "w6FOnYOvODOXV9os",
-      "name": "MCP"
-    }
-  ],
   "shared": [
     {
-      "updatedAt": "2025-11-06T09:54:01.839Z",
-      "createdAt": "2025-11-06T09:54:01.839Z",
+      "updatedAt": "2025-12-08T18:32:11.505Z",
+      "createdAt": "2025-12-08T18:32:11.505Z",
       "role": "workflow:owner",
-      "workflowId": "aAlk41R6h4hhBalt",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "0X4lWT11JngwDmJE",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

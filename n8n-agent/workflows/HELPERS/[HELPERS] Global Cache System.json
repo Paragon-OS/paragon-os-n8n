@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-12-07T01:41:52.000Z",
-  "createdAt": "2025-12-06T09:53:57.673Z",
-  "id": "zZfQPFI7JkUjGspq",
+  "updatedAt": "2025-12-08T18:28:23.801Z",
+  "createdAt": "2025-12-08T18:23:28.540Z",
+  "id": "6kBor4QBA0bO5gQI",
   "name": "[HELPERS] Global Cache System",
-  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -359,44 +358,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
   "meta": null,
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "userPrompt": "Who is sebastian on Telegram?",
-          "previousAttempt": {},
-          "cacheKey": "telegramContacts",
-          "trueToWrite": false,
-          "writeTTLms": 0
-        }
-      }
-    ]
-  },
-  "versionId": "b52e1436-15f5-4f64-bb07-d22b694bf58e",
+  "pinData": null,
+  "versionId": "bb6b7d78-4a9b-45f4-a0df-382100a4878a",
   "activeVersionId": null,
-  "versionCounter": 53,
   "triggerCount": 0,
-  "tags": [],
   "shared": [
     {
-      "updatedAt": "2025-12-06T09:53:57.676Z",
-      "createdAt": "2025-12-06T09:53:57.676Z",
+      "updatedAt": "2025-12-08T18:23:28.541Z",
+      "createdAt": "2025-12-08T18:23:28.541Z",
       "role": "workflow:owner",
-      "workflowId": "zZfQPFI7JkUjGspq",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "6kBor4QBA0bO5gQI",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

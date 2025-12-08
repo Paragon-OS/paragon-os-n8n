@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-11-26T20:11:40.000Z",
-  "createdAt": "2025-11-26T05:17:31.999Z",
-  "id": "kbdWHcsSbJUgODWD",
+  "updatedAt": "2025-12-08T18:28:24.325Z",
+  "createdAt": "2025-12-08T18:23:28.404Z",
+  "id": "0ytFlfLvJx8lEC6h",
   "name": "[LAB] MCP Server",
-  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -79,32 +78,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
   "meta": null,
-  "pinData": {},
-  "versionId": "4f888528-285b-48f2-bfa9-d1a1509437fa",
+  "pinData": null,
+  "versionId": "1782b143-3e65-426d-95a4-659d2718b27b",
   "activeVersionId": null,
-  "versionCounter": 9,
   "triggerCount": 0,
-  "tags": [],
   "shared": [
     {
-      "updatedAt": "2025-11-26T05:17:32.006Z",
-      "createdAt": "2025-11-26T05:17:32.006Z",
+      "updatedAt": "2025-12-08T18:23:28.405Z",
+      "createdAt": "2025-12-08T18:23:28.405Z",
       "role": "workflow:owner",
-      "workflowId": "kbdWHcsSbJUgODWD",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "0ytFlfLvJx8lEC6h",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

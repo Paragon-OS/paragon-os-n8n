@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-12-07T01:46:56.000Z",
-  "createdAt": "2025-12-06T17:30:00.000Z",
-  "id": "TelegramToolFetch",
+  "updatedAt": "2025-12-08T18:28:23.901Z",
+  "createdAt": "2025-12-08T18:23:28.596Z",
+  "id": "BLDfYvDSiF96mIgp",
   "name": "[HELPERS] Telegram Tool Fetch",
-  "description": "Fetches and normalizes Telegram MCP tools",
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -77,32 +76,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
   "meta": null,
-  "pinData": {},
-  "versionId": "7b698747-c801-42d4-ae91-ec31f3c0ad6a",
+  "pinData": null,
+  "versionId": "c60f426c-a92d-4d75-abbd-dd0f77b11491",
   "activeVersionId": null,
-  "versionCounter": 6,
   "triggerCount": 0,
-  "tags": [],
   "shared": [
     {
-      "updatedAt": "2025-12-07T00:24:02.987Z",
-      "createdAt": "2025-12-07T00:24:02.987Z",
+      "updatedAt": "2025-12-08T18:23:28.596Z",
+      "createdAt": "2025-12-08T18:23:28.596Z",
       "role": "workflow:owner",
-      "workflowId": "TelegramToolFetch",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "BLDfYvDSiF96mIgp",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

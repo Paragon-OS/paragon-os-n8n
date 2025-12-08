@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-11-07T12:43:35.000Z",
-  "createdAt": "2025-11-04T08:49:45.191Z",
-  "id": "hSb1J5CmvO8KcWPv",
+  "updatedAt": "2025-12-08T18:28:24.194Z",
+  "createdAt": "2025-12-08T18:23:28.363Z",
+  "id": "9nTbZ1JUFuPaWoXh",
   "name": "[LAB] Discord Message Retriever",
-  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -543,41 +542,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
-  "pinData": {},
-  "versionId": "0a863fa7-6a53-4096-a002-708adf24179a",
+  "meta": null,
+  "pinData": null,
+  "versionId": "3da8296c-280e-42f2-9a23-10260c6b51e5",
   "activeVersionId": null,
-  "versionCounter": 2,
   "triggerCount": 0,
-  "tags": [
-    {
-      "updatedAt": "2025-11-07T12:42:46.406Z",
-      "createdAt": "2025-11-07T12:42:46.406Z",
-      "id": "nP0FjyF3pFepp7fe",
-      "name": "LAB"
-    }
-  ],
   "shared": [
     {
-      "updatedAt": "2025-11-04T08:49:45.194Z",
-      "createdAt": "2025-11-04T08:49:45.194Z",
+      "updatedAt": "2025-12-08T18:23:28.363Z",
+      "createdAt": "2025-12-08T18:23:28.363Z",
       "role": "workflow:owner",
-      "workflowId": "hSb1J5CmvO8KcWPv",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "9nTbZ1JUFuPaWoXh",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

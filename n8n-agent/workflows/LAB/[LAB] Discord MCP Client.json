@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-11-07T12:44:43.000Z",
-  "createdAt": "2025-10-30T15:38:17.824Z",
-  "id": "qXzz33pAVkLd4UOO",
+  "updatedAt": "2025-12-08T18:32:11.534Z",
+  "createdAt": "2025-12-08T18:32:11.534Z",
+  "id": "ick7jPJ9fqWf1W9f",
   "name": "[LAB] Discord MCP Client",
-  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -79,7 +78,7 @@
       "credentials": {
         "mcpClientApi": {
           "id": "ZFofx3k2ze1wsifx",
-          "name": "Discord MCP Server"
+          "name": "Discord MCP Client (STDIO) account"
         }
       }
     },
@@ -99,7 +98,7 @@
       "credentials": {
         "mcpClientApi": {
           "id": "ZFofx3k2ze1wsifx",
-          "name": "Discord MCP Server"
+          "name": "Discord MCP Client (STDIO) account"
         }
       }
     },
@@ -398,62 +397,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "chatInput": "get last 10 messages with sebastianMoy.",
-          "outputType": "DIRECT_MESSAGES"
-        }
-      }
-    ]
-  },
-  "versionId": "8efe0ace-d946-4e56-b6e9-6816d69204bc",
+  "meta": null,
+  "pinData": null,
+  "versionId": "ff4be366-b9ad-495e-b9a9-895eebc1f8f5",
   "activeVersionId": null,
-  "versionCounter": 2,
   "triggerCount": 0,
-  "tags": [
-    {
-      "updatedAt": "2025-11-02T21:22:20.646Z",
-      "createdAt": "2025-11-02T21:22:20.646Z",
-      "id": "95mwWdOxtdnkFLhS",
-      "name": "Discord"
-    },
-    {
-      "updatedAt": "2025-11-07T12:42:46.406Z",
-      "createdAt": "2025-11-07T12:42:46.406Z",
-      "id": "nP0FjyF3pFepp7fe",
-      "name": "LAB"
-    },
-    {
-      "updatedAt": "2025-11-02T21:22:14.342Z",
-      "createdAt": "2025-11-02T21:22:14.342Z",
-      "id": "w6FOnYOvODOXV9os",
-      "name": "MCP"
-    }
-  ],
   "shared": [
     {
-      "updatedAt": "2025-10-30T15:38:17.826Z",
-      "createdAt": "2025-10-30T15:38:17.826Z",
+      "updatedAt": "2025-12-08T18:32:11.535Z",
+      "createdAt": "2025-12-08T18:32:11.535Z",
       "role": "workflow:owner",
-      "workflowId": "qXzz33pAVkLd4UOO",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "ick7jPJ9fqWf1W9f",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-11-07T12:44:06.000Z",
-  "createdAt": "2025-11-02T21:18:12.287Z",
-  "id": "KW9f0WRpcj4EneUm",
+  "updatedAt": "2025-12-08T18:32:11.492Z",
+  "createdAt": "2025-12-08T18:32:11.492Z",
+  "id": "DVfzmcM5uoLer2ox",
   "name": "[LAB] Discord Contact Indexer",
-  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -164,7 +163,7 @@
       "credentials": {
         "mcpClientApi": {
           "id": "ZFofx3k2ze1wsifx",
-          "name": "Discord MCP Server"
+          "name": "Discord MCP Client (STDIO) account"
         }
       }
     },
@@ -546,49 +545,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "indexingOrQueryRequest": "who is sebastian"
-        }
-      }
-    ]
-  },
-  "versionId": "89c8a4c9-e337-4804-910c-2565cc5369c0",
+  "meta": null,
+  "pinData": null,
+  "versionId": "0542053e-bb49-4acb-9198-7f6f483f13de",
   "activeVersionId": null,
-  "versionCounter": 2,
   "triggerCount": 0,
-  "tags": [
-    {
-      "updatedAt": "2025-11-07T12:42:46.406Z",
-      "createdAt": "2025-11-07T12:42:46.406Z",
-      "id": "nP0FjyF3pFepp7fe",
-      "name": "LAB"
-    }
-  ],
   "shared": [
     {
-      "updatedAt": "2025-11-02T21:18:12.290Z",
-      "createdAt": "2025-11-02T21:18:12.290Z",
+      "updatedAt": "2025-12-08T18:32:11.494Z",
+      "createdAt": "2025-12-08T18:32:11.494Z",
       "role": "workflow:owner",
-      "workflowId": "KW9f0WRpcj4EneUm",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "DVfzmcM5uoLer2ox",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

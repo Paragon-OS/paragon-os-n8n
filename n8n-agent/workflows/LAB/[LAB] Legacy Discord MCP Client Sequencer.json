@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-11-30T20:37:17.000Z",
-  "createdAt": "2025-11-30T11:44:00.998Z",
-  "id": "UmVILcJm4YeLsvxf",
+  "updatedAt": "2025-12-08T18:32:11.597Z",
+  "createdAt": "2025-12-08T18:32:11.597Z",
+  "id": "2EBwaSh8PDykgOpE",
   "name": "[LAB] Legacy Discord MCP Client Sequencer",
-  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -686,102 +685,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "userPrompt": "List the last 10 messages in the Discord channel 'staryo-admin'",
-          "metadata": {
-            "sessionId": "sample-session-id-1",
-            "messageId": "sample-message-id-1",
-            "streamUrl": "http://localhost:3000/api/stream/update"
-          }
-        }
-      }
-    ],
-    "Enrich With Discord Context": [
-      {
-        "json": {
-          "userPrompt": "List the last 10 messages in the Discord channel 'staryo-admin-only' in the 'Metarune Labs' guild.",
-          "context": {
-            "serversOrGuilds": [
-              {
-                "name": "Metarune Labs",
-                "channels": {
-                  "1277593921886883850": "staryo-admin-only"
-                },
-                "id": "1277590071574401084"
-              }
-            ],
-            "discordContacts": [],
-            "toolRecommendations": {
-              "discord_read_channel": {
-                "parameters": {
-                  "limit": 10,
-                  "channelId": "1277593921886883850"
-                }
-              }
-            },
-            "myProfile": {
-              "user": {
-                "id": "711983662144421991",
-                "username": "paragonthedev",
-                "discriminator": "0",
-                "tag": "paragonthedev",
-                "bot": false,
-                "verified": true,
-                "createdAt": 1589820533072
-              },
-              "status": "online",
-              "guildCount": 11,
-              "channelCount": 816
-            },
-            "previousAttempt": {}
-          }
-        }
-      }
-    ]
-  },
-  "versionId": "63773e00-c0d3-46d2-a883-97d8e1154ecc",
+  "meta": null,
+  "pinData": null,
+  "versionId": "73b624b8-cdaa-4cce-9305-b5c6ea00e5ce",
   "activeVersionId": null,
-  "versionCounter": 275,
   "triggerCount": 0,
-  "tags": [
-    {
-      "updatedAt": "2025-11-02T21:22:20.646Z",
-      "createdAt": "2025-11-02T21:22:20.646Z",
-      "id": "95mwWdOxtdnkFLhS",
-      "name": "Discord"
-    },
-    {
-      "updatedAt": "2025-11-02T21:22:14.342Z",
-      "createdAt": "2025-11-02T21:22:14.342Z",
-      "id": "w6FOnYOvODOXV9os",
-      "name": "MCP"
-    }
-  ],
   "shared": [
     {
-      "updatedAt": "2025-11-30T11:44:01.003Z",
-      "createdAt": "2025-11-30T11:44:01.003Z",
+      "updatedAt": "2025-12-08T18:32:11.598Z",
+      "createdAt": "2025-12-08T18:32:11.598Z",
       "role": "workflow:owner",
-      "workflowId": "UmVILcJm4YeLsvxf",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "2EBwaSh8PDykgOpE",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

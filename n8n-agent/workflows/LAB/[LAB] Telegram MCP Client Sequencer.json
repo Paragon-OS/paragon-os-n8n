@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-11-30T20:37:18.000Z",
-  "createdAt": "2025-11-19T21:40:51.636Z",
-  "id": "rjoIG01kPyzaQwcU",
+  "updatedAt": "2025-12-08T18:28:24.489Z",
+  "createdAt": "2025-12-08T18:23:28.432Z",
+  "id": "iZVz81X2IcZ54pTM",
   "name": "[LAB] Telegram MCP Client Sequencer",
-  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -643,60 +642,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "userPrompt": "List last 5 messages with sebastian",
-          "metadata": {
-            "sessionId": "sample-session-id-1",
-            "messageId": "sample-message-id-1",
-            "streamUrl": "http://localhost:3000/api/stream/update"
-          }
-        }
-      }
-    ]
-  },
-  "versionId": "5a2e06db-30f5-4338-bfb7-757c7e5f7855",
+  "meta": null,
+  "pinData": null,
+  "versionId": "85e5401b-ab39-40fe-bed4-19db832d72d0",
   "activeVersionId": null,
-  "versionCounter": 304,
   "triggerCount": 0,
-  "tags": [
-    {
-      "updatedAt": "2025-11-02T21:22:20.646Z",
-      "createdAt": "2025-11-02T21:22:20.646Z",
-      "id": "95mwWdOxtdnkFLhS",
-      "name": "Discord"
-    },
-    {
-      "updatedAt": "2025-11-02T21:22:14.342Z",
-      "createdAt": "2025-11-02T21:22:14.342Z",
-      "id": "w6FOnYOvODOXV9os",
-      "name": "MCP"
-    }
-  ],
   "shared": [
     {
-      "updatedAt": "2025-11-19T21:40:51.641Z",
-      "createdAt": "2025-11-19T21:40:51.641Z",
+      "updatedAt": "2025-12-08T18:23:28.432Z",
+      "createdAt": "2025-12-08T18:23:28.432Z",
       "role": "workflow:owner",
-      "workflowId": "rjoIG01kPyzaQwcU",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "iZVz81X2IcZ54pTM",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

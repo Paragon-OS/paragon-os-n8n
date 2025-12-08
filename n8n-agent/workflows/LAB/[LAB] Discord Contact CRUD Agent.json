@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-11-07T12:44:21.000Z",
-  "createdAt": "2025-11-02T08:02:03.059Z",
-  "id": "VIzl0XsRciC94VMQ",
+  "updatedAt": "2025-12-08T18:32:11.481Z",
+  "createdAt": "2025-12-08T18:32:11.481Z",
+  "id": "BhZIyWhqylUeaNKW",
   "name": "[LAB] Discord Contact CRUD Agent",
-  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -447,47 +446,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
   "meta": null,
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "indexingPrompt": "Index all contacts from Direct Messages"
-        }
-      }
-    ]
-  },
-  "versionId": "eb811803-0cc7-48ca-95c0-76c2a1d74e3f",
+  "pinData": null,
+  "versionId": "bc5348ad-8d0e-4df9-a5d0-4fda7dd57976",
   "activeVersionId": null,
-  "versionCounter": 2,
   "triggerCount": 0,
-  "tags": [
-    {
-      "updatedAt": "2025-11-07T12:42:46.406Z",
-      "createdAt": "2025-11-07T12:42:46.406Z",
-      "id": "nP0FjyF3pFepp7fe",
-      "name": "LAB"
-    }
-  ],
   "shared": [
     {
-      "updatedAt": "2025-11-02T08:02:03.065Z",
-      "createdAt": "2025-11-02T08:02:03.065Z",
+      "updatedAt": "2025-12-08T18:32:11.483Z",
+      "createdAt": "2025-12-08T18:32:11.483Z",
       "role": "workflow:owner",
-      "workflowId": "VIzl0XsRciC94VMQ",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "BhZIyWhqylUeaNKW",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

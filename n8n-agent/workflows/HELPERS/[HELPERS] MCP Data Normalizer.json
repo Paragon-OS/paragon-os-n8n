@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-12-07T01:41:44.000Z",
-  "createdAt": "2025-12-06T17:30:00.000Z",
-  "id": "MCPDataNormalizer",
+  "updatedAt": "2025-12-08T18:28:23.818Z",
+  "createdAt": "2025-12-08T18:23:28.549Z",
+  "id": "5OV0s43G1DYigS2p",
   "name": "[HELPERS] MCP Data Normalizer",
-  "description": "Normalizes MCP response data using a configurable mapper function. Extracts data from MCP response format and transforms it using the provided mapper.",
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -68,32 +67,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "mcp-normalizer-v1",
+  "versionId": "5f023418-123e-480d-8556-d611c8ccda1e",
   "activeVersionId": null,
-  "versionCounter": 4,
   "triggerCount": 0,
-  "tags": [],
   "shared": [
     {
-      "updatedAt": "2025-12-07T00:23:50.371Z",
-      "createdAt": "2025-12-07T00:23:50.371Z",
+      "updatedAt": "2025-12-08T18:23:28.550Z",
+      "createdAt": "2025-12-08T18:23:28.550Z",
       "role": "workflow:owner",
-      "workflowId": "MCPDataNormalizer",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "5OV0s43G1DYigS2p",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

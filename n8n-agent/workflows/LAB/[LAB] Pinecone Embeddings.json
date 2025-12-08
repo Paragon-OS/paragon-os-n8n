@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-11-30T05:18:43.000Z",
-  "createdAt": "2025-11-28T22:18:06.049Z",
-  "id": "iaJ7xXs647QyMHGF",
+  "updatedAt": "2025-12-08T18:28:24.397Z",
+  "createdAt": "2025-12-08T18:23:28.413Z",
+  "id": "dFIeZB3c7ecz9PPy",
   "name": "[LAB] Pinecone Embeddings",
-  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -289,34 +288,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
-  "pinData": {},
-  "versionId": "1a680104-a30c-413e-89f1-b5330db9badf",
+  "meta": null,
+  "pinData": null,
+  "versionId": "9b46ed61-1396-497e-b302-e87b3490e36c",
   "activeVersionId": null,
-  "versionCounter": 128,
   "triggerCount": 0,
-  "tags": [],
   "shared": [
     {
-      "updatedAt": "2025-11-28T22:18:06.056Z",
-      "createdAt": "2025-11-28T22:18:06.056Z",
+      "updatedAt": "2025-12-08T18:23:28.414Z",
+      "createdAt": "2025-12-08T18:23:28.414Z",
       "role": "workflow:owner",
-      "workflowId": "iaJ7xXs647QyMHGF",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "dFIeZB3c7ecz9PPy",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

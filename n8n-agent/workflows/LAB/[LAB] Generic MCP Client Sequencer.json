@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-11-16T14:37:40.000Z",
-  "createdAt": "2025-11-12T23:05:43.150Z",
-  "id": "Ivkq7vq8ZTC7C1pg",
+  "updatedAt": "2025-12-08T18:32:11.586Z",
+  "createdAt": "2025-12-08T18:32:11.586Z",
+  "id": "3xrR1G2WAqBVsMBT",
   "name": "[LAB] Generic MCP Client Sequencer",
-  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -409,7 +408,7 @@
       "credentials": {
         "mcpClientApi": {
           "id": "ZFofx3k2ze1wsifx",
-          "name": "Discord MCP Server"
+          "name": "Discord MCP Client (STDIO) account"
         }
       },
       "onError": "continueErrorOutput"
@@ -805,55 +804,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "userPrompt": "list channels in metarune labs guild"
-        }
-      }
-    ]
-  },
-  "versionId": "e41ab471-d739-472b-8825-1374423e9e83",
+  "meta": null,
+  "pinData": null,
+  "versionId": "5c28edef-836e-40d2-b722-4ee81be44663",
   "activeVersionId": null,
-  "versionCounter": 56,
   "triggerCount": 0,
-  "tags": [
-    {
-      "updatedAt": "2025-11-02T21:22:20.646Z",
-      "createdAt": "2025-11-02T21:22:20.646Z",
-      "id": "95mwWdOxtdnkFLhS",
-      "name": "Discord"
-    },
-    {
-      "updatedAt": "2025-11-02T21:22:14.342Z",
-      "createdAt": "2025-11-02T21:22:14.342Z",
-      "id": "w6FOnYOvODOXV9os",
-      "name": "MCP"
-    }
-  ],
   "shared": [
     {
-      "updatedAt": "2025-11-12T23:05:43.159Z",
-      "createdAt": "2025-11-12T23:05:43.159Z",
+      "updatedAt": "2025-12-08T18:32:11.587Z",
+      "createdAt": "2025-12-08T18:32:11.587Z",
       "role": "workflow:owner",
-      "workflowId": "Ivkq7vq8ZTC7C1pg",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "3xrR1G2WAqBVsMBT",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

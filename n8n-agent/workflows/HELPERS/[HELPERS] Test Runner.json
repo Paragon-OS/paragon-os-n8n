@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-12-07T01:43:14.000Z",
-  "createdAt": "2025-12-05T18:10:00.000Z",
-  "id": "TestRunnerHelper001",
+  "updatedAt": "2025-12-08T08:37:06.890Z",
+  "createdAt": "2025-12-08T08:37:06.890Z",
+  "id": "kWkxTKac3HHDwWEm",
   "name": "[HELPERS] Test Runner",
-  "description": "Run test cases against any workflow. Select the workflow and test case, then execute to see results.",
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -292,7 +291,7 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "Q5M9oudKeKapcB4t",
+          "value": "IZa7S90Z9W1qxysr",
           "mode": "id"
         },
         "workflowInputs": {
@@ -343,54 +342,7 @@
         1140,
         400
       ],
-      "typeVersion": 1.3,
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "Q5M9oudKeKapcB4t",
-          "mode": "id"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "mode": "={{ $json.mode }}",
-            "collectionId": "={{ $json.collectionId }}",
-            "input": "={{ $json.input }}"
-          },
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "mode",
-              "displayName": "mode",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string"
-            },
-            {
-              "id": "collectionId",
-              "displayName": "collectionId",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string"
-            },
-            {
-              "id": "input",
-              "displayName": "input",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      }
+      "typeVersion": 1.3
     },
     {
       "parameters": {
@@ -682,34 +634,17 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
-  "pinData": {},
-  "versionId": "b2c3d4e5-test-runner-0001",
+  "meta": null,
+  "pinData": null,
+  "versionId": "1e3f4ca8-44ad-44c0-aae8-5c167c1db059",
   "activeVersionId": null,
-  "versionCounter": 5,
   "triggerCount": 0,
-  "tags": [],
-  "shared": [
-    {
-      "updatedAt": "2025-12-05T18:20:43.210Z",
-      "createdAt": "2025-12-05T18:20:43.210Z",
-      "role": "workflow:owner",
-      "workflowId": "TestRunnerHelper001",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
-    }
-  ]
+  "shared": [],
+  "activeVersion": null,
+  "tags": []
 }

@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-12-07T15:09:06.000Z",
-  "createdAt": "2025-11-30T21:05:00.000Z",
-  "id": "TelegramSmartAgent",
+  "updatedAt": "2025-12-08T18:28:23.636Z",
+  "createdAt": "2025-12-08T18:23:28.255Z",
+  "id": "ktEA5rSUrk7NRMxk",
   "name": "Telegram Smart Agent",
-  "description": "High-level Telegram orchestration agent that uses a unified Telegram Context Scout search tool and a shared Step Executor to plan, execute, and answer user prompts involving Telegram chats, contacts, and media.",
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -338,7 +337,9 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
   "meta": null,
@@ -346,45 +347,23 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "userPrompt": "who am i?"
+          "userPrompt": "hey! who is pasindu"
         }
       }
     ]
   },
-  "versionId": "a136ff18-9fc9-4315-94f1-b6e86dc2ad31",
+  "versionId": "e24bbb50-6f32-4803-8b2f-772f6190277f",
   "activeVersionId": null,
-  "versionCounter": 36,
   "triggerCount": 0,
-  "tags": [
-    {
-      "updatedAt": "2025-11-07T17:59:49.155Z",
-      "createdAt": "2025-11-07T17:59:49.155Z",
-      "id": "q6mxN2D7JQjPEzuF",
-      "name": "Telegram"
-    },
-    {
-      "updatedAt": "2025-11-02T21:22:14.342Z",
-      "createdAt": "2025-11-02T21:22:14.342Z",
-      "id": "w6FOnYOvODOXV9os",
-      "name": "MCP"
-    }
-  ],
   "shared": [
     {
-      "updatedAt": "2025-11-30T20:54:44.561Z",
-      "createdAt": "2025-11-30T20:54:44.561Z",
+      "updatedAt": "2025-12-08T18:23:28.256Z",
+      "createdAt": "2025-12-08T18:23:28.256Z",
       "role": "workflow:owner",
-      "workflowId": "TelegramSmartAgent",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "ktEA5rSUrk7NRMxk",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

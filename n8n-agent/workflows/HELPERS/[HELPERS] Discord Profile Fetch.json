@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-12-07T01:45:59.000Z",
-  "createdAt": "2025-12-06T17:30:00.000Z",
-  "id": "DiscordProfileFetch",
+  "updatedAt": "2025-12-08T18:28:23.711Z",
+  "createdAt": "2025-12-08T18:23:28.493Z",
+  "id": "DeGVilnG6cey6qMw",
   "name": "[HELPERS] Discord Profile Fetch",
-  "description": "Fetches and normalizes Discord user profile",
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -81,32 +80,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
   "meta": null,
-  "pinData": {},
-  "versionId": "8c6d7112-560f-45d6-9ff6-aa1d84f6a8a9",
+  "pinData": null,
+  "versionId": "968a45b2-1a5f-46eb-9102-4fa947ea8172",
   "activeVersionId": null,
-  "versionCounter": 6,
   "triggerCount": 0,
-  "tags": [],
   "shared": [
     {
-      "updatedAt": "2025-12-07T00:23:54.575Z",
-      "createdAt": "2025-12-07T00:23:54.575Z",
+      "updatedAt": "2025-12-08T18:23:28.493Z",
+      "createdAt": "2025-12-08T18:23:28.493Z",
       "role": "workflow:owner",
-      "workflowId": "DiscordProfileFetch",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "DeGVilnG6cey6qMw",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

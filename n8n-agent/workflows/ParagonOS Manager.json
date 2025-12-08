@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-12-07T12:01:21.000Z",
-  "createdAt": "2025-11-06T23:04:10.688Z",
-  "id": "z1Ry4y4k5dGR0BqR",
+  "updatedAt": "2025-12-08T18:32:11.426Z",
+  "createdAt": "2025-12-08T18:32:11.426Z",
+  "id": "qyhAOdaOLyZV11vu",
   "name": "ParagonOS Manager",
-  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -375,87 +374,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "chatInput": "find staryo admin only channel in metarune labs guild, then list messages"
-        }
-      }
-    ],
-    "Webhook1": [
-      {
-        "json": {
-          "body": {
-            "userPrompt": "List the last 10 messages in the Discord channel 'staryo-admin'",
-            "metadata": {
-              "sessionId": "sample-session-id-1",
-              "messageId": "sample-message-id-1",
-              "streamUrl": "http://localhost:3000/api/stream/update"
-            }
-          }
-        }
-      }
-    ],
-    "When chat message received": [
-      {
-        "json": {
-          "sessionId": "c7c92ef4ad0e4f31926488306cb9eddd",
-          "action": "sendMessage",
-          "chatInput": "is there anyone named like sano or pasindu on discord or telegram?"
-        }
-      }
-    ],
-    "Test Admin Agent": [
-      {
-        "json": {
-          "sessionId": "c7c92ef4ad0e4f31926488306cb9eddd",
-          "action": "sendMessage",
-          "chatInput": "is there anyone named like sano or pasindu on discord or telegram?"
-        }
-      }
-    ]
-  },
-  "versionId": "b42f9196-0d54-4710-97e0-7b7dcf318533",
+  "meta": null,
+  "pinData": null,
+  "versionId": "ed9f59fe-f36c-436e-9c71-3fc7618ccf3d",
   "activeVersionId": null,
-  "versionCounter": 337,
-  "triggerCount": 1,
-  "tags": [
-    {
-      "updatedAt": "2025-11-02T21:22:20.646Z",
-      "createdAt": "2025-11-02T21:22:20.646Z",
-      "id": "95mwWdOxtdnkFLhS",
-      "name": "Discord"
-    },
-    {
-      "updatedAt": "2025-11-07T17:59:49.155Z",
-      "createdAt": "2025-11-07T17:59:49.155Z",
-      "id": "q6mxN2D7JQjPEzuF",
-      "name": "Telegram"
-    }
-  ],
+  "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-11-06T23:04:10.693Z",
-      "createdAt": "2025-11-06T23:04:10.693Z",
+      "updatedAt": "2025-12-08T18:32:11.427Z",
+      "createdAt": "2025-12-08T18:32:11.427Z",
       "role": "workflow:owner",
-      "workflowId": "z1Ry4y4k5dGR0BqR",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "qyhAOdaOLyZV11vu",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

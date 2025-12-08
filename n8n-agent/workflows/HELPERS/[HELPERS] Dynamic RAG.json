@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-12-07T01:41:56.000Z",
-  "createdAt": "2025-12-02T01:18:35.706Z",
-  "id": "IZa7S90Z9W1qxysr",
+  "updatedAt": "2025-12-08T18:28:23.745Z",
+  "createdAt": "2025-12-08T18:23:28.510Z",
+  "id": "29WRubfOxURqZKuM",
   "name": "[HELPERS] Dynamic RAG",
-  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -1381,42 +1380,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "mode": "SEARCH"
-        }
-      }
-    ]
-  },
-  "versionId": "88503ea7-95d6-4cb6-ad4d-70d3f7564967",
+  "meta": null,
+  "pinData": null,
+  "versionId": "b75dc662-7846-4240-9096-761cb59ed4f9",
   "activeVersionId": null,
-  "versionCounter": 133,
   "triggerCount": 0,
-  "tags": [],
   "shared": [
     {
-      "updatedAt": "2025-12-02T01:18:35.713Z",
-      "createdAt": "2025-12-02T01:18:35.713Z",
+      "updatedAt": "2025-12-08T18:23:28.511Z",
+      "createdAt": "2025-12-08T18:23:28.511Z",
       "role": "workflow:owner",
-      "workflowId": "IZa7S90Z9W1qxysr",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "29WRubfOxURqZKuM",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

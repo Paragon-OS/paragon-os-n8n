@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-12-07T02:15:59.000Z",
-  "createdAt": "2025-11-30T21:00:00.000Z",
-  "id": "TelegramContextScout",
+  "updatedAt": "2025-12-08T18:28:23.617Z",
+  "createdAt": "2025-12-08T18:23:28.247Z",
+  "id": "65omL2eir1jG8xeI",
   "name": "Telegram Context Scout",
-  "description": "This workflow provides a fast, consistent lookup system for Telegram data by combining MCP tools, structured normalization, caching, and fuzzy search.\n\nIt supports six entity types:\n\n**contact**\nSearches Telegram contacts using RAG (semantic search) for better matching on names, usernames, and context. Uses the `paragon-os-contacts` collection internally. This is the primary contact search method.\n\n**contact-rag**\nAlias for `contact` - also searches Telegram contacts using RAG (semantic search). Both `contact` and `contact-rag` use the same RAG-based search implementation.\n\n**chat**\nRepresents a Telegram chat (DM, group, channel) returned by the `telegram_list_chats` MCP tool. Each chat is normalized to include id, name, members, kind, and unread.\n\n**tool**\nRepresents an MCP tool exposed by the Telegram MCP server. Each item includes the tool name, description and the exact tool call schema.\n\n**self**\nRepresents current user's own Telegram profile. It's a single item including id, username, and other profile details. This entity ignores the `query` parameter.\n\n**message-rag**\nSearches Telegram messages using RAG (semantic search) for finding messages by content, sender, or context. Uses the `paragon-os-messages` collection internally.\n\n### What the workflow does\n\n**1. Retrieval**\nWhen an entity type is requested, the workflow fetches the relevant raw data from the appropriate MCP tool unless valid cached data is already available.\n\n**2. Normalization**\nFetched data is transformed into a predictable format for each entity category, enabling reliable fuzzy matching downstream.\n\n**3. Caching**\nAll data types are cached independently with a TTL to reduce repeated MCP calls and improve tool execution speed.\n\n**4. Query Processing**\nThe workflow accepts a search query along with an entity type, then performs fuzzy matching over the appropriate cached dataset and returns the most relevant matches along with match scores.\n\n**5. RAG Operations**\nFor RAG-based entity types (contact, contact-rag, message-rag), the workflow uses semantic search and can store/retrieve information from vector collections.\n\nUse this tool whenever a workflow needs structured Telegram data lookup for contacts, chats, or Telegram MCP tools.",
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -62,8 +61,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "GenericContextScoutCore",
-          "mode": "id"
+          "value": "[HELPERS] Generic Context Scout Core",
+          "mode": "list",
+          "cachedResultName": "[HELPERS] Generic Context Scout Core",
+          "cachedResultUrl": "/workflow/GenericContextScoutCore"
         },
         "workflowInputs": {
           "mappingMode": "mapEachItem",
@@ -153,54 +154,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
   "meta": null,
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "entity": "tool",
-          "query": "send message"
-        }
-      }
-    ]
-  },
-  "versionId": "effd89c9-0a33-433c-9d37-50e4f942624e",
+  "pinData": null,
+  "versionId": "fc095b0e-7083-4f93-93dd-278275d7d52f",
   "activeVersionId": null,
-  "versionCounter": 60,
   "triggerCount": 0,
-  "tags": [
-    {
-      "updatedAt": "2025-11-07T17:59:49.155Z",
-      "createdAt": "2025-11-07T17:59:49.155Z",
-      "id": "q6mxN2D7JQjPEzuF",
-      "name": "Telegram"
-    },
-    {
-      "updatedAt": "2025-11-02T21:22:14.342Z",
-      "createdAt": "2025-11-02T21:22:14.342Z",
-      "id": "w6FOnYOvODOXV9os",
-      "name": "MCP"
-    }
-  ],
   "shared": [
     {
-      "updatedAt": "2025-11-30T20:54:42.692Z",
-      "createdAt": "2025-11-30T20:54:42.692Z",
+      "updatedAt": "2025-12-08T18:23:28.248Z",
+      "createdAt": "2025-12-08T18:23:28.248Z",
       "role": "workflow:owner",
-      "workflowId": "TelegramContextScout",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "65omL2eir1jG8xeI",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }

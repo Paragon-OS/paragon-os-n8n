@@ -1,9 +1,8 @@
 {
-  "updatedAt": "2025-11-17T07:19:44.000Z",
-  "createdAt": "2025-11-16T16:28:00.502Z",
-  "id": "LhOq7oS95v5spmX3",
+  "updatedAt": "2025-12-08T18:32:11.637Z",
+  "createdAt": "2025-12-08T18:32:11.637Z",
+  "id": "3socXFa2UjsnmIiH",
   "name": "[LAB] Playbook v1 ParagonOS Manager",
-  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -464,42 +463,25 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "chatInput": "find staryo admin only channel in metarune labs guild, then list messages"
-        }
-      }
-    ]
-  },
-  "versionId": "9f724db9-4cb6-427c-856a-f0624414013f",
+  "meta": null,
+  "pinData": null,
+  "versionId": "a554df1f-08b1-4b7e-a82f-4ac837b9b275",
   "activeVersionId": null,
-  "versionCounter": 67,
   "triggerCount": 0,
-  "tags": [],
   "shared": [
     {
-      "updatedAt": "2025-11-16T16:28:00.507Z",
-      "createdAt": "2025-11-16T16:28:00.507Z",
+      "updatedAt": "2025-12-08T18:32:11.638Z",
+      "createdAt": "2025-12-08T18:32:11.638Z",
       "role": "workflow:owner",
-      "workflowId": "LhOq7oS95v5spmX3",
-      "projectId": "GEUEn6ArNROzJ5FY",
-      "project": {
-        "updatedAt": "2025-10-28T15:11:59.092Z",
-        "createdAt": "2025-10-28T15:08:17.462Z",
-        "id": "GEUEn6ArNROzJ5FY",
-        "name": "Paragon TheDev <paragoncryptodev@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null
-      }
+      "workflowId": "3socXFa2UjsnmIiH",
+      "projectId": "GEUEn6ArNROzJ5FY"
     }
-  ]
+  ],
+  "activeVersion": null,
+  "tags": []
 }
