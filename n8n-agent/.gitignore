@@ -6,6 +6,9 @@ node_modules/
 .env.local
 .env.*.local
 
+# n8n-manager config (contains credentials)
+8man-config.json
+
 # Logs
 logs
 *.log

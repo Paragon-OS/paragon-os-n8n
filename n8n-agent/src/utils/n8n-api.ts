@@ -270,8 +270,13 @@ export async function importWorkflow(
   const client = config ? createApiClient(config) : getDefaultClient();
 
   try {
+    // Convert Execute Workflow node references from ID-based to name-based
+    // This eliminates the need for reference fixing - names are stable, IDs are not
+    const { convertWorkflowReferencesToNames } = await import('./workflow-reference-converter');
+    const workflowWithNameReferences = await convertWorkflowReferencesToNames(workflowData);
+    
     // Clean workflow data before sending to API
-    const cleanedData = cleanWorkflowForApi(workflowData);
+    const cleanedData = cleanWorkflowForApi(workflowWithNameReferences);
     
     // Check if workflow exists by searching by name (unless forceCreate is true)
     // We can't use the 'id' from workflowData because:
