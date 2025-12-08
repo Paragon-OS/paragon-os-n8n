@@ -19,6 +19,13 @@ export default defineConfig({
     // try to modify the same Test Runner workflow in n8n simultaneously
     // This runs test files sequentially but still allows parallel execution within files
     fileParallelism: false,
+    // Serialize tests within files to prevent overwhelming LLM services
+    // Smart Agent workflows use OpenAI/LLM services which can be rate-limited
+    // Running tests sequentially within files prevents parallel API calls
+    sequence: {
+      shuffle: false, // Keep test order deterministic
+      concurrent: false, // Disable concurrent execution within files
+    },
     // Use forks pool for better process isolation with child processes (n8n CLI)
     // This prevents interference between test runs and ensures proper stdout/stderr capture
     pool: 'forks',
