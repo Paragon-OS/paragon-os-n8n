@@ -1,13 +1,11 @@
 import fs from "fs";
 import path from "path";
-import os from "os";
-import { resolveDir, getPassthroughArgs, confirm } from "../cli";
-import { runN8nQuiet } from "../utils/n8n";
+import { resolveDir, confirm } from "../cli";
 import { collectJsonFilesRecursive } from "../utils/file";
 import { normalizeWorkflowForCompare } from "../utils/workflow";
 import { deepEqual, exportCurrentWorkflowsForCompare } from "../utils/compare";
 import { logger } from "../utils/logger";
-import { importWorkflow } from "../utils/n8n-api";
+import { importWorkflow, exportWorkflows } from "../utils/n8n-api";
 import type { BackupWorkflowForRestore, WorkflowObject } from "../types/index";
 
 interface RestoreOptions {
@@ -17,9 +15,6 @@ interface RestoreOptions {
 
 export async function executeRestore(options: RestoreOptions, remainingArgs: string[] = []): Promise<void> {
   const inputDir = resolveDir(options.input, "./workflows");
-
-  // Get passthrough flags for n8n (excluding our custom flags)
-  const passthroughFlags = getPassthroughArgs(remainingArgs, ["--input"]);
 
   const jsonFiles = await collectJsonFilesRecursive(inputDir);
 
@@ -132,92 +127,251 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
   logger.info(""); // Empty line after confirmation
 
   /**
-   * NOTE:
-   *   We intentionally do NOT pass "--separate" here.
-   *
-   *   The n8n CLI expects:
-   *     - "--separate" when "--input" points to a directory that contains
-   *       multiple workflow JSON files to import in one go.
-   *     - NO "--separate" when "--input" points directly to a single
-   *       workflow JSON file.
-   *
-   *   This CLI wraps each workflow JSON file individually (to support
-   *   nested/tag-based directory structures created by the backup/organize
-   *   commands), so we call "import:workflow" once per file without
-   *   "--separate".
-   *
-   *   IMPORTANT: For workflows that were deleted from n8n, we need to remove
-   *   the ID field before importing, otherwise n8n may fail to import or create
-   *   a workflow with a different ID. We create a temporary file without the ID.
+   * Helper function to check if an ID looks like a custom ID (not a database ID)
    */
-  const tempFiles: string[] = [];
+  function isValidCustomId(id: string): boolean {
+    // Database IDs are either UUIDs or NanoIDs (10-21 alphanumeric chars)
+    // Custom IDs are usually longer strings with mixed case, no dashes
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const nanoIdPattern = /^[A-Za-z0-9_-]{10,21}$/;
+    
+    // If it's not a UUID or NanoID, it's likely a custom ID
+    return !uuidPattern.test(id) && !nanoIdPattern.test(id);
+  }
 
+  /**
+   * Import all workflows using API (unified approach).
+   * This ensures consistent schema handling and allows us to track ID mappings during import.
+   */
+  const idMapping = new Map<string, string>(); // old ID -> new ID
+  const isDeleted = (id: string | undefined) => id ? deletedWorkflowIds.has(id) : false;
+
+  for (const backup of toImport) {
+    const oldId = backup.id;
+    const isDeletedWorkflow = isDeleted(oldId);
+
+    logger.info(
+      `Importing workflow "${backup.name}"${oldId ? ` (old ID: ${oldId})` : " (new workflow)"}${isDeletedWorkflow ? " [deleted, creating new]" : ""}`,
+      {
+        filePath: backup.filePath,
+        workflowId: oldId,
+        workflowName: backup.name,
+        isDeleted: isDeletedWorkflow
+      }
+    );
+
+    try {
+      // Prepare workflow for import
+      const workflowForImport = { ...backup.workflow };
+      
+      // For deleted workflows, remove ID to force creation of new workflow
+      // For existing workflows, importWorkflow will handle update by name
+      if (isDeletedWorkflow) {
+        delete workflowForImport.id;
+      }
+
+      // Import workflow via API (handles schema cleaning, creates or updates as needed)
+      const importedWorkflow = await importWorkflow(
+        workflowForImport as any,
+        undefined,
+        isDeletedWorkflow // forceCreate for deleted workflows
+      );
+
+      // Build ID mapping: old ID -> new ID
+      if (oldId && importedWorkflow.id && oldId !== importedWorkflow.id) {
+        idMapping.set(oldId, importedWorkflow.id);
+        logger.debug(`Mapped workflow ID: ${oldId} -> ${importedWorkflow.id} (${backup.name})`);
+      }
+
+      // Also map custom IDs (like "TelegramContextScout") to new database ID
+      if (oldId && isValidCustomId(oldId) && importedWorkflow.id) {
+        idMapping.set(oldId, importedWorkflow.id);
+        logger.debug(`Mapped custom ID: ${oldId} -> ${importedWorkflow.id} (${backup.name})`);
+      }
+
+      logger.info(`✓ Successfully imported "${backup.name}"${importedWorkflow.id ? ` (new ID: ${importedWorkflow.id})` : ""}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error(`Failed to import workflow "${backup.name}": ${errorMessage}`, error instanceof Error ? error : undefined, {
+        filePath: backup.filePath,
+        originalId: oldId,
+        workflowName: backup.name,
+      });
+      process.exit(1);
+    }
+  }
+
+  /**
+   * After import: fix workflow references that still point to old IDs.
+   * We now have accurate ID mappings from the import process, so we can fix references reliably.
+   */
   try {
-    for (const backup of toImport) {
-      let importFilePath = backup.filePath;
-      const isDeleted = backup.id ? deletedWorkflowIds.has(backup.id) : false;
+    if (idMapping.size === 0) {
+      logger.debug("No ID mappings to process - skipping reference updates");
+    } else {
+      logger.info(`\nUpdating workflow references (${idMapping.size} ID mappings)...`);
+      
+      // Get all current workflows (including newly imported ones)
+      const currentWorkflows = await exportWorkflows();
 
-      // For deleted workflows, use API import instead of CLI (handles schema better)
-      if (isDeleted && backup.id) {
-        logger.info(
-          `Importing deleted workflow "${backup.name}" via API (removed ID ${backup.id} to create as new workflow)`,
-          {
-            filePath: backup.filePath,
-            originalId: backup.id,
-            workflowName: backup.name,
-          }
-        );
+      for (const workflow of currentWorkflows) {
+        if (!workflow?.nodes || !Array.isArray(workflow.nodes)) continue;
 
-        try {
-          // For deleted workflows, we need to ensure we create a new one
-          // Remove the ID completely and any name-based lookup will fail, forcing creation
-          const workflowForImport = { ...backup.workflow };
-          delete workflowForImport.id;
+        let updated = false;
+        const updatedNodes = workflow.nodes.map((node: any) => {
+          // Handle both Execute Workflow and Tool Workflow nodes
+          const isWorkflowNode = 
+            node?.type === "n8n-nodes-base.executeWorkflow" ||
+            node?.type === "@n8n/n8n-nodes-langchain.toolWorkflow";
           
-          // Use API import which handles schema validation better
-          // Force create new workflow (don't try to update by name)
-          // The importWorkflow function already handles cleaning the workflow data
-          // Cast to Workflow type - importWorkflow will handle missing required fields
-          await importWorkflow(workflowForImport as any, undefined, true);
-          logger.info(`✓ Successfully imported "${backup.name}" via API`);
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          logger.error(`Failed to import deleted workflow "${backup.name}" via API: ${errorMessage}`, error instanceof Error ? error : undefined, {
-            filePath: backup.filePath,
-            originalId: backup.id,
-            workflowName: backup.name,
-          });
-          process.exit(1);
-        }
-        continue; // Skip CLI import for deleted workflows
-      } else {
-        logger.info(
-          `Importing workflow from "${backup.filePath}"${backup.id ? ` (id: ${backup.id}, name: ${backup.name})` : ` (name: ${backup.name})`}`,
-          {
-            filePath: backup.filePath,
-            workflowId: backup.id,
-            workflowName: backup.name
+          if (!isWorkflowNode) {
+            return node;
           }
-        );
-      }
 
-      const args = ["import:workflow", `--input=${importFilePath}`, ...passthroughFlags];
-      const exitCode = await runN8nQuiet(args);
+          const params = node.parameters || {};
+          const wfParam = params.workflowId;
+          let oldRef: string | undefined;
+          let newNode = node;
 
-      if (exitCode !== 0) {
-        logger.error(`n8n import:workflow failed for "${backup.filePath}" with code ${exitCode}`, undefined, { filePath: backup.filePath, exitCode });
-        process.exit(exitCode);
+          if (wfParam && typeof wfParam === "object" && "value" in wfParam) {
+            oldRef = wfParam.value as string;
+            let newId: string | undefined;
+            let matchingWorkflow: any = undefined;
+            let needsUpdate = false;
+
+            // Try direct ID mapping first (most reliable - from our import process)
+            if (oldRef && idMapping.has(oldRef)) {
+              newId = idMapping.get(oldRef)!;
+              matchingWorkflow = currentWorkflows.find(w => w.id === newId);
+              needsUpdate = true;
+            } 
+            // Fallback: Try name-based lookup (for cases where oldRef is a workflow name)
+            else if (oldRef) {
+              matchingWorkflow = currentWorkflows.find(w => {
+                if (!w.name || !oldRef) return false;
+                // Exact name match
+                if (w.name === oldRef) return true;
+                // Name without spaces/tags matches custom ID
+                const nameNoSpaces = w.name.replace(/\s+/g, '').replace(/\[.*?\]/g, '');
+                if (nameNoSpaces === oldRef || nameNoSpaces.toLowerCase() === oldRef.toLowerCase()) {
+                  return true;
+                }
+                return false;
+              });
+              if (matchingWorkflow?.id) {
+                newId = matchingWorkflow.id;
+                // If value is already a name, we still need to update if cachedResultUrl has old ID
+                if (matchingWorkflow.name === oldRef) {
+                  // Check if cachedResultUrl needs updating
+                  if (wfParam.cachedResultUrl && typeof wfParam.cachedResultUrl === "string") {
+                    const urlMatch = wfParam.cachedResultUrl.match(/\/workflow\/([^\/]+)/);
+                    if (urlMatch && urlMatch[1] && urlMatch[1] !== newId) {
+                      needsUpdate = true;
+                    }
+                  }
+                } else {
+                  needsUpdate = true; // Value needs to be updated to match name
+                }
+              }
+            }
+
+            // Also check if cachedResultUrl has an old ID that needs updating
+            if (!newId && wfParam.cachedResultUrl && typeof wfParam.cachedResultUrl === "string") {
+              const urlMatch = wfParam.cachedResultUrl.match(/\/workflow\/([^\/]+)/);
+              if (urlMatch && urlMatch[1]) {
+                const oldIdFromUrl = urlMatch[1];
+                if (idMapping.has(oldIdFromUrl)) {
+                  newId = idMapping.get(oldIdFromUrl)!;
+                  matchingWorkflow = currentWorkflows.find(w => w.id === newId);
+                  needsUpdate = true;
+                } else if (oldRef) {
+                  // Try to find workflow by name if we have a name in value
+                  matchingWorkflow = currentWorkflows.find(w => w.name === oldRef);
+                  if (matchingWorkflow?.id) {
+                    newId = matchingWorkflow.id;
+                    needsUpdate = true;
+                  }
+                }
+              }
+            }
+
+            if (newId && matchingWorkflow && needsUpdate) {
+              // For mode "list", use workflow name; for mode "id", use database ID
+              const currentMode = wfParam.mode || "id";
+              const valueToUse = currentMode === "list" && matchingWorkflow.name 
+                ? matchingWorkflow.name 
+                : newId;
+              const modeToUse = currentMode === "list" && matchingWorkflow.name 
+                ? "list" 
+                : "id";
+              
+              const newWorkflowId = { 
+                ...wfParam, 
+                value: valueToUse,
+                mode: modeToUse
+              };
+              // Always update cached result to point to new ID
+              newWorkflowId.cachedResultUrl = `/workflow/${newId}`;
+              newWorkflowId.cachedResultName = matchingWorkflow.name;
+              
+              const newParams = { ...params, workflowId: newWorkflowId };
+              newNode = { ...node, parameters: newParams };
+              updated = true;
+            }
+          } else if (typeof wfParam === "string") {
+            oldRef = wfParam;
+            let newId: string | undefined;
+            let matchingWorkflow: any = undefined;
+
+            // Try direct ID mapping first (most reliable - from our import process)
+            if (idMapping.has(oldRef)) {
+              newId = idMapping.get(oldRef)!;
+              matchingWorkflow = currentWorkflows.find(w => w.id === newId);
+            } else if (oldRef) {
+              // Fallback: Try name-based lookup (for cases where oldRef is a workflow name)
+              matchingWorkflow = currentWorkflows.find(w => {
+                if (!w.name || !oldRef) return false;
+                // Exact name match
+                if (w.name === oldRef) return true;
+                // Name without spaces/tags matches custom ID
+                const nameNoSpaces = w.name.replace(/\s+/g, '').replace(/\[.*?\]/g, '');
+                if (nameNoSpaces === oldRef || nameNoSpaces.toLowerCase() === oldRef.toLowerCase()) {
+                  return true;
+                }
+                return false;
+              });
+              if (matchingWorkflow?.id) {
+                newId = matchingWorkflow.id;
+              }
+            }
+
+            if (newId) {
+              // For string params, default to "id" mode with database ID
+              const newWorkflowId = { value: newId, mode: "id", __rl: true };
+              const newParams = { ...params, workflowId: newWorkflowId };
+              newNode = { ...node, parameters: newParams };
+              updated = true;
+            }
+          }
+
+          return newNode;
+        });
+
+        if (updated) {
+          try {
+            await importWorkflow({ ...workflow, nodes: updatedNodes } as any, undefined, false);
+            logger.info(`✓ Updated workflow references in "${workflow.name || workflow.id}"`);
+          } catch (err) {
+            logger.warn(
+              `Failed to update workflow references in "${workflow.name || workflow.id}"`,
+              err instanceof Error ? err : undefined
+            );
+          }
+        }
       }
     }
-  } finally {
-    // Clean up temporary files
-    for (const tempFile of tempFiles) {
-      try {
-        await fs.promises.unlink(tempFile);
-      } catch (err) {
-        logger.warn("Failed to clean up temporary file", { tempFile }, err);
-      }
-    }
+  } catch (err) {
+    logger.warn("Failed to update workflow references after restore", err);
   }
 
   process.exit(0);
