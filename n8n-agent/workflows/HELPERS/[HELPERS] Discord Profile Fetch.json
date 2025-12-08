@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T18:36:58.513Z",
-  "createdAt": "2025-12-08T18:36:58.513Z",
-  "id": "zpDxk2eUFbFLefr3",
+  "updatedAt": "2025-12-08T18:55:41.721Z",
+  "createdAt": "2025-12-08T18:55:41.721Z",
+  "id": "rydRD7nt3xdjM6Nk",
   "name": "[HELPERS] Discord Profile Fetch",
   "active": false,
   "isArchived": false,
@@ -87,15 +87,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "38919db5-6f07-46b1-bb61-3709c91a88f1",
+  "versionId": "65eb15c7-0288-4777-b7c2-119ee5d705fe",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T18:36:58.513Z",
-      "createdAt": "2025-12-08T18:36:58.513Z",
+      "updatedAt": "2025-12-08T18:55:41.722Z",
+      "createdAt": "2025-12-08T18:55:41.722Z",
       "role": "workflow:owner",
-      "workflowId": "zpDxk2eUFbFLefr3",
+      "workflowId": "rydRD7nt3xdjM6Nk",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

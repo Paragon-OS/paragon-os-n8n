@@ -10,9 +10,56 @@ When n8n workflows use the `toolWorkflow` node with `"mode": "list"`, the workfl
 2. The `toolWorkflow` nodes store workflow IDs, not names
 3. When IDs don't match, the tool references break silently
 
+## The Critical Problem
+
+**When you restore workflows to n8n, n8n assigns NEW workflow IDs!**
+
+This means:
+1. You backup workflows from n8n → local JSON files have IDs like `sO4VcVy2m7hOCbJI`
+2. You restore workflows to n8n → n8n assigns NEW IDs like `GwCBsdxV4CkAQPPf`
+3. Your local files still reference the OLD IDs → **all toolWorkflow references are broken!**
+
+## The Solution
+
+Use `sync-workflow-ids-from-n8n.ts` to fetch the ACTUAL IDs from your running n8n instance and update your local files.
+
 ## Scripts
 
-### 1. `scan-tool-workflows.ts`
+### 🔥 1. `sync-workflow-ids-from-n8n.ts` (MOST IMPORTANT)
+
+**Syncs workflow IDs from your live n8n instance to local files.**
+
+This is the script you need after every restore!
+
+```bash
+# Preview what will be synced
+npx ts-node scripts/sync-workflow-ids-from-n8n.ts
+
+# Apply the sync
+npx ts-node scripts/sync-workflow-ids-from-n8n.ts --sync
+```
+
+**Requirements:**
+- n8n must be running
+- Set environment variables (in `.env` or shell):
+  - `N8N_BASE_URL` (e.g., `http://localhost:5678`)
+  - `N8N_API_KEY` or session cookie
+
+**What it does:**
+1. Fetches all workflows from n8n via API
+2. Compares workflow names between n8n and local files
+3. Updates local file references to match n8n's actual IDs
+
+**Example output:**
+```
+[SYNC] Telegram Smart Agent
+  Node: "Telegram Context Scout Tool"
+  Target: Telegram Context Scout
+  Local ID:  sO4VcVy2m7hOCbJI  ← OLD (from previous restore)
+  n8n ID:    GwCBsdxV4CkAQPPf  ← NEW (current n8n instance)
+```
+
+### 2. `scan-tool-workflows.ts`
 
 Scans all workflows and lists detailed information about `toolWorkflow` nodes.
 
@@ -74,9 +121,30 @@ npx ts-node scripts/fix-tool-workflow-references.ts --fix
 - Updates workflow ID, cached URL, and cached name
 - Preserves JSON formatting
 
-## Workflow
+## Recommended Workflows
 
-Recommended workflow for maintaining workflow references:
+### After Restoring Workflows to n8n (CRITICAL!)
+
+**This is the most important workflow** - run this every time you restore workflows:
+
+```bash
+# 1. Restore workflows to n8n using your normal process
+npm run n8n:restore
+
+# 2. Sync workflow IDs from n8n to local files
+npx ts-node scripts/sync-workflow-ids-from-n8n.ts --sync
+
+# 3. Verify all references are valid
+npx ts-node scripts/validate-tool-workflow-references.ts
+
+# 4. Commit the updated workflow files
+git add workflows/
+git commit -m "Sync workflow IDs after restore"
+```
+
+### When Working with Local Files Only
+
+If you're just fixing references between local files (not syncing with n8n):
 
 ```bash
 # 1. Validate current state

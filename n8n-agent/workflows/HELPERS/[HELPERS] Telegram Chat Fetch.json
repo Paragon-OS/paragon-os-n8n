@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T18:36:58.581Z",
-  "createdAt": "2025-12-08T18:36:58.581Z",
-  "id": "45LXIBzHwGOKffVa",
+  "updatedAt": "2025-12-08T18:55:42.656Z",
+  "createdAt": "2025-12-08T18:55:42.656Z",
+  "id": "3l931bkvbOpuSQHV",
   "name": "[HELPERS] Telegram Chat Fetch",
   "active": false,
   "isArchived": false,
@@ -158,15 +158,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "aa9c1e62-4181-4097-939b-c510832829cd",
+  "versionId": "d9fcd034-2498-4d1e-88ac-c4a261bfb6ec",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T18:36:58.582Z",
-      "createdAt": "2025-12-08T18:36:58.582Z",
+      "updatedAt": "2025-12-08T18:55:42.656Z",
+      "createdAt": "2025-12-08T18:55:42.656Z",
       "role": "workflow:owner",
-      "workflowId": "45LXIBzHwGOKffVa",
+      "workflowId": "3l931bkvbOpuSQHV",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

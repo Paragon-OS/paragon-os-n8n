@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T18:36:58.665Z",
-  "createdAt": "2025-12-08T18:36:58.665Z",
-  "id": "XgAZqvq48oVdGieD",
+  "updatedAt": "2025-12-08T18:55:43.059Z",
+  "createdAt": "2025-12-08T18:55:43.059Z",
+  "id": "GrOv0m9k233QQGUt",
   "name": "[LAB] Discord Contact Indexer",
   "active": false,
   "isArchived": false,
@@ -552,15 +552,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "1de47c4c-a4b5-416b-a167-518dfc90a777",
+  "versionId": "b5063e97-539c-4c11-a74c-d430c6b60de3",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T18:36:58.666Z",
-      "createdAt": "2025-12-08T18:36:58.666Z",
+      "updatedAt": "2025-12-08T18:55:43.061Z",
+      "createdAt": "2025-12-08T18:55:43.061Z",
       "role": "workflow:owner",
-      "workflowId": "XgAZqvq48oVdGieD",
+      "workflowId": "GrOv0m9k233QQGUt",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

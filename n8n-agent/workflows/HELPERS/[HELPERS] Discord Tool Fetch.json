@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T18:36:58.520Z",
-  "createdAt": "2025-12-08T18:36:58.520Z",
-  "id": "ZdE6SEJeju2S9TrG",
+  "updatedAt": "2025-12-08T18:55:41.731Z",
+  "createdAt": "2025-12-08T18:55:41.731Z",
+  "id": "bAiB4jO5O8LhFHDA",
   "name": "[HELPERS] Discord Tool Fetch",
   "active": false,
   "isArchived": false,
@@ -83,15 +83,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "66720308-109a-4796-8d44-20160c0f338d",
+  "versionId": "04074401-fdee-4f98-acf7-c8bd14041646",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T18:36:58.521Z",
-      "createdAt": "2025-12-08T18:36:58.521Z",
+      "updatedAt": "2025-12-08T18:55:41.732Z",
+      "createdAt": "2025-12-08T18:55:41.732Z",
       "role": "workflow:owner",
-      "workflowId": "ZdE6SEJeju2S9TrG",
+      "workflowId": "bAiB4jO5O8LhFHDA",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

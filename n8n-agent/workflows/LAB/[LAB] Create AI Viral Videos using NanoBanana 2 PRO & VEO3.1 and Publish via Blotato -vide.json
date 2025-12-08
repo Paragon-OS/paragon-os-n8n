@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T18:36:58.633Z",
-  "createdAt": "2025-12-08T18:36:58.633Z",
-  "id": "PkziZSVkenkfTDuM",
+  "updatedAt": "2025-12-08T18:55:42.760Z",
+  "createdAt": "2025-12-08T18:55:42.760Z",
+  "id": "i15GLtTy1PmVWDZP",
   "name": "[LAB] Create AI Viral Videos using NanoBanana 2 PRO & VEO3.1 and Publish via Blotato -vide",
   "active": false,
   "isArchived": false,
@@ -977,15 +977,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "ebeadd4d-b5ec-4274-be6b-665f993490fb",
+  "versionId": "b947dfe5-5f3f-4856-8bdf-3925d53bc02e",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T18:36:58.634Z",
-      "createdAt": "2025-12-08T18:36:58.634Z",
+      "updatedAt": "2025-12-08T18:55:42.763Z",
+      "createdAt": "2025-12-08T18:55:42.763Z",
       "role": "workflow:owner",
-      "workflowId": "PkziZSVkenkfTDuM",
+      "workflowId": "i15GLtTy1PmVWDZP",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

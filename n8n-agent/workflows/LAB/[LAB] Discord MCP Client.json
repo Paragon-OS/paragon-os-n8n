@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T18:36:58.703Z",
-  "createdAt": "2025-12-08T18:36:58.703Z",
-  "id": "lkisW81LSe2jeWHy",
+  "updatedAt": "2025-12-08T18:55:43.102Z",
+  "createdAt": "2025-12-08T18:55:43.102Z",
+  "id": "6gtq7qBAYQCuJBvY",
   "name": "[LAB] Discord MCP Client",
   "active": false,
   "isArchived": false,
@@ -404,15 +404,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "d9e23ed1-e74c-460a-9d5f-e9861af1b8ce",
+  "versionId": "b1f0d15a-92dc-4856-b99d-2159da1e92ed",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T18:36:58.704Z",
-      "createdAt": "2025-12-08T18:36:58.704Z",
+      "updatedAt": "2025-12-08T18:55:43.102Z",
+      "createdAt": "2025-12-08T18:55:43.102Z",
       "role": "workflow:owner",
-      "workflowId": "lkisW81LSe2jeWHy",
+      "workflowId": "6gtq7qBAYQCuJBvY",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T18:36:58.484Z",
-  "createdAt": "2025-12-08T18:36:58.484Z",
-  "id": "s2NhwrkH9FPXGCwN",
+  "updatedAt": "2025-12-08T18:55:41.679Z",
+  "createdAt": "2025-12-08T18:55:41.679Z",
+  "id": "F8FXNTM2Nkmn6HDY",
   "name": "[HELPERS] Discord & Telegram Step Executor",
   "active": false,
   "isArchived": false,
@@ -460,15 +460,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "9cf9b7f9-1faf-4b67-88d4-661dea9db00a",
+  "versionId": "817be64c-6487-4ddc-a6c1-d23600b805cb",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T18:36:58.485Z",
-      "createdAt": "2025-12-08T18:36:58.485Z",
+      "updatedAt": "2025-12-08T18:55:41.680Z",
+      "createdAt": "2025-12-08T18:55:41.680Z",
       "role": "workflow:owner",
-      "workflowId": "s2NhwrkH9FPXGCwN",
+      "workflowId": "F8FXNTM2Nkmn6HDY",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

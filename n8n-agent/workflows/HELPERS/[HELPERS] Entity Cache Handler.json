@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T18:36:58.542Z",
-  "createdAt": "2025-12-08T18:36:58.542Z",
-  "id": "LtxYTGH9nPOh6zL7",
+  "updatedAt": "2025-12-08T18:55:42.447Z",
+  "createdAt": "2025-12-08T18:55:42.447Z",
+  "id": "einY9ReZvCJPogie",
   "name": "[HELPERS] Entity Cache Handler",
   "active": false,
   "isArchived": false,
@@ -334,15 +334,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "e4b59ce5-0b11-4d28-b546-7a656bce6724",
+  "versionId": "14efec25-92ad-4236-b29e-5cf9c5dae1a9",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T18:36:58.543Z",
-      "createdAt": "2025-12-08T18:36:58.543Z",
+      "updatedAt": "2025-12-08T18:55:42.448Z",
+      "createdAt": "2025-12-08T18:55:42.448Z",
       "role": "workflow:owner",
-      "workflowId": "LtxYTGH9nPOh6zL7",
+      "workflowId": "einY9ReZvCJPogie",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

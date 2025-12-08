@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T18:36:58.757Z",
-  "createdAt": "2025-12-08T18:36:58.757Z",
-  "id": "xFXwXJhNM4cp9Eti",
+  "updatedAt": "2025-12-08T18:55:43.234Z",
+  "createdAt": "2025-12-08T18:55:43.234Z",
+  "id": "Ibhhc7lhDIzKrM22",
   "name": "[LAB] Generic MCP Client Sequencer",
   "active": false,
   "isArchived": false,
@@ -811,15 +811,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "f62e1b9e-bbde-4160-894a-165e236b1601",
+  "versionId": "65ab63dd-f250-4604-8058-cb675b2a48f3",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T18:36:58.758Z",
-      "createdAt": "2025-12-08T18:36:58.758Z",
+      "updatedAt": "2025-12-08T18:55:43.235Z",
+      "createdAt": "2025-12-08T18:55:43.235Z",
       "role": "workflow:owner",
-      "workflowId": "xFXwXJhNM4cp9Eti",
+      "workflowId": "Ibhhc7lhDIzKrM22",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T18:36:58.713Z",
-  "createdAt": "2025-12-08T18:36:58.713Z",
-  "id": "P1zH3yLAbjE08HAN",
+  "updatedAt": "2025-12-08T18:55:43.132Z",
+  "createdAt": "2025-12-08T18:55:43.132Z",
+  "id": "Oa2zcg5HPF6U2ZLE",
   "name": "[LAB] Discord Manager",
   "active": false,
   "isArchived": false,
@@ -549,15 +549,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "7e731711-1bd6-4809-8b63-2a493a0e603a",
+  "versionId": "14ee3fd1-0381-4d46-8619-5a0d9a48fe50",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T18:36:58.714Z",
-      "createdAt": "2025-12-08T18:36:58.714Z",
+      "updatedAt": "2025-12-08T18:55:43.133Z",
+      "createdAt": "2025-12-08T18:55:43.133Z",
       "role": "workflow:owner",
-      "workflowId": "P1zH3yLAbjE08HAN",
+      "workflowId": "Oa2zcg5HPF6U2ZLE",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],
