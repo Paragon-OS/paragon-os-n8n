@@ -1,7 +1,8 @@
 import { isEqual } from "lodash";
 import type { WorkflowObject } from "../types/index";
-import { runN8nCapture } from "./n8n";
+import { exportWorkflows } from "./n8n-api";
 import { logger } from "./logger";
+import type { Workflow } from "./n8n-api";
 
 /**
  * Deep equality comparison using lodash.isEqual
@@ -10,39 +11,32 @@ import { logger } from "./logger";
 export const deepEqual = isEqual;
 
 export async function exportCurrentWorkflowsForCompare(): Promise<Map<string, WorkflowObject>> {
-  const { code, stdout, stderr } = await runN8nCapture(["export:workflow", "--pretty", "--all"]);
+  let workflows: Workflow[];
 
-  if (code !== 0) {
-    logger.error("n8n export:workflow failed while preparing selective restore", undefined, { exitCode: code, stderr: stderr.trim() });
+  try {
+    workflows = await exportWorkflows();
+  } catch (err) {
+    logger.error("Failed to export workflows from n8n API while preparing selective restore", err);
     throw new Error("Failed to export current workflows for comparison.");
   }
 
-  if (!stdout.trim()) {
+  if (workflows.length === 0) {
     // No workflows currently exist on the instance; treat all backup workflows as new.
     return new Map();
   }
 
-  let workflows: unknown;
-
-  try {
-    workflows = JSON.parse(stdout);
-  } catch (err) {
-    logger.error("Failed to parse JSON from n8n export:workflow during selective restore", err);
-    throw new Error("Failed to parse current workflows for comparison.");
-  }
-
-  if (!Array.isArray(workflows)) {
-    logger.error("Unexpected export format from n8n during selective restore: expected an array of workflows.");
-    throw new Error("Unexpected export format from n8n during selective restore.");
-  }
-
   const map = new Map<string, WorkflowObject>();
 
-  for (const wf of workflows as WorkflowObject[]) {
+  for (const wf of workflows) {
     if (!wf || typeof wf !== "object") continue;
     const id = typeof wf.id === "string" ? wf.id : undefined;
     if (!id) continue;
-    map.set(id, wf);
+    
+    // Convert Workflow to WorkflowObject format for compatibility
+    // WorkflowObject is a superset of Workflow, so we can cast it directly
+    const workflowObject: WorkflowObject = wf as unknown as WorkflowObject;
+    
+    map.set(id, workflowObject);
   }
 
   return map;

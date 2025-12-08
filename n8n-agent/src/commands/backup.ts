@@ -1,11 +1,12 @@
 import path from "path";
 import fs from "fs";
-import { resolveDir, getPassthroughArgs, confirm } from "../cli";
-import { runN8n } from "../utils/n8n";
+import { resolveDir, confirm } from "../cli";
+import { exportWorkflows } from "../utils/n8n-api";
 import { collectJsonFilesRecursive, removeEmptyDirectoriesUnder } from "../utils/file";
 import { parseTagFromName, sanitizeWorkflowName } from "../utils/workflow";
 import { logger } from "../utils/logger";
 import type { WorkflowFile } from "../types/index";
+import type { Workflow } from "../utils/n8n-api";
 
 interface BackupOptions {
   output?: string;
@@ -281,9 +282,17 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
 
   logger.info(""); // Empty line after confirmation
 
-  // n8n's export command does not overwrite existing files - it skips them.
+  // Ensure output directory exists
+  try {
+    await fs.promises.mkdir(normalizedOutputDir, { recursive: true });
+  } catch (err) {
+    logger.error("Failed to create output directory", err, { outputDir: normalizedOutputDir });
+    process.exit(1);
+    return;
+  }
+
   // To ensure we always get fresh exports, temporarily move existing workflow
-  // files to a staging area, run the export, then let our renaming logic merge
+  // files to a staging area, export via API, then let our renaming logic merge
   // the new exports with any existing files.
   const tempDir = path.join(normalizedOutputDir, ".backup-temp");
   let movedFiles = false;
@@ -308,33 +317,18 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
     }
   } catch (err) {
     logger.warn("Failed to move existing workflow files to temp directory", { tempDir }, err);
-    // Continue anyway - worst case n8n will skip existing files
+    // Continue anyway - we'll overwrite existing files
   }
 
-  // Mirrors: n8n export:workflow --backup --output=./workflows/
-  const args = ["export:workflow", "--backup", `--output=${outputDir}`];
-
-  // Allow extra flags like --all to be forwarded to n8n
-  const passthroughFlags = getPassthroughArgs(remainingArgs, ["--output"]);
-
-  const exitCode = await runN8n([...args, ...passthroughFlags]);
-
-  if (exitCode === 0) {
-    // If export succeeded, rename exported files to use workflow names while
-    // keeping restore/import behavior based solely on workflow IDs inside JSON.
-    // Pass the temp directory so the renaming logic can process both old and
-    // new files together, with new files taking precedence.
-    await renameExportedWorkflowsToNames(outputDir, movedFiles ? tempDir : undefined);
+  // Export workflows using REST API
+  let workflows: Workflow[];
+  try {
+    logger.info("Fetching workflows from n8n...");
+    workflows = await exportWorkflows();
+    logger.info(`Fetched ${workflows.length} workflow(s) from n8n.`);
+  } catch (err) {
+    logger.error("Failed to export workflows from n8n API", err);
     
-    // Clean up temp directory after renaming logic has processed everything
-    if (movedFiles) {
-      try {
-        await fs.promises.rm(tempDir, { recursive: true, force: true });
-      } catch (err) {
-        logger.warn("Failed to clean up temporary directory", { tempDir }, err);
-      }
-    }
-  } else {
     // If export failed, restore files from temp directory
     if (movedFiles) {
       try {
@@ -349,12 +343,64 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
         }
         
         await fs.promises.rm(tempDir, { recursive: true, force: true });
-      } catch (err) {
-        logger.error("Failed to restore files after export failure", err, { tempDir });
+      } catch (restoreErr) {
+        logger.error("Failed to restore files after export failure", restoreErr, { tempDir });
       }
+    }
+    
+    process.exit(1);
+    return;
+  }
+
+  // Write workflows to JSON files (using ID as filename, like n8n CLI does)
+  // Skip archived workflows
+  let exportedCount = 0;
+  for (const workflow of workflows) {
+    // Skip archived workflows
+    if ((workflow as { isArchived?: boolean }).isArchived === true) {
+      continue;
+    }
+
+    // Use workflow ID as filename (n8n CLI behavior)
+    // If no ID, skip this workflow
+    if (!workflow.id) {
+      logger.warn(`Skipping workflow "${workflow.name}" - no ID found`);
+      continue;
+    }
+
+    const filename = `${workflow.id}.json`;
+    const filePath = path.join(normalizedOutputDir, filename);
+
+    try {
+      // Ensure the directory exists (in case it was deleted)
+      await fs.promises.mkdir(path.dirname(filePath), { recursive: true });
+      
+      // Write workflow as JSON (pretty-printed like n8n CLI)
+      const jsonContent = JSON.stringify(workflow, null, 2);
+      await fs.promises.writeFile(filePath, jsonContent, "utf8");
+      exportedCount++;
+    } catch (err) {
+      logger.warn(`Failed to write workflow file: ${filePath}`, err);
     }
   }
 
-  process.exit(exitCode);
+  logger.info(`Exported ${exportedCount} workflow(s) to ${normalizedOutputDir}`);
+
+  // Rename exported files to use workflow names while
+  // keeping restore/import behavior based solely on workflow IDs inside JSON.
+  // Pass the temp directory so the renaming logic can process both old and
+  // new files together, with new files taking precedence.
+  await renameExportedWorkflowsToNames(outputDir, movedFiles ? tempDir : undefined);
+  
+  // Clean up temp directory after renaming logic has processed everything
+  if (movedFiles) {
+    try {
+      await fs.promises.rm(tempDir, { recursive: true, force: true });
+    } catch (err) {
+      logger.warn("Failed to clean up temporary directory", { tempDir }, err);
+    }
+  }
+
+  process.exit(0);
 }
 

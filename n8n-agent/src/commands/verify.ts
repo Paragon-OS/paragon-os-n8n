@@ -2,12 +2,13 @@ import fs from "fs";
 import path from "path";
 import boxen from "boxen";
 import chalk from "chalk";
-import { runN8nCapture } from "../utils/n8n";
+import { getWorkflow, exportWorkflows } from "../utils/n8n-api";
 import { collectJsonFilesRecursive } from "../utils/file";
 import { logger } from "../utils/logger";
 import type { WorkflowObject } from "../types/index";
 import type { ExecuteWorkflowTriggerNode } from "../types/n8n";
 import { isExecuteWorkflowTriggerNode } from "../types/n8n";
+import type { Workflow } from "../utils/n8n-api";
 
 /**
  * Verify that workflow trigger inputs in the database match the JSON files.
@@ -116,14 +117,51 @@ async function verifyWorkflow(
     };
   }
 
-  // Export workflow from n8n database
-  const { code, stdout, stderr } = await runN8nCapture([
-    "export:workflow",
-    `--id=${wfId}`,
-    "--pretty",
-  ]);
-
-  if (code !== 0) {
+  // Get workflow from n8n database using REST API
+  let dbWorkflow: Workflow;
+  try {
+    // Check if wfId looks like a valid database ID (UUID or NanoID)
+    const isValidDatabaseId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(wfId) ||
+                               /^[A-Za-z0-9_-]{10,21}$/.test(wfId);
+    
+    if (isValidDatabaseId) {
+      // Try to get workflow by ID first
+      try {
+        dbWorkflow = await getWorkflow(wfId);
+      } catch (getError) {
+        // If getWorkflow fails, fall through to name search
+        logger.debug(`Failed to get workflow by ID "${wfId}", trying to find by name...`);
+        const allWorkflows = await exportWorkflows();
+        const found = allWorkflows.find((w) => w.id === wfId);
+        
+        if (found) {
+          dbWorkflow = found;
+        } else {
+          // Try to find by workflow name from JSON file
+          const foundByName = allWorkflows.find((w) => w.name === workflowName);
+          if (foundByName) {
+            dbWorkflow = foundByName;
+          } else {
+            throw new Error(`Workflow not found: ${wfId}`);
+          }
+        }
+      }
+    } else {
+      // Custom ID or name - search by name
+      logger.debug(`Looking up workflow by name: "${wfId}" or "${workflowName}"`);
+      const allWorkflows = await exportWorkflows();
+      const found = allWorkflows.find(
+        (w) => w.id === wfId || w.name === wfId || w.name === workflowName
+      );
+      
+      if (!found) {
+        throw new Error(`Workflow not found: ${wfId}`);
+      }
+      
+      dbWorkflow = found;
+    }
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
     return {
       workflowId: wfId,
       workflowName,
@@ -131,39 +169,16 @@ async function verifyWorkflow(
       jsonInputs,
       dbInputs: [],
       differences: [
-        `Failed to export workflow from database: ${stderr.trim() || "unknown error"}`,
+        `Failed to get workflow from database: ${errorMessage}`,
       ],
     };
   }
+  
+  // Convert Workflow to WorkflowObject format for compatibility
+  // WorkflowObject is a superset of Workflow, so we can cast it directly
+  const dbWorkflowObject: WorkflowObject = dbWorkflow as unknown as WorkflowObject;
 
-  if (!stdout.trim()) {
-    return {
-      workflowId: wfId,
-      workflowName,
-      status: "not_found",
-      jsonInputs,
-      dbInputs: [],
-      differences: ["Workflow not found in database"],
-    };
-  }
-
-  let dbWorkflow: WorkflowObject;
-  try {
-    const parsed = JSON.parse(stdout);
-    // n8n export:workflow --id may return an array with one element or a single object
-    dbWorkflow = Array.isArray(parsed) ? (parsed[0] as WorkflowObject) : (parsed as WorkflowObject);
-  } catch (err) {
-    return {
-      workflowId: wfId,
-      workflowName,
-      status: "error",
-      jsonInputs,
-      dbInputs: [],
-      differences: [`Failed to parse database export: ${err}`],
-    };
-  }
-
-  const dbInputs = extractTriggerInputs(dbWorkflow);
+  const dbInputs = extractTriggerInputs(dbWorkflowObject);
   const differences = compareInputs(jsonInputs, dbInputs);
 
   return {
