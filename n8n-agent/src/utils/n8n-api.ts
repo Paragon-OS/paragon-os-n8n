@@ -264,7 +264,8 @@ function cleanWorkflowForApi(workflowData: Workflow): Record<string, unknown> {
 export async function importWorkflow(
   workflowData: Workflow,
   config?: N8nApiConfig,
-  forceCreate: boolean = false
+  forceCreate: boolean = false,
+  existingWorkflowId?: string
 ): Promise<Workflow> {
   const client = config ? createApiClient(config) : getDefaultClient();
 
@@ -278,12 +279,50 @@ export async function importWorkflow(
     // 2. Even if it's a database ID, we shouldn't use it in request bodies
     // 3. We need to find the actual database ID (UUID or NanoID) by searching by name
     let existingWorkflow: Workflow | null = null;
-    if (!forceCreate && workflowData.name) {
+    
+    // If an existing workflow ID was provided, verify it exists before using it
+    // This prevents 404 errors when the workflow was deleted or doesn't exist
+    if (existingWorkflowId && isValidDatabaseId(existingWorkflowId)) {
+      try {
+        // Verify the workflow exists by fetching it
+        const workflow = await getWorkflow(existingWorkflowId, config);
+        if (workflow && workflow.id) {
+          existingWorkflow = workflow;
+          logger.debug(`Verified existing workflow ID: ${existingWorkflowId}`);
+        }
+      } catch (error) {
+        // If fetch fails (e.g., workflow was deleted), log and fall through to name-based lookup
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
+          logger.warn(`Provided workflow ID ${existingWorkflowId} not found (may have been deleted), will try name-based lookup or create new`);
+          // Clear existingWorkflowId so we don't try to use it
+          existingWorkflowId = undefined;
+        } else {
+          logger.debug(`Failed to verify workflow ID ${existingWorkflowId}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+        // Don't use the invalid ID - let name-based lookup or creation handle it
+        // existingWorkflow remains null, so we'll fall through to name-based lookup
+      }
+    }
+    
+    // If no existing workflow found yet, search by name
+    // Also verify the found workflow actually exists (not deleted)
+    if (!existingWorkflow && !forceCreate && workflowData.name) {
       try {
         const workflows = await exportWorkflows(config);
         const byName = workflows.find(w => w.name === workflowData.name);
         if (byName && byName.id && isValidDatabaseId(byName.id)) {
-          existingWorkflow = byName;
+          // Verify the workflow actually exists before using it
+          try {
+            const verified = await getWorkflow(byName.id, config);
+            if (verified && verified.id) {
+              existingWorkflow = verified;
+            }
+          } catch (verifyError) {
+            // Workflow was deleted - skip it and create new
+            if (axios.isAxiosError(verifyError) && verifyError.response?.status === 404) {
+              logger.warn(`Workflow "${workflowData.name}" (ID: ${byName.id}) found in export but doesn't exist (deleted), will create new`);
+            }
+          }
         }
       } catch {
         // If search fails, proceed to create new workflow
@@ -297,7 +336,23 @@ export async function importWorkflow(
       const workflowId = existingWorkflow.id;
       // For PUT, the id goes in the URL path, NOT in the request body
       // cleanedData already doesn't include id (we removed it in cleanWorkflowForApi)
-      response = await client.put<Workflow>(`/workflows/${workflowId}`, cleanedData);
+      try {
+        response = await client.put<Workflow>(`/workflows/${workflowId}`, cleanedData);
+      } catch (putError) {
+        // If PUT fails with 404, the workflow might have been deleted
+        // Fall back to creating a new workflow
+        if (axios.isAxiosError(putError) && putError.response?.status === 404) {
+          logger.warn(`Workflow ${workflowId} not found (may have been deleted), creating new workflow instead`);
+          try {
+            response = await client.post<Workflow>('/workflows', cleanedData);
+          } catch (postError) {
+            // If POST also fails, throw the original PUT error
+            throw putError;
+          }
+        } else {
+          throw putError;
+        }
+      }
     } else {
       // Create new workflow - POST never accepts id in request body (it's read-only)
       // cleanedData already doesn't include id (we removed it in cleanWorkflowForApi)
@@ -494,26 +549,46 @@ export async function executeWorkflow(
       
       try {
         // Get the workflow to find its database ID
-        const workflow = await getWorkflow(workflowId, config).catch(() => null);
-        if (workflow) {
-          // Get most recent execution
-          const execResponse = await client.get('/executions', {
-            params: { workflowId: workflow.id, limit: 1 },
-          });
-          
-          if (execResponse.status === 200) {
-            const executions = Array.isArray(execResponse.data) ? execResponse.data :
-                              execResponse.data?.data ? execResponse.data.data :
-                              execResponse.data?.executions || [];
-            
-            if (executions.length > 0) {
-              const exec = executions[0] as { id: string };
-              const detailResponse = await client.get(`/executions/${exec.id}`);
-              if (detailResponse.status === 200) {
-                logger.debug(`Found execution via API: ${exec.id}`);
-                return detailResponse.data as N8nExecutionResponse;
-              }
+        // workflowId might be a custom ID, so we need to resolve it
+        let resolvedWorkflowId = workflowId;
+        try {
+          const workflow = await getWorkflow(workflowId, config);
+          resolvedWorkflowId = workflow.id;
+        } catch {
+          // If getWorkflow fails, try to resolve by name or use as-is
+          try {
+            const workflows = await exportWorkflows(config);
+            const byName = workflows.find(w => w.name === workflowId);
+            if (byName?.id) {
+              resolvedWorkflowId = byName.id;
             }
+          } catch {
+            // Use workflowId as-is
+          }
+        }
+        
+        // Wait a bit for execution to be saved to database
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Get most recent execution
+        const execResponse = await client.get('/executions', {
+          params: { workflowId: resolvedWorkflowId, limit: 1 },
+        });
+        
+        if (execResponse.status === 200) {
+          const executions = Array.isArray(execResponse.data) ? execResponse.data :
+                            execResponse.data?.data ? execResponse.data.data :
+                            execResponse.data?.executions || [];
+          
+          if (executions.length > 0) {
+            const exec = executions[0] as { id: string };
+            const detailResponse = await client.get(`/executions/${exec.id}`);
+            if (detailResponse.status === 200) {
+              logger.debug(`Found execution via API: ${exec.id}`);
+              return detailResponse.data as N8nExecutionResponse;
+            }
+          } else {
+            logger.debug(`No executions found for workflow ${resolvedWorkflowId}`);
           }
         }
       } catch (apiError) {

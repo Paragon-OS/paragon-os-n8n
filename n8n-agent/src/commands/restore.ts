@@ -146,17 +146,53 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
   const idMapping = new Map<string, string>(); // old ID -> new ID
   const isDeleted = (id: string | undefined) => id ? deletedWorkflowIds.has(id) : false;
 
+  // Fetch all current workflows once to check for existing workflows by name
+  // This prevents duplicates when restoring multiple times
+  let currentWorkflowsForNameCheck: any[] = [];
+  try {
+    currentWorkflowsForNameCheck = await exportWorkflows();
+    logger.debug(`Fetched ${currentWorkflowsForNameCheck.length} existing workflows for name-based duplicate prevention`);
+  } catch (err) {
+    logger.warn("Failed to fetch existing workflows for duplicate check, proceeding anyway", err);
+  }
+
   for (const backup of toImport) {
     const oldId = backup.id;
     const isDeletedWorkflow = isDeleted(oldId);
 
+    // Check if workflow with same name already exists (to prevent duplicates)
+    // This is especially important for "deleted" workflows that might have been
+    // restored in a previous run
+    // If there are multiple workflows with the same name, use the most recently updated one
+    const existingWorkflowsByName = backup.name
+      ? currentWorkflowsForNameCheck.filter(w => w.name === backup.name)
+      : [];
+    
+    // If multiple workflows with same name, prefer the most recently updated one
+    const existingWorkflowByName = existingWorkflowsByName.length > 0
+      ? existingWorkflowsByName.sort((a, b) => {
+          const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+          const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+          return bTime - aTime; // Most recent first
+        })[0]
+      : null;
+    
+    const willUpdate = existingWorkflowByName !== null;
+    const willCreate = isDeletedWorkflow && !existingWorkflowByName;
+    
+    if (existingWorkflowsByName.length > 1) {
+      logger.warn(`Found ${existingWorkflowsByName.length} workflows with name "${backup.name}", using most recently updated one (ID: ${existingWorkflowByName?.id})`);
+    }
+
     logger.info(
-      `Importing workflow "${backup.name}"${oldId ? ` (old ID: ${oldId})` : " (new workflow)"}${isDeletedWorkflow ? " [deleted, creating new]" : ""}`,
+      `Importing workflow "${backup.name}"${oldId ? ` (old ID: ${oldId})` : " (new workflow)"}${willCreate ? " [creating new]" : willUpdate ? " [updating existing]" : ""}`,
       {
         filePath: backup.filePath,
         workflowId: oldId,
         workflowName: backup.name,
-        isDeleted: isDeletedWorkflow
+        isDeleted: isDeletedWorkflow,
+        willUpdate,
+        willCreate
       }
     );
 
@@ -164,23 +200,44 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
       // Prepare workflow for import
       const workflowForImport = { ...backup.workflow };
       
-      // For deleted workflows, remove ID to force creation of new workflow
-      // For existing workflows, importWorkflow will handle update by name
+      // For deleted workflows, remove ID so importWorkflow can search by name
+      // importWorkflow will check if a workflow with the same name exists
+      // If it exists, it will update it; if not, it will create a new one
+      // This prevents duplicates when restoring multiple times
       if (isDeletedWorkflow) {
         delete workflowForImport.id;
       }
 
+      // If we found an existing workflow by name, pass its ID to importWorkflow
+      // This ensures we update the correct workflow and avoids issues with duplicates
+      // or race conditions where importWorkflow's own lookup might find a different workflow
+      const existingWorkflowId = existingWorkflowByName?.id;
+      
+      // Only force create if no workflow with this name exists
+      // Otherwise, importWorkflow will update the existing one (using the ID we found)
+      const shouldForceCreate = isDeletedWorkflow && !existingWorkflowByName;
+
       // Import workflow via API (handles schema cleaning, creates or updates as needed)
+      // Pass the existing workflow ID if we found one to ensure we update the correct workflow
       const importedWorkflow = await importWorkflow(
         workflowForImport as any,
         undefined,
-        isDeletedWorkflow // forceCreate for deleted workflows
+        shouldForceCreate, // Only force create if truly new (no existing workflow by name)
+        existingWorkflowId // Pass the ID we found to avoid duplicate lookup issues
       );
 
       // Build ID mapping: old ID -> new ID
-      if (oldId && importedWorkflow.id && oldId !== importedWorkflow.id) {
-        idMapping.set(oldId, importedWorkflow.id);
-        logger.debug(`Mapped workflow ID: ${oldId} -> ${importedWorkflow.id} (${backup.name})`);
+      // Always create mapping if we have both old and new IDs, even if they're the same
+      // (this helps with reference updates even when workflow wasn't recreated)
+      if (oldId && importedWorkflow.id) {
+        if (oldId !== importedWorkflow.id) {
+          idMapping.set(oldId, importedWorkflow.id);
+          logger.debug(`Mapped workflow ID: ${oldId} -> ${importedWorkflow.id} (${backup.name})`);
+        } else {
+          // Even if IDs match, create mapping for reference updates
+          idMapping.set(oldId, importedWorkflow.id);
+          logger.debug(`Mapped workflow ID (same): ${oldId} -> ${importedWorkflow.id} (${backup.name})`);
+        }
       }
 
       // Also map custom IDs (like "TelegramContextScout") to new database ID
