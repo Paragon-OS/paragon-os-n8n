@@ -1,47 +1,68 @@
-import { runN8nCapture } from "../utils/n8n";
+import { exportWorkflows } from "../utils/n8n-api";
 import { logger } from "../utils/logger";
 import type { ExportedWorkflow } from "../types/index";
+import type { Workflow } from "../utils/n8n-api";
 
 export async function executeTree(remainingArgs: string[] = []): Promise<void> {
-  // We intentionally do NOT set stdio: "inherit" here so we can parse JSON.
-  // If the user does not pass any explicit selection flags, default to --all.
-  const hasSelectionFlag = remainingArgs.some((f) =>
-    ["--all", "--id", "--active", "--inactive"].some((sel) => f === sel || f.startsWith(`${sel}=`))
-  );
-
-  const baseArgs = ["export:workflow", "--pretty"];
-  const selectionArgs = hasSelectionFlag ? [] : ["--all"];
-
-  const { code, stdout, stderr } = await runN8nCapture([...baseArgs, ...selectionArgs, ...remainingArgs]);
-
-  if (code !== 0) {
-    logger.error("n8n export:workflow failed", undefined, { exitCode: code, stderr: stderr.trim() });
-    process.exit(code);
+  // Parse filtering options from remaining args
+  let filterById: string | undefined;
+  let filterActive: boolean | undefined;
+  
+  for (const arg of remainingArgs) {
+    if (arg.startsWith("--id=")) {
+      filterById = arg.substring(5);
+    } else if (arg === "--active") {
+      filterActive = true;
+    } else if (arg === "--inactive") {
+      filterActive = false;
+    }
+    // Note: --all flag is ignored (we always fetch all workflows via API)
   }
 
-  if (!stdout.trim()) {
-    logger.info("No workflows returned by n8n export:workflow.");
-    process.exit(0);
-  }
-
-  let workflows: unknown;
-
+  let workflows: Workflow[];
+  
   try {
-    workflows = JSON.parse(stdout);
+    workflows = await exportWorkflows();
   } catch (err) {
-    logger.error("Failed to parse JSON from n8n export:workflow", err);
+    logger.error("Failed to export workflows from n8n API", err);
     process.exit(1);
+    return;
   }
 
-  if (!Array.isArray(workflows)) {
-    logger.error("Unexpected export format from n8n: expected an array of workflows.");
-    process.exit(1);
+  if (workflows.length === 0) {
+    logger.info("No workflows found in n8n instance.");
+    process.exit(0);
+    return;
   }
 
-  const typedWorkflows: ExportedWorkflow[] = workflows as ExportedWorkflow[];
+  // Apply filters
+  let filteredWorkflows = workflows;
+  
+  if (filterById) {
+    filteredWorkflows = filteredWorkflows.filter((wf) => 
+      wf.id === filterById || wf.name?.includes(filterById)
+    );
+  }
+  
+  if (filterActive !== undefined) {
+    filteredWorkflows = filteredWorkflows.filter((wf) => wf.active === filterActive);
+  }
+
+  if (filteredWorkflows.length === 0) {
+    logger.info("No workflows match the specified filters.");
+    process.exit(0);
+    return;
+  }
+
+  // Map Workflow[] to ExportedWorkflow[] format
+  const typedWorkflows: ExportedWorkflow[] = filteredWorkflows.map((wf) => ({
+    id: wf.id,
+    name: wf.name,
+    folderId: (wf as { folderId?: string | null }).folderId ?? null,
+  }));
 
   // Build folder-to-workflows map. We don't resolve folder names here because
-  // n8n export:workflow does not include folder metadata by default; we treat
+  // the REST API does not include folder metadata by default; we treat
   // each distinct folderId as a logical folder key and group workflows by it.
   const folderMap = new Map<string, ExportedWorkflow[]>();
   const uncategorized: ExportedWorkflow[] = [];
