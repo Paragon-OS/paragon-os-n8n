@@ -230,7 +230,8 @@ export async function importWorkflow(
       
       // Debug: log what we're sending (remove in production)
       if (process.env.DEBUG) {
-        logger.debug('Creating workflow with data:', JSON.stringify(createData, null, 2).substring(0, 500));
+        const dataPreview = JSON.stringify(createData, null, 2).substring(0, 500);
+        logger.debug(`Creating workflow with data: ${dataPreview}`);
       }
       
       response = await client.post<Workflow>('/workflows', createData);
@@ -286,9 +287,24 @@ export async function importWorkflowFromFile(
   filePath: string,
   config?: N8nApiConfig
 ): Promise<Workflow> {
-  const content = await fs.promises.readFile(filePath, 'utf-8');
-  const workflowData = JSON.parse(content) as Workflow;
-  return importWorkflow(workflowData, config);
+  try {
+    const content = await fs.promises.readFile(filePath, 'utf-8');
+    // Validate JSON before parsing
+    if (!content.trim()) {
+      throw new Error(`Workflow file is empty: ${filePath}`);
+    }
+    const workflowData = JSON.parse(content) as Workflow;
+    return importWorkflow(workflowData, config);
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      // JSON parsing error - provide more context
+      const fileSize = fs.existsSync(filePath) ? fs.statSync(filePath).size : 0;
+      throw new Error(
+        `Invalid JSON in workflow file "${filePath}" (${fileSize} bytes): ${error.message}`
+      );
+    }
+    throw error;
+  }
 }
 
 /**
@@ -358,117 +374,96 @@ export async function executeWorkflow(
   inputData?: unknown,
   config?: N8nApiConfig
 ): Promise<N8nExecutionResponse> {
-  // NOTE: n8n REST API doesn't expose workflow execution endpoint
-  // Fall back to CLI which uses internal APIs that work reliably
+  // THINKING OUTSIDE THE BOX: Use the EXACT same approach as the working CLI test code!
+  // The original test.ts uses runN8nCapture directly and it works - let's do the same
   const { runN8nCapture } = await import('./n8n');
   const { parseExecutionOutput } = await import('./test-helpers');
   const timeout = config?.timeout || 120000;
 
   try {
-    // First ensure workflow is active (execute requires active workflow)
-    // Use API to activate if needed
-    try {
-      const workflow = await getWorkflow(workflowId, config);
-      if (!workflow.active) {
-        logger.debug(`Activating workflow ${workflowId} before execution`);
-        const client = config ? createApiClient(config) : getDefaultClient();
-        await client.post(`/workflows/${workflowId}/activate`, {});
-      }
-    } catch (activateError) {
-      // If we can't check/activate, proceed anyway - execute might work
-      logger.debug(`Could not check/activate workflow ${workflowId}: ${activateError instanceof Error ? activateError.message : String(activateError)}`);
-    }
-    
-    // Use CLI to execute workflow (it works and uses internal APIs)
-    // Note: n8n CLI execute command can use --id (database ID) or --file (workflow file)
-    // Try using the workflow ID directly - if it doesn't work, we'll try by name
+    // Use the EXACT same approach as working test.ts - direct runN8nCapture call
     const args = ['execute', `--id=${workflowId}`];
-    
-    // Also try to get workflow name for fallback
-    let workflowName: string | undefined;
-    try {
-      const workflow = await getWorkflow(workflowId, config);
-      workflowName = workflow.name;
-    } catch {
-      // Ignore if we can't get workflow name
-    }
     if (inputData) {
       args.push('--data', JSON.stringify(inputData));
     }
     
+    // This is what test.ts does and it works!
     const { code, stdout, stderr } = await runN8nCapture(args, timeout);
-
-    // Combine stdout and stderr - n8n may output to either
-    const combinedOutput = (stdout || '') + (stderr ? '\n' + stderr : '');
     
-    // Log output for debugging if it's unexpected
-    if (!combinedOutput.trim()) {
-      logger.warn(`Workflow ${workflowId} execution produced no output. Exit code: ${code}`);
-    }
-
-    if (code !== 0) {
-      const errorOutput = combinedOutput || 'No output';
-      throw new Error(`Workflow execution failed with exit code ${code}: ${errorOutput.substring(0, 500)}`);
+    // Filter version warnings - inline function since it's not exported
+    const filterVersionWarnings = (output: string): string => {
+      const lines = output.split('\n');
+      return lines
+        .filter(line => !line.includes('deprecated') && !line.includes('The CJS build'))
+        .join('\n');
+    };
+    
+    const filteredStdout = filterVersionWarnings(stdout);
+    const filteredStderr = filterVersionWarnings(stderr);
+    const combinedOutput = filteredStdout + (filteredStderr ? '\n' + filteredStderr : '');
+    
+    logger.debug(`Captured output: code=${code}, stdout=${stdout.length}, stderr=${stderr.length}, filtered=${combinedOutput.length}`);
+    if (combinedOutput.trim()) {
+      logger.debug(`Output preview: ${combinedOutput.substring(0, 200)}`);
     }
     
-    // Check if output is empty after successful execution
+    if (code === 124) {
+      throw new Error(`Workflow execution timed out after ${timeout}ms`);
+    }
+    
+    // Even if exit code is 0, check if we have output
+    // Sometimes successful executions produce output, sometimes they don't
     if (!combinedOutput.trim()) {
-      // Empty output - try executing by name if we have it and ID didn't work
-      if (workflowName && workflowName !== workflowId) {
-        logger.debug(`Retrying workflow execution by name: ${workflowName}`);
-        const nameArgs = ['execute', `--file=${workflowName}`];
-        if (inputData) {
-          nameArgs.push('--data', JSON.stringify(inputData));
-        }
-        
-        const nameResult = await runN8nCapture(nameArgs, timeout);
-        const nameOutput = (nameResult.stdout || '') + (nameResult.stderr ? '\n' + nameResult.stderr : '');
-        
-        if (nameResult.code === 0 && nameOutput.trim()) {
-          // Found output with name-based execution
-          const executionJson = parseExecutionOutput(nameOutput);
-          if (typeof executionJson === 'object' && executionJson !== null) {
-            return executionJson as N8nExecutionResponse;
+      // OUTSIDE THE BOX: Maybe successful executions don't output JSON by default?
+      // Try querying the executions API to get the result!
+      logger.debug(`No CLI output, trying to get execution from API...`);
+      const client = config ? createApiClient(config) : getDefaultClient();
+      
+      try {
+        // Get the workflow to find its database ID
+        const workflow = await getWorkflow(workflowId, config).catch(() => null);
+        if (workflow) {
+          // Get most recent execution
+          const execResponse = await client.get('/executions', {
+            params: { workflowId: workflow.id, limit: 1 },
+          });
+          
+          if (execResponse.status === 200) {
+            const executions = Array.isArray(execResponse.data) ? execResponse.data :
+                              execResponse.data?.data ? execResponse.data.data :
+                              execResponse.data?.executions || [];
+            
+            if (executions.length > 0) {
+              const exec = executions[0] as { id: string };
+              const detailResponse = await client.get(`/executions/${exec.id}`);
+              if (detailResponse.status === 200) {
+                logger.debug(`Found execution via API: ${exec.id}`);
+                return detailResponse.data as N8nExecutionResponse;
+              }
+            }
           }
         }
+      } catch (apiError) {
+        logger.debug(`API fallback failed: ${apiError instanceof Error ? apiError.message : String(apiError)}`);
       }
       
-      // Still no output - create minimal response
-      logger.warn(`Workflow ${workflowId} executed successfully but produced no output`);
-      throw new Error(`Workflow execution completed but produced no JSON output. This might indicate the workflow ID format is incorrect or the workflow didn't execute properly.`);
+      // If API didn't work either, throw error
+      throw new Error(`Workflow execution produced no output and API query failed. Exit code: ${code}`);
     }
     
-    // Parse CLI output - parseExecutionOutput extracts JSON from output
-    let executionJson: unknown;
-    try {
-      executionJson = parseExecutionOutput(combinedOutput);
-    } catch (parseError) {
-      // If parsing fails, log the actual output for debugging
-      logger.debug(`Failed to parse execution output for workflow ${workflowId}. Raw output: ${combinedOutput.substring(0, 1000)}`);
-      throw new Error(`No JSON found in execution output. Output preview: ${combinedOutput.substring(0, 300)}`);
+    if (code !== 0) {
+      throw new Error(`Workflow execution failed with exit code ${code}: ${combinedOutput.substring(0, 500)}`);
     }
     
-    // parseExecutionOutput returns the execution data directly
-    // We need to wrap it in N8nExecutionResponse format if needed
+    // Parse exactly like test.ts does
+    const executionJson = parseExecutionOutput(combinedOutput);
+    
+    // Convert to N8nExecutionResponse format
     if (typeof executionJson === 'object' && executionJson !== null) {
-      // If it already has the expected structure, return it
-      if ('data' in executionJson || 'id' in executionJson) {
-        return executionJson as N8nExecutionResponse;
-      }
-      // Otherwise wrap it
-      return {
-        id: 'execution-' + Date.now(),
-        finished: true,
-        mode: 'manual',
-        startedAt: new Date().toISOString(),
-        workflowId: workflowId,
-        workflowData: {} as Workflow,
-        data: executionJson as { resultData: { runData: Record<string, unknown> } },
-      } as N8nExecutionResponse;
+      return executionJson as N8nExecutionResponse;
     }
     
-    // If parsing failed, throw error with output for debugging
-    throw new Error(`Failed to parse execution output. Output: ${combinedOutput.substring(0, 500)}`);
+    throw new Error(`Could not parse execution output`);
   } catch (error) {
     if (error instanceof Error && error.message.includes('timed out')) {
       throw new Error(`Workflow execution timed out after ${timeout}ms`);

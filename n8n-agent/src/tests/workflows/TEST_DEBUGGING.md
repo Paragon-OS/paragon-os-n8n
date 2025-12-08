@@ -71,9 +71,9 @@ This error occurs when:
    - Look for recent Test Runner executions
    - Check for error messages in failed executions
 
-6. **Test manually via CLI:**
+6. **Test manually via Vitest:**
    ```bash
-   npm run n8n:test -- --workflow DiscordContextScout --test contact-fuzzy
+   npm test -- discord-context-scout -t "contact-fuzzy"
    ```
 
 ### Test Framework Status

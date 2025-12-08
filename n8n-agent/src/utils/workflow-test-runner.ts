@@ -226,16 +226,24 @@ export async function executeWorkflowTest(
     configNode.parameters.jsonOutput = `=${configJson}`;
 
     // Write modified workflow to temp file
-    fs.writeFileSync(context.tempPath, JSON.stringify(testRunnerJson, null, 2));
-
-    // Import modified Test Runner using API and get workflow name (CLI uses name, not database ID)
-    let testRunnerWorkflowName: string;
     try {
-      const importedWorkflow = await importWorkflowFromFile(context.tempPath);
-      // CLI execute command works with workflow name, not database UUID
-      // Use the workflow name (which matches what's in the JSON file)
-      testRunnerWorkflowName = importedWorkflow.name || '[HELPERS] Test Runner';
-      logger.debug(`Test Runner workflow imported: ${testRunnerWorkflowName} (ID: ${importedWorkflow.id})`);
+      const jsonString = JSON.stringify(testRunnerJson, null, 2);
+      fs.writeFileSync(context.tempPath, jsonString, 'utf-8');
+      
+      // Validate the JSON we just wrote
+      JSON.parse(jsonString);
+    } catch (jsonError) {
+      return {
+        testCase,
+        success: false,
+        error: `Failed to serialize test runner workflow: ${jsonError instanceof Error ? jsonError.message : String(jsonError)}`,
+      };
+    }
+
+    // Import modified Test Runner using API
+    try {
+      await importWorkflowFromFile(context.tempPath);
+      logger.debug(`Test Runner workflow imported successfully`);
     } catch (error) {
       return {
         testCase,
@@ -244,10 +252,24 @@ export async function executeWorkflowTest(
       };
     }
 
-    // Execute Test Runner using workflow name (CLI prefers name over database ID)
+    // Execute Test Runner using the custom ID from the JSON file
+    // The CLI --id flag expects the custom ID from the workflow JSON (TestRunnerHelper001),
+    // not the database UUID returned by the API
+    // We need to read the custom ID from the temp file since that's what we just imported
+    let testRunnerCustomId: string = TEST_RUNNER_ID; // Fallback to constant
+    try {
+      const testRunnerContent = JSON.parse(fs.readFileSync(context.tempPath, 'utf-8'));
+      if (testRunnerContent.id) {
+        testRunnerCustomId = testRunnerContent.id;
+      }
+    } catch {
+      // Use fallback ID
+    }
+
     let executionResult: N8nExecutionResponse;
     try {
-      executionResult = await executeWorkflow(testRunnerWorkflowName, undefined, { timeout: 2 * 60 * 1000 });
+      // Use the custom ID from the JSON file (this is what CLI expects)
+      executionResult = await executeWorkflow(testRunnerCustomId, undefined, { timeout: 2 * 60 * 1000 });
     } catch (error) {
       // Handle timeout or execution errors
       if (error instanceof Error && error.message.includes('timed out')) {
@@ -323,8 +345,13 @@ export async function executeWorkflowTest(
     }
     
     // Cleanup temp file
-    if (fs.existsSync(context.tempPath)) {
-      fs.unlinkSync(context.tempPath);
+    try {
+      if (fs.existsSync(context.tempPath)) {
+        fs.unlinkSync(context.tempPath);
+      }
+    } catch (cleanupError) {
+      // Ignore cleanup errors - file might already be deleted
+      logger.debug(`Failed to cleanup temp file: ${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`);
     }
   }
 }

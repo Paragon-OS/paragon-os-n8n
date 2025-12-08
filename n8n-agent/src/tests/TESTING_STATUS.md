@@ -96,6 +96,6 @@ When tests run, you'll see:
 ### Migration Status
 
 - ✅ All test cases from `test-cases.js` migrated to TypeScript
-- ✅ CLI test command (`npm run n8n:test`) still works for backward compatibility
-- ✅ Both test methods can coexist
+- ✅ All tests now run via Vitest (`npm test`)
+- ✅ CLI test command removed - use Vitest instead
 

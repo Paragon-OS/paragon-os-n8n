@@ -111,12 +111,11 @@ npm test -- -t "contact-rag"
 - ✅ Manual `process.exit()` management (Vitest handles exit codes)
 - ✅ Custom result formatting (Vitest reporters handle it)
 
-## Backward Compatibility
+## Testing
 
-The CLI test command (`npm run n8n:test`) still works for backward compatibility. Both test methods can coexist:
+All workflow tests are now run using Vitest:
 
-- **CLI tests**: `npm run n8n:test -- --workflow DynamicRAG --test status`
-- **Vitest tests**: `npm test -- dynamic-rag -t "status"`
+- **Vitest tests**: `npm test` (runs all tests) or `npm test -- dynamic-rag -t "status"` (run specific test)
 
 ## Next Steps
 

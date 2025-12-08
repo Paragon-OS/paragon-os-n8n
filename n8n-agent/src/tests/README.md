@@ -116,9 +116,9 @@ These utilities handle:
 ✅ No manual test case loading
 ✅ Can use Vitest's test filtering and organization features
 
-## Migration from CLI Tests
+## Testing
 
-The original CLI test command (`npm run n8n:test`) still works for backward compatibility. The Vitest tests use the same underlying execution logic but provide a better developer experience.
+All workflow tests are run using Vitest. The tests use the same underlying execution logic as the previous CLI-based tests but provide a better developer experience with proper test framework integration.
 
 ## Notes
 

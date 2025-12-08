@@ -7,7 +7,6 @@ import { executeBackup } from "./commands/backup";
 import { executeRestore } from "./commands/restore";
 import { executeTree } from "./commands/tree";
 import { executeOrganize } from "./commands/organize";
-import { executeTest } from "./commands/test";
 import { executeVerify } from "./commands/verify";
 
 const program = new Command();
@@ -55,16 +54,6 @@ program
     // For tree, all remaining args after command are passthrough
     const remainingArgs = getRemainingArgs(command);
     await executeTree(remainingArgs);
-  });
-
-program
-  .command("test")
-  .description("Run test cases against workflows")
-  .option("-w, --workflow <name>", "Workflow name to test")
-  .option("-t, --test <case>", "Test case ID")
-  .option("-l, --list", "List all available test cases")
-  .action(async (options) => {
-    await executeTest(options);
   });
 
 program

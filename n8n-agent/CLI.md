@@ -17,7 +17,6 @@ npm install
 | `restore` | `npm run n8n:workflows:upsync` | Import workflows from JSON files to n8n |
 | `organize` | - | Organize workflow files into tag-based directories |
 | `tree` | `npm run n8n:workflows:tree` | Display workflow folder structure |
-| `test` | `npm run n8n:test` | Run integration tests against workflows |
 | `verify` | `npm run n8n:verify` | Verify workflow trigger inputs match database |
 
 ---
@@ -181,103 +180,6 @@ n8n workflow folder structure (by folderId):
 ```
 
 ---
-
-### `test` - Run Integration Tests
-
-Run test cases against n8n workflows using the Test Runner helper workflow.
-
-```bash
-# Using npm scripts
-npm run n8n:test -- --list                              # List available tests
-npm run n8n:test -- --workflow <name>                   # Run all tests for a workflow
-npm run n8n:test -- --workflow <name> --test <case>     # Run specific test
-
-# Using CLI directly
-ts-node src/n8n-workflows-cli.ts test [options]
-```
-
-**Options:**
-
-| Option | Alias | Description |
-|--------|-------|-------------|
-| `--workflow <name>` | `-w` | Workflow name to test |
-| `--test <case>` | `-t` | Test case ID (optional - runs all if omitted) |
-| `--list` | `-l` | List all available test cases |
-
-**Features:**
-- Auto-syncs workflow to n8n before testing
-- Configures and executes the Test Runner helper workflow
-- Parses and displays test results with formatted output
-- Supports running all tests for a workflow with summary
-- Shows pass/fail counts and lists failed tests
-
-**Examples:**
-
-```bash
-# List all available tests
-npm run n8n:test -- --list
-
-# Run all tests for DynamicRAG workflow
-npm run n8n:test -- --workflow DynamicRAG
-
-# Run a specific test
-npm run n8n:test -- --workflow TelegramContextScout --test contact-rag
-
-# Short form
-npm run n8n:test -- -w DynamicRAG -t status
-```
-
-**Test Output (Single Test):**
-
-```
-╭────── Running Test ──────╮
-│                          │
-│   Workflow: DynamicRAG   │
-│   Test:     status       │
-│                          │
-╰──────────────────────────╯
-📥 Test Input:
-{
-  "mode": "STATUS",
-  "collectionId": "paragon-os-contacts"
-}
-
-🔄 Auto-syncing workflow "DynamicRAG" to n8n...
-✅ Workflow "DynamicRAG" synced successfully
-
-╭───────────────────── Test Results ─────────────────────╮
-│                                                        │
-│   Workflow Output:                                     │
-│   { "status": "green", "pointsCount": 200 }            │
-│                                                        │
-╰────────────────────────────────────────────────────────╯
-✅ Test completed successfully
-```
-
-**Test Output (All Tests):**
-
-```
-╭──── Running All Tests ─────╮
-│                            │
-│   Workflow: DynamicRAG     │
-│   Tests:    8 test cases   │
-│                            │
-╰────────────────────────────╯
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  [1/8] status
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  ✅ status - PASSED
-     {"status": "green", ...}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  [2/8] search-contacts
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  ✅ search-contacts - PASSED
-
-...
-
-╭─────────────── ✅ All Tests Passed ───────────────╮
 │                                                   │
 │   Total:  8 tests                                 │
 │   Passed: 8                                       │
@@ -438,8 +340,6 @@ n8n-agent/
 | `n8n:workflows:downsync` | `ts-node src/n8n-workflows-cli.ts backup` |
 | `n8n:workflows:upsync` | `ts-node src/n8n-workflows-cli.ts restore` |
 | `n8n:workflows:tree` | `ts-node src/n8n-workflows-cli.ts tree --all` |
-| `n8n:test` | `ts-node src/n8n-workflows-cli.ts test` |
-| `n8n:test:list` | `ts-node src/n8n-workflows-cli.ts test --list` |
 | `n8n:verify` | `ts-node src/n8n-workflows-cli.ts verify` |
 | `test` | `vitest run` |
 | `test:watch` | `vitest` |

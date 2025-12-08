@@ -63,9 +63,9 @@ export async function runN8nCapture(
     // Fallback: check if vitest is in process args (e.g., when running via npm test)
     (process.argv.some(arg => /vitest/i.test(arg)) && process.argv.some(arg => /test/i.test(arg)));
   
-  // For execute commands, use streaming to detect completion early (unless in test env)
-  // In test environments, use simple execa buffering for reliability
-  if (args.includes('execute') && !isTestEnv) {
+  // For execute commands, ALWAYS use streaming to ensure we capture all output
+  // Streaming properly captures output that might be lost with simple buffering
+  if (args.includes('execute')) {
     return runN8nExecuteWithStreaming(args, timeout);
   }
   
@@ -77,10 +77,20 @@ export async function runN8nCapture(
     
     // Use 'pipe' for stdout/stderr to capture all output
     // execa will automatically buffer all output when using 'pipe'
+    // For execute commands, ensure output is not suppressed by setting env vars
+    const env = { ...process.env };
+    if (args.includes('execute')) {
+      // Force n8n to output JSON even when not in TTY
+      // Some n8n versions suppress output when stdout is not a TTY
+      env.FORCE_COLOR = '0'; // Disable color codes that might interfere
+      env.NO_COLOR = '1';
+    }
+    
     const result = await execa("n8n", args, {
       stdio: [stdinMode, "pipe", "pipe"],
       reject: false,
       timeout,
+      env,
       // These are execa defaults but being explicit
       all: false, // Keep stdout and stderr separate
       stripFinalNewline: false, // Keep newlines as-is
@@ -128,8 +138,10 @@ async function runN8nExecuteWithStreaming(
   timeoutMs?: number
 ): Promise<{ code: number; stdout: string; stderr: string }> {
   return new Promise((resolve) => {
+    // For execute commands, ensure we capture output properly
+    // Use 'pipe' for both stdout and stderr to capture all output
     const child = execa("n8n", args, {
-      stdio: ["inherit", "pipe", "pipe"],
+      stdio: ["ignore", "pipe", "pipe"], // Use ignore for stdin to avoid blocking
       reject: false,
     });
 
@@ -229,15 +241,23 @@ async function runN8nExecuteWithStreaming(
       exitCode = code ?? 1;
       exitSignal = signal;
       
+      // For execute commands, wait longer for output to flush
+      // Sometimes output is written asynchronously after process exit
+      const waitTime = args.includes('execute') ? 2000 : 1000;
+      
       // Give streams a chance to finish, but don't wait forever
-      // If streams don't close within 1 second, resolve anyway
+      // If streams don't close within waitTime, resolve anyway with what we have
       setTimeout(() => {
         if (!completed) {
+          // Log what we captured before forcing resolution
+          if (stdout || stderr) {
+            logger.debug(`Forcing resolution after ${waitTime}ms. Captured: stdout=${stdout.length} chars, stderr=${stderr.length} chars`);
+          }
           stdoutEnded = true;
           stderrEnded = true;
           tryResolve();
         }
-      }, 1000);
+      }, waitTime);
       
       tryResolve();
     });
