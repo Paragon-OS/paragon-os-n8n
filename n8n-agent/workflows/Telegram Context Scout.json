@@ -1,0 +1,178 @@
+{
+  "updatedAt": "2025-12-08T18:36:58.465Z",
+  "createdAt": "2025-12-08T18:36:58.465Z",
+  "id": "sO4VcVy2m7hOCbJI",
+  "name": "Telegram Context Scout",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "entity"
+            },
+            {
+              "name": "query"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        400
+      ],
+      "id": "trigger",
+      "name": "When Executed by Another Workflow",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Telegram Platform Configuration\nconst TELEGRAM_CONFIG = {\n  platform: \"TELEGRAM\",\n  mcpCredentialId: \"aiYCclLDUqob5iQ0\",\n  cacheKeyPrefix: \"telegram\",\n  defaultTTL: 6 * 60 * 60 * 1000, // 6 hours\n  \n  entities: {\n    \"contact\": {\n      cacheKey: \"telegramContacts\",\n      fetchWorkflowId: \"TelegramContactFetch\",\n      mcpTool: {\n        name: \"telegram_list_contacts\",\n        parameters: { limit: 200 },\n        mcpDataKey: \"contacts\"\n      },\n      mapper: \"(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone, platform: 'TELEGRAM' })\",\n      dataKey: \"contacts\",\n      searchType: \"rag\",\n      ragConfig: {\n        collectionId: \"paragon-os-contacts\",\n        autoIngest: true\n      },\n      requiresRAGStatusCheck: true\n    },\n    \"contact-rag\": {\n      cacheKey: \"telegramContacts\",\n      fetchWorkflowId: \"TelegramContactFetch\",\n      mcpTool: {\n        name: \"telegram_list_contacts\",\n        parameters: { limit: 200 },\n        mcpDataKey: \"contacts\"\n      },\n      mapper: \"(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone, platform: 'TELEGRAM' })\",\n      dataKey: \"contacts\",\n      searchType: \"rag\",\n      ragConfig: {\n        collectionId: \"paragon-os-contacts\",\n        autoIngest: true\n      },\n      requiresRAGStatusCheck: true\n    },\n    \"chat\": {\n      cacheKey: \"telegramChannels\",\n      fetchWorkflowId: \"TelegramChatFetch\",\n      mcpTool: {\n        name: \"telegram_list_chats\",\n        parameters: { limit: 50 },\n        mcpDataKey: \"items\"\n      },\n      mapper: \"(g) => ({ id: g.id, name: g.name, members: g.memberCount, kind: g.kind, unread: g.unread })\",\n      dataKey: \"channels\",\n      searchType: \"fuzzy\",\n      fuzzyConfig: {\n        searchKeys: [\"name\", \"kind\"],\n        matchQuality: 50,\n        limit: 10\n      }\n    },\n    \"tool\": {\n      cacheKey: \"telegramTools\",\n      fetchWorkflowId: \"TelegramToolFetch\",\n      mapper: \"(t) => t\",\n      dataKey: \"tools\",\n      searchType: \"fuzzy\",\n      fuzzyConfig: {\n        searchKeys: [\"name\", \"description\"],\n        matchQuality: 50,\n        limit: 10\n      }\n    },\n    \"self\": {\n      cacheKey: \"telegramProfile\",\n      fetchWorkflowId: \"TelegramProfileFetch\",\n      mapper: \"(p) => p\",\n      dataKey: \"myProfile\",\n      searchType: \"none\",\n      skipQuery: true\n    },\n    \"message-rag\": {\n      cacheKey: \"telegramMessages\",\n      fetchWorkflowId: \"TelegramMessageFetch\",\n      mcpTool: {\n        name: \"telegram_list_messages\",\n        parameters: { chat_id: \"4000551178\", limit: 100 },\n        mcpDataKey: \"\"\n      },\n      mapper: \"(m) => ({ id: m.id, chatId: m.chatId, text: m.text || '', senderId: m.senderId, senderName: m.senderName || m.from?.name || '', date: m.date || m.timestamp, kind: m.kind || 'message' })\",\n      dataKey: \"messages\",\n      searchType: \"rag\",\n      ragConfig: {\n        collectionId: \"paragon-os-messages\",\n        autoIngest: true\n      },\n      requiresRAGStatusCheck: true\n    }\n  }\n};\n\nconst input = $input.first().json;\n\n// Debug: Log input to see what we're receiving\nif (!input.entity) {\n  throw new Error(`Entity is missing from input. Received: ${JSON.stringify(input)}`);\n}\n\nreturn {\n  query: input.query || '',\n  entity: input.entity,\n  platformConfig: TELEGRAM_CONFIG\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        400
+      ],
+      "id": "load-config",
+      "name": "Load Telegram Config"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Explicitly structure data for executeWorkflow\nconst input = $input.first().json;\n\n// Ensure entity is present\nif (!input.entity || input.entity === '') {\n  throw new Error(`Entity is missing or empty. Input: ${JSON.stringify(input)}`);\n}\n\n// Return structured data\nreturn {\n  query: input.query || '',\n  entity: input.entity,\n  platformConfig: input.platformConfig\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        400
+      ],
+      "id": "prepare-input",
+      "name": "Prepare Input"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "[HELPERS] Generic Context Scout Core",
+          "mode": "list",
+          "cachedResultName": "[HELPERS] Generic Context Scout Core",
+          "cachedResultUrl": "/workflow/GenericContextScoutCore"
+        },
+        "workflowInputs": {
+          "mappingMode": "mapEachItem",
+          "value": {
+            "query": "={{ $json.query }}",
+            "entity": "={{ $json.entity }}",
+            "platformConfig": "={{ $json.platformConfig }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "entity",
+              "displayName": "entity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "platformConfig",
+              "displayName": "platformConfig",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "object"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        976,
+        400
+      ],
+      "id": "execute-core",
+      "name": "Execute Core"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Load Telegram Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Telegram Config": {
+      "main": [
+        [
+          {
+            "node": "Prepare Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Input": {
+      "main": [
+        [
+          {
+            "node": "Execute Core",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "ef4705ae-14bd-435f-8018-101163707b28",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-08T18:36:58.466Z",
+      "createdAt": "2025-12-08T18:36:58.466Z",
+      "role": "workflow:owner",
+      "workflowId": "sO4VcVy2m7hOCbJI",
+      "projectId": "GEUEn6ArNROzJ5FY"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

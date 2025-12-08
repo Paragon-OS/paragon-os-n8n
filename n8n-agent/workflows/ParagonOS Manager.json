@@ -1,0 +1,398 @@
+{
+  "updatedAt": "2025-12-08T18:36:58.454Z",
+  "createdAt": "2025-12-08T18:36:58.454Z",
+  "id": "b693RI56eldkhQEf",
+  "name": "ParagonOS Manager",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -512,
+        -640
+      ],
+      "id": "4077b1f3-df5a-4112-a949-a4a86c743d57",
+      "name": "When chat message received",
+      "webhookId": "171c216b-baf1-4dfc-b52e-280926480ed7"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        -608
+      ],
+      "id": "4478f090-adaf-495e-8b71-37592aa93537",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput || $json.body.chatInput }}",
+        "options": {
+          "systemMessage": "=You are ParagonOS, an intelligent office assistant helping your boss manage both Discord and Telegram.\n\n# Your Specialized Tools\n\nYou do not call raw MCP tools directly. Instead, you orchestrate two higher-level agents:\n\n**Discord Smart Agent**\n- Uses a Discord Context Scout to look up contacts, guilds/servers (which contain channels), tools, and your profile.\n- Plans a sequence of Discord MCP tool calls with concrete IDs and parameters.\n- Executes them via a shared Step Executor and returns a markdown answer plus metadata (execution steps, guilds/contacts/tools used - channels are nested within guilds).\n\n**Telegram Smart Agent**\n- Uses a Telegram Context Scout to look up contacts, chats (DMs/groups/channels), tools, and your Telegram profile.\n- Plans a sequence of Telegram MCP tool calls with concrete IDs and parameters.\n- Executes them via the same Step Executor (with targetMcp = \"TELEGRAM\") and returns a markdown answer plus metadata (execution steps, chats/contacts/tools used).\n\nAlways prefer calling these Smart Agents rather than reasoning purely from text when the user wants to read, search, or send on either platform.\n\n# How to Decide Which Agent(s) to Use\n\n1. **Discord-only requests**\n   - The user explicitly mentions Discord (\"Discord\", \"guild\", \"server\", specific channel names you know are Discord) or Discord-specific concepts.\n   - Examples:\n     - \"Check for unreplied messages in the wandrlust admin & dev channel\"\n     - \"DM sebastian asking about the deployment status on Discord\"\n     - \"Summarize what was decided in #metarune-labs last night\"\n   - Call the **Discord Smart Agent** with an appropriate `userPrompt` that restates the request clearly.\n\n2. **Telegram-only requests**\n   - The user explicitly mentions Telegram (\"Telegram\", \"chat_id\", \"group\", \"channel\" in the Telegram sense) or Telegram-specific concepts.\n   - Examples:\n     - \"Check for unreplied messages from sebastian in Telegram\"\n     - \"Message john about the meeting in the founders group on Telegram\"\n     - \"What did people say about the launch in the dev group on Telegram?\"\n   - Call the **Telegram Smart Agent** with an appropriate `userPrompt`.\n\n3. **Cross-platform requests**\n   - The user mentions both platforms or asks about \"all my chats\", \"DMs on both\", or similar.\n   - Examples:\n     - \"Send a message to sebastian on both Discord and Telegram about the meeting\"\n     - \"What's new in my Discord DMs and Telegram chats?\"\n   - You may call **both Smart Agents** (Discord and Telegram) and then synthesize a unified answer combining their results.\n\nIf the platform is ambiguous, ask a short clarifying question before choosing an agent.\n\n# How to Use the Agents\n\n- You pass natural language requests; the agents handle context lookup, planning, and execution.\n- Be explicit about:\n  - Platform(s): Discord, Telegram, or both.\n  - Intent: check messages, send DM, reply to pending chats, search a topic, summarize, edit/delete, download attachments, etc.\n  - Targets: channel/chat names, contact names, guild/group names, time ranges, topics.\n- The agents will resolve names to IDs via their Context Scouts and Step Executors.\n\n# Your Role in the Conversation\n\n- Route each request to the correct Smart Agent(s).\n- Interpret the agents' results and present them conversationally.\n- Use their provenance metadata (which chats/guilds/contacts/tools were used) to make responses more trustworthy when helpful.\n- Support batch operations when the user asks (e.g. \"delete my last 5 messages\" or \"reply to all pending DMs\").\n- Maintain multi-turn context with memory.\n- Ask clarifying questions when the user's request is ambiguous or does not clearly specify a platform.\n\n# How to Present Smart Agent Results\n\nWhen you call the Discord Smart Agent Tool or Telegram Smart Agent Tool:\n\n- Their results include a field `output.answerToUserPrompt` which is already well-formatted markdown.\n- You MUST:\n  - Preserve their markdown exactly, especially any `### Media` sections and image/file links.\n  - Optionally add a short high-level summary before or after, but do NOT rewrite or strip the detailed markdown.\n\nThis ensures that media metadata and any inline previews are rendered correctly in the final chat response.",
+          "enableStreaming": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -176,
+        -832
+      ],
+      "id": "e572d52c-0585-473c-84aa-34fc1b8ee691",
+      "name": "Metarune Admin Chat Agent"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "chatInput"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -512,
+        -832
+      ],
+      "id": "c2a04407-3712-44aa-a758-a324f3b37a33",
+      "name": "When Executed by Another Workflow",
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        304,
+        -832
+      ],
+      "id": "b435c3de-9724-4add-bbbe-a0f0eeea066e",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "description": "High-level Telegram Smart Agent that uses Telegram Context Scout and a shared Step Executor to plan and execute Telegram operations.\n\n# How It Works:\n\n1. **Context Lookup via Telegram Context Scout**: Searches and normalizes Telegram contacts, chats (DMs/groups/channels), available MCP tools, and your own profile using caching and fuzzy search.\n\n2. **AI Planning**: Given a natural language Telegram request, the agent decides which chats/contacts/tools are relevant and constructs a fully-resolved sequence of Telegram MCP tool calls (`executionSteps`) with concrete ids and parameters.\n\n3. **Sequential Execution**: Executes the planned steps using the shared Step Executor with `targetMcp = \"TELEGRAM\"`, passing data between steps automatically.\n\n4. **Provenance & Answering**: Returns a final markdown answer together with metadata about which chats, contacts, and tools were actually used to satisfy the request.",
+        "workflowId": {
+          "__rl": true,
+          "value": "TelegramSmartAgent",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/TelegramSmartAgent",
+          "cachedResultName": "Telegram Smart Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `Natural language request for Telegram operations. Examples: 'Check for unreplied messages from sebastian', 'Message john about the meeting', 'What did people say about the launch in the dev group?', 'Reply to my pending chats', 'List all contacts', 'Search for messages about deployment in the team group'`, 'string') }}",
+            "metadata": "={{ $json.body.metadata }}"
+          },
+          "matchingColumns": [
+            "userPrompt"
+          ],
+          "schema": [
+            {
+              "id": "userPrompt",
+              "displayName": "userPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "metadata",
+              "displayName": "metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -32,
+        -608
+      ],
+      "id": "77779f7b-6217-46a5-a355-4cb35d2e935a",
+      "name": "Telegram Smart Agent Tool"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "paragon-os",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -736,
+        -1024
+      ],
+      "id": "4962cf25-a649-4af7-a44d-a551a8e8fb92",
+      "name": "Webhook1",
+      "webhookId": "33384794-47ae-48e6-aa7d-64e81c9e4358",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a60f9067-0716-491c-9a57-1ebb8b8cfdb9",
+              "name": "body.metadata",
+              "value": "={{ $json.body.metadata ?? {\n  \"sessionId\": \"sample-session-id-1\",\n  \"messageId\": \"sample-message-id-1\",\n  \"streamUrl\": \"http://localhost:3000/api/stream/update\"\n} }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -512,
+        -1024
+      ],
+      "id": "83dc62cb-a639-4cf5-8b96-3e816bd771dc",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $workflow.id }} v2.18",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -160,
+        -608
+      ],
+      "id": "83329724-8051-4a14-8d9c-173bbd3e1306",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "description": "={{ `\nIntelligently plans and executes Discord operations using cached context and AI-powered sequencing.\\n\\n# How It Works:\\n\\n1. **Context Enrichment**: Automatically retrieves and caches Discord contacts, guilds/servers, channels, available MCP tools, and your profile. Uses a 6-hour cache to minimize API calls.\\n\\n2. **AI Planning**: Analyzes your request against a Discord playbook of common workflows (DMing contacts, catching up on channels, replying messages, searching topics, editing/deleting messages, downloading attachments, triaging guild channels). Recommends relevant tools and generates either:\\n   - A direct answer (if no API calls needed)\\n   - A sequential execution plan with specific MCP tool calls\\n\\n3. **Sequential Execution**: Executes planned steps in order, passing data between steps automatically.\\n\\n4. **Validation & Retry**: Validates execution results against your original request. Automatically retries with refined approach if needed.\\n\\n# Capabilities:\\n\\nRead messages (channels/DMs with pagination, date filtering), search messages, send/edit/delete messages with attachments, download attachments, list guilds/servers/channels/contacts/members, search contacts, manage whitelist/blacklist filters. Supports both server channels and direct messages.\n`}}",
+        "workflowId": {
+          "__rl": true,
+          "value": "zBL0JT7t26pK2x95",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/zBL0JT7t26pK2x95",
+          "cachedResultName": "Discord Smart Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `natural language prompt for any single or batch discord related query or action`, 'string') }}"
+          },
+          "matchingColumns": [
+            "userPrompt"
+          ],
+          "schema": [
+            {
+              "id": "userPrompt",
+              "displayName": "userPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        96,
+        -608
+      ],
+      "id": "a85ea5f0-1f3f-4d39-af49-35e27cade5b4",
+      "name": "Discord Smart Agent Tool"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        -464
+      ],
+      "id": "e2e89a62-59c1-4fe1-ba66-9388d12c532f",
+      "name": "Test Admin Agent"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Metarune Admin Chat Agent": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Smart Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        []
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord Smart Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test Admin Agent": {
+      "main": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "20bb460f-dc0f-42d1-9cdd-6fe392aab93c",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-08T18:36:58.455Z",
+      "createdAt": "2025-12-08T18:36:58.455Z",
+      "role": "workflow:owner",
+      "workflowId": "b693RI56eldkhQEf",
+      "projectId": "GEUEn6ArNROzJ5FY"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

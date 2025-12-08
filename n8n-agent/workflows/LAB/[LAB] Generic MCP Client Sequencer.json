@@ -1,0 +1,828 @@
+{
+  "updatedAt": "2025-12-08T18:36:58.757Z",
+  "createdAt": "2025-12-08T18:36:58.757Z",
+  "id": "xFXwXJhNM4cp9Eti",
+  "name": "[LAB] Generic MCP Client Sequencer",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        288,
+        336
+      ],
+      "id": "a28c3a27-fa98-44ff-a27c-bac6c959d46c",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "executionSteps",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        -112
+      ],
+      "id": "129e6361-65a7-431f-bd22-754190777bc2",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "userPrompt"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -688,
+        -32
+      ],
+      "id": "955c31ca-243f-4e7b-b432-1c36e8f86117",
+      "name": "When Executed by Another Workflow",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -16,
+        80
+      ],
+      "id": "ec3654f4-d970-4ace-88fe-c48d51af5cdd",
+      "name": "Context Aggregator"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Provided task is \"{{ $json.userPrompt }}\". Break it down to achievable action steps.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=## You are a helpful assistant with the capabilities to generate a direct answer to a user's prompt, or a sequential JSON array of tool execution steps to accomplish the task. \n\nInstructions:\n- you are PROHIBITED from using guild/server/channel/contact display names instead of proper IDs as execution parameters. If you only have a name of a guild/server/channel/contact, your TOP PRIORITY is finding the discord guild/server/channel/contact IDs.\n- use your knowledge of the contact list instead of calling 'discord_list_contacts'\n- use your knowledge of the guilds/servers list instead of calling 'discord_list_guilds'\n\nIMPORTANT: Use directAnswer ONLY for informational questions that can be answered from the provided context (contacts, guilds, tools lists). \n\nFor ANY operation that requires Discord API calls, you MUST use executionSteps:\n- Reading/list/get operations (list messages, read channel, get user info, etc.)\n- Writing/send operations (send message, etc.)\n- Finding/searching operations (find channel, search messages, etc.)\n- Any action that retrieves or modifies Discord data\n\nExamples:\n- \"list messages with user X\" → MUST use executionSteps (find contact ID then list messages)\n- \"list channels in guild/server Y\" → MUST use executionSteps (find guild ID then list)\n- \"list messages in the guild/server Y channel Z\" → MUST use executionSteps (find guild ID, list channels, then list messages of the matching channel)\n- \"send a message to channel Y\" → MUST use executionSteps\n- \"what tools are available?\" → Can use directAnswer (from tools list)\n- \"who are my contacts?\" → Can use directAnswer (from contacts list)\n\n## Your Knowledge of Discord Contacts:\n\n{{ $json.discordContacts ? $json.discordContacts.toJsonString() : '[]' }}\n\n## Your Knowledge of Discord Servers/Guilds:\n\n{{ $json.serversOrGuilds ? $json.serversOrGuilds.toJsonString() : '[]' }}\n\n## Your Knowledge of Available MCP tools:\n\n{{ $json.tools ? $json.tools.toJsonString() : '[]' }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        208,
+        -112
+      ],
+      "id": "e3e26a90-5aff-4f8c-8753-28621ad0e8dc",
+      "name": "Execution Planner AI Agent"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"executionSteps\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"toolName\": {\n            \"type\": \"string\"\n          },\n          \"callParams\": {\n            \"type\": \"object\"\n          }\n        },\n        \"required\": [\"toolName\", \"callParams\"],\n        \"additionalProperties\": false\n      },\n      \"description\": \"List MCP tool execution steps to achieve user's goal\"\n    },\n    \"directAnswer\": {\n      \"type\": \"object\",\n      \"description\": \"You can provide a direct answer without providing a list of executionSteps\"\n    }\n  },\n  \"additionalProperties\": false\n}\n",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        288,
+        128
+      ],
+      "id": "196f8da3-2db4-45c8-bb1b-fe3dbf5c1b1d",
+      "name": "Execution Plan Output Parser"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5093fd74-cc07-45b4-8725-2d1de4075919",
+                    "leftValue": "={{ $json.output.executionSteps ?? [] }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "HAS EXECUTION STEPS"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ !!$json.output.directAnswer?.toJsonString() }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "ff6241e7-5888-44d3-bcd7-543a0deffafe"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "HAS DIRECT ANSWER"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        656,
+        -112
+      ],
+      "id": "50f039eb-6b90-49c1-bef5-5bdd25934df5",
+      "name": "Has a direct answer?"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 3,
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2672,
+        -288
+      ],
+      "id": "05c06239-c845-41f5-96a9-e7fb2f6c1b47",
+      "name": "Final Response"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "497d547e-48e4-4218-a02e-9648db9a4c93",
+              "name": "executionSteps",
+              "value": "={{ $json.output.executionSteps ?? [] }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        -32
+      ],
+      "id": "cc000200-91ca-4491-b7d9-7cfcf7db980e",
+      "name": "Prepare Execution Steps"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ee6d0a21-266b-44c6-8536-a80f30695e6a",
+              "name": "stepResult.stepOutput",
+              "value": "={{ JSON.parse($json.result.content[0].text) }}",
+              "type": "object"
+            },
+            {
+              "id": "bec043e7-22fd-4b23-a549-d1e81ec6bcb6",
+              "name": "stepResult.toolName",
+              "value": "={{ $json.toolName }}",
+              "type": "string"
+            },
+            {
+              "id": "3cbfb631-8642-43bb-82f4-1333495056f8",
+              "name": "stepResult.callParams",
+              "value": "={{ $json.callParams }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1776,
+        -208
+      ],
+      "id": "25fb680a-e4f4-4d1f-927d-e3a2ef3fb15c",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8338f4c8-fec3-44c9-b2d5-375790642f17",
+              "name": "userPrompt",
+              "value": "={{ $json.userPrompt }}",
+              "type": "string"
+            },
+            {
+              "id": "83b2b73c-cdd9-469f-b0e0-c228c0a5fa7e",
+              "name": "cachedTools",
+              "value": "={{ $json.tools?.length ?? 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "0138bb46-fdba-4ab8-89b9-76830358bc9c",
+              "name": "cachedContacts",
+              "value": "={{ $json.discordContacts?.length ?? 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "8eae33a9-d42a-49b8-9e73-d270a72e62d0",
+              "name": "cachedGuilds",
+              "value": "={{ $json.serversOrGuilds?.length ?? 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "db49315b-8cb4-47a5-8553-453db33a4187",
+              "name": "stepCount",
+              "value": "={{ $json.executionSteps.length }}",
+              "type": "number"
+            },
+            {
+              "id": "90a974f7-04b9-42d6-96fa-031c05698c27",
+              "name": "executionSuccess",
+              "value": "={{ $json.executionSteps.filter(item=>!!item).length }}/{{ $json.executionSteps.length }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2448,
+        208
+      ],
+      "id": "6c4cc83f-a324-4899-a3d1-404b8c6cbe9c",
+      "name": "Create Diagnostics"
+    },
+    {
+      "parameters": {
+        "dataToSave": {
+          "values": [
+            {
+              "key": "toolCount",
+              "value": "={{ $json.cachedTools }}"
+            },
+            {
+              "key": "contactCount",
+              "value": "={{ $json.cachedContacts }}"
+            },
+            {
+              "key": "guildCount",
+              "value": "={{ $json.cachedGuilds }}"
+            },
+            {
+              "key": "prompt",
+              "value": "={{ $json.userPrompt }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executionData",
+      "typeVersion": 1.1,
+      "position": [
+        2672,
+        272
+      ],
+      "id": "de5a7698-d521-473e-8b70-132657758479",
+      "name": "Input Data Logger"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 3,
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2224,
+        192
+      ],
+      "id": "f584d154-22d1-4f5a-80e6-ee11b22e4c88",
+      "name": "Metadata Collector"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": false
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1552,
+        -208
+      ],
+      "id": "dc10966c-323b-44ab-b815-275537c3d013",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1328,
+        -32
+      ],
+      "id": "a6014485-9683-4880-8f74-187e3cd75cd6",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "={{ $json.toolName }}",
+        "toolParameters": "={{ $json.callParams }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        1552,
+        -16
+      ],
+      "id": "d5baf39d-2552-476e-8bc9-94ebd8a024d8",
+      "name": "MCP Sequence Executor",
+      "executeOnce": false,
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ZFofx3k2ze1wsifx",
+          "name": "Discord MCP Client (STDIO) account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "executionSteps",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        -208
+      ],
+      "id": "8b46bc5a-f76b-4513-b356-e7401b8e31e8",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "zBL0JT7t26pK2x95",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/zBL0JT7t26pK2x95",
+          "cachedResultName": "Discord Context Cache"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -240,
+        144
+      ],
+      "id": "2af1f399-443c-424e-84b1-f804e2e0cd71",
+      "name": "Call 'Discord Context Cache'"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "yOV8ocLO9PMsNqdG",
+          "mode": "list",
+          "cachedResultName": "Sequencer Evaluations",
+          "cachedResultUrl": "/projects/GEUEn6ArNROzJ5FY/datatables/yOV8ocLO9PMsNqdG"
+        }
+      },
+      "type": "n8n-nodes-base.evaluationTrigger",
+      "typeVersion": 4.7,
+      "position": [
+        -688,
+        176
+      ],
+      "id": "8dbf024d-6039-43d1-8184-2d9d6f925aab",
+      "name": "When fetching a dataset row"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        80
+      ],
+      "id": "c606a1b5-fe2d-48b8-a1dc-8849b2326d6d",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "operation": "setMetrics",
+        "expectedAnswer": "={{ JSON.stringify([\n  {\n    \"userPrompt\": \"list channels in metarune labs guild\",\n    \"cachedTools\": 17,\n    \"cachedContacts\": 20,\n    \"cachedGuilds\": 11,\n    \"stepCount\": 1,\n    \"executionSuccess\": \"1/1\"\n  }\n]) }}",
+        "actualAnswer": "={{ JSON.stringify([\n  {\n    \"userPrompt\": $json.userPrompt,\n    \"cachedTools\": $json.cachedTools,\n    \"cachedContacts\": $json.cachedContacts,\n    \"cachedGuilds\": $json.cachedGuilds,\n    \"stepCount\": $json.stepCount,\n    \"executionSuccess\": $json.executionSuccess\n  }\n]) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.evaluation",
+      "typeVersion": 4.8,
+      "position": [
+        2896,
+        272
+      ],
+      "id": "75258665-bec7-4772-addd-c53c9614be56",
+      "name": "Evaluation"
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2976,
+        496
+      ],
+      "id": "2ee97493-1a8c-4c6a-bd38-321764ab94cb",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Execution Planner AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Execution Plan Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Context Aggregator": {
+      "main": [
+        [
+          {
+            "node": "Execution Planner AI Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Metadata Collector",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Execution Planner AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Has a direct answer?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execution Plan Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Execution Planner AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has a direct answer?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Execution Steps",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Final Response",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Prepare Execution Steps": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Metadata Collector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Diagnostics": {
+      "main": [
+        [
+          {
+            "node": "Final Response",
+            "type": "main",
+            "index": 2
+          },
+          {
+            "node": "Input Data Logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Data Logger": {
+      "main": [
+        [
+          {
+            "node": "Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Metadata Collector": {
+      "main": [
+        [
+          {
+            "node": "Create Diagnostics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "MCP Sequence Executor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Sequence Executor": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Metadata Collector",
+            "type": "main",
+            "index": 2
+          },
+          {
+            "node": "Final Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Response": {
+      "main": [
+        []
+      ]
+    },
+    "Call 'Discord Context Cache'": {
+      "main": [
+        [
+          {
+            "node": "Context Aggregator",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "When fetching a dataset row": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Call 'Discord Context Cache'",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Context Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Evaluation",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "f62e1b9e-bbde-4160-894a-165e236b1601",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-08T18:36:58.758Z",
+      "createdAt": "2025-12-08T18:36:58.758Z",
+      "role": "workflow:owner",
+      "workflowId": "xFXwXJhNM4cp9Eti",
+      "projectId": "GEUEn6ArNROzJ5FY"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

@@ -1,0 +1,175 @@
+{
+  "updatedAt": "2025-12-08T18:36:58.494Z",
+  "createdAt": "2025-12-08T18:36:58.494Z",
+  "id": "JLLUTG5FiNcN8aHk",
+  "name": "[HELPERS] Discord Contact Fetch",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{}"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        400
+      ],
+      "id": "trigger",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "executeTool",
+        "toolName": "=discord_list_contacts",
+        "toolParameters": "={\n  \"limit\": 100\n}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        528,
+        400
+      ],
+      "id": "mcp-call",
+      "name": "List Contacts",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "ZFofx3k2ze1wsifx",
+          "name": "Discord MCP Client (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "[HELPERS] MCP Data Normalizer",
+          "mode": "list",
+          "cachedResultName": "[HELPERS] MCP Data Normalizer",
+          "cachedResultUrl": "/workflow/MCPDataNormalizer"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "rawData": "={{ $json }}",
+            "dataKey": "contacts",
+            "mcpDataKey": "contacts",
+            "mapper": "(c) => ({ id: c.id, username: c.tag, displayName: c.displayName, lastMessage: c.lastMessageAtRelative, contactType: c.type, platform: 'DISCORD' })",
+            "errorMsg": "No valid contacts found"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "rawData",
+              "displayName": "rawData",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dataKey",
+              "displayName": "dataKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "mcpDataKey",
+              "displayName": "mcpDataKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "mapper",
+              "displayName": "mapper",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "errorMsg",
+              "displayName": "errorMsg",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        400
+      ],
+      "id": "normalize",
+      "name": "Normalize Data"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "List Contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Contacts": {
+      "main": [
+        [
+          {
+            "node": "Normalize Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "f105591b-1cd2-4473-84ce-43ec9470842b",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-08T18:36:58.494Z",
+      "createdAt": "2025-12-08T18:36:58.494Z",
+      "role": "workflow:owner",
+      "workflowId": "JLLUTG5FiNcN8aHk",
+      "projectId": "GEUEn6ArNROzJ5FY"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

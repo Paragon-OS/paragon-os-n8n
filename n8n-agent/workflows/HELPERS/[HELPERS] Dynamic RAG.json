@@ -1,0 +1,1404 @@
+{
+  "updatedAt": "2025-12-08T18:36:58.530Z",
+  "createdAt": "2025-12-08T18:36:58.530Z",
+  "id": "AIDIgQVoiOHWSbVc",
+  "name": "[HELPERS] Dynamic RAG",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "batch-aggregate-node",
+      "name": "Aggregate Batch",
+      "type": "n8n-nodes-base.aggregate",
+      "position": [
+        1360,
+        896
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Split aggregated data into chunks of 100 (Gemini API limit)\nconst data = $input.first().json.data || [];\nconst BATCH_SIZE = 100;\nconst chunks = [];\n\n// Store original data and collectionId for later use\nconst collectionId = $('Switch').first().json.collectionId;\n\n// Split into chunks of 100\nfor (let i = 0; i < data.length; i += BATCH_SIZE) {\n  chunks.push({\n    chunk: data.slice(i, i + BATCH_SIZE),\n    chunkIndex: Math.floor(i / BATCH_SIZE),\n    totalChunks: Math.ceil(data.length / BATCH_SIZE),\n    collectionId: collectionId,\n    originalData: data // Keep reference to all data for later merging\n  });\n}\n\n// Output one item per chunk\nreturn chunks.map(chunk => ({ json: chunk }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        896
+      ],
+      "id": "split-into-chunks",
+      "name": "Split Into Chunks (100)"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1808,
+        896
+      ],
+      "id": "process-chunks",
+      "name": "Process Chunks"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare chunk data for embedding, preserving metadata\nconst chunkData = $input.first().json;\n\n// Store the chunk metadata to be merged with embeddings later\nreturn [{\n  json: {\n    ...chunkData,\n    _chunkMetadata: {\n      chunk: chunkData.chunk,\n      chunkIndex: chunkData.chunkIndex,\n      collectionId: chunkData.collectionId\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        992
+      ],
+      "id": "prepare-chunk-for-embed",
+      "name": "Prepare Chunk for Embed"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:batchEmbedContents",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requests\": {{ JSON.stringify($json.chunk.map(item => ({ \"model\": \"models/text-embedding-004\", \"content\": { \"parts\": [{ \"text\": item.content }] } }))) }}\n}",
+        "options": {}
+      },
+      "id": "batch-embed-gemini",
+      "name": "Batch Embed (Gemini)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2256,
+        1064
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2480,
+        992
+      ],
+      "id": "merge-chunk-with-embeddings",
+      "name": "Merge Chunk with Embeddings"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combine chunk metadata with embeddings\nconst chunkMetadata = $('Prepare Chunk for Embed').first().json._chunkMetadata || {};\nconst embeddings = $input.first().json.embeddings || [];\n\nreturn [{\n  json: {\n    chunk: chunkMetadata.chunk || [],\n    chunkIndex: chunkMetadata.chunkIndex ?? 0,\n    embeddings: embeddings,\n    collectionId: chunkMetadata.collectionId\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2704,
+        1064
+      ],
+      "id": "store-chunk-embeddings",
+      "name": "Store Chunk Embeddings"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2032,
+        752
+      ],
+      "id": "merge-embeddings",
+      "name": "Merge All Embeddings"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combine all chunks and their embeddings\nconst mergedData = $input.first().json.data || [];\n\n// Flatten chunks and embeddings back into single arrays\nconst allItems = [];\nconst allEmbeddings = [];\n\n// Sort by chunkIndex to maintain order\nconst sortedChunks = mergedData.sort((a, b) => a.chunkIndex - b.chunkIndex);\n\nfor (const chunkData of sortedChunks) {\n  const chunk = chunkData.chunk || [];\n  const embeddings = chunkData.embeddings || [];\n  \n  allItems.push(...chunk);\n  allEmbeddings.push(...embeddings);\n}\n\n// Generate Qdrant points\nconst points = allItems.map((item, index) => {\n  let metadata = {};\n  try { metadata = JSON.parse(item.metadata || '{}'); } catch(e) {}\n  \n  // Qdrant requires ID to be unsigned integer or UUID\n  // Use the numeric id if available, otherwise use index\n  const id = typeof metadata.id === 'number' ? metadata.id : index;\n  \n  return {\n    id: id,\n    vector: allEmbeddings[index]?.values || [],\n    payload: {\n      content: item.content,\n      metadata: item.metadata\n    }\n  };\n});\n\nconst collectionId = mergedData[0]?.collectionId || $('Switch').first().json.collectionId;\n\nreturn [{ json: { points, collectionId } }];"
+      },
+      "id": "prepare-qdrant-points",
+      "name": "Prepare Qdrant Points",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2256,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/{{ $json.collectionId }}/points",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "qdrantApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ points: $json.points }) }}",
+        "options": {}
+      },
+      "id": "batch-upsert-qdrant",
+      "name": "Batch Upsert (Qdrant)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2480,
+        752
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "qdrantApi": {
+          "id": "ytBh4xOzWNQ347S5",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/{{ $json.collectionId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"vectors\": {\n    \"size\": 768,\n    \"distance\": \"Cosine\"  \n  },\n  \"shard_number\": 1,  \n  \"replication_factor\": 1,  \n  \"write_consistency_factor\": 1 \n}",
+        "options": {}
+      },
+      "id": "aed0bdff-4e56-4128-80f5-2e373cee6905",
+      "name": "Create collection",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        64,
+        2056
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "S0nticGtHhYu1fe4",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.input }}",
+        "options": {}
+      },
+      "id": "1d6ad257-d218-4964-8084-a69a6155e821",
+      "name": "Question and Answer Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainRetrievalQa",
+      "position": [
+        672,
+        1696
+      ],
+      "typeVersion": 1.5
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "id": "dae1e6e6-16b2-4120-b5b1-adae15db6cae",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        640,
+        1920
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "topK": 5
+      },
+      "id": "be311b8d-c43e-4be4-96e9-cbebb0dd4832",
+      "name": "Vector Store Retriever",
+      "type": "@n8n/n8n-nodes-langchain.retrieverVectorStore",
+      "position": [
+        768,
+        1920
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "={{ $('Switch').item.json.collectionId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "2b128ca6-60ed-4e70-9a30-fe9aaa2c2d58",
+      "name": "Qdrant Vector Store1",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "position": [
+        768,
+        2128
+      ],
+      "typeVersion": 1.1,
+      "credentials": {
+        "qdrantApi": {
+          "id": "ytBh4xOzWNQ347S5",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "f39fcb8f-71bc-4c1e-8bfe-f3a01e38c89c",
+      "name": "Merge1",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        1136,
+        1540
+      ],
+      "typeVersion": 3.1
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "document.pageContent"
+            },
+            {
+              "fieldToAggregate": "score"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0934c7d2-f3f3-469e-8d87-65dbfa6de06c",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "position": [
+        776,
+        1192
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/{{ $json.collectionId }}/points/delete",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "qdrantApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"filter\": {}\n}",
+        "options": {}
+      },
+      "id": "6f4e90ae-415a-404b-ad61-c5ac62d74f10",
+      "name": "Clear collection",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        64,
+        896
+      ],
+      "typeVersion": 4.2,
+      "retryOnFail": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "S0nticGtHhYu1fe4",
+          "name": "Header Auth account"
+        },
+        "qdrantApi": {
+          "id": "ytBh4xOzWNQ347S5",
+          "name": "QdrantApi account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"answer\": {{ JSON.stringify($('Question and Answer Chain').item.json.response) }},\n  \"results\": {{ JSON.stringify($json.results) }},\n  \"count\": {{ $json.count }}\n}",
+        "options": {}
+      },
+      "id": "ee957717-7708-4ec4-82de-6b5e0f59af04",
+      "name": "Output",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1584,
+        1540
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the raw search results from Retrive sources1\nconst searchResults = $('Retrive sources1').all();\n\n// Parse each result into clean JSON\nconst results = searchResults.map(item => {\n  const doc = item.json.document || item.json;\n  const pageContent = doc.pageContent || '';\n  const score = item.json.score || 0;\n  \n  // Parse metadata JSON string\n  let metadata = {};\n  try {\n    metadata = typeof doc.metadata === 'string' ? JSON.parse(doc.metadata) : (doc.metadata || {});\n  } catch(e) {}\n  \n  // Parse rawJson if available\n  let contact = {};\n  try {\n    contact = metadata.rawJson ? JSON.parse(metadata.rawJson) : {};\n  } catch(e) {}\n  \n  return {\n    id: contact.id || metadata.id,\n    displayName: contact.displayName,\n    username: contact.username || null,\n    phone: contact.phone || null,\n    contactType: contact.contactType,\n    score: Math.round(score * 1000) / 1000\n  };\n});\n\nreturn [{ json: { results, count: results.length } }];\n"
+      },
+      "id": "17d5e418-e03f-4358-9a8c-0749c134ea37",
+      "name": "Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1360,
+        1540
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bdb8250e-e4b6-4e5b-b3b2-4f941c14e307",
+              "name": "content",
+              "value": "={{ $('Switch').item.json.input.content }}",
+              "type": "object"
+            },
+            {
+              "id": "f30308e0-ffa7-4ced-9538-99077a0b7ecb",
+              "name": "metadata",
+              "value": "={{ $('Switch').item.json.input.metadata }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        352,
+        896
+      ],
+      "id": "9f9b5121-2980-48c3-9d0b-81187e1a6df6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "sourceField": "content",
+        "outputMode": "multiple",
+        "options": {
+          "includeRawJson": true,
+          "idField": "id",
+          "skipEmpty": true
+        }
+      },
+      "type": "n8n-nodes-paragon-os.jsonDocumentLoader",
+      "typeVersion": 1,
+      "position": [
+        776,
+        896
+      ],
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "JSON Document Loader"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "map-content-field",
+              "name": "content",
+              "type": "string",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "id": "map-metadata-field",
+              "name": "metadata",
+              "type": "string",
+              "value": "={{ JSON.stringify($json.metadata) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1136,
+        896
+      ],
+      "id": "b2c3d4e5-f678-9012-bcde-f23456789abc",
+      "name": "Map to Vector Store Format"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        360,
+        1416
+      ],
+      "id": "e873c882-2217-4bde-920a-06bc481ea5db",
+      "name": "Embeddings Google Gemini1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        848,
+        2336
+      ],
+      "id": "1428525f-8265-4b91-ab83-3a82696e8348",
+      "name": "Embeddings Google Gemini2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "={{ $('Switch').item.json.collectionId }}",
+          "mode": "id"
+        },
+        "prompt": "={{ $json.input }}",
+        "topK": 5,
+        "options": {}
+      },
+      "id": "579efbf5-55e4-4c28-9bcb-c8b4652d0e54",
+      "name": "Retrive sources1",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "position": [
+        288,
+        1192
+      ],
+      "typeVersion": 1.3,
+      "alwaysOutputData": true,
+      "credentials": {
+        "qdrantApi": {
+          "id": "ytBh4xOzWNQ347S5",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        64,
+        1540
+      ],
+      "id": "1286b78a-a4ba-429c-83cc-911c058e1bd1",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "input",
+              "type": "any"
+            },
+            {
+              "name": "mode"
+            },
+            {
+              "name": "collectionId"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -832,
+        2056
+      ],
+      "id": "0daf4a1a-88cc-4f6f-b827-b663ba32c0b8",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0c0d73c5-48dd-4704-a4ec-018e7f38fbd3",
+                    "leftValue": "={{ $json.mode }}",
+                    "rightValue": "INSERT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "INSERT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "81936f1d-a6cb-45af-b8b8-6dffa7f565fb",
+                    "leftValue": "={{ $json.mode }}",
+                    "rightValue": "SEARCH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "SEARCH"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.mode }}",
+                    "rightValue": "CLEAR",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "204b2ebf-7ad7-4e51-9849-6553610a5afb"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CLEAR"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1d9f4d1f-c41b-4578-a7c4-d09f8fde2876",
+                    "leftValue": "={{ $json.mode }}",
+                    "rightValue": "CREATE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CREATE"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7b1d45a5-0dec-4a34-96c2-aceb7bed030a",
+                    "leftValue": "={{ $json.mode }}",
+                    "rightValue": "DELETE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DELETE"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a8c2f3d4-e567-4890-bcde-f12345678901",
+                    "leftValue": "={{ $json.mode }}",
+                    "rightValue": "STATUS",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "STATUS"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -160,
+        1976
+      ],
+      "id": "ae868fcd-b699-437f-908b-bd9fd03b5941",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/{{ $json.collectionId }}/points/delete",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "qdrantApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"filter\": {}\n}",
+        "options": {}
+      },
+      "id": "7fc827f6-2878-4fe4-bdd7-96eecddd8c05",
+      "name": "Clear collection1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        64,
+        1864
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "S0nticGtHhYu1fe4",
+          "name": "Header Auth account"
+        },
+        "qdrantApi": {
+          "id": "ytBh4xOzWNQ347S5",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        2056
+      ],
+      "id": "337f0a5f-c7fc-4fe4-958c-39abd6c8b51c",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $json.data[0] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -384,
+        2056
+      ],
+      "id": "53284e1b-b4b6-482d-bab8-d1a2a4897d15",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ $json.error.message }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        352,
+        2056
+      ],
+      "id": "7e1aac0a-a9f1-42b0-a631-d5a9bd8b10c9",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/{{ $json.collectionId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "qdrantApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "{     \"optimizers_config\": {         \"indexing_threshold\": 10000     }   }",
+        "options": {}
+      },
+      "id": "0320a784-752d-4ca1-a43b-2f53600093fa",
+      "name": "Delete collection",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        64,
+        2248
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "S0nticGtHhYu1fe4",
+          "name": "Header Auth account"
+        },
+        "qdrantApi": {
+          "id": "ytBh4xOzWNQ347S5",
+          "name": "QdrantApi account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ $json.error.message }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        352,
+        2248
+      ],
+      "id": "dc3aa657-42cf-4efe-b45a-1c207bc801ee",
+      "name": "Stop and Error1"
+    },
+    {
+      "parameters": {
+        "errorMessage": "=Unknown execution mode: {{ $('Edit Fields1').item.json.mode }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        64,
+        2440
+      ],
+      "id": "8bc4d5f7-9756-4dc5-9d23-8f3b5172de31",
+      "name": "Stop and Error2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2704,
+        752
+      ],
+      "id": "5afa0640-f722-446e-a90a-f10bd2ed0f49",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/{{ $json.collectionId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "qdrantApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c9d8e7f6-5432-1098-abcd-ef0123456789",
+      "name": "Get Collection Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        64,
+        2632
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "qdrantApi": {
+          "id": "ytBh4xOzWNQ347S5",
+          "name": "QdrantApi account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Check the collection status response\nconst collectionId = $('Switch').first().json.collectionId;\nconst response = $input.first().json;\n\n// Check if we got an error (collection doesn't exist)\nif (response.error || response.status?.error) {\n  return [{\n    json: {\n      collectionId,\n      exists: false,\n      ready: false,\n      pointsCount: 0,\n      message: response.error || response.status?.error || 'Collection does not exist'\n    }\n  }];\n}\n\n// Extract collection info\nconst result = response.result || response;\nconst status = result.status || 'unknown';\nconst pointsCount = result.points_count || 0;\nconst vectorsCount = result.vectors_count || 0;\n\n// Collection exists and is ready if status is 'green' and has points\nconst exists = true;\nconst isGreen = status === 'green';\nconst hasPoints = pointsCount > 0;\nconst ready = isGreen && hasPoints;\n\nreturn [{\n  json: {\n    collectionId,\n    exists,\n    ready,\n    status,\n    pointsCount,\n    vectorsCount,\n    message: ready \n      ? `Collection is ready with ${pointsCount} points` \n      : (isGreen ? 'Collection exists but is empty' : `Collection status: ${status}`)\n  }\n}];"
+      },
+      "id": "d0e1f2a3-b456-7890-cdef-123456789abc",
+      "name": "Format Status Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        352,
+        2440
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Collection doesn't exist - return not exists status\nconst collectionId = $('Switch').first().json.collectionId;\nconst errorResponse = $input.first().json;\n\nreturn [{\n  json: {\n    collectionId,\n    exists: false,\n    ready: false,\n    pointsCount: 0,\n    vectorsCount: 0,\n    status: 'not_found',\n    message: errorResponse.status?.error || 'Collection does not exist'\n  }\n}];"
+      },
+      "id": "e1f2a3b4-c567-8901-def0-23456789abcd",
+      "name": "Format Not Found Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        352,
+        2632
+      ],
+      "typeVersion": 2
+    }
+  ],
+  "connections": {
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Response": {
+      "main": [
+        [
+          {
+            "node": "Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clear collection": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Batch": {
+      "main": [
+        [
+          {
+            "node": "Split Into Chunks (100)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Into Chunks (100)": {
+      "main": [
+        [
+          {
+            "node": "Process Chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Chunks": {
+      "main": [
+        [
+          {
+            "node": "Merge All Embeddings",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Chunk for Embed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Chunk for Embed": {
+      "main": [
+        [
+          {
+            "node": "Batch Embed (Gemini)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Chunk with Embeddings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Batch Embed (Gemini)": {
+      "main": [
+        [
+          {
+            "node": "Merge Chunk with Embeddings",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Chunk with Embeddings": {
+      "main": [
+        [
+          {
+            "node": "Store Chunk Embeddings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Chunk Embeddings": {
+      "main": [
+        [
+          {
+            "node": "Process Chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All Embeddings": {
+      "main": [
+        [
+          {
+            "node": "Prepare Qdrant Points",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Qdrant Points": {
+      "main": [
+        [
+          {
+            "node": "Batch Upsert (Qdrant)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Batch Upsert (Qdrant)": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store1": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Vector Store Retriever",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store Retriever": {
+      "ai_retriever": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "ai_retriever",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Question and Answer Chain": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "JSON Document Loader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSON Document Loader": {
+      "main": [
+        [
+          {
+            "node": "Map to Vector Store Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map to Vector Store Format": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Retrive sources1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrive sources1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Retrive sources1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Clear collection",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clear collection1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create collection",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete collection",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Collection Info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Collection Info": {
+      "main": [
+        [
+          {
+            "node": "Format Status Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Not Found Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create collection": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete collection": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Stop and Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "66bead92-5952-490b-b5ed-67c7f6ed8815",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-08T18:36:58.530Z",
+      "createdAt": "2025-12-08T18:36:58.530Z",
+      "role": "workflow:owner",
+      "workflowId": "AIDIgQVoiOHWSbVc",
+      "projectId": "GEUEn6ArNROzJ5FY"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

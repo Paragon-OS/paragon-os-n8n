@@ -1,0 +1,351 @@
+{
+  "updatedAt": "2025-12-08T18:36:58.542Z",
+  "createdAt": "2025-12-08T18:36:58.542Z",
+  "id": "LtxYTGH9nPOh6zL7",
+  "name": "[HELPERS] Entity Cache Handler",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "cacheKey"
+            },
+            {
+              "name": "ttl",
+              "type": "number"
+            },
+            {
+              "name": "fetchWorkflowId"
+            },
+            {
+              "name": "fetchWorkflowInputs",
+              "type": "object"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        400
+      ],
+      "id": "trigger",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "zZfQPFI7JkUjGspq",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/zZfQPFI7JkUjGspq",
+          "cachedResultName": "[HELPERS] Global Cache System"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cacheKey": "={{ $json.cacheKey }}",
+            "trueToWrite": false,
+            "writeTTLms": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "trueToWrite",
+              "displayName": "trueToWrite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "cacheKey",
+              "displayName": "cacheKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "writeValue",
+              "displayName": "writeValue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "writeTTLms",
+              "displayName": "writeTTLms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        528,
+        400
+      ],
+      "id": "check-cache",
+      "name": "Check Cache",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        752,
+        304
+      ],
+      "id": "cache-hit",
+      "name": "Cache Hit"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "={{ $('When Executed by Another Workflow').item.json.fetchWorkflowId }}",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": "={{ $('When Executed by Another Workflow').item.json.fetchWorkflowInputs }}",
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        512
+      ],
+      "id": "fetch-data",
+      "name": "Fetch Data",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "zZfQPFI7JkUjGspq",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/zZfQPFI7JkUjGspq",
+          "cachedResultName": "[HELPERS] Global Cache System"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "writeTTLms": "={{ $('When Executed by Another Workflow').item.json.ttl }}",
+            "cacheKey": "={{ $('When Executed by Another Workflow').item.json.cacheKey }}",
+            "writeValue": "={{ $json }}",
+            "trueToWrite": true
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "trueToWrite",
+              "displayName": "trueToWrite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "cacheKey",
+              "displayName": "cacheKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "writeValue",
+              "displayName": "writeValue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "writeTTLms",
+              "displayName": "writeTTLms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        976,
+        512
+      ],
+      "id": "update-cache",
+      "name": "Update Cache",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1200,
+        400
+      ],
+      "id": "merge-results",
+      "name": "Merge Results"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle errors from either cache hit or fetch path\nconst input = $input.first().json;\n\n// If there's an error, return it in a structured format\nif (input.error) {\n  const errorMsg = typeof input.error === 'string' ? input.error : (input.error.message || JSON.stringify(input.error));\n  return {\n    error: errorMsg\n  };\n}\n\n// Return the data as-is if no error\nreturn input;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1424,
+        400
+      ],
+      "id": "handle-errors",
+      "name": "Handle Errors"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Check Cache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Cache": {
+      "main": [
+        [
+          {
+            "node": "Cache Hit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Data": {
+      "main": [
+        [
+          {
+            "node": "Update Cache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Cache": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cache Hit": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Handle Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Errors": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "e4b59ce5-0b11-4d28-b546-7a656bce6724",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-08T18:36:58.543Z",
+      "createdAt": "2025-12-08T18:36:58.543Z",
+      "role": "workflow:owner",
+      "workflowId": "LtxYTGH9nPOh6zL7",
+      "projectId": "GEUEn6ArNROzJ5FY"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

@@ -1,0 +1,487 @@
+{
+  "updatedAt": "2025-12-08T18:36:58.815Z",
+  "createdAt": "2025-12-08T18:36:58.815Z",
+  "id": "r8usqXxRVILE0kbu",
+  "name": "[LAB] Playbook v1 ParagonOS Manager",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {},
+        "path": "48fa6920-f2bd-4550-bafc-9ec1bcc0cadb"
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -448,
+        16
+      ],
+      "id": "5fb5a8ed-2dc9-4e2d-9333-d831ed1cb541",
+      "name": "When chat message received",
+      "webhookId": "48fa6920-f2bd-4550-bafc-9ec1bcc0cadb",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "playbook-1",
+              "name": "playbooks",
+              "value": "={{ [\n  {\n    \"name\": \"daily_digest\",\n    \"description\": \"Check unread messages across channels and DMs\",\n    \"keywords\": [\"daily digest\", \"catch up\", \"what's new\", \"unread messages\", \"what did i miss\"],\n    \"prompt\": \"list all pending channels and DMs that need attention, then for each one list the recent messages\"\n  },\n  {\n    \"name\": \"catch_up_dms\",\n    \"description\": \"List recent DM conversations with unread messages\",\n    \"keywords\": [\"catch up dms\", \"dm updates\", \"direct messages\", \"catch me up with {user}\"],\n    \"prompt\": \"list all pending DMs, then list recent messages from each DM conversation\"\n  },\n  {\n    \"name\": \"check_mentions\",\n    \"description\": \"Find recent mentions of the user\",\n    \"keywords\": [\"check mentions\", \"my mentions\", \"where was i mentioned\", \"who mentioned me\"],\n    \"prompt\": \"search for messages mentioning me across all channels and DMs from the last 7 days\"\n  },\n  {\n    \"name\": \"channel_summary\",\n    \"description\": \"Summarize recent activity in a specific channel\",\n    \"keywords\": [\"channel summary\", \"what's happening in {channel}\", \"recent activity in {channel}\", \"summarize {channel}\"],\n    \"prompt\": \"find channel {channelId} in guild {guildId}, then list recent messages from that channel\"\n  },\n  {\n    \"name\": \"pending_messages\",\n    \"description\": \"Get all pending channels/DMs needing attention\",\n    \"keywords\": [\"pending messages\", \"what needs attention\", \"unread channels\", \"channels needing response\"],\n    \"prompt\": \"list all pending channels and DMs that have unread messages or mentions\"\n  }\n] }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        -96
+      ],
+      "id": "4fe3917e-d32d-4e02-a7cf-be528116882e",
+      "name": "Playbook Library"
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        80,
+        352
+      ],
+      "id": "0e7cf7d5-6e62-4632-b3eb-1adcb5a7f0cf",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NIhZoi9otQV2vaAP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"playbookMatch\": {\n      \"type\": \"boolean\",\n      \"description\": \"True if user request matches a playbook\"\n    },\n    \"playbookName\": {\n      \"type\": \"string\",\n      \"description\": \"Name of the matched playbook, or null if no match\"\n    },\n    \"extractedParams\": {\n      \"type\": \"object\",\n      \"description\": \"Parameters extracted from user input (channelId, guildId, userId, dateRange, etc.)\",\n      \"properties\": {\n        \"channelId\": {\"type\": \"string\"},\n        \"guildId\": {\"type\": \"string\"},\n        \"userId\": {\"type\": \"string\"},\n        \"dateRange\": {\"type\": \"string\"}\n      }\n    }\n  },\n  \"required\": [\"playbookMatch\"],\n  \"additionalProperties\": false\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        144
+      ],
+      "id": "021e68e9-cad0-4d5b-880f-6b9213e2d54e",
+      "name": "Playbook Classifier Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a playbook classifier. Your job is to determine if a user's request matches one of the predefined playbooks.\n\nAvailable playbooks:\n{{ $json.playbooks.map(p => `- ${p.name}: ${p.description}\\n  Keywords: ${p.keywords.join(', ')}`).join('\\n') }}\n\nAnalyze the user input and:\n1. Check if it matches any playbook based on keywords and intent\n2. If it matches, set playbookMatch=true and provide the playbookName\n3. Extract any parameters from the user input (channel IDs, guild IDs, user IDs, date ranges)\n4. If no match, set playbookMatch=false\n\nExamples:\n- \"catch me up with sebastians dms\" → matches catch_up_dms, extract userName: \"sebastian\"\n- \"check my mentions\" → matches check_mentions\n- \"send a meme to dev-chat\" → no match (not a playbook operation)\n- \"what's happening in general channel\" → matches channel_summary, extract channelId: \"123456\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        -96
+      ],
+      "id": "6424cd2c-8f35-47c8-a596-a2843b295122",
+      "name": "Playbook Classifier"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output?.playbookMatch }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "playbook-match-condition"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "USE PLAYBOOK"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output?.playbookMatch }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "false",
+                      "singleValue": true
+                    },
+                    "id": "no-playbook-match-condition"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "USE AGENT"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        448,
+        -96
+      ],
+      "id": "03a883a3-4cb8-4ab6-8220-b70be0432940",
+      "name": "Route to Playbook or Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the matched playbook name and extracted parameters\nconst playbookName = $input.first().json.output.playbookName;\nconst extractedParams = $input.first().json.output.extractedParams || {};\nconst playbooks = $('Playbook Library').first().json.playbooks;\n\n// Find the matched playbook\nconst matchedPlaybook = playbooks.find(p => p.name === playbookName);\n\nif (!matchedPlaybook) {\n  throw new Error(`Playbook '${playbookName}' not found`);\n}\n\n// Start with the playbook's base prompt\nlet finalPrompt = matchedPlaybook.prompt;\n\n// Inject extracted parameters into the prompt\n// Replace {paramName} placeholders with actual values\nif (extractedParams.channelId) {\n  finalPrompt = finalPrompt.replace('{channelId}', extractedParams.channelId);\n}\nif (extractedParams.guildId) {\n  finalPrompt = finalPrompt.replace('{guildId}', extractedParams.guildId);\n}\nif (extractedParams.userId) {\n  finalPrompt = finalPrompt.replace('{userId}', extractedParams.userId);\n}\nif (extractedParams.dateRange) {\n  finalPrompt = finalPrompt.replace('{dateRange}', extractedParams.dateRange);\n}\n\n// Return the formatted prompt ready for Discord MCP Client Sequencer\nreturn {\n  userPrompt: finalPrompt,\n  playbookName: playbookName,\n  extractedParams: extractedParams\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        -240
+      ],
+      "id": "15d33a40-bb15-46c4-8a0c-2b1aa2f49451",
+      "name": "Prepare Playbook Execution"
+    },
+    {
+      "parameters": {
+        "description": "Executes Discord operations. Supports both single operations and multi-step sequential operations.\n\n# Capabilities: \n\nThe Discord MCP tools enable comprehensive Discord integration including reading messages from channels and DMs (with pagination and date filtering), searching message content, sending/editing/deleting messages with file attachment support, downloading attachments, and managing server/channel access. You can list guilds/servers you are part of, list channels, contacts, member counts and guild/server members, search for specific contacts, configure whitelist/blacklist filters for channels and DMs, and retrieve pending channels or DMs that need attention (unread messages or mentions). The tools support both server channels and direct messages, with automatic DM channel creation when sending to users.\n\nSINGLE operations (examples):\n- \"find channel ID for dev-chat in metarune homies guild\"\n- \"send message 'hello' to channel ID 1234567890\"\n- \"list all channels in metarune homies guild\"\n- \"list all guilds i'm in\"\n\nMULTI-STEP operations (the tool will break these down automatically):\n- \"find dev-chat channel and send a message\"\n- \"get channel ID for general then send message 'hello'\"\n- \"list members in server X and find user Y\"\n\nThe tool intelligently plans and executes sequences of Discord operations. For multi-step operations, it will automatically break them down, execute steps sequentially, and pass data between steps.",
+        "workflowId": {
+          "__rl": true,
+          "value": "vfcxqLBDDMKL5lnG",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/vfcxqLBDDMKL5lnG",
+          "cachedResultName": "Discord MCP Client Sequencer"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `discord action to perform, with exact guild/server or channel IDs`, 'string') }}"
+          },
+          "matchingColumns": [
+            "userPrompt"
+          ],
+          "schema": [
+            {
+              "id": "userPrompt",
+              "displayName": "userPrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        816,
+        288
+      ],
+      "id": "c13efccd-018e-4c18-bfbd-9514a291dcfe",
+      "name": "Discord Agent with Caching"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $workflow.id }} v2"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        688,
+        288
+      ],
+      "id": "0b53c571-7479-4dbd-9dbc-2df134b5026c",
+      "name": "Conversation Memory"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "=You are a Discord manager for custom/complex operations.\n\nNote: Common recurring tasks (like checking unread messages, catching up on DMs, checking mentions, channel summaries, and pending messages) are handled by predefined playbooks. You receive requests that don't match standard playbooks and require custom handling.\n\nBreak down tasks into sequential, independent steps:\n1. Multi-step instructions to the Discord tool must be independent and NOT expect data from the previous steps.\n2. Each tool call must be completely self-contained with ALL necessary information\n3. When you need information from a previous step, YOU must extract it and pass it explicitly in the next call\n\nEXAMPLES:\n\"say hi to dev-chat in metarune homies guild\"\n  Step 1: \"find the channel ID for dev-chat in metarune homies guild\"\n  Step 2: Extract channel ID, then \"send message 'hi' to channel ID 1234567890\"\n  \nIMPORTANT:\n- Always specify IDs explicitly when sending messages - never use channel names in tool calls.\n- If you don't have guild/server or user IDs, use the MCP to fetch them\n- If you don't have guild channel IDs, use the MCP to fetch them\n- There's no concept of `unread` messages in Discord MCP. unread means any message after my last response to the channel."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        672,
+        64
+      ],
+      "id": "28ec746a-b1f0-47e9-8d7e-143fc96db69f",
+      "name": "Metarune Admin Chat Agent"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "chatInput"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        -192
+      ],
+      "id": "57a5c631-2893-4379-a577-d40617e0be3d",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1024,
+        64
+      ],
+      "id": "0e16ec9e-3147-4fac-9bf5-11f5a2afbc77",
+      "name": "Merge Playbook and Agent Outputs"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        64
+      ],
+      "id": "125f39d1-da1c-4ec1-b427-5881661b0ac3",
+      "name": "No Operation, do nothing"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Playbook Library",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Playbook Library": {
+      "main": [
+        [
+          {
+            "node": "Playbook Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Playbook Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Playbook Classifier Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Playbook Classifier Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Playbook Classifier",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Playbook Classifier": {
+      "main": [
+        [
+          {
+            "node": "Route to Playbook or Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route to Playbook or Agent": {
+      "main": [
+        [
+          {
+            "node": "Prepare Playbook Execution",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Playbook Execution": {
+      "main": [
+        [
+          {
+            "node": "Discord Agent with Caching",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord Agent with Caching": {
+      "ai_tool": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ],
+      "main": [
+        [
+          {
+            "node": "Merge Playbook and Agent Outputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Metarune Admin Chat Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Metarune Admin Chat Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge Playbook and Agent Outputs",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Playbook and Agent Outputs": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Playbook Library",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "c19b72a2-2b5e-42e8-bd97-f22ed35f6d5b",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-08T18:36:58.815Z",
+      "createdAt": "2025-12-08T18:36:58.815Z",
+      "role": "workflow:owner",
+      "workflowId": "r8usqXxRVILE0kbu",
+      "projectId": "GEUEn6ArNROzJ5FY"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

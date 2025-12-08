@@ -1,0 +1,685 @@
+{
+  "updatedAt": "2025-12-08T18:36:58.553Z",
+  "createdAt": "2025-12-08T18:36:58.553Z",
+  "id": "DJwg0RBcdim8vt8J",
+  "name": "[HELPERS] Generic Context Scout Core",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "query"
+            },
+            {
+              "name": "entity"
+            },
+            {
+              "name": "platformConfig",
+              "type": "object"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        352
+      ],
+      "id": "trigger",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\n// Debug: Log what we received\nif (!input.entity) {\n  throw new Error(`Entity is missing. Received input: ${JSON.stringify(input, null, 2)}`);\n}\n\nconst { query, entity, platformConfig } = input;\n\n// Validate entity exists in config\nif (!platformConfig || !platformConfig.entities || !platformConfig.entities[entity]) {\n  throw new Error(`Entity type '${entity}' not found in platform config. Input keys: ${Object.keys(input).join(', ')}`);\n}\n\nconst entityConfig = platformConfig.entities[entity];\n\n// Build fetch workflow inputs\nconst fetchWorkflowInputs = {};\n\n// If entity has special parameters, pass them\nif (entityConfig.mcpTool?.parameters) {\n  Object.assign(fetchWorkflowInputs, entityConfig.mcpTool.parameters);\n}\n\nreturn {\n  query: query || '',\n  entity: entity,\n  entityConfig: entityConfig,\n  platformConfig: platformConfig,\n  fetchWorkflowInputs: fetchWorkflowInputs\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        352
+      ],
+      "id": "prepare-entity",
+      "name": "Prepare Entity Config"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-skip-query",
+              "leftValue": "={{ $json.entityConfig.skipQuery }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        752,
+        352
+      ],
+      "id": "check-skip-query",
+      "name": "Check Skip Query"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-rag-status",
+              "leftValue": "={{ $json.entityConfig.requiresRAGStatusCheck }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        976,
+        288
+      ],
+      "id": "check-rag-status",
+      "name": "Check RAG Status Required"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "[HELPERS] Entity Cache Handler",
+          "mode": "list",
+          "cachedResultName": "[HELPERS] Entity Cache Handler",
+          "cachedResultUrl": "/workflow/EntityCacheHandler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cacheKey": "={{ $json.entityConfig.cacheKey }}",
+            "ttl": "={{ $json.entityConfig.ttl || $json.platformConfig.defaultTTL }}",
+            "fetchWorkflowId": "={{ $json.entityConfig.fetchWorkflowId }}",
+            "fetchWorkflowInputs": "={{ $json.fetchWorkflowInputs }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "cacheKey",
+              "displayName": "cacheKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "ttl",
+              "displayName": "ttl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "fetchWorkflowId",
+              "displayName": "fetchWorkflowId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "fetchWorkflowInputs",
+              "displayName": "fetchWorkflowInputs",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1200,
+        352
+      ],
+      "id": "get-entity-data",
+      "name": "Get Entity Data (Cache or Fetch)",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "merge-entity-config",
+              "name": "entityConfig",
+              "value": "={{ $('Prepare Entity Config').first().json.entityConfig }}",
+              "type": "object"
+            },
+            {
+              "id": "merge-query",
+              "name": "query",
+              "value": "={{ $('Prepare Entity Config').first().json.query }}",
+              "type": "string"
+            },
+            {
+              "id": "9c04271a-c2fc-4370-82c4-c16f1c1f4d12",
+              "name": "={{ $('Prepare Entity Config').first().json.entityConfig.dataKey }}",
+              "value": "={{ $json.myProfile }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1424,
+        352
+      ],
+      "id": "merge-entity-config",
+      "name": "Merge Entity Config"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract entity data from cache handler output and merge with entityConfig\n// The input from Merge Entity Config contains: cache handler output + entityConfig + query\nconst mergedInput = $input.first().json;\nconst entityConfig = $json.entityConfig;\nconst query = $json.query || '';\n\n// Handle error cases from cache handler\nif (mergedInput.error) {\n  throw new Error(`Failed to fetch entity data: ${mergedInput.error}`);\n}\n\nif (!entityConfig) {\n  throw new Error(`entityConfig is missing. Available keys: ${JSON.stringify(Object.keys($json || {}))}`);\n}\n\nconst dataKey = entityConfig.dataKey;\n\n// Extract the cache handler output by removing the fields we added in Merge Entity Config\n// The cache handler output is everything except entityConfig and query\nconst cacheHandlerOutput = {};\nfor (const key in mergedInput) {\n  if (key !== 'entityConfig' && key !== 'query') {\n    cacheHandlerOutput[key] = mergedInput[key];\n  }\n}\n\n// Cache handler returns the fetch workflow output directly\n// Fetch workflows return data in format: { [dataKey]: data }\n// For example: { contacts: [...] }, { tools: [...] }, { myProfile: {...} }\n\nlet entityData = null;\n\n// Strategy 1: Check if dataKey exists directly in cacheHandlerOutput (most common case)\nif (cacheHandlerOutput && cacheHandlerOutput[dataKey] !== undefined) {\n  entityData = cacheHandlerOutput[dataKey];\n}\n// Strategy 2: Check if the entire cacheHandlerOutput is an array (direct array return)\nelse if (Array.isArray(cacheHandlerOutput)) {\n  entityData = cacheHandlerOutput;\n}\n// Strategy 3: For skipQuery entities, check if cacheHandlerOutput itself is the data\nelse if (entityConfig.skipQuery && cacheHandlerOutput && typeof cacheHandlerOutput === 'object' && !Array.isArray(cacheHandlerOutput)) {\n  // For profile, the data might be the object itself if fetch workflow didn't wrap it\n  // Check if it looks like profile data (has common profile fields)\n  const hasProfileFields = cacheHandlerOutput.id || cacheHandlerOutput.userId || cacheHandlerOutput.username || cacheHandlerOutput.displayName;\n  if (hasProfileFields) {\n    entityData = cacheHandlerOutput;\n  }\n}\n\n// If still no data found, return empty array\nif (entityData === null || entityData === undefined) {\n  entityData = entityConfig.skipQuery ? null : [];\n}\n\n// Ensure entityData is an array (except for skipQuery entities which might be single objects)\nif (entityConfig.skipQuery) {\n  // For skipQuery entities (like 'self'), return as array with single item or empty\n  return {\n    [dataKey]: Array.isArray(entityData) ? entityData : (entityData ? [entityData] : []),\n    entityConfig: entityConfig,\n    query: query,\n  };\n}\n\n// For searchable entities, ensure it's an array\nif (!Array.isArray(entityData)) {\n  entityData = entityData ? [entityData] : [];\n}\n\n// Return data in format expected by search nodes\nreturn {\n  [dataKey]: entityData,\n  entityConfig: entityConfig,\n  query: query,\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1648,
+        352
+      ],
+      "id": "extract-entity-data",
+      "name": "Extract Entity Data"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "search-type-fuzzy",
+                    "leftValue": "={{ $('Prepare Entity Config').first().json.entityConfig.searchType }}",
+                    "rightValue": "fuzzy",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "FUZZY"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "search-type-rag",
+                    "leftValue": "={{ $('Prepare Entity Config').first().json.entityConfig.searchType }}",
+                    "rightValue": "rag",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "RAG"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "search-type-none",
+                    "leftValue": "={{ $('Prepare Entity Config').first().json.entityConfig.searchType }}",
+                    "rightValue": "none",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "NONE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        1872,
+        336
+      ],
+      "id": "route-search-type",
+      "name": "Route Search Type"
+    },
+    {
+      "parameters": {
+        "query": "={{ $('Prepare Entity Config').first().json.query }}",
+        "arrayField": "={{ $json.entityConfig.dataKey }}",
+        "searchKeys": "={{ $('Prepare Entity Config').first().json.entityConfig.fuzzyConfig.searchKeys.join('\\n') }}",
+        "matchQuality": "={{ $('Prepare Entity Config').first().json.entityConfig.fuzzyConfig.matchQuality }}",
+        "limit": "={{ $('Prepare Entity Config').first().json.entityConfig.fuzzyConfig.limit }}",
+        "advancedOptions": {
+          "includeScore": true,
+          "matchIndividualWords": false
+        }
+      },
+      "type": "n8n-nodes-paragon-os.fuzzySearch",
+      "typeVersion": 1,
+      "position": [
+        2096,
+        208
+      ],
+      "id": "fuzzy-search",
+      "name": "Fuzzy Search"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-empty-query",
+              "leftValue": "={{ ($('Prepare Entity Config').first().json.query || '').trim() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        2096,
+        400
+      ],
+      "id": "check-empty-query-rag",
+      "name": "Check Empty Query for RAG"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Return empty result for empty query instead of calling RAG API\nconst entityConfig = $('Prepare Entity Config').first().json.entityConfig;\nconst dataKey = entityConfig.dataKey;\n\nreturn {\n  results: [],\n  count: 0,\n  answer: \"Query is empty. Please provide a search query.\"\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2320,
+        320
+      ],
+      "id": "empty-query-response",
+      "name": "Empty Query Response"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "IZa7S90Z9W1qxysr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/IZa7S90Z9W1qxysr",
+          "cachedResultName": "[HELPERS] Dynamic RAG"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "mode": "SEARCH",
+            "collectionId": "={{ $('Prepare Entity Config').first().json.entityConfig.ragConfig.collectionId }}",
+            "input": "={{ $('Prepare Entity Config').first().json.query }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "input",
+              "displayName": "input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "collectionId",
+              "displayName": "collectionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2320,
+        480
+      ],
+      "id": "rag-search",
+      "name": "RAG Search"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2320,
+        336
+      ],
+      "id": "merge-results",
+      "name": "Merge Results"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format final output based on search type\nconst input = $input.first().json;\n\n// Handle error cases\nif (input.error) {\n  throw new Error(input.error);\n}\n\nconst entityConfig = $('Prepare Entity Config').first().json.entityConfig;\nconst searchType = entityConfig.searchType;\n\n// Handle different output formats\nif (searchType === 'none' || entityConfig.skipQuery) {\n  // For skipQuery entities (like 'self'), return the data directly\n  const dataKey = entityConfig.dataKey;\n  return input[dataKey] || input;\n} else if (searchType === 'fuzzy') {\n  // Fuzzy search returns results with scores\n  return input;\n} else if (searchType === 'rag') {\n  // RAG search returns { results, count, answer }\n  // Extract results array\n  return input.results || input;\n}\n\n// Fallback: return as-is\nreturn input;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2544,
+        352
+      ],
+      "id": "format-output",
+      "name": "Format Output"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare Entity Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Entity Config": {
+      "main": [
+        [
+          {
+            "node": "Check Skip Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Skip Query": {
+      "main": [
+        [
+          {
+            "node": "Get Entity Data (Cache or Fetch)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check RAG Status Required",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check RAG Status Required": {
+      "main": [
+        [
+          {
+            "node": "Get Entity Data (Cache or Fetch)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Entity Data (Cache or Fetch)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Entity Data (Cache or Fetch)": {
+      "main": [
+        [
+          {
+            "node": "Merge Entity Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Entity Config": {
+      "main": [
+        [
+          {
+            "node": "Extract Entity Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Entity Data": {
+      "main": [
+        [
+          {
+            "node": "Route Search Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Search Type": {
+      "main": [
+        [
+          {
+            "node": "Fuzzy Search",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Empty Query for RAG",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Empty Query for RAG": {
+      "main": [
+        [
+          {
+            "node": "Empty Query Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "RAG Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Empty Query Response": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Fuzzy Search": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "RAG Search": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Format Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "bdc22bc8-1db0-4a83-b1bb-8f23d4ffd636",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-08T18:36:58.553Z",
+      "createdAt": "2025-12-08T18:36:58.553Z",
+      "role": "workflow:owner",
+      "workflowId": "DJwg0RBcdim8vt8J",
+      "projectId": "GEUEn6ArNROzJ5FY"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

@@ -1,0 +1,153 @@
+{
+  "updatedAt": "2025-12-08T18:36:58.409Z",
+  "createdAt": "2025-12-08T18:36:58.409Z",
+  "id": "Qp9xNaJkQraiWaP6",
+  "name": "Discord Context Scout",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "query"
+            },
+            {
+              "name": "entity"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        400
+      ],
+      "id": "trigger",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Discord Platform Configuration\nconst DISCORD_CONFIG = {\n  platform: \"DISCORD\",\n  mcpCredentialId: \"ZFofx3k2ze1wsifx\",\n  cacheKeyPrefix: \"discord\",\n  defaultTTL: 6 * 60 * 60 * 1000, // 6 hours\n  \n  entities: {\n    \"contact\": {\n      cacheKey: \"discordContacts\",\n      fetchWorkflowId: \"DiscordContactFetch\",\n      mcpTool: {\n        name: \"discord_list_contacts\",\n        parameters: { limit: 100 },\n        mcpDataKey: \"contacts\"\n      },\n      mapper: \"(c) => ({ id: c.id, username: c.tag, displayName: c.displayName, lastMessage: c.lastMessageAtRelative, contactType: c.type, platform: 'DISCORD' })\",\n      dataKey: \"contacts\",\n      searchType: \"rag\",\n      ragConfig: {\n        collectionId: \"paragon-os-contacts\",\n        autoIngest: true\n      },\n      requiresRAGStatusCheck: true\n    },\n    \"guild\": {\n      cacheKey: \"discordGuilds\",\n      fetchWorkflowId: \"DiscordGuildFetch\",\n      mcpTool: {\n        name: \"discord_list_guilds\",\n        parameters: {},\n        mcpDataKey: \"guilds\"\n      },\n      mapper: \"(g) => ({ id: g.id, name: g.name, members: g.memberCount, channels: g.channels ?? [] })\",\n      dataKey: \"guilds\",\n      searchType: \"fuzzy\",\n      fuzzyConfig: {\n        searchKeys: [\"name\", \"channels\"],\n        matchQuality: 50,\n        limit: 10\n      }\n    },\n    \"tool\": {\n      cacheKey: \"discordTools\",\n      fetchWorkflowId: \"DiscordToolFetch\",\n      mapper: \"(t) => t\",\n      dataKey: \"tools\",\n      searchType: \"fuzzy\",\n      fuzzyConfig: {\n        searchKeys: [\"name\", \"description\"],\n        matchQuality: 50,\n        limit: 10\n      }\n    },\n    \"self\": {\n      cacheKey: \"discordProfile\",\n      fetchWorkflowId: \"DiscordProfileFetch\",\n      mapper: \"(p) => p\",\n      dataKey: \"myProfile\",\n      searchType: \"none\",\n      skipQuery: true\n    }\n  }\n};\n\nconst input = $input.first().json;\n\nreturn {\n  query: input.query || '',\n  entity: input.entity || '',\n  platformConfig: DISCORD_CONFIG\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        400
+      ],
+      "id": "load-config",
+      "name": "Load Discord Config"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "[HELPERS] Generic Context Scout Core",
+          "mode": "list",
+          "cachedResultName": "[HELPERS] Generic Context Scout Core",
+          "cachedResultUrl": "/workflow/GenericContextScoutCore"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ $json.query }}",
+            "entity": "={{ $json.entity }}",
+            "platformConfig": "={{ $json.platformConfig }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "entity",
+              "displayName": "entity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "platformConfig",
+              "displayName": "platformConfig",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        400
+      ],
+      "id": "execute-core",
+      "name": "Execute Core"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Load Discord Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Discord Config": {
+      "main": [
+        [
+          {
+            "node": "Execute Core",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "52c6ac93-6668-4d5f-a64b-242a0dfa2150",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-08T18:36:58.412Z",
+      "createdAt": "2025-12-08T18:36:58.412Z",
+      "role": "workflow:owner",
+      "workflowId": "Qp9xNaJkQraiWaP6",
+      "projectId": "GEUEn6ArNROzJ5FY"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
