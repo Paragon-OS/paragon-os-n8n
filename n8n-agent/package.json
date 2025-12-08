@@ -10,7 +10,8 @@
     "n8n:delete-all": "ts-node src/n8n-workflows-cli.ts delete-all",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:select": "ts-node src/scripts/test-selector.ts"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.21",
