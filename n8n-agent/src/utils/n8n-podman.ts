@@ -391,13 +391,11 @@ export async function startN8nInstance(
       );
       apiKey = setupResult.apiKey;
       sessionCookie = setupResult.sessionCookie;
-      if (apiKey) {
-        logger.info(`✅ n8n setup complete with API key: ${apiKey.substring(0, 10)}...`);
-      } else {
-        logger.warn(`⚠️  Could not obtain API key, tests may fail`);
-      }
+      // apiKey is always undefined - this is intentional (API key creation skipped)
       if (sessionCookie) {
-        logger.info(`✅ Session cookie available for authentication`);
+        logger.info(`✅ n8n setup complete with session cookie authentication`);
+      } else {
+        logger.warn(`⚠️  Could not obtain session cookie, tests may fail`);
       }
     } catch (error) {
       logger.error(`Failed to set up n8n: ${error instanceof Error ? error.message : String(error)}`);

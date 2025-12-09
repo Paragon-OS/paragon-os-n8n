@@ -1,7 +1,7 @@
 /**
  * n8n Setup Utilities
  * 
- * Functions to set up n8n instances for testing, including user creation and API key setup
+ * Functions to set up n8n instances for testing, including user creation and session cookie setup
  */
 
 import axios from 'axios';
@@ -109,25 +109,28 @@ async function waitForDbMigrations(
 }
 
 /**
- * Set up n8n user and API key using direct HTTP API calls.
+ * Set up n8n user and session cookie using direct HTTP API calls.
  * 
  * This function:
  * 1. Waits for DB migrations to complete
  * 2. Directly POSTs to /rest/owner/setup to create the initial user
  * 3. Logs in to get a session cookie
- * 4. Creates an API key via REST API
+ * 
+ * Note: API key creation is intentionally skipped as it fails due to scope
+ * validation issues in n8n. Session cookies work perfectly for all operations
+ * via /rest endpoints, which are automatically used when no API key is available.
  * 
  * @param containerName - Podman container name (for migration checking)
  * @param baseUrl - n8n base URL
  * @param user - User details (email, password, name)
- * @returns Object with apiKey and userId if successful
+ * @returns Object with sessionCookie (apiKey is always undefined)
  */
 export async function setupN8nViaCliInContainer(
   containerName: string,
   baseUrl: string,
   user = DEFAULT_TEST_USER
 ): Promise<{ apiKey?: string; userId?: string; sessionCookie?: string }> {
-  logger.info(`🔧 Setting up n8n user and API key at ${baseUrl}`);
+  logger.info(`🔧 Setting up n8n user and session cookie at ${baseUrl}`);
   
   // Step 1: Wait for DB migrations
   const migrationsReady = await waitForDbMigrations(containerName, 90000); // Increase to 90 seconds
@@ -189,15 +192,15 @@ export async function setupN8nViaCliInContainer(
         const data = setupResponse.data as any;
         // Try multiple possible response formats
         const userId = data.id || data.user?.id || data.userId || '';
-        const apiKey = data.apiKey || data.api_key || data.key;
-        
-        if (apiKey) {
+        // Check if API key was returned (unlikely, but handle if present)
+        const returnedApiKey = data.apiKey || data.api_key || data.key;
+        if (returnedApiKey) {
           logger.info(`✅ User created with API key: ${userId || 'unknown'}`);
-          return { apiKey, userId: userId || undefined };
+          return { apiKey: returnedApiKey, userId: userId || undefined };
         }
         
         if (userId) {
-          logger.info(`✅ User created: ${userId}, will create API key...`);
+          logger.info(`✅ User created: ${userId}, will get session cookie...`);
           userCreated = true;
           break; // Exit retry loop
         } else {
@@ -209,7 +212,7 @@ export async function setupN8nViaCliInContainer(
         }
       } else if (setupResponse.status === 400 && 
                  (setupResponse.data as any)?.message?.includes('already exists')) {
-        logger.info(`User already exists, proceeding to API key creation...`);
+        logger.info(`User already exists, proceeding to get session cookie...`);
         userCreated = true;
         break;
       } else {
@@ -245,84 +248,27 @@ export async function setupN8nViaCliInContainer(
   logger.info(`Waiting 2 seconds for user to be persisted...`);
   await new Promise(resolve => setTimeout(resolve, 2000));
   
-  // Step 5: Create API key via login + REST API (with retries)
-  logger.info(`Creating API key via login...`);
-  let apiKey: string | undefined;
-  let sessionCookie: string | undefined;
+  // Step 5: Login to get session cookie (API key creation skipped - not needed)
+  logger.info(`Logging in to get session cookie...`);
   
-  for (let attempt = 1; attempt <= 5; attempt++) {
-    logger.info(`API key creation attempt ${attempt}/5...`);
-    const result = await createApiKey(baseUrl, user.email, user.password);
-    
-    if (result.apiKey) {
-      logger.info(`✅ API key created successfully: ${result.apiKey.substring(0, 10)}...`);
-      return { apiKey: result.apiKey, sessionCookie: result.sessionCookie };
-    }
-    
-    // Store session cookie even if API key creation failed
-    if (result.sessionCookie) {
-      sessionCookie = result.sessionCookie;
-      logger.info(`✅ Session cookie obtained (API key creation failed)`);
-    }
-    
-    if (attempt < 5) {
-      const waitTime = attempt * 3000; // 3s, 6s, 9s, 12s
-      logger.info(`API key creation failed, waiting ${waitTime}ms before retry...`);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
-    }
-  }
-  
-  logger.error(`Failed to create API key after 5 attempts`);
-  
-  // Return session cookie even if API key creation failed
-  if (sessionCookie) {
-    logger.warn(`⚠️  No API key created, but session cookie is available for authentication`);
-    return { sessionCookie };
-  }
-  
-  return {};
-}
-
-/**
- * Create API key for a user (requires login session)
- * Returns both the API key and session cookie for authentication
- */
-async function createApiKey(
-  baseUrl: string,
-  email: string,
-  password: string
-): Promise<{ apiKey?: string; sessionCookie?: string }> {
   try {
-    // First verify login endpoint is ready
-    logger.info(`Verifying login endpoint is ready...`);
+    // Verify login endpoint is ready
     const loginEndpointCheck = await axios.get(`${baseUrl}/rest/login`, {
       timeout: 3000,
       validateStatus: () => true,
     });
     
     if (loginEndpointCheck.status === 404) {
-      logger.warn(`Login endpoint not ready yet (404), waiting 5 seconds...`);
-      await new Promise(resolve => setTimeout(resolve, 5000));
-      
-      // Retry endpoint check
-      const retryCheck = await axios.get(`${baseUrl}/rest/login`, {
-        timeout: 3000,
-        validateStatus: () => true,
-      });
-      
-      if (retryCheck.status === 404) {
-        logger.warn(`Login endpoint still not ready after wait`);
-        return {};
-      }
+      logger.warn(`Login endpoint not ready yet (404), waiting 2 seconds...`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
     
-    logger.info(`Logging in to create API key with email: ${email}...`);
-    // Login to get session - n8n expects emailOrLdapLoginId, not email
-    let loginResponse = await axios.post(
+    // Login to get session cookie
+    const loginResponse = await axios.post(
       `${baseUrl}/rest/login`,
       {
-        emailOrLdapLoginId: email,
-        password,
+        emailOrLdapLoginId: user.email,
+        password: user.password,
       },
       {
         timeout: 10000,
@@ -331,116 +277,45 @@ async function createApiKey(
       }
     );
 
-    logger.info(`Login response: status=${loginResponse.status}`);
-    
-    // Retry login if it fails (up to 2 retries)
-    if (loginResponse.status !== 200) {
-      logger.warn(`Login failed: status=${loginResponse.status}, data=${JSON.stringify(loginResponse.data).substring(0, 500)}`);
+    if (loginResponse.status === 200) {
+      const cookies = loginResponse.headers['set-cookie'];
+      logger.info(`Cookies received: ${cookies ? cookies.length : 0} cookie(s)`);
       
-      for (let retry = 1; retry <= 2; retry++) {
-        const waitTime = retry * 5000; // 5s, 10s
-        logger.info(`Waiting ${waitTime}ms before login retry ${retry}/2...`);
-        await new Promise(resolve => setTimeout(resolve, waitTime));
-        
-        logger.info(`Retrying login (attempt ${retry + 1})...`);
-        loginResponse = await axios.post(
-          `${baseUrl}/rest/login`,
-          {
-            emailOrLdapLoginId: email,
-            password,
-          },
-          {
-            timeout: 10000,
-            validateStatus: () => true,
-            withCredentials: true,
-          }
-        );
-        
-        logger.info(`Retry login response: status=${loginResponse.status}`);
-        
-        if (loginResponse.status === 200) {
-          break; // Success!
-        }
-      }
-      
-      if (loginResponse.status !== 200) {
-        logger.warn(`Login failed after all retries: status=${loginResponse.status}, data=${JSON.stringify(loginResponse.data).substring(0, 500)}`);
-        return {};
-      }
-    }
-
-    // Extract session cookie from successful login
-    const cookies = loginResponse.headers['set-cookie'];
-    logger.info(`Cookies received: ${cookies ? cookies.length : 0} cookie(s)`);
-    
-    if (!cookies || cookies.length === 0) {
-      logger.warn(`No session cookie in login response`);
-      return {};
-    }
-
-    const sessionCookie = cookies.find(c => c.startsWith('n8n-auth=')) || cookies[0];
-    logger.info(`Using session cookie: ${sessionCookie.substring(0, 50)}...`);
-
-    // Create API key with proper format (label, scopes, expiresAt)
-    logger.info(`Creating API key at ${baseUrl}/rest/api-keys...`);
-    const apiKeyResponse = await axios.post(
-      `${baseUrl}/rest/api-keys`,
-      {
-        label: 'test-api-key',
-        // Use basic scopes - just workflow and credential read/list
-        scopes: ['workflow:read', 'credential:read'],
-        expiresAt: Math.floor(Date.now() / 1000) + (365 * 24 * 60 * 60), // 1 year from now (Unix timestamp in seconds)
-      },
-      {
-        timeout: 5000,
-        validateStatus: () => true,
-        headers: {
-          'Cookie': sessionCookie,
-          'Content-Type': 'application/json',
-        },
-        withCredentials: true,
-      }
-    );
-
-    logger.info(`API key creation response: status=${apiKeyResponse.status}`);
-    logger.info(`API key response data: ${JSON.stringify(apiKeyResponse.data).substring(0, 500)}`);
-
-    if (apiKeyResponse.status === 200 || apiKeyResponse.status === 201) {
-      const response = apiKeyResponse.data as any;
-      // Response can be wrapped in { data: { rawApiKey: "...", ... } } or direct { rawApiKey: "...", ... }
-      const data = response.data || response;
-      const apiKey = data.rawApiKey || data.apiKey || data.key;
-      if (apiKey) {
-        logger.info(`✅ API key created: ${apiKey.substring(0, 15)}...`);
-        return { apiKey, sessionCookie };
+      if (cookies && cookies.length > 0) {
+        const sessionCookie = cookies.find(c => c.startsWith('n8n-auth=')) || cookies[0];
+        logger.info(`✅ Session cookie obtained for authentication`);
+        logger.info(`ℹ️  API key creation skipped - session cookie is sufficient for all operations via /rest endpoints`);
+        return { sessionCookie, userId: undefined };
       } else {
-        logger.warn(`API key response missing apiKey field. Full response: ${JSON.stringify(response).substring(0, 500)}`);
+        logger.warn(`No session cookie in login response`);
       }
     } else {
-      logger.warn(`API key creation failed: status=${apiKeyResponse.status}, data=${JSON.stringify(apiKeyResponse.data).substring(0, 500)}`);
+      logger.warn(`Login failed: status=${loginResponse.status}`);
     }
-
-    // Even if API key creation failed, return the session cookie as it can be used for authentication
-    logger.info(`Returning session cookie even though API key creation failed`);
-    return { sessionCookie };
   } catch (error) {
-    logger.debug(`Failed to create API key: ${error instanceof Error ? error.message : String(error)}`);
-    return {};
+    logger.error(`Failed to login and get session cookie: ${error instanceof Error ? error.message : String(error)}`);
   }
+  
+  logger.warn(`⚠️  Failed to obtain session cookie`);
+  return {};
 }
 
+
 /**
- * Setup n8n with user, API key, and credentials via CLI
+ * Setup n8n with user, session cookie, and credentials via CLI
  * 
  * This is the recommended approach for test environments as it:
- * 1. Creates user and API key via HTTP (reliable)
+ * 1. Creates user and gets session cookie via HTTP (reliable)
  * 2. Injects credentials via CLI (allows exact ID control)
+ * 
+ * Note: API key creation is intentionally skipped as it fails due to scope
+ * validation issues. Session cookies work perfectly for all operations.
  * 
  * @param containerName - Podman container name
  * @param baseUrl - n8n base URL
  * @param dataDir - Host data directory (for credential file creation)
  * @param user - User details (optional)
- * @returns Object with apiKey
+ * @returns Object with sessionCookie (apiKey is always undefined)
  */
 export async function setupN8nWithCredentials(
   containerName: string,
@@ -448,20 +323,18 @@ export async function setupN8nWithCredentials(
   dataDir: string,
   user = DEFAULT_TEST_USER
 ): Promise<{ apiKey?: string; sessionCookie?: string }> {
-  logger.info(`🚀 Setting up n8n with user, API key, and credentials...`);
+  logger.info(`🚀 Setting up n8n with user, session cookie, and credentials...`);
   
-  // Step 1: Setup user and API key via HTTP
-  logger.info(`Step 1: Setting up user and API key...`);
+  // Step 1: Setup user and get session cookie via HTTP
+  logger.info(`Step 1: Setting up user and session cookie...`);
   const { apiKey, sessionCookie } = await setupN8nViaCliInContainer(containerName, baseUrl, user);
   
-  if (!apiKey) {
-    logger.warn(`⚠️  No API key created, some operations may fail`);
-  } else {
-    logger.info(`✅ User and API key setup complete`);
-  }
-  
+  // apiKey is always undefined - this is intentional (API key creation skipped)
   if (sessionCookie) {
-    logger.info(`✅ Session cookie available for authentication`);
+    logger.info(`✅ User and session cookie setup complete`);
+    logger.info(`ℹ️  Using session cookie authentication (API key not needed)`);
+  } else {
+    logger.warn(`⚠️  Failed to obtain session cookie`);
   }
   
   // Step 2: Check if CLI is available for credential import
@@ -487,9 +360,6 @@ export async function setupN8nWithCredentials(
   }
   
   logger.info(`🎉 n8n setup complete!`);
-  if (!apiKey && sessionCookie) {
-    logger.warn(`⚠️  Could not obtain API key, tests may fail`);
-  }
   return { apiKey, sessionCookie };
 }
 
