@@ -34,9 +34,26 @@ describe('Credential Setup Tests', () => {
     }
   }, testTimeout);
 
-  afterAll(async () => {
+  afterEach(async () => {
+    // Clean up instance after each test to free ports
     if (instance) {
-      await stopN8nInstance(instance);
+      try {
+        await stopN8nInstance(instance);
+      } catch (error) {
+        console.error('Failed to stop instance in afterEach:', error);
+      }
+      instance = null;
+    }
+  }, testTimeout);
+
+  afterAll(async () => {
+    // Final cleanup in case afterEach didn't run
+    if (instance) {
+      try {
+        await stopN8nInstance(instance);
+      } catch (error) {
+        console.error('Failed to stop instance in afterAll:', error);
+      }
     }
   }, testTimeout);
 

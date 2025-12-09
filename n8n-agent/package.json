@@ -15,9 +15,15 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:select": "ts-node src/scripts/test-selector.ts",
-    "test:integration": "vitest run src/tests/integration",
-    "test:integration:watch": "vitest watch src/tests/integration",
-    "test:backup-restore": "vitest run src/tests/integration/backup-restore.test.ts"
+    "test:integration": "./scripts/test-integration.sh all",
+    "test:integration:watch": "./scripts/test-integration.sh all --watch",
+    "test:integration:log": "./scripts/test-integration.sh all --log",
+    "test:credentials": "./scripts/test-integration.sh credentials",
+    "test:credentials:log": "./scripts/test-integration.sh credentials --log",
+    "test:backup-restore": "./scripts/test-integration.sh backup",
+    "test:backup-restore:log": "./scripts/test-integration.sh backup --log",
+    "test:simple": "./scripts/test-integration.sh simple",
+    "test:cleanup": "pkill -f 'vitest.*integration' 2>/dev/null || true && podman ps -q --filter 'name=n8n-test' | xargs -r podman stop 2>/dev/null && podman ps -aq --filter 'name=n8n-test' | xargs -r podman rm -f 2>/dev/null || true"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.21",

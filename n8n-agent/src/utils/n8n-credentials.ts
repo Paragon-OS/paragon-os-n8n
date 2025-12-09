@@ -166,15 +166,15 @@ function createCredentialFile(
 
   const credFile = join(credDir, `credential-${credential.id}.json`);
   
-  // n8n credential export format
-  const credentialJson = {
+  // n8n credential export format (must be an array!)
+  const credentialJson = [{
     id: credential.id,
     name: credential.name,
     type: credential.type,
     data: credential.data,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-  };
+  }];
   
   writeFileSync(credFile, JSON.stringify(credentialJson, null, 2));
   logger.debug(`Created credential file: ${credFile}`);

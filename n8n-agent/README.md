@@ -34,11 +34,26 @@ npm run n8n:db:check            # Check for issues (dry-run)
 
 ### Testing
 ```bash
-npm test                        # Run tests
+# Unit tests
+npm test                        # Run all unit tests
 npm run test:watch              # Watch mode
 npm run test:select             # Interactive selector
-npm run test:integration        # Integration tests (requires podman)
+
+# Integration tests (requires podman)
+npm run test:integration        # All integration tests
+npm run test:credentials        # Credential setup tests
+npm run test:backup-restore     # Backup/restore tests
+npm run test:simple             # Quick smoke test
+
+# With logging (output to /tmp/n8n-tests/)
+npm run test:credentials:log
+npm run test:integration:log
+
+# Cleanup
+npm run test:cleanup            # Stop and remove test containers
 ```
+
+**See**: [docs/TESTING.md](docs/TESTING.md) for detailed testing guide.
 
 **Note**: Integration tests automatically inject credentials via CLI. See [docs/CREDENTIALS.md](docs/CREDENTIALS.md) for setup.
 
