@@ -1,0 +1,120 @@
+# Cursor Rules for Paragon OS n8n Agent
+
+## Test Execution Rules
+
+### 1. Always Run Minimum Scope of Tests
+- **NEVER** run all tests unless explicitly requested
+- **ALWAYS** run the most specific test that covers the change:
+  - Single test file: `vitest run src/tests/integration/simple-start.test.ts`
+  - Single test case: `vitest run src/tests/integration/credential-setup.test.ts -t "should start n8n instance"`
+  - Specific workflow test: `npm run n8n:test -- -w WorkflowName -t testCase`
+- Use `npm run test:select` for interactive test selection
+- Prefer targeted test commands:
+  - `npm run test:simple` - Quick smoke test (~1 min)
+  - `npm run test:credentials` - Credential tests (~2 min)
+  - `npm run test:backup-restore` - Backup tests (~5 min)
+  - `npm run test:integration` - All tests (~10 min) - ONLY when necessary
+
+### 2. Always Add Timeouts
+- **NEVER** run test commands without explicit timeouts
+- **ALWAYS** use timeout flags or ensure commands have built-in timeouts:
+  - Vitest: Tests already have 5-minute timeout in `vitest.config.ts`
+  - execa commands: **MUST** include `timeout` option (e.g., `timeout: 60000`)
+  - Long-running operations: Use appropriate timeouts (2-10 minutes)
+  - Integration tests: The `scripts/test-integration.sh` script **automatically** applies timeouts:
+    - Simple tests: 3 minutes
+    - Credential tests: 5 minutes
+    - Backup/restore tests: 15 minutes
+    - Full suite: 15 minutes
+  - If using `vitest` directly, use `--timeout` flag or ensure test files specify timeouts
+- If a command might hang, wrap it with a timeout mechanism
+- Default timeout for n8n commands: 2 minutes for execute, no timeout for others (configurable)
+- **Note**: On macOS, the `timeout` command may not be available. The script falls back to vitest's built-in timeout in this case.
+
+### 3. Podman Container Management
+- **ALWAYS** check for running podman containers before running tests
+- **ALWAYS** clean up containers before starting tests:
+  ```bash
+  # Check for running containers
+  podman ps --filter 'name=n8n-test'
+  
+  # Clean up before tests (RECOMMENDED - uses npm script)
+  npm run test:cleanup
+  # OR manually:
+  podman ps -q --filter 'name=n8n-test' | xargs -r podman stop 2>/dev/null || true
+  podman ps -aq --filter 'name=n8n-test' | xargs -r podman rm -f 2>/dev/null || true
+  ```
+- The test integration script (`scripts/test-integration.sh`) **automatically**:
+  - Cleans up containers before starting tests
+  - Checks for running containers before test execution
+  - Cleans up containers after tests complete (success or failure)
+  - Removes containers matching `n8n-test-*` patterns
+- If tests hang, first check for orphaned containers: `podman ps -a --filter 'name=n8n-test'`
+- Clean up containers after test failures or interruptions
+- The script uses `timeout` command if available (Linux), otherwise falls back to vitest's built-in timeout
+
+### 4. Test Command Examples
+
+**Good (minimal scope, timeout, cleanup):**
+```bash
+# Use npm scripts (RECOMMENDED - handles cleanup and timeout automatically)
+npm run test:simple          # Simple test (~1 min, 3 min timeout)
+npm run test:credentials     # Credential tests (~2 min, 5 min timeout)
+npm run test:backup-restore  # Backup tests (~5 min, 15 min timeout)
+
+# Or use test integration script directly (also handles cleanup/timeout)
+./scripts/test-integration.sh simple
+./scripts/test-integration.sh credentials
+
+# For unit tests (no containers needed)
+vitest run src/utils/test-helpers.test.ts
+
+# For specific test case
+vitest run src/tests/integration/simple-start.test.ts -t "should start n8n"
+```
+
+**Bad (too broad, no timeout check, no cleanup):**
+```bash
+# DON'T: Running all tests without cleanup
+npm run test  # Runs ALL unit tests - too broad
+
+# DON'T: Running integration tests without using the script
+vitest run src/tests/integration  # Missing cleanup and timeout
+
+# DON'T: No timeout specified for long operations
+execa('n8n', ['execute', ...], { /* no timeout */ })
+
+# DON'T: Running tests without checking for containers first
+# Always use npm scripts or test-integration.sh which handle this
+```
+
+### 5. When Writing Test Code
+- **ALWAYS** include timeout in test definitions: `it('test name', async () => {...}, testTimeout)`
+- **ALWAYS** include timeout in execa calls: `execa('command', args, { timeout: 60000 })`
+- **ALWAYS** cleanup containers in `afterEach` and `afterAll` hooks
+- **ALWAYS** check for podman availability before starting tests
+- Use `checkPodmanAvailable()` before container operations
+
+### 6. Debugging Hanging Tests
+1. Check for running containers: `podman ps --filter 'name=n8n-test'`
+2. Check for stuck processes: `ps aux | grep vitest`
+3. Clean up: `npm run test:cleanup`
+4. Check logs: `tail -100 /tmp/n8n-tests/test_*.log`
+5. Check container logs: `podman logs <container-name>`
+
+## Code Quality Rules
+
+- Use TypeScript strict mode
+- Follow existing code style and patterns
+- Add proper error handling and logging
+- Include JSDoc comments for public functions
+- Write tests for new functionality
+
+## File Organization
+
+- Test files: `src/tests/**/*.test.ts`
+- Integration tests: `src/tests/integration/`
+- Workflow tests: `src/tests/workflows/`
+- Utilities: `src/utils/`
+- Scripts: `scripts/`
+

@@ -126,7 +126,7 @@ export async function setupN8nViaCliInContainer(
   containerName: string,
   baseUrl: string,
   user = DEFAULT_TEST_USER
-): Promise<{ apiKey?: string; userId?: string }> {
+): Promise<{ apiKey?: string; userId?: string; sessionCookie?: string }> {
   logger.info(`🔧 Setting up n8n user and API key at ${baseUrl}`);
   
   // Step 1: Wait for DB migrations
@@ -248,14 +248,21 @@ export async function setupN8nViaCliInContainer(
   // Step 5: Create API key via login + REST API (with retries)
   logger.info(`Creating API key via login...`);
   let apiKey: string | undefined;
+  let sessionCookie: string | undefined;
   
   for (let attempt = 1; attempt <= 5; attempt++) {
     logger.info(`API key creation attempt ${attempt}/5...`);
-    apiKey = await createApiKey(baseUrl, user.email, user.password);
+    const result = await createApiKey(baseUrl, user.email, user.password);
     
-    if (apiKey) {
-      logger.info(`✅ API key created successfully: ${apiKey.substring(0, 10)}...`);
-      return { apiKey };
+    if (result.apiKey) {
+      logger.info(`✅ API key created successfully: ${result.apiKey.substring(0, 10)}...`);
+      return { apiKey: result.apiKey, sessionCookie: result.sessionCookie };
+    }
+    
+    // Store session cookie even if API key creation failed
+    if (result.sessionCookie) {
+      sessionCookie = result.sessionCookie;
+      logger.info(`✅ Session cookie obtained (API key creation failed)`);
     }
     
     if (attempt < 5) {
@@ -266,6 +273,13 @@ export async function setupN8nViaCliInContainer(
   }
   
   logger.error(`Failed to create API key after 5 attempts`);
+  
+  // Return session cookie even if API key creation failed
+  if (sessionCookie) {
+    logger.warn(`⚠️  No API key created, but session cookie is available for authentication`);
+    return { sessionCookie };
+  }
+  
   return {};
 }
 
@@ -320,12 +334,13 @@ export async function isSetupRequired(baseUrl: string): Promise<boolean> {
  */
 /**
  * Create API key for a user (requires login session)
+ * Returns both the API key and session cookie for authentication
  */
 async function createApiKey(
   baseUrl: string,
   email: string,
   password: string
-): Promise<string | undefined> {
+): Promise<{ apiKey?: string; sessionCookie?: string }> {
   try {
     // First verify login endpoint is ready
     logger.info(`Verifying login endpoint is ready...`);
@@ -346,7 +361,7 @@ async function createApiKey(
       
       if (retryCheck.status === 404) {
         logger.warn(`Login endpoint still not ready after wait`);
-        return undefined;
+        return {};
       }
     }
     
@@ -399,7 +414,7 @@ async function createApiKey(
       
       if (loginResponse.status !== 200) {
         logger.warn(`Login failed after all retries: status=${loginResponse.status}, data=${JSON.stringify(loginResponse.data).substring(0, 500)}`);
-        return undefined;
+        return {};
       }
     }
 
@@ -409,7 +424,7 @@ async function createApiKey(
     
     if (!cookies || cookies.length === 0) {
       logger.warn(`No session cookie in login response`);
-      return undefined;
+      return {};
     }
 
     const sessionCookie = cookies.find(c => c.startsWith('n8n-auth=')) || cookies[0];
@@ -446,7 +461,7 @@ async function createApiKey(
       const apiKey = data.rawApiKey || data.apiKey || data.key;
       if (apiKey) {
         logger.info(`✅ API key created: ${apiKey.substring(0, 15)}...`);
-        return apiKey;
+        return { apiKey, sessionCookie };
       } else {
         logger.warn(`API key response missing apiKey field. Full response: ${JSON.stringify(response).substring(0, 500)}`);
       }
@@ -454,10 +469,12 @@ async function createApiKey(
       logger.warn(`API key creation failed: status=${apiKeyResponse.status}, data=${JSON.stringify(apiKeyResponse.data).substring(0, 500)}`);
     }
 
-    return undefined;
+    // Even if API key creation failed, return the session cookie as it can be used for authentication
+    logger.info(`Returning session cookie even though API key creation failed`);
+    return { sessionCookie };
   } catch (error) {
     logger.debug(`Failed to create API key: ${error instanceof Error ? error.message : String(error)}`);
-    return undefined;
+    return {};
   }
 }
 
@@ -536,7 +553,8 @@ export async function createInitialUser(
       logger.info(`Waiting 5 seconds for user to be fully persisted and services to sync...`);
       await new Promise(resolve => setTimeout(resolve, 5000));
       
-      apiKey = await createApiKey(baseUrl, user.email, user.password);
+      const result = await createApiKey(baseUrl, user.email, user.password);
+      apiKey = result.apiKey;
     }
     
     logger.info(`User creation complete - userId: "${userId}", API key: ${apiKey ? 'yes' : 'no'}`);
@@ -697,10 +715,10 @@ export async function waitForN8nApiReady(
         
         for (let attempt = 1; attempt <= 3; attempt++) {
           logger.info(`API key creation attempt ${attempt}/3...`);
-          apiKey = await createApiKey(baseUrl, DEFAULT_TEST_USER.email, DEFAULT_TEST_USER.password);
-          if (apiKey) {
-            logger.info(`✅ Created API key: ${apiKey.substring(0, 10)}...`);
-            return { apiKey };
+          const result = await createApiKey(baseUrl, DEFAULT_TEST_USER.email, DEFAULT_TEST_USER.password);
+          if (result.apiKey) {
+            logger.info(`✅ Created API key: ${result.apiKey.substring(0, 10)}...`);
+            return { apiKey: result.apiKey };
           }
           
           if (attempt < 3) {
@@ -747,10 +765,10 @@ export async function waitForN8nApiReady(
             let apiKey: string | undefined;
             for (let attempt = 1; attempt <= 3; attempt++) {
               logger.info(`API key creation attempt ${attempt}/3...`);
-              apiKey = await createApiKey(baseUrl, DEFAULT_TEST_USER.email, DEFAULT_TEST_USER.password);
-              if (apiKey) {
-                logger.info(`✅ Created API key: ${apiKey.substring(0, 10)}...`);
-                return { apiKey };
+              const result = await createApiKey(baseUrl, DEFAULT_TEST_USER.email, DEFAULT_TEST_USER.password);
+              if (result.apiKey) {
+                logger.info(`✅ Created API key: ${result.apiKey.substring(0, 10)}...`);
+                return { apiKey: result.apiKey };
               }
               
               if (attempt < 3) {
@@ -774,10 +792,10 @@ export async function waitForN8nApiReady(
           let apiKey: string | undefined;
           for (let attempt = 1; attempt <= 3; attempt++) {
             logger.info(`API key creation attempt ${attempt}/3...`);
-            apiKey = await createApiKey(baseUrl, DEFAULT_TEST_USER.email, DEFAULT_TEST_USER.password);
-            if (apiKey) {
-              logger.info(`✅ Created API key: ${apiKey.substring(0, 10)}...`);
-              return { apiKey };
+            const result = await createApiKey(baseUrl, DEFAULT_TEST_USER.email, DEFAULT_TEST_USER.password);
+            if (result.apiKey) {
+              logger.info(`✅ Created API key: ${result.apiKey.substring(0, 10)}...`);
+              return { apiKey: result.apiKey };
             }
             
             if (attempt < 3) {
@@ -822,17 +840,21 @@ export async function setupN8nWithCredentials(
   baseUrl: string,
   dataDir: string,
   user = DEFAULT_TEST_USER
-): Promise<{ apiKey?: string }> {
+): Promise<{ apiKey?: string; sessionCookie?: string }> {
   logger.info(`🚀 Setting up n8n with user, API key, and credentials...`);
   
   // Step 1: Setup user and API key via HTTP
   logger.info(`Step 1: Setting up user and API key...`);
-  const { apiKey } = await setupN8nViaCliInContainer(containerName, baseUrl, user);
+  const { apiKey, sessionCookie } = await setupN8nViaCliInContainer(containerName, baseUrl, user);
   
   if (!apiKey) {
     logger.warn(`⚠️  No API key created, some operations may fail`);
   } else {
     logger.info(`✅ User and API key setup complete`);
+  }
+  
+  if (sessionCookie) {
+    logger.info(`✅ Session cookie available for authentication`);
   }
   
   // Step 2: Check if CLI is available for credential import
@@ -842,7 +864,7 @@ export async function setupN8nWithCredentials(
   if (!cliAvailable) {
     logger.warn(`⚠️  n8n CLI import:credentials not available, skipping credential setup`);
     logger.warn(`   Workflows requiring credentials will fail`);
-    return { apiKey };
+    return { apiKey, sessionCookie };
   }
   
   logger.info(`✅ n8n CLI is available`);
@@ -858,6 +880,9 @@ export async function setupN8nWithCredentials(
   }
   
   logger.info(`🎉 n8n setup complete!`);
-  return { apiKey };
+  if (!apiKey && sessionCookie) {
+    logger.warn(`⚠️  Could not obtain API key, tests may fail`);
+  }
+  return { apiKey, sessionCookie };
 }
 

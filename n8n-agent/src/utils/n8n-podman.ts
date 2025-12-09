@@ -33,6 +33,7 @@ export interface N8nInstance {
   baseUrl: string;
   dataDir: string;
   apiKey?: string;
+  sessionCookie?: string;
   stop: () => Promise<void>;
   remove: () => Promise<void>;
   restart: () => Promise<void>;
@@ -381,6 +382,7 @@ export async function startN8nInstance(
     logger.info(`Step 6: Setting up n8n user, API key, and credentials...`);
     const { setupN8nWithCredentials } = await import('./n8n-setup');
     let apiKey: string | undefined;
+    let sessionCookie: string | undefined;
     try {
       const setupResult = await setupN8nWithCredentials(
         containerName,
@@ -388,10 +390,14 @@ export async function startN8nInstance(
         dataDir
       );
       apiKey = setupResult.apiKey;
+      sessionCookie = setupResult.sessionCookie;
       if (apiKey) {
         logger.info(`✅ n8n setup complete with API key: ${apiKey.substring(0, 10)}...`);
       } else {
         logger.warn(`⚠️  Could not obtain API key, tests may fail`);
+      }
+      if (sessionCookie) {
+        logger.info(`✅ Session cookie available for authentication`);
       }
     } catch (error) {
       logger.error(`Failed to set up n8n: ${error instanceof Error ? error.message : String(error)}`);
@@ -406,6 +412,7 @@ export async function startN8nInstance(
       baseUrl,
       dataDir,
       apiKey,
+      sessionCookie,
       async stop() {
         logger.info(`Stopping n8n instance: ${containerName}`);
         try {
