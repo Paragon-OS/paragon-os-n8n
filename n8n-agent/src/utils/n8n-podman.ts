@@ -79,31 +79,48 @@ function generateContainerName(prefix: string = 'n8n-test'): string {
  * Find an available port starting from a base port
  */
 async function findAvailablePort(startPort: number = 50000): Promise<number> {
+  logger.debug(`Finding available port starting from ${startPort}...`);
   return new Promise((resolve, reject) => {
     const server = net.createServer();
+    let attempts = 0;
+    const maxAttempts = 100; // Don't try more than 100 ports
     
-    server.listen(startPort, () => {
-      const address = server.address();
-      if (address && typeof address === 'object') {
-        const port = address.port;
-        server.close(() => {
-          resolve(port);
-        });
-      } else {
-        server.close(() => {
-          reject(new Error('Could not determine port'));
-        });
+    const tryPort = (port: number) => {
+      attempts++;
+      if (attempts > maxAttempts) {
+        server.close();
+        reject(new Error(`Could not find available port after ${maxAttempts} attempts`));
+        return;
       }
-    });
+      
+      server.listen(port, () => {
+        const address = server.address();
+        if (address && typeof address === 'object') {
+          const foundPort = address.port;
+          server.close(() => {
+            logger.debug(`✅ Found available port: ${foundPort}`);
+            resolve(foundPort);
+          });
+        } else {
+          server.close(() => {
+            reject(new Error('Could not determine port'));
+          });
+        }
+      });
+      
+      server.on('error', (err: NodeJS.ErrnoException) => {
+        if (err.code === 'EADDRINUSE') {
+          // Port is in use, try next one
+          logger.debug(`Port ${port} in use, trying ${port + 1}...`);
+          tryPort(port + 1);
+        } else {
+          server.close();
+          reject(err);
+        }
+      });
+    };
     
-    server.on('error', (err: NodeJS.ErrnoException) => {
-      if (err.code === 'EADDRINUSE') {
-        // Port is in use, try next one
-        findAvailablePort(startPort + 1).then(resolve).catch(reject);
-      } else {
-        reject(err);
-      }
-    });
+    tryPort(startPort);
   });
 }
 
@@ -133,11 +150,19 @@ async function waitForN8nReady(
   timeout: number = DEFAULT_TIMEOUT
 ): Promise<boolean> {
   const startTime = Date.now();
+  let lastProgressLog = 0;
   const axios = (await import('axios')).default;
 
-  logger.debug(`Waiting for n8n to be ready at ${baseUrl} (timeout: ${timeout}ms)`);
+  logger.info(`⏳ Waiting for n8n container to be ready at ${baseUrl} (timeout: ${timeout}ms)...`);
 
   while (Date.now() - startTime < timeout) {
+    const elapsed = Date.now() - startTime;
+    
+    // Log progress every 10 seconds
+    if (elapsed - lastProgressLog >= 10000) {
+      logger.info(`⏳ Container still starting... (${Math.floor(elapsed / 1000)}s elapsed)`);
+      lastProgressLog = elapsed;
+    }
     try {
       const response = await axios.get(`${baseUrl}/healthz`, {
         timeout: 2000,
@@ -147,7 +172,7 @@ async function waitForN8nReady(
       // 200 = healthy, 401 = running but requires auth (both are fine)
       if (response.status === 200 || response.status === 401) {
         const elapsed = Date.now() - startTime;
-        logger.debug(`n8n is ready at ${baseUrl} (took ${elapsed}ms)`);
+        logger.info(`✅ n8n container is ready at ${baseUrl} (took ${Math.floor(elapsed / 1000)}s)`);
         return true;
       }
     } catch (error) {
@@ -234,11 +259,14 @@ export async function startN8nInstance(
   const dataDir = config?.dataDir || createTempDataDir(containerName);
   
   // Find available port
+  logger.info(`Finding available port...`);
   let actualPort: number;
   if (requestedPort && requestedPort > 0) {
     actualPort = requestedPort;
+    logger.info(`Using requested port: ${actualPort}`);
   } else {
     actualPort = await findAvailablePort();
+    logger.info(`Using auto-selected port: ${actualPort}`);
   }
 
   const baseUrl = `http://localhost:${actualPort}`;
@@ -246,45 +274,47 @@ export async function startN8nInstance(
   logger.info(`Starting n8n instance: ${containerName} on port ${actualPort}`);
 
   // Clean up any existing container with the same name
+  logger.info(`Step 1: Cleaning up any existing container...`);
   try {
     await removeContainer(containerName, true);
+    logger.info(`✅ Cleanup complete`);
   } catch (error) {
     logger.warn(`Failed to clean up existing container ${containerName}`, error);
   }
 
   try {
-    // Pull n8n image if needed (with timeout)
-    logger.debug(`Pulling n8n image: n8nio/n8n:${n8nVersion}`);
+    // Check if image exists locally first (faster than trying to pull)
+    logger.info(`Step 2: Checking if n8n image exists locally: n8nio/n8n:${n8nVersion}...`);
     try {
-      await execa('podman', ['pull', `n8nio/n8n:${n8nVersion}`], {
-        timeout: 180000, // 3 minutes for pull
+      await execa('podman', ['inspect', `n8nio/n8n:${n8nVersion}`], {
+        timeout: 5000,
       });
-      logger.debug(`Image pulled successfully`);
+      logger.info(`✅ Image already exists locally`);
     } catch (error) {
-      // Check if image already exists locally
+      logger.info(`Image not found locally, pulling from registry...`);
       try {
-        await execa('podman', ['inspect', `n8nio/n8n:${n8nVersion}`], {
-          timeout: 5000,
+        await execa('podman', ['pull', `n8nio/n8n:${n8nVersion}`], {
+          timeout: 180000, // 3 minutes for pull
         });
-        logger.debug(`Image already exists locally`);
-      } catch {
-        throw new Error(`Failed to pull n8n image: ${error instanceof Error ? error.message : String(error)}`);
+        logger.info(`✅ Image pulled successfully`);
+      } catch (pullError) {
+        throw new Error(`Failed to pull n8n image: ${pullError instanceof Error ? pullError.message : String(pullError)}`);
       }
     }
 
     // Build environment variables
+    logger.info(`Step 3: Building container configuration...`);
     const envArgs: string[] = [];
-    envArgs.push('-e', 'N8N_BASIC_AUTH_ACTIVE=false'); // Disable auth for testing
+    // Don't use basic auth - we'll use user management with API keys instead
+    // Basic auth and user management are mutually exclusive in n8n
+    envArgs.push('-e', 'N8N_BASIC_AUTH_ACTIVE=false');
     envArgs.push('-e', 'N8N_HOST=0.0.0.0');
     envArgs.push('-e', 'N8N_PORT=5678');
     envArgs.push('-e', 'N8N_PROTOCOL=http');
     envArgs.push('-e', 'N8N_METRICS=false'); // Disable metrics for faster startup
     envArgs.push('-e', 'N8N_DIAGNOSTICS_ENABLED=false'); // Disable diagnostics
     envArgs.push('-e', 'N8N_PAYLOAD_SIZE_MAX=16'); // Increase payload size limit
-    // Don't disable user management - we need it to create a user and API key
-    // envArgs.push('-e', 'N8N_USER_MANAGEMENT_DISABLED=true'); // Disable user management for testing
     envArgs.push('-e', 'N8N_SKIP_WEBHOOK_DEREGISTRATION_SHUTDOWN=true'); // Skip webhook cleanup
-    envArgs.push('-e', 'N8N_DISABLE_PRODUCTION_MAIN_PROCESS=true'); // Disable production mode (allows API without key)
     envArgs.push('-e', 'N8N_PERSONALIZATION_ENABLED=false'); // Disable personalization
     envArgs.push('-e', 'N8N_USER_FOLDER=/home/node/.n8n');
     
@@ -294,6 +324,7 @@ export async function startN8nInstance(
     }
 
     // Start container
+    logger.info(`Step 4: Starting container...`);
     const containerArgs = [
       'run',
       '-d',
@@ -304,14 +335,14 @@ export async function startN8nInstance(
       `n8nio/n8n:${n8nVersion}`,
     ];
 
-    logger.debug(`Starting container: podman ${containerArgs.join(' ')}`);
+    logger.info(`Executing: podman run -d --name ${containerName} -p ${actualPort}:5678 ...`);
     const { stdout: containerId } = await execa('podman', containerArgs, {
       timeout: 30000,
     });
-    logger.debug(`Container started: ${containerId.trim()}`);
+    logger.info(`✅ Container started: ${containerId.trim()}`);
 
     // Wait for n8n to be ready
-    logger.info(`Waiting for n8n to be ready at ${baseUrl}...`);
+    logger.info(`Step 5: Waiting for n8n to be ready at ${baseUrl}...`);
     const isReady = await waitForN8nReady(baseUrl, timeout);
     
     if (!isReady) {
@@ -326,21 +357,27 @@ export async function startN8nInstance(
       throw new Error(`n8n failed to start within ${timeout}ms. Check logs with: podman logs ${containerName}`);
     }
 
-    // Wait for API to be ready and set up user if needed
-    logger.info(`Setting up n8n API access...`);
-    const { waitForN8nApiReady } = await import('./n8n-setup');
+    // Set up user and API key via CLI
+    logger.info(`Step 6: Setting up n8n user and API key...`);
+    const { setupN8nViaCliInContainer } = await import('./n8n-setup');
     let apiKey: string | undefined;
     try {
-      const apiReady = await waitForN8nApiReady(baseUrl, 30000); // 30 seconds for API setup
-      apiKey = apiReady.apiKey;
+      const setupResult = await setupN8nViaCliInContainer(
+        containerName,
+        baseUrl
+      );
+      apiKey = setupResult.apiKey;
       if (apiKey) {
-        logger.debug(`n8n API key obtained: ${apiKey.substring(0, 10)}...`);
+        logger.info(`✅ n8n API key obtained: ${apiKey.substring(0, 10)}...`);
+      } else {
+        logger.warn(`⚠️  Could not obtain API key, tests may fail`);
       }
     } catch (error) {
-      logger.warn(`Failed to set up n8n API access, continuing anyway: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(`Failed to set up n8n via CLI: ${error instanceof Error ? error.message : String(error)}`);
+      logger.warn(`Continuing anyway, but tests will likely fail without API key`);
     }
 
-    logger.info(`✅ n8n instance ready: ${baseUrl}${apiKey ? ' (with API key)' : ''}`);
+    logger.info(`✅ n8n instance ready: ${baseUrl}`);
 
     return {
       containerName,

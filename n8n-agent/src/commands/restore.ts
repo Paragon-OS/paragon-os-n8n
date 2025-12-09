@@ -28,7 +28,7 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
   if (jsonFiles.length === 0) {
     logger.info(`No workflow JSON files found under "${inputDir}".`);
     if (!isTestMode) {
-      process.exitCode = 0;
+    process.exitCode = 0;
     }
     return;
   }
@@ -153,7 +153,7 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
   if (backups.length === 0) {
     logger.info(`No valid workflow JSON files found under "${inputDir}" after parsing.`);
     if (!isTestMode) {
-      process.exitCode = 0;
+    process.exitCode = 0;
     }
     return;
   }
@@ -204,7 +204,7 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
   if (toImport.length === 0) {
     logger.info("All workflows in the backup already match the current n8n instance. Nothing to restore.");
     if (!isTestMode) {
-      process.exitCode = 0;
+    process.exitCode = 0;
     }
     return;
   }
@@ -223,7 +223,7 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
   if (!confirmed) {
     logger.info("Restore cancelled.");
     if (!isTestMode) {
-      process.exitCode = 0;
+    process.exitCode = 0;
     }
     return;
   }
@@ -578,7 +578,7 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
   }
 
   if (!isTestMode) {
-    process.exitCode = 0;
+  process.exitCode = 0;
   }
 }
 

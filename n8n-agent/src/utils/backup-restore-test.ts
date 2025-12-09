@@ -7,10 +7,25 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { exportWorkflows, importWorkflow, deleteWorkflow, type Workflow } from './n8n-api';
+import { exportWorkflows, importWorkflow, deleteWorkflow, type Workflow, type N8nApiConfig } from './n8n-api';
 import { logger } from './logger';
 import type { N8nInstance } from './n8n-podman';
 import { collectJsonFilesRecursive } from './file';
+
+/**
+ * Helper to build API config from instance
+ */
+function buildApiConfig(instance: N8nInstance): N8nApiConfig {
+  const config: N8nApiConfig = {
+    baseURL: instance.baseUrl,
+  };
+  
+  if (instance.apiKey) {
+    config.apiKey = instance.apiKey;
+  }
+  
+  return config;
+}
 
 export interface BackupRestoreTestResult {
   success: boolean;
@@ -50,10 +65,7 @@ export async function createTestWorkflows(
   for (const workflow of workflows) {
     try {
       logger.debug(`Importing workflow "${workflow.name}" to ${baseUrl}...`);
-      // Use API key if available
-      const apiConfig = instance.apiKey 
-        ? { baseURL: baseUrl, apiKey: instance.apiKey }
-        : { baseURL: baseUrl };
+      const apiConfig = buildApiConfig(instance);
       
       const importedWorkflow = await importWorkflow(workflow, apiConfig);
       
@@ -89,10 +101,7 @@ export async function clearAllWorkflows(instance: N8nInstance): Promise<void> {
   
   try {
     logger.debug(`Exporting workflows from ${baseUrl}...`);
-    // Use API key if available
-    const apiConfig = instance.apiKey 
-      ? { baseURL: baseUrl, apiKey: instance.apiKey }
-      : { baseURL: baseUrl };
+    const apiConfig = buildApiConfig(instance);
     
     const workflows = await exportWorkflows(apiConfig);
     logger.debug(`Found ${workflows.length} workflow(s) to delete`);
@@ -106,10 +115,7 @@ export async function clearAllWorkflows(instance: N8nInstance): Promise<void> {
           continue;
         }
         logger.debug(`Deleting workflow: ${wf.name} (${wf.id})`);
-        // Use API key if available
-        const apiConfig = instance.apiKey 
-          ? { baseURL: baseUrl, apiKey: instance.apiKey }
-          : { baseURL: baseUrl };
+        const apiConfig = buildApiConfig(instance);
         await deleteWorkflow(wf.id, apiConfig);
         deletedCount++;
       } catch (error) {
@@ -148,10 +154,7 @@ export async function verifyWorkflowsMatch(
   let restoredWorkflows: Workflow[];
   try {
     logger.debug(`Exporting workflows from ${baseUrl}...`);
-    // Use API key if available
-    const apiConfig = instance.apiKey 
-      ? { baseURL: baseUrl, apiKey: instance.apiKey }
-      : { baseURL: baseUrl };
+    const apiConfig = buildApiConfig(instance);
     
     restoredWorkflows = await exportWorkflows(apiConfig);
     logger.debug(`Exported ${restoredWorkflows.length} workflow(s) from n8n`);
@@ -254,10 +257,7 @@ export async function verifyWorkflowReferences(
   // Get all workflow IDs from n8n
   let n8nWorkflows: Workflow[];
   try {
-    // Use API key if available
-    const apiConfig = instance.apiKey 
-      ? { baseURL: baseUrl, apiKey: instance.apiKey }
-      : { baseURL: baseUrl };
+    const apiConfig = buildApiConfig(instance);
     
     n8nWorkflows = await exportWorkflows(apiConfig);
   } catch (error) {
@@ -365,10 +365,14 @@ export async function runBackupRestoreTest(
     logger.info(`\n💾 Step 2: Running backup to ${backupDir}...`);
     const originalN8nUrl = process.env.N8N_BASE_URL;
     const originalN8nUrl2 = process.env.N8N_URL;
+    const originalApiKey = process.env.N8N_API_KEY;
     try {
       // Set both environment variables to ensure API client picks it up
       process.env.N8N_BASE_URL = instance.baseUrl;
       process.env.N8N_URL = instance.baseUrl;
+      if (instance.apiKey) {
+        process.env.N8N_API_KEY = instance.apiKey;
+      }
       const { executeBackup } = await import('../commands/backup');
       await executeBackup({ output: backupDir, yes: true }, []);
     } catch (error) {
@@ -384,6 +388,11 @@ export async function runBackupRestoreTest(
         process.env.N8N_URL = originalN8nUrl2;
       } else {
         delete process.env.N8N_URL;
+      }
+      if (originalApiKey !== undefined) {
+        process.env.N8N_API_KEY = originalApiKey;
+      } else {
+        delete process.env.N8N_API_KEY;
       }
     }
     
@@ -407,6 +416,9 @@ export async function runBackupRestoreTest(
       // Set both environment variables to ensure API client picks it up
       process.env.N8N_BASE_URL = instance.baseUrl;
       process.env.N8N_URL = instance.baseUrl;
+      if (instance.apiKey) {
+        process.env.N8N_API_KEY = instance.apiKey;
+      }
       const { executeRestore } = await import('../commands/restore');
       await executeRestore({ 
         input: backupDir, 
@@ -427,6 +439,11 @@ export async function runBackupRestoreTest(
       } else {
         delete process.env.N8N_URL;
       }
+      if (originalApiKey !== undefined) {
+        process.env.N8N_API_KEY = originalApiKey;
+      } else {
+        delete process.env.N8N_API_KEY;
+      }
     }
 
     // Step 5: Verify workflows match
@@ -442,7 +459,8 @@ export async function runBackupRestoreTest(
     // Step 6: Verify references (if requested)
     if (options?.verifyReferences) {
       logger.info(`\n🔗 Step 6: Verifying workflow references...`);
-      const restoredWorkflows = await exportWorkflows({ baseURL: instance.baseUrl });
+      const apiConfig = buildApiConfig(instance);
+      const restoredWorkflows = await exportWorkflows(apiConfig);
       const refCheck = await verifyWorkflowReferences(instance, restoredWorkflows);
       if (!refCheck.valid) {
         errors.push(...refCheck.broken);

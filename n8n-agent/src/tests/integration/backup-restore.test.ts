@@ -222,7 +222,10 @@ describe('Backup/Restore Integration Tests', () => {
       const created = await createTestWorkflows(instance, [helperWorkflow, mainWorkflow]);
       
       // Get actual IDs from n8n
-      const n8nWorkflows = await exportWorkflows({ baseURL: instance.baseUrl });
+      const n8nWorkflows = await exportWorkflows({ 
+        baseURL: instance.baseUrl,
+        apiKey: instance.apiKey,
+      });
       const helperId = n8nWorkflows.find(w => w.name === 'Helper Workflow')?.id;
       
       if (!helperId) {
@@ -241,7 +244,10 @@ describe('Backup/Restore Integration Tests', () => {
       );
 
       // Verify references are valid
-      const restoredWorkflows = await exportWorkflows({ baseURL: instance.baseUrl });
+      const restoredWorkflows = await exportWorkflows({ 
+        baseURL: instance.baseUrl,
+        apiKey: instance.apiKey,
+      });
       const refCheck = await verifyWorkflowReferences(instance, restoredWorkflows);
       
       expect(result.success).toBe(true);
@@ -309,7 +315,10 @@ describe('Backup/Restore Integration Tests', () => {
           await executeRestore({ input: backupDir, yes: true }, []);
           
           // Verify no duplicates
-          const workflows = await exportWorkflows({ baseURL: instance.baseUrl });
+          const workflows = await exportWorkflows({ 
+            baseURL: instance.baseUrl,
+            apiKey: instance.apiKey,
+          });
           const byName = workflows.filter(w => w.name === 'Multi Restore Test');
           expect(byName.length).toBe(1);
         }
@@ -359,7 +368,10 @@ describe('Backup/Restore Integration Tests', () => {
         await executeRestore({ input: backupDir, yes: true }, []);
         
         // Should complete without errors
-        const workflows = await exportWorkflows({ baseURL: instance.baseUrl });
+        const workflows = await exportWorkflows({ 
+          baseURL: instance.baseUrl,
+          apiKey: instance.apiKey,
+        });
         expect(workflows.length).toBe(0);
       } finally {
         if (originalN8nUrl !== undefined) {

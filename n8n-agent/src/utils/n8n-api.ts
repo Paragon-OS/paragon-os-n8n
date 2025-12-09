@@ -283,19 +283,17 @@ export function isValidDatabaseId(id: string): boolean {
  */
 function cleanWorkflowForApi(workflowData: Workflow): Record<string, unknown> {
   // n8n API has strict schema - only specific fields allowed
-  // Start with minimum required: name, nodes, connections
+  // Start with minimum required: name, nodes, connections, settings
   const cleaned: Record<string, unknown> = {
     name: workflowData.name,
     nodes: workflowData.nodes,
     connections: workflowData.connections || {},
+    settings: workflowData.settings || {}, // settings is required in newer n8n versions
   };
   
   // Add optional but commonly accepted fields
   // Note: Some n8n versions may not accept all of these in POST requests
   // Test with minimal fields first if you encounter "additional properties" errors
-  if (workflowData.settings !== undefined && workflowData.settings !== null) {
-    cleaned.settings = workflowData.settings;
-  }
   if (workflowData.staticData !== undefined && workflowData.staticData !== null) {
     cleaned.staticData = workflowData.staticData;
   }
@@ -435,7 +433,7 @@ export async function importWorkflow(
       const apiBaseUrl = config?.baseURL || getN8nBaseUrl();
       try {
         logger.debug(`POST /workflows to ${apiBaseUrl}/api/v1/workflows`);
-        response = await client.post<Workflow>('/workflows', cleanedData);
+      response = await client.post<Workflow>('/workflows', cleanedData);
         logger.debug(`POST successful: status=${response.status}, workflow ID: ${response.data?.id || 'none'}`);
       } catch (postError) {
         // If POST fails, log more details
@@ -483,7 +481,7 @@ export async function importWorkflow(
 
     // Log successful import for debugging
     logger.debug(`Successfully imported workflow: ${response.data?.name || 'unknown'} (ID: ${response.data?.id || 'unknown'})`);
-    
+
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
