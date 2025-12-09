@@ -4,7 +4,7 @@
  */
 
 import { logger } from './logger';
-import { exportWorkflows, type Workflow } from './n8n-api';
+import { exportWorkflows, type Workflow, type N8nApiConfig } from './n8n-api';
 
 /**
  * Convert Execute Workflow node references to use workflow IDs
@@ -12,7 +12,8 @@ import { exportWorkflows, type Workflow } from './n8n-api';
  */
 export async function convertWorkflowReferencesToNames(
   workflow: Workflow,
-  allWorkflows?: Workflow[]
+  allWorkflows?: Workflow[],
+  config?: N8nApiConfig
 ): Promise<Workflow> {
   if (!workflow.nodes || !Array.isArray(workflow.nodes)) {
     return workflow;
@@ -25,7 +26,7 @@ export async function convertWorkflowReferencesToNames(
   let workflows = allWorkflows;
   if (!workflows || workflows.length === 0) {
     try {
-      workflows = await exportWorkflows();
+      workflows = await exportWorkflows(config);
       logger.debug(`Fetched ${workflows.length} workflows from n8n for reference resolution`);
     } catch (error) {
       logger.warn('Failed to fetch workflows for reference conversion, skipping', error);

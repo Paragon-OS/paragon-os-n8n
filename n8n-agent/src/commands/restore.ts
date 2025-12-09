@@ -18,13 +18,18 @@ interface RestoreOptions {
 }
 
 export async function executeRestore(options: RestoreOptions, remainingArgs: string[] = []): Promise<void> {
+  // Check if we're in test mode (don't exit process)
+  const isTestMode = process.env.VITEST === 'true' || process.env.NODE_ENV === 'test';
+  
   const inputDir = resolveDir(options.input, "./workflows");
 
   const jsonFiles = await collectJsonFilesRecursive(inputDir);
 
   if (jsonFiles.length === 0) {
     logger.info(`No workflow JSON files found under "${inputDir}".`);
-    process.exitCode = 0;
+    if (!isTestMode) {
+      process.exitCode = 0;
+    }
     return;
   }
 
@@ -37,11 +42,17 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
       if (!isConnected) {
         logger.error("Cannot connect to n8n. Please ensure n8n is running at the configured URL.");
         logger.error("Check your N8N_BASE_URL environment variable or ensure n8n is started.");
+        if (isTestMode) {
+          throw new Error("Cannot connect to n8n");
+        }
         process.exitCode = 1;
         return;
       }
     } catch (err) {
       logger.error("Failed to check n8n connection", err);
+      if (isTestMode) {
+        throw err;
+      }
       process.exitCode = 1;
       return;
     }
@@ -89,6 +100,9 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
     } catch (err) {
       if (db) db.close();
       logger.error("Failed to load workflows from database for comparison", err);
+      if (isTestMode) {
+        throw err;
+      }
       process.exitCode = 1;
       return;
     }
@@ -97,6 +111,9 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
       currentWorkflows = await exportCurrentWorkflowsForCompare();
     } catch (err) {
       logger.error("Failed to export current workflows for comparison", err);
+      if (isTestMode) {
+        throw err;
+      }
       process.exitCode = 1;
       return;
     }
@@ -135,7 +152,9 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
 
   if (backups.length === 0) {
     logger.info(`No valid workflow JSON files found under "${inputDir}" after parsing.`);
-    process.exitCode = 0;
+    if (!isTestMode) {
+      process.exitCode = 0;
+    }
     return;
   }
 
@@ -184,7 +203,9 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
 
   if (toImport.length === 0) {
     logger.info("All workflows in the backup already match the current n8n instance. Nothing to restore.");
-    process.exitCode = 0;
+    if (!isTestMode) {
+      process.exitCode = 0;
+    }
     return;
   }
 
@@ -201,7 +222,9 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
   const confirmed = await confirm("Do you want to proceed with the restore?", options.yes || false);
   if (!confirmed) {
     logger.info("Restore cancelled.");
-    process.exitCode = 0;
+    if (!isTestMode) {
+      process.exitCode = 0;
+    }
     return;
   }
 
@@ -224,6 +247,9 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
         db.close();
         logger.error(`❌ Database is not safe to modify: ${safetyCheck.reason}`);
         logger.error("   Please stop n8n before using --preserve-ids option.");
+        if (isTestMode) {
+          throw new Error(`Database is not safe to modify: ${safetyCheck.reason}`);
+        }
         process.exitCode = 1;
         return;
       }
@@ -232,6 +258,9 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
       if (db) db.close();
       logger.error(`Failed to verify database safety: ${error instanceof Error ? error.message : String(error)}`);
       logger.error("   Make sure n8n database exists and is accessible.");
+      if (isTestMode) {
+        throw error;
+      }
       process.exitCode = 1;
       return;
     }
@@ -277,7 +306,9 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
     for (const backup of toImport) {
       try {
         // Convert references using backup workflows (resolve by name)
-        backup.workflow = await convertWorkflowReferencesToNames(backup.workflow as Workflow, allBackupWorkflows) as any;
+        // Note: In database import mode, we don't have a config, so pass undefined
+        // The converter will use the default client (which should work if n8n is stopped)
+        backup.workflow = await convertWorkflowReferencesToNames(backup.workflow as Workflow, allBackupWorkflows, undefined) as any;
       } catch (error) {
         logger.warn(`Failed to convert references for "${backup.name}": ${error instanceof Error ? error.message : String(error)}`);
       }
@@ -404,6 +435,9 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
         originalId: oldId,
         workflowName: backup.name,
       });
+      if (isTestMode) {
+        throw error;
+      }
       process.exitCode = 1;
       return;
     }
@@ -443,7 +477,8 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
       for (const workflow of actualWorkflows) {
         try {
           // Convert references using actual n8n workflows (with correct IDs)
-          const fixedWorkflow = await convertWorkflowReferencesToNames(workflow, actualWorkflows);
+          // Use undefined config to use default client (which should have N8N_BASE_URL set)
+          const fixedWorkflow = await convertWorkflowReferencesToNames(workflow, actualWorkflows, undefined);
           
           // Check if any references were changed by comparing JSON
           const originalJson = JSON.stringify(workflow);
@@ -542,6 +577,8 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
     logger.info("To sync local files with n8n state, run: npm run n8n:workflows:downsync");
   }
 
-  process.exitCode = 0;
+  if (!isTestMode) {
+    process.exitCode = 0;
+  }
 }
 

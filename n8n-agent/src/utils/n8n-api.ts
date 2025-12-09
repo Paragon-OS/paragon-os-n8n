@@ -161,13 +161,17 @@ export async function checkN8nConnection(config?: N8nApiConfig): Promise<boolean
 }
 
 let defaultClient: AxiosInstance | null = null;
+let lastBaseUrl: string | null = null;
 
 /**
  * Get or create default API client instance
+ * Resets the client if the base URL environment variable has changed
  */
 function getDefaultClient(): AxiosInstance {
-  if (!defaultClient) {
+  const currentBaseUrl = getN8nBaseUrl();
+  if (!defaultClient || lastBaseUrl !== currentBaseUrl) {
     defaultClient = createApiClient();
+    lastBaseUrl = currentBaseUrl;
   }
   return defaultClient;
 }
@@ -318,7 +322,7 @@ export async function importWorkflow(
     // Pass all backup workflows so references can be resolved even if target workflows
     // haven't been imported yet (they'll be matched by name from backup files)
     const { convertWorkflowReferencesToNames } = await import('./workflow-reference-converter');
-    const workflowWithNameReferences = await convertWorkflowReferencesToNames(workflowData, allBackupWorkflows);
+    const workflowWithNameReferences = await convertWorkflowReferencesToNames(workflowData, allBackupWorkflows, config);
     
     // Clean workflow data before sending to API
     const cleanedData = cleanWorkflowForApi(workflowWithNameReferences);
@@ -408,13 +412,24 @@ export async function importWorkflow(
       // cleanedData already doesn't include id (we removed it in cleanWorkflowForApi)
       
       // Debug: log what we're sending
-      logger.info(`Creating workflow "${workflowData.name}" with fields: ${Object.keys(cleanedData).join(', ')}`);
+      logger.debug(`Creating workflow "${workflowData.name}" with fields: ${Object.keys(cleanedData).join(', ')}`);
       if (process.env.DEBUG) {
         const dataPreview = JSON.stringify(cleanedData, null, 2).substring(0, 1000);
         logger.debug(`Creating workflow with data: ${dataPreview}`);
       }
       
-      response = await client.post<Workflow>('/workflows', cleanedData);
+      // Try POST to /workflows endpoint
+      try {
+        response = await client.post<Workflow>('/workflows', cleanedData);
+      } catch (postError) {
+        // If POST fails, log more details
+        if (axios.isAxiosError(postError)) {
+          logger.debug(`POST /workflows failed: status=${postError.response?.status}, url=${baseURL}/api/v1/workflows`);
+          logger.debug(`Request data keys: ${Object.keys(cleanedData).join(', ')}`);
+          logger.debug(`Response: ${JSON.stringify(postError.response?.data).substring(0, 500)}`);
+        }
+        throw postError;
+      }
     }
 
     if (response.status === 401) {
@@ -438,11 +453,19 @@ export async function importWorkflow(
         ? JSON.stringify(response.data).substring(0, 500)
         : String(response.data).substring(0, 500);
       
+      // Log the full response for debugging
+      logger.debug(`Import workflow failed: status=${response.status}, url=${baseURL}/api/v1/workflows`);
+      logger.debug(`Response headers:`, response.headers);
+      logger.debug(`Response data:`, response.data);
+      
       throw new Error(
         `Failed to import workflow: ${response.status} ${errorMessage}${errorDetails ? `\nDetails: ${errorDetails}` : ''}`
       );
     }
 
+    // Log successful import for debugging
+    logger.debug(`Successfully imported workflow: ${response.data?.name || 'unknown'} (ID: ${response.data?.id || 'unknown'})`);
+    
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {

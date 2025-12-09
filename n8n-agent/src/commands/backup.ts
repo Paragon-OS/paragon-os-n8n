@@ -172,10 +172,16 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
   logger.info(`📦 Backup target: ${normalizedOutputDir}`);
   logger.info("   This will export all workflows from n8n to the backup directory.\n");
 
+  // Check if we're in test mode (don't exit process)
+  const isTestMode = process.env.VITEST === 'true' || process.env.NODE_ENV === 'test';
+
   if (!options.yes) {
     const shouldContinue = await confirm("Do you want to proceed with the backup?");
     if (!shouldContinue) {
       logger.info("Backup cancelled.");
+      if (isTestMode) {
+        return;
+      }
       process.exit(0);
     }
   }
@@ -190,6 +196,9 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
     logger.info(`Fetched ${workflows.length} workflow(s) from n8n.`);
   } catch (err) {
     logger.error("Failed to export workflows from n8n API", err);
+    if (isTestMode) {
+      throw err;
+    }
     process.exit(1);
     return;
   }
@@ -233,6 +242,9 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
     logger.info(`Exported ${exportedCount} workflow(s) to temp directory`);
   } catch (err) {
     logger.error("Failed to write workflows to temp directory", err);
+    if (isTestMode) {
+      throw err;
+    }
     process.exit(1);
     return;
   }
@@ -328,6 +340,9 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
       // Couldn't restore
     }
     
+    if (isTestMode) {
+      throw err;
+    }
     process.exit(1);
     return;
   }
@@ -336,5 +351,8 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
   logger.info("✅ Backup completed successfully!");
   logger.info(`   ${workflows.length} workflow(s) backed up to ${normalizedOutputDir}`);
 
+  if (isTestMode) {
+    return;
+  }
   process.exit(0);
 }
