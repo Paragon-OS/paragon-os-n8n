@@ -93,11 +93,23 @@ function createApiClient(config?: N8nApiConfig): AxiosInstance {
     throw new Error('baseURL is not defined - provide baseURL in config or set N8N_BASE_URL/N8N_URL environment variable');
   }
   
-  const apiKey = config?.apiKey || getN8nApiKey();
-  const sessionCookie = config?.sessionCookie || getN8nSessionCookie();
+  // When config is provided, use only config values (don't fall back to environment)
+  // This ensures test instances with session cookies don't get overridden by env vars
+  // Only fall back to environment when no config is provided
+  const apiKey = config ? (config.apiKey ?? undefined) : getN8nApiKey();
+  const sessionCookie = config ? (config.sessionCookie ?? undefined) : getN8nSessionCookie();
   const timeout = config?.timeout || 120000; // 2 minutes default
 
-  logger.debug(`Creating API client for ${baseURL}/api/v1`);
+  // CRITICAL: Use /rest endpoints when only session cookie is available
+  // /api/v1 requires API keys and rejects session cookies with "'X-N8N-API-KEY' header required"
+  // /rest accepts session cookies for authentication
+  const apiPath = (!apiKey && sessionCookie) ? '/rest' : '/api/v1';
+
+  logger.info(`Creating API client for ${baseURL}${apiPath}`);
+  logger.info(`Auth method: apiKey=${apiKey ? 'present' : 'missing'}, sessionCookie=${sessionCookie ? 'present' : 'missing'}`);
+  if (sessionCookie) {
+    logger.info(`Session cookie preview: ${sessionCookie.substring(0, 50)}...`);
+  }
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -106,12 +118,16 @@ function createApiClient(config?: N8nApiConfig): AxiosInstance {
   // Prefer API key over session cookie
   if (apiKey) {
     headers['X-N8N-API-KEY'] = apiKey;
+    logger.info(`Using API key authentication with ${apiPath} endpoints`);
   } else if (sessionCookie) {
     headers['Cookie'] = sessionCookie;
+    logger.info(`Using session cookie authentication with ${apiPath} endpoints (Cookie header set)`);
+  } else {
+    logger.warn(`No authentication method available - API calls will likely fail`);
   }
 
   const client = axios.create({
-    baseURL: `${baseURL}/api/v1`,
+    baseURL: `${baseURL}${apiPath}`,
     headers,
     timeout,
     validateStatus: (status) => status < 500, // Don't throw on 4xx
@@ -196,9 +212,75 @@ function getDefaultClient(): AxiosInstance {
  * Export all workflows from n8n (handles pagination)
  */
 export async function exportWorkflows(config?: N8nApiConfig): Promise<Workflow[]> {
+  const apiKey = config ? (config.apiKey ?? undefined) : getN8nApiKey();
+  const sessionCookie = config ? (config.sessionCookie ?? undefined) : getN8nSessionCookie();
+  const useRestEndpoint = !apiKey && !!sessionCookie;
+  const baseURL = config?.baseURL || getN8nBaseUrl();
+
+  // CRITICAL: /rest/workflows returns summary data without nodes/connections
+  // /api/v1/workflows requires API keys (both GET and POST require API keys)
+  // Solution: When using /rest, get workflow summaries first, then fetch each workflow individually
+  if (useRestEndpoint) {
+    logger.info(`Using /rest endpoint - will fetch workflow summaries first, then full data for each`);
+    
+    try {
+      // Step 1: Get workflow summaries from /rest/workflows
+      const summaryClient = axios.create({
+        baseURL: `${baseURL}/rest`,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': sessionCookie!,
+        },
+        timeout: 120000,
+        validateStatus: (status) => status < 500,
+        withCredentials: true,
+      });
+      
+      const summaryResponse = await summaryClient.get<{ count: number; data: Array<{ id: string; name: string }> }>('/workflows');
+      
+      if (summaryResponse.status !== 200) {
+        throw new Error(`Failed to get workflow summaries: ${summaryResponse.status} ${summaryResponse.statusText}`);
+      }
+      
+      const summaries = summaryResponse.data.data || [];
+      logger.info(`Found ${summaries.length} workflow(s) in summary, fetching full data for each...`);
+      
+      // Step 2: Fetch each workflow individually to get full data with nodes/connections
+      const allWorkflows: Workflow[] = [];
+      for (const summary of summaries) {
+        try {
+          const fullResponse = await summaryClient.get<{ data: Workflow }>(`/workflows/${summary.id}`);
+          if (fullResponse.status === 200 && fullResponse.data && 'data' in fullResponse.data) {
+            // /rest/workflows/{id} returns { data: {...} }
+            const workflow = (fullResponse.data as any).data;
+            if (workflow && workflow.id && Array.isArray(workflow.nodes)) {
+              allWorkflows.push(workflow);
+              logger.debug(`Fetched full workflow: ${workflow.name} (${workflow.nodes.length} nodes)`);
+            } else {
+              logger.warn(`Workflow ${summary.id} missing nodes or invalid structure`);
+            }
+          }
+        } catch (error) {
+          logger.warn(`Failed to fetch full data for workflow ${summary.id} (${summary.name}): ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+      
+      logger.info(`Total workflows fetched with full data: ${allWorkflows.length}`);
+      return allWorkflows;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message || error.message;
+        throw new Error(`Failed to export workflows: ${message}`);
+      }
+      throw error;
+    }
+  }
+
+  // Use /api/v1 for API key authentication
   const client = config ? createApiClient(config) : getDefaultClient();
 
   try {
+
     const allWorkflows: Workflow[] = [];
     let cursor: string | null = null;
     const limit = 250; // Maximum allowed by n8n API
@@ -210,9 +292,9 @@ export async function exportWorkflows(config?: N8nApiConfig): Promise<Workflow[]
       }
 
       const apiBaseUrl = config?.baseURL || getN8nBaseUrl();
-      logger.debug(`GET /workflows from ${apiBaseUrl}/api/v1/workflows`);
+      logger.info(`GET /workflows from ${apiBaseUrl}/api/v1/workflows`);
       const response = await client.get<unknown>('/workflows', { params });
-      logger.debug(`GET /workflows response: status=${response.status}, data type=${typeof response.data}`);
+      logger.info(`GET /workflows response: status=${response.status}, data type=${typeof response.data}, isArray=${Array.isArray(response.data)}`);
       
       if (response.status !== 200) {
         logger.error(`Failed to export workflows: status=${response.status}, statusText=${response.statusText}`);
@@ -221,38 +303,77 @@ export async function exportWorkflows(config?: N8nApiConfig): Promise<Workflow[]
       }
       
       // Handle both direct array and paginated response formats
+      // /rest endpoints may return { data: [...] } format
+      // /api/v1 endpoints may return { data: [...], nextCursor: "..." } or direct array
       let workflows: Workflow[] = [];
       let nextCursor: string | null = null;
+
+      // Log raw response structure for debugging
+      logger.info(`Response.data type: ${typeof response.data}, isArray: ${Array.isArray(response.data)}`);
+      if (response.data && typeof response.data === 'object' && response.data !== null) {
+        logger.info(`Response.data keys: ${Object.keys(response.data).join(', ')}`);
+        if ('data' in response.data) {
+          logger.info(`Response.data.data type: ${typeof (response.data as any).data}, isArray: ${Array.isArray((response.data as any).data)}`);
+          if (Array.isArray((response.data as any).data)) {
+            logger.info(`Response.data.data length: ${(response.data as any).data.length}`);
+          }
+        }
+      }
 
       if (Array.isArray(response.data)) {
         // Direct array format (legacy or non-paginated)
         workflows = response.data as Workflow[];
+        logger.info(`Got direct array format: ${workflows.length} workflows`);
       } else if (response.data && typeof response.data === 'object' && response.data !== null) {
         const dataObj = response.data as { data?: unknown; nextCursor?: string | null };
         
         if ('data' in dataObj && Array.isArray(dataObj.data)) {
-          // Paginated format: { data: [...], nextCursor: "..." }
+          // Paginated format: { data: [...], nextCursor: "..." } or /rest format: { data: [...] }
           workflows = dataObj.data as Workflow[];
           nextCursor = dataObj.nextCursor || null;
-        } else if ('data' in dataObj) {
-          // Single workflow in data field
+          logger.info(`Got paginated/rest format: ${workflows.length} workflows${nextCursor ? `, has cursor` : ''}`);
+        } else if ('data' in dataObj && !Array.isArray(dataObj.data)) {
+          // Single workflow in data field (unlikely but handle it)
           workflows = [dataObj.data as Workflow];
+          logger.info(`Got single workflow in data field`);
         } else {
           // Might be a single workflow object
           workflows = [response.data as Workflow];
+          logger.info(`Got single workflow object`);
         }
       } else {
         // Single workflow object
         workflows = [response.data as Workflow];
+        logger.info(`Got single workflow (non-object)`);
+      }
+
+      // Log sample workflow structure for debugging
+      if (workflows.length > 0) {
+        const sample = workflows[0];
+        logger.info(`Sample workflow: name="${sample.name}", id="${sample.id}", nodes=${Array.isArray(sample.nodes) ? sample.nodes.length : 'not array'}`);
+        if (!Array.isArray(sample.nodes) || sample.nodes.length === 0) {
+          logger.warn(`⚠️  Workflow "${sample.name}" has no nodes!`);
+          logger.warn(`   Workflow keys: ${Object.keys(sample).join(', ')}`);
+          logger.warn(`   nodes type: ${typeof sample.nodes}, value: ${JSON.stringify(sample.nodes).substring(0, 200)}`);
+          // Check if nodes are in a different field
+          const sampleAny = sample as any;
+          if (sampleAny.data && Array.isArray(sampleAny.data.nodes)) {
+            logger.info(`   Found nodes in data.nodes field!`);
+            sample.nodes = sampleAny.data.nodes;
+          } else if (sampleAny.workflow && Array.isArray(sampleAny.workflow.nodes)) {
+            logger.info(`   Found nodes in workflow.nodes field!`);
+            sample.nodes = sampleAny.workflow.nodes;
+          }
+        }
       }
 
       allWorkflows.push(...workflows);
       cursor = nextCursor;
 
-      logger.debug(`Fetched ${workflows.length} workflows (total so far: ${allWorkflows.length})${cursor ? `, next cursor: ${cursor.substring(0, 20)}...` : ''}`);
+      logger.info(`Fetched ${workflows.length} workflows (total so far: ${allWorkflows.length})${cursor ? `, next cursor: ${cursor.substring(0, 20)}...` : ''}`);
     } while (cursor);
 
-    logger.debug(`Total workflows fetched: ${allWorkflows.length}`);
+    logger.info(`Total workflows fetched: ${allWorkflows.length}`);
     return allWorkflows;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -290,7 +411,7 @@ export function isValidDatabaseId(id: string): boolean {
  * Clean workflow data for API submission
  * Removes metadata fields that n8n API doesn't accept
  */
-function cleanWorkflowForApi(workflowData: Workflow): Record<string, unknown> {
+function cleanWorkflowForApi(workflowData: Workflow, useRestEndpoint: boolean = false): Record<string, unknown> {
   // n8n API has strict schema - only specific fields allowed
   // Start with minimum required: name, nodes, connections, settings
   const cleaned: Record<string, unknown> = {
@@ -299,6 +420,12 @@ function cleanWorkflowForApi(workflowData: Workflow): Record<string, unknown> {
     connections: workflowData.connections || {},
     settings: workflowData.settings || {}, // settings is required in newer n8n versions
   };
+  
+  // /rest endpoints require 'active' field (NOT NULL constraint in database)
+  // /api/v1 endpoints treat 'active' as read-only
+  if (useRestEndpoint) {
+    cleaned.active = workflowData.active !== undefined ? workflowData.active : false;
+  }
   
   // Add optional but commonly accepted fields
   // Note: Some n8n versions may not accept all of these in POST requests
@@ -311,7 +438,7 @@ function cleanWorkflowForApi(workflowData: Workflow): Record<string, unknown> {
   
   // CRITICAL: Read-only fields that must NEVER be included in POST/PUT request bodies:
   // - 'id': Read-only, generated by n8n. Only used in URL paths (GET /workflows/{id}, PUT /workflows/{id})
-  // - 'active': Read-only in POST. Can be set via PUT /workflows/{id}/activate endpoint
+  // - 'active': Read-only in /api/v1 POST, but REQUIRED in /rest POST (NOT NULL constraint)
   // - 'tags': Read-only in POST. Must be managed via separate tag endpoints
   // - 'createdAt', 'updatedAt', 'isArchived': All read-only
   // - 'description': May not be accepted in some n8n versions (test without it first)
@@ -344,8 +471,13 @@ export async function importWorkflow(
     const { convertWorkflowReferencesToNames } = await import('./workflow-reference-converter');
     const workflowWithNameReferences = await convertWorkflowReferencesToNames(workflowData, allBackupWorkflows, config);
     
+    // Determine if we're using /rest endpoints (session cookie only) or /api/v1 (API key)
+    const apiKey = config ? (config.apiKey ?? undefined) : getN8nApiKey();
+    const sessionCookie = config ? (config.sessionCookie ?? undefined) : getN8nSessionCookie();
+    const useRestEndpoint = !apiKey && !!sessionCookie;
+    
     // Clean workflow data before sending to API
-    const cleanedData = cleanWorkflowForApi(workflowWithNameReferences);
+    const cleanedData = cleanWorkflowForApi(workflowWithNameReferences, useRestEndpoint);
     
     // Check if workflow exists by searching by name (unless forceCreate is true)
     // We can't use the 'id' from workflowData because:
@@ -489,9 +621,17 @@ export async function importWorkflow(
     }
 
     // Log successful import for debugging
-    logger.debug(`Successfully imported workflow: ${response.data?.name || 'unknown'} (ID: ${response.data?.id || 'unknown'})`);
+    // /rest endpoints wrap response in { data: {...} }, /api/v1 returns directly
+    const importedWorkflow = useRestEndpoint && response.data && 'data' in response.data 
+      ? (response.data as any).data 
+      : response.data;
+    
+    logger.info(`Successfully imported workflow: ${importedWorkflow?.name || 'unknown'} (ID: ${importedWorkflow?.id || 'unknown'})`);
+    if (!importedWorkflow?.id) {
+      logger.warn(`Response missing ID field. Full response: ${JSON.stringify(response.data).substring(0, 500)}`);
+    }
 
-    return response.data;
+    return importedWorkflow;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       if (error.response?.status === 401) {

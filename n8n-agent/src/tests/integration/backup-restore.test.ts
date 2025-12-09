@@ -122,6 +122,24 @@ describe('Backup/Restore Integration Tests', () => {
         }
       );
 
+      // Log result details for debugging
+      console.log('\n📊 Test Result Summary:');
+      console.log(`   Success: ${result.success}`);
+      console.log(`   Errors: ${result.errors.length}`);
+      if (result.errors.length > 0) {
+        console.log(`   Error details:`);
+        result.errors.forEach((err, i) => console.log(`     ${i + 1}. ${err}`));
+      }
+      console.log(`   Warnings: ${result.warnings.length}`);
+      if (result.warnings.length > 0) {
+        console.log(`   Warning details:`);
+        result.warnings.forEach((warn, i) => console.log(`     ${i + 1}. ${warn}`));
+      }
+      console.log(`   Stats:`);
+      console.log(`     - Workflows backed up: ${result.stats.workflowsBackedUp}`);
+      console.log(`     - Workflows restored: ${result.stats.workflowsRestored}`);
+      console.log(`     - Workflows verified: ${result.stats.workflowsVerified}`);
+
       // Verify results
       expect(result.success).toBe(true);
       expect(result.errors).toHaveLength(0);

@@ -22,6 +22,12 @@ function buildApiConfig(instance: N8nInstance): N8nApiConfig {
   
   if (instance.apiKey) {
     config.apiKey = instance.apiKey;
+    logger.info(`Using API key authentication for ${instance.baseUrl}`);
+  } else if (instance.sessionCookie) {
+    config.sessionCookie = instance.sessionCookie;
+    logger.info(`Using session cookie authentication for ${instance.baseUrl} (cookie length: ${instance.sessionCookie.length})`);
+  } else {
+    logger.warn(`No authentication method available for ${instance.baseUrl} - API calls may fail`);
   }
   
   return config;
@@ -61,11 +67,13 @@ export async function createTestWorkflows(
   }
 
   logger.info(`Creating ${workflows.length} test workflow(s) in n8n instance at ${baseUrl}...`);
+  logger.info(`Instance auth: apiKey=${instance.apiKey ? 'present' : 'missing'}, sessionCookie=${instance.sessionCookie ? 'present' : 'missing'}`);
 
   for (const workflow of workflows) {
     try {
-      logger.debug(`Importing workflow "${workflow.name}" to ${baseUrl}...`);
+      logger.info(`Importing workflow "${workflow.name}" to ${baseUrl}...`);
       const apiConfig = buildApiConfig(instance);
+      logger.info(`API config: baseURL=${apiConfig.baseURL}, apiKey=${apiConfig.apiKey ? 'present' : 'missing'}, sessionCookie=${apiConfig.sessionCookie ? 'present' : 'missing'}`);
       
       const importedWorkflow = await importWorkflow(workflow, apiConfig);
       
@@ -77,8 +85,13 @@ export async function createTestWorkflows(
       logger.debug(`✅ Created test workflow: ${workflow.name} (ID: ${importedWorkflow.id})`);
     } catch (error) {
       logger.error(`Failed to create workflow "${workflow.name}"`, error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error(`Error details: ${errorMessage}`);
+      if (error instanceof Error && error.stack) {
+        logger.debug(`Stack trace: ${error.stack}`);
+      }
       throw new Error(
-        `Failed to create test workflow "${workflow.name}": ${error instanceof Error ? error.message : String(error)}`
+        `Failed to create test workflow "${workflow.name}": ${errorMessage}`
       );
     }
   }
@@ -383,20 +396,33 @@ export async function runBackupRestoreTest(
 
     // Step 2: Backup workflows
     logger.info(`\n💾 Step 2: Running backup to ${backupDir}...`);
+    logger.debug(`Backup environment: N8N_BASE_URL=${instance.baseUrl}, N8N_URL=${instance.baseUrl}, N8N_API_KEY=${instance.apiKey ? 'set' : 'not set'}, N8N_SESSION_COOKIE=${instance.sessionCookie ? 'set' : 'not set'}`);
     const originalN8nUrl = process.env.N8N_BASE_URL;
     const originalN8nUrl2 = process.env.N8N_URL;
     const originalApiKey = process.env.N8N_API_KEY;
+    const originalSessionCookie = process.env.N8N_SESSION_COOKIE;
     try {
       // Set both environment variables to ensure API client picks it up
       process.env.N8N_BASE_URL = instance.baseUrl;
       process.env.N8N_URL = instance.baseUrl;
       if (instance.apiKey) {
         process.env.N8N_API_KEY = instance.apiKey;
+      } else {
+        // CRITICAL: Delete API key env var when using session cookie only
+        // Otherwise old API key values will override session cookie
+        delete process.env.N8N_API_KEY;
       }
+      if (instance.sessionCookie) {
+        process.env.N8N_SESSION_COOKIE = instance.sessionCookie;
+      }
+      logger.debug(`Starting backup command...`);
       const { executeBackup } = await import('../commands/backup');
       await executeBackup({ output: backupDir, yes: true }, []);
+      logger.debug(`Backup command completed`);
     } catch (error) {
-      errors.push(`Backup failed: ${error instanceof Error ? error.message : String(error)}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error(`Backup failed: ${errorMessage}`, error);
+      errors.push(`Backup failed: ${errorMessage}`);
       throw error;
     } finally {
       if (originalN8nUrl !== undefined) {
@@ -414,14 +440,23 @@ export async function runBackupRestoreTest(
       } else {
         delete process.env.N8N_API_KEY;
       }
+      if (originalSessionCookie !== undefined) {
+        process.env.N8N_SESSION_COOKIE = originalSessionCookie;
+      } else {
+        delete process.env.N8N_SESSION_COOKIE;
+      }
     }
     
     // Verify backup files exist
+    logger.debug(`Verifying backup files in ${backupDir}...`);
     const backupFiles = await collectJsonFilesRecursive(backupDir);
     if (backupFiles.length === 0) {
-      errors.push('No backup files created');
+      const errorMsg = 'No backup files created';
+      logger.error(errorMsg);
+      errors.push(errorMsg);
     } else {
       logger.info(`✅ Backup created ${backupFiles.length} file(s)`);
+      logger.debug(`Backup files: ${backupFiles.map(f => path.basename(f)).join(', ')}`);
     }
 
     // Step 3: Clear n8n instance (simulate fresh restore)
@@ -432,21 +467,34 @@ export async function runBackupRestoreTest(
 
     // Step 4: Restore workflows
     logger.info(`\n📥 Step 4: Running restore${options?.preserveIds ? ' with ID preservation' : ''}...`);
+    logger.debug(`Restore environment: N8N_BASE_URL=${instance.baseUrl}, N8N_URL=${instance.baseUrl}, N8N_API_KEY=${instance.apiKey ? 'set' : 'not set'}, N8N_SESSION_COOKIE=${instance.sessionCookie ? 'set' : 'not set'}`);
+    logger.debug(`Restore options: input=${backupDir}, preserveIds=${options?.preserveIds || false}`);
     try {
       // Set both environment variables to ensure API client picks it up
       process.env.N8N_BASE_URL = instance.baseUrl;
       process.env.N8N_URL = instance.baseUrl;
       if (instance.apiKey) {
         process.env.N8N_API_KEY = instance.apiKey;
+      } else {
+        // CRITICAL: Delete API key env var when using session cookie only
+        // Otherwise old API key values will override session cookie
+        delete process.env.N8N_API_KEY;
       }
+      if (instance.sessionCookie) {
+        process.env.N8N_SESSION_COOKIE = instance.sessionCookie;
+      }
+      logger.debug(`Starting restore command...`);
       const { executeRestore } = await import('../commands/restore');
       await executeRestore({ 
         input: backupDir, 
         yes: true, 
         preserveIds: options?.preserveIds 
       }, []);
+      logger.debug(`Restore command completed`);
     } catch (error) {
-      errors.push(`Restore failed: ${error instanceof Error ? error.message : String(error)}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error(`Restore failed: ${errorMessage}`, error);
+      errors.push(`Restore failed: ${errorMessage}`);
       throw error;
     } finally {
       if (originalN8nUrl !== undefined) {
@@ -463,6 +511,11 @@ export async function runBackupRestoreTest(
         process.env.N8N_API_KEY = originalApiKey;
       } else {
         delete process.env.N8N_API_KEY;
+      }
+      if (originalSessionCookie !== undefined) {
+        process.env.N8N_SESSION_COOKIE = originalSessionCookie;
+      } else {
+        delete process.env.N8N_SESSION_COOKIE;
       }
     }
 
@@ -494,13 +547,43 @@ export async function runBackupRestoreTest(
 
     if (errors.length === 0) {
       logger.info(`\n🎉 Backup/restore test completed successfully!`);
+      logger.info(`📊 Test Statistics:`);
+      logger.info(`   - Workflows backed up: ${stats.workflowsBackedUp}`);
+      logger.info(`   - Workflows restored: ${stats.workflowsRestored}`);
+      logger.info(`   - Workflows verified: ${stats.workflowsVerified}`);
+      if (options?.verifyReferences) {
+        logger.info(`   - References fixed: ${stats.referencesFixed}`);
+        logger.info(`   - References broken: ${stats.referencesBroken}`);
+      }
     } else {
       logger.error(`\n❌ Backup/restore test completed with ${errors.length} error(s)`);
+      logger.error(`\n📋 Error Details:`);
+      errors.forEach((error, index) => {
+        logger.error(`   ${index + 1}. ${error}`);
+      });
+      if (warnings.length > 0) {
+        logger.warn(`\n⚠️  Warnings (${warnings.length}):`);
+        warnings.forEach((warning, index) => {
+          logger.warn(`   ${index + 1}. ${warning}`);
+        });
+      }
+      logger.info(`\n📊 Test Statistics:`);
+      logger.info(`   - Workflows backed up: ${stats.workflowsBackedUp}`);
+      logger.info(`   - Workflows restored: ${stats.workflowsRestored}`);
+      logger.info(`   - Workflows verified: ${stats.workflowsVerified}`);
     }
 
   } catch (error) {
-    errors.push(`Test failed: ${error instanceof Error ? error.message : String(error)}`);
-    logger.error(`Test error:`, error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    errors.push(`Test failed: ${errorMessage}`);
+    logger.error(`\n💥 Test error occurred:`, error);
+    if (error instanceof Error && error.stack) {
+      logger.debug(`Stack trace: ${error.stack}`);
+    }
+    logger.error(`\n📋 All Errors (${errors.length}):`);
+    errors.forEach((err, index) => {
+      logger.error(`   ${index + 1}. ${err}`);
+    });
   }
 
   return {
