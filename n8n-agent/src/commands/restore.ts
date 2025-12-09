@@ -257,6 +257,57 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
   }
 
   /**
+   * Post-import: Fix all workflow references using actual n8n IDs
+   * After restore (especially after delete-all), n8n assigns new IDs to workflows.
+   * We need to update all references to use the actual IDs from n8n, not old IDs.
+   * This ensures references like "http://localhost:5678/workflow/OLD_ID" get fixed.
+   */
+  if (toImport.length > 0) {
+    logger.info("");
+    logger.info("🔧 Fixing workflow references with actual n8n IDs...");
+    
+    try {
+      // Fetch all workflows from n8n to get their actual IDs (after import)
+      const actualWorkflows = await exportWorkflows();
+      logger.debug(`Fetched ${actualWorkflows.length} workflows from n8n for reference fixing`);
+      
+      // Import the reference converter
+      const { convertWorkflowReferencesToNames } = await import('../utils/workflow-reference-converter');
+      
+      // Fix references in each workflow using actual n8n IDs
+      let fixedCount = 0;
+      for (const workflow of actualWorkflows) {
+        try {
+          // Convert references using actual n8n workflows (with correct IDs)
+          const fixedWorkflow = await convertWorkflowReferencesToNames(workflow, actualWorkflows);
+          
+          // Check if any references were changed by comparing JSON
+          const originalJson = JSON.stringify(workflow);
+          const fixedJson = JSON.stringify(fixedWorkflow);
+          
+          if (originalJson !== fixedJson) {
+            // References were updated, save the workflow back to n8n
+            await importWorkflow(fixedWorkflow, undefined, false, workflow.id);
+            fixedCount++;
+            logger.debug(`✓ Fixed references in "${workflow.name}"`);
+          }
+        } catch (error) {
+          logger.warn(`Failed to fix references in "${workflow.name}": ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+      
+      if (fixedCount > 0) {
+        logger.info(`✅ Fixed workflow references in ${fixedCount} workflow(s)`);
+      } else {
+        logger.info("✅ All workflow references are already correct");
+      }
+    } catch (error) {
+      logger.warn("Failed to fix workflow references after import", error);
+      logger.warn("You may need to manually update workflow references or run the fix script");
+    }
+  }
+
+  /**
    * NOTE: We do NOT sync local files after upsync.
    * 
    * Local files are the source of truth. During import, references are converted
@@ -264,6 +315,7 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
    * 
    * If you need to sync local files with n8n state, run: npm run n8n:workflows:downsync
    */
+  logger.info("");
   logger.info("✅ Upsync complete! Local files remain unchanged (source of truth).");
   logger.info("To sync local files with n8n state, run: npm run n8n:workflows:downsync");
 

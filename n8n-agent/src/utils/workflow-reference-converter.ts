@@ -80,12 +80,13 @@ export async function convertWorkflowReferencesToNames(
 
       if (targetWorkflow && targetWorkflow.id) {
         // Use ID-based reference (n8n resolves by ID in value field)
+        // Always use relative path for cachedResultUrl (not full URL like http://localhost:5678/workflow/...)
         const newWorkflowId = {
           ...wfParam,
           value: targetWorkflow.id,
           mode: 'list',
           cachedResultName: targetWorkflow.name,
-          cachedResultUrl: `/workflow/${targetWorkflow.id}`,
+          cachedResultUrl: `/workflow/${targetWorkflow.id}`, // Relative path only, never full URL
         };
 
         return {
@@ -110,6 +111,7 @@ export async function convertWorkflowReferencesToNames(
       
       if (targetWorkflow && targetWorkflow.id) {
         // Convert to object format with ID-based reference
+        // Always use relative path for cachedResultUrl (not full URL)
         return {
           ...node,
           parameters: {
@@ -119,7 +121,7 @@ export async function convertWorkflowReferencesToNames(
               mode: 'list',
               __rl: true,
               cachedResultName: targetWorkflow.name,
-              cachedResultUrl: `/workflow/${targetWorkflow.id}`,
+              cachedResultUrl: `/workflow/${targetWorkflow.id}`, // Relative path only
             },
           },
         };
