@@ -128,6 +128,38 @@ function createApiClient(config?: N8nApiConfig): AxiosInstance {
   return client;
 }
 
+/**
+ * Quick connection check to verify n8n is running
+ * Uses a shorter timeout (5 seconds) for faster failure detection
+ */
+export async function checkN8nConnection(config?: N8nApiConfig): Promise<boolean> {
+  const quickClient = createApiClient({ 
+    ...config, 
+    timeout: 5000 // 5 second timeout for quick check
+  });
+  
+  try {
+    // Try a lightweight endpoint with minimal data
+    await quickClient.get('/workflows', { 
+      params: { limit: 1 },
+      timeout: 5000 
+    });
+    return true;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      // Connection refused or timeout means n8n is not running
+      if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+        return false;
+      }
+      // Other errors (like 401, 403) mean n8n is running but auth failed
+      // We consider this as "connected" since the server responded
+      return true;
+    }
+    // Unknown error - assume not connected to be safe
+    return false;
+  }
+}
+
 let defaultClient: AxiosInstance | null = null;
 
 /**

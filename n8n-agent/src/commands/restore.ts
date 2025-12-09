@@ -5,7 +5,7 @@ import { collectJsonFilesRecursive } from "../utils/file";
 import { normalizeWorkflowForCompare } from "../utils/workflow";
 import { deepEqual, exportCurrentWorkflowsForCompare } from "../utils/compare";
 import { logger } from "../utils/logger";
-import { importWorkflow, exportWorkflows } from "../utils/n8n-api";
+import { importWorkflow, exportWorkflows, checkN8nConnection } from "../utils/n8n-api";
 import type { BackupWorkflowForRestore, WorkflowObject } from "../types/index";
 
 interface RestoreOptions {
@@ -20,7 +20,24 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
 
   if (jsonFiles.length === 0) {
     logger.info(`No workflow JSON files found under "${inputDir}".`);
-    process.exit(0);
+    process.exitCode = 0;
+    return;
+  }
+
+  // Quick connection check first to fail fast if n8n is not running
+  logger.info("Checking n8n connection...");
+  try {
+    const isConnected = await checkN8nConnection();
+    if (!isConnected) {
+      logger.error("Cannot connect to n8n. Please ensure n8n is running at the configured URL.");
+      logger.error("Check your N8N_BASE_URL environment variable or ensure n8n is started.");
+      process.exitCode = 1;
+      return;
+    }
+  } catch (err) {
+    logger.error("Failed to check n8n connection", err);
+    process.exitCode = 1;
+    return;
   }
 
   let currentWorkflows: Map<string, WorkflowObject>;
@@ -28,7 +45,7 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
     currentWorkflows = await exportCurrentWorkflowsForCompare();
   } catch (err) {
     logger.error("Failed to export current workflows for comparison", err);
-    process.exit(1);
+    process.exitCode = 1;
     return;
   }
 
@@ -65,7 +82,8 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
 
   if (backups.length === 0) {
     logger.info(`No valid workflow JSON files found under "${inputDir}" after parsing.`);
-    process.exit(0);
+    process.exitCode = 0;
+    return;
   }
 
   const toImport: BackupWorkflowForRestore[] = [];
@@ -113,7 +131,8 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
 
   if (toImport.length === 0) {
     logger.info("All workflows in the backup already match the current n8n instance. Nothing to restore.");
-    process.exit(0);
+    process.exitCode = 0;
+    return;
   }
 
   // Ask for confirmation before importing
@@ -121,7 +140,8 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
   const confirmed = await confirm("Do you want to proceed with the restore?", options.yes || false);
   if (!confirmed) {
     logger.info("Restore cancelled.");
-    process.exit(0);
+    process.exitCode = 0;
+    return;
   }
 
   logger.info(""); // Empty line after confirmation
@@ -231,7 +251,8 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
         originalId: oldId,
         workflowName: backup.name,
       });
-      process.exit(1);
+      process.exitCode = 1;
+      return;
     }
   }
 
@@ -246,6 +267,6 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
   logger.info("✅ Upsync complete! Local files remain unchanged (source of truth).");
   logger.info("To sync local files with n8n state, run: npm run n8n:workflows:downsync");
 
-  process.exit(0);
+  process.exitCode = 0;
 }
 

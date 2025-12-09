@@ -35,8 +35,13 @@ program
   .option("-y, --yes", "Skip confirmation prompt")
   .allowUnknownOption(true)
   .action(async (options, command) => {
-    const remainingArgs = getRemainingArgs(command);
-    await executeRestore(options, remainingArgs);
+    try {
+      const remainingArgs = getRemainingArgs(command);
+      await executeRestore(options, remainingArgs);
+    } catch (error) {
+      console.error("Fatal error during restore:", error);
+      process.exitCode = 1;
+    }
   });
 
 program
@@ -72,6 +77,18 @@ program
   .action(async (options) => {
     await executeDeleteAll(options);
   });
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exitCode = 1;
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exitCode = 1;
+});
 
 // Parse arguments
 program.parse();
