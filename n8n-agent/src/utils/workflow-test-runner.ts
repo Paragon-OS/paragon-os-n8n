@@ -10,7 +10,8 @@ import {
   executeWorkflow, 
   formatExecutionResult,
   getWorkflow,
-  type N8nExecutionResponse 
+  type N8nExecutionResponse,
+  type N8nApiConfig
 } from "./n8n-api";
 import { collectJsonFilesRecursive } from "./file";
 import { logger } from "./logger";
@@ -123,7 +124,8 @@ async function initTestContext(workflowsDir: string): Promise<TestContext> {
  */
 export async function syncWorkflow(
   workflowName: string,
-  workflowsDir?: string
+  workflowsDir?: string,
+  config?: N8nApiConfig
 ): Promise<void> {
   const workflowsPath = workflowsDir || resolveWorkflowsDir();
   const allWorkflowFiles = await collectJsonFilesRecursive(workflowsPath);
@@ -149,7 +151,7 @@ export async function syncWorkflow(
 
   if (workflowFile) {
     try {
-      await importWorkflowFromFile(workflowFile);
+      await importWorkflowFromFile(workflowFile.path, config);
       logger.debug(`Workflow "${workflowName}" synced successfully`);
     } catch (error) {
       // Don't fail the test if sync fails - workflow might already be in n8n
@@ -172,7 +174,8 @@ export async function executeWorkflowTest(
   workflowName: string,
   testCase: string,
   testData: Record<string, unknown>,
-  workflowsDir?: string
+  workflowsDir?: string,
+  config?: N8nApiConfig
 ): Promise<WorkflowTestResult> {
   const workflowsPath = workflowsDir || resolveWorkflowsDir();
   
@@ -193,7 +196,7 @@ export async function executeWorkflowTest(
 
     if (workflowFile) {
       try {
-        await importWorkflowFromFile(workflowFile);
+        await importWorkflowFromFile(workflowFile.path, config);
       } catch (error) {
         logger.warn(`Warning: Failed to auto-sync workflow "${workflowName}"`, error, { workflow: workflowName });
         // Continue with test anyway
@@ -250,7 +253,7 @@ export async function executeWorkflowTest(
     // Import modified Test Runner using API and get the actual database ID
     let testRunnerDatabaseId: string;
     try {
-      const importedWorkflow = await importWorkflowFromFile(context.tempPath);
+      const importedWorkflow = await importWorkflowFromFile(context.tempPath, config);
       // After import, we get the actual database ID (not the custom ID from JSON)
       if (!importedWorkflow.id) {
         throw new Error('Imported workflow did not return an ID');
@@ -269,7 +272,11 @@ export async function executeWorkflowTest(
     try {
       // Use the database ID returned from import (this is what n8n CLI --id expects after restore)
       // The custom ID (TestRunnerHelper001) won't work after workflows are restored with new IDs
-      executionResult = await executeWorkflow(testRunnerDatabaseId, undefined, { timeout: 2 * 60 * 1000 });
+      const executionConfig: N8nApiConfig = {
+        ...config,
+        timeout: config?.timeout || 2 * 60 * 1000, // 2 minutes default
+      };
+      executionResult = await executeWorkflow(testRunnerDatabaseId, undefined, executionConfig);
     } catch (error) {
       // Handle timeout or execution errors
       if (error instanceof Error && error.message.includes('timed out')) {
@@ -338,7 +345,7 @@ export async function executeWorkflowTest(
     // Restore original Test Runner configuration by importing the original file
     try {
       // Restore from the original test runner file path using API
-      await importWorkflowFromFile(context.testRunnerPath);
+      await importWorkflowFromFile(context.testRunnerPath, config);
     } catch {
       // Ignore cleanup errors - Test Runner will be restored on next test or can be manually restored
       logger.debug('Failed to restore Test Runner configuration during cleanup');
