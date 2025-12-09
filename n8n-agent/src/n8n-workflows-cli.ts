@@ -33,6 +33,7 @@ program
   .description("Import workflows from JSON files to n8n instance")
   .option("-i, --input <dir>", "Input directory containing workflow JSON files", "./workflows")
   .option("-y, --yes", "Skip confirmation prompt")
+  .option("--preserve-ids", "Preserve workflow IDs by using direct database import (WARNING: n8n must be stopped)")
   .allowUnknownOption(true)
   .action(async (options, command) => {
     try {

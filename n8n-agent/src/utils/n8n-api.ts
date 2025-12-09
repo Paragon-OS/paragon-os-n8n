@@ -249,7 +249,7 @@ function isUUID(id: string): boolean {
  * Check if a string is a valid n8n database ID (UUID or NanoID)
  * n8n uses UUIDs for older workflows and NanoIDs for newer ones
  */
-function isValidDatabaseId(id: string): boolean {
+export function isValidDatabaseId(id: string): boolean {
   // UUID format: 550e8400-e29b-41d4-a716-446655440000
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   
