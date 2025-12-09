@@ -80,11 +80,11 @@ async function waitForDbMigrations(
     }
     
     try {
-      // Check container logs for migration completion
+      // Check container logs for migration completion (optimized: reduced tail and check interval)
       const { stdout } = await execa(
         'podman',
-        ['logs', '--tail', '100', containerName], // Increased tail to 100 lines
-        { timeout: 5000, reject: false }
+        ['logs', '--tail', '50', containerName], // Reduced from 100 to 50 lines (faster)
+        { timeout: 3000, reject: false } // Reduced timeout from 5s to 3s
       );
       
       // Look for migration completion message
@@ -100,7 +100,7 @@ async function waitForDbMigrations(
       logger.debug(`Migration check error: ${error instanceof Error ? error.message : String(error)}`);
     }
     
-    await new Promise(resolve => setTimeout(resolve, 3000)); // Check every 3 seconds
+    await new Promise(resolve => setTimeout(resolve, 1500)); // Reduced from 3s to 1.5s (check more frequently)
   }
   
   logger.warn(`⚠️  DB migrations may not be complete after ${timeout}ms`);
@@ -134,47 +134,26 @@ export async function setupN8nViaCliInContainer(
     logger.warn(`Proceeding despite migration uncertainty...`);
   }
   
-  // Step 2: Wait for REST API endpoints to be fully ready
-  logger.info(`Waiting for REST API endpoints to be ready...`);
-  const maxWaitTime = 60000; // 60 seconds max
-  const startTime = Date.now();
-  let endpointsReady = false;
-  
-  while (Date.now() - startTime < maxWaitTime) {
-    try {
-      // Check if /rest/owner/setup endpoint exists (not 404)
-      const setupCheck = await axios.get(`${baseUrl}/rest/owner/setup`, {
-        timeout: 3000,
-        validateStatus: () => true,
-      });
-      
-      // 200 or 400 means endpoint exists, 404 means it doesn't yet
-      if (setupCheck.status !== 404) {
-        // Also check if it's not returning "starting up" message
-        if (typeof setupCheck.data === 'string' && setupCheck.data.includes('starting up')) {
-          logger.debug(`Setup endpoint still returning "starting up", waiting...`);
-        } else {
-          logger.info(`✅ REST API endpoints are ready`);
-          endpointsReady = true;
-          break;
-        }
-      } else {
-        logger.debug(`Setup endpoint not ready yet (404)`);
-      }
-    } catch (error) {
-      logger.debug(`Endpoint check error: ${error instanceof Error ? error.message : String(error)}`);
-    }
+  // Step 2: Quick check if REST API is responding (with short timeout)
+  logger.info(`Checking if REST API is responding...`);
+  try {
+    const setupCheck = await axios.get(`${baseUrl}/rest/owner/setup`, {
+      timeout: 2000,
+      validateStatus: () => true,
+    });
     
-    await new Promise(resolve => setTimeout(resolve, 3000)); // Check every 3 seconds
+    if (setupCheck.status !== 404 && 
+        !(typeof setupCheck.data === 'string' && setupCheck.data.includes('starting up'))) {
+      logger.info(`✅ REST API is responding`);
+    } else {
+      logger.debug(`REST API not fully ready yet, but proceeding (will retry on failure)`);
+    }
+  } catch (error) {
+    logger.debug(`REST API check failed, proceeding anyway (will retry on failure)`);
   }
   
-  if (!endpointsReady) {
-    logger.warn(`⚠️  REST API endpoints may not be fully ready after ${maxWaitTime}ms, proceeding anyway...`);
-  }
-  
-  // Step 3: Additional wait to ensure everything is stable
-  logger.info(`Waiting 3 seconds for system to stabilize...`);
-  await new Promise(resolve => setTimeout(resolve, 3000));
+  // Step 3: Brief wait for system stability (reduced from 3s to 1s)
+  await new Promise(resolve => setTimeout(resolve, 1000));
   
   // Step 4: Try to create user via POST /rest/owner/setup (don't check first, just try)
   logger.info(`Creating initial user: ${user.email}`);
@@ -261,9 +240,9 @@ export async function setupN8nViaCliInContainer(
     return {};
   }
   
-  // Wait for user to be fully persisted
-  logger.info(`Waiting 5 seconds for user to be fully persisted...`);
-  await new Promise(resolve => setTimeout(resolve, 5000));
+  // Wait briefly for user to be persisted (reduced from 5s to 2s)
+  logger.info(`Waiting 2 seconds for user to be persisted...`);
+  await new Promise(resolve => setTimeout(resolve, 2000));
   
   // Step 5: Create API key via login + REST API (with retries)
   logger.info(`Creating API key via login...`);
