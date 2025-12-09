@@ -220,6 +220,107 @@ afterEach(async () => {
 
 **Lesson:** ⚡ Each test needs its own isolated container
 
+### 6. Credential Setup Counting Bug ❌ FIXED (2025-01-09)
+
+**Problem:**
+```
+📊 Credential Setup Summary:
+  ✅ Successful: 4/4  // ❌ WRONG! Only 3 were actually set up
+```
+
+**Root Cause:**
+```typescript
+// In setupCredential function
+if (!hasData) {
+  logger.warn(`⚠️  Skipping ${credential.name} - no data available`);
+  return; // ❌ Returns silently, caller thinks it succeeded!
+}
+
+// In setupEssentialCredentials
+await setupCredential(...);
+results.push({ credential: credKey, success: true }); // ❌ Always executes!
+```
+
+**Why It Failed:**
+- `setupCredential` returned early (didn't throw) when skipping
+- Caller always added `success: true` after the call
+- Skipped credentials were counted as successful
+
+**Fix:**
+```typescript
+// Make skipped credentials throw an error
+if (!hasData) {
+  const errorMsg = `Skipped - no data available in environment`;
+  logger.warn(`⚠️  Skipping ${credential.name} - ${errorMsg}`);
+  throw new Error(errorMsg); // ✅ Now properly caught and counted as failed
+}
+```
+
+**Result:**
+```
+📊 Credential Setup Summary:
+  ✅ Successful: 3/4
+  ❌ Failed: 1/4
+    - googleGemini: Skipped - no data available in environment
+```
+
+**Lesson:** ⚡ When a function skips work, it should throw an error (not return silently) so callers can properly track failures
+
+### 7. Missing dotenv Import ❌ FIXED (2025-01-09)
+
+**Problem:**
+```
+⚠️  Skipping Google Gemini(PaLM) Api account - no data available in environment
+```
+Even though `GOOGLE_GEMINI_API_KEY` exists in `.env` file.
+
+**Root Cause:**
+```typescript
+// n8n-credentials.ts - Missing dotenv import!
+export const TEST_CREDENTIALS = {
+  googleGemini: {
+    data: {
+      apiKey: process.env.GOOGLE_GEMINI_API_KEY || '', // ❌ undefined - .env not loaded!
+    },
+  },
+};
+```
+
+**Why It Failed:**
+- `TEST_CREDENTIALS` is defined at module load time
+- It reads `process.env.GOOGLE_GEMINI_API_KEY` immediately
+- Without `dotenv/config`, the `.env` file hasn't been loaded yet
+- `process.env.GOOGLE_GEMINI_API_KEY` is `undefined`, defaults to `''`
+- Empty string fails the `hasData` check
+
+**Fix:**
+```typescript
+// Load environment variables from .env file if it exists
+import 'dotenv/config'; // ✅ Add this at the top!
+
+export const TEST_CREDENTIALS = {
+  // Now process.env is populated before this runs
+};
+```
+
+**Result:**
+```
+📊 Credential Setup Summary:
+  ✅ Successful: 4/4  // ✅ All credentials including Google Gemini!
+```
+
+**Key Learnings:**
+- ⚡ **Always import `dotenv/config`** in files that read `process.env` at module load time
+- ⚡ Files that define constants using `process.env` need dotenv loaded first
+- ⚡ Other files like `n8n-api.ts` already had it, but `n8n-credentials.ts` was missing it
+- ⚡ The import is safe to call multiple times (dotenv only loads once)
+
+**Pattern to Follow:**
+```typescript
+// At the top of any file that uses process.env
+import 'dotenv/config'; // Load .env before reading process.env
+```
+
 ---
 
 ## 🔑 **CRITICAL INSIGHTS**
@@ -265,6 +366,62 @@ podman ps -aq --filter 'name=n8n-test' | xargs podman rm -f
 - Random ports prevent conflicts
 - Timestamps in container names
 
+### 6. Always Import dotenv/config for process.env
+
+**Critical Pattern:**
+```typescript
+// ✅ CORRECT - Load .env before using process.env
+import 'dotenv/config';
+
+export const CONFIG = {
+  apiKey: process.env.API_KEY || '', // Now works!
+};
+```
+
+**Why It Matters:**
+- Files that define constants using `process.env` at module load time need dotenv loaded first
+- Without it, `process.env.VAR_NAME` is `undefined` even if it exists in `.env`
+- The import is safe to call multiple times (dotenv only loads once)
+- Files like `n8n-api.ts` already have it, but `n8n-credentials.ts` was missing it
+
+**Files That Need It:**
+- Any file that reads `process.env` at the top level (module load time)
+- Files that define constants/objects using `process.env` values
+- Files that don't have dotenv loaded by their dependencies
+
+**Lesson:** ⚡ Always check if `dotenv/config` is imported when `process.env` values are undefined
+
+### 7. Error Handling: Throw, Don't Return Silently
+
+**Anti-Pattern:**
+```typescript
+if (!hasData) {
+  logger.warn('Skipping...');
+  return; // ❌ Caller thinks it succeeded!
+}
+
+// Caller code
+await setupCredential(...);
+results.push({ success: true }); // ❌ Always executes!
+```
+
+**Correct Pattern:**
+```typescript
+if (!hasData) {
+  throw new Error('Skipped - no data available'); // ✅ Properly caught
+}
+
+// Caller code
+try {
+  await setupCredential(...);
+  results.push({ success: true });
+} catch (error) {
+  results.push({ success: false, error: error.message }); // ✅ Counted as failed
+}
+```
+
+**Lesson:** ⚡ When a function skips work, throw an error so callers can properly track failures
+
 ---
 
 ## 📋 **IMPLEMENTATION CHECKLIST**
@@ -274,10 +431,11 @@ When working with credential injection:
 - [ ] Use CLI (`n8n import:credentials`), NOT REST API
 - [ ] Wrap credentials in array `[{...}]`
 - [ ] Use exact IDs from workflow JSON
+- [ ] **Import `dotenv/config`** in files that read `process.env` at module load time
 - [ ] Read credentials from environment variables
 - [ ] Cleanup temp files after import
 - [ ] Check CLI availability before import
-- [ ] Handle missing environment variables gracefully
+- [ ] Handle missing environment variables gracefully (throw error, don't return silently)
 - [ ] Log detailed progress for debugging
 - [ ] Cleanup containers in `afterEach`
 - [ ] Use random ports for containers
@@ -421,10 +579,12 @@ npm run test:credentials
 
 1. **Use CLI** for credential import (`n8n import:credentials`)
 2. **Wrap credentials** in array format `[{...}]`
-3. **Cleanup containers** before and after tests
-4. **Use random ports** to prevent conflicts
-5. **Log everything** for debugging
-6. **Check this document** before attempting fixes
+3. **Import dotenv/config** in files using `process.env` at module load time
+4. **Throw errors** when skipping work (don't return silently)
+5. **Cleanup containers** before and after tests
+6. **Use random ports** to prevent conflicts
+7. **Log everything** for debugging
+8. **Check this document** before attempting fixes
 
 ### Don'ts ❌
 
