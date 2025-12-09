@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-09T00:47:25.000Z",
+  "updatedAt": "2025-12-09T01:13:47.249Z",
   "createdAt": "2025-12-08T23:57:03.802Z",
   "id": "3oWOf1fvT3tYjvwF",
   "name": "[HELPERS] Generic Context Scout Core",
@@ -678,7 +678,7 @@
             "entities": {
               "contact": {
                 "cacheKey": "telegramContacts",
-                "fetchWorkflowId": "tN2vDMlNOHIydhBr",
+                "fetchWorkflowId": "SBhY0qCFVdLXt1sG",
                 "mcpTool": {
                   "name": "telegram_list_contacts",
                   "parameters": {
@@ -697,7 +697,7 @@
               },
               "contact-rag": {
                 "cacheKey": "telegramContacts",
-                "fetchWorkflowId": "tN2vDMlNOHIydhBr",
+                "fetchWorkflowId": "SBhY0qCFVdLXt1sG",
                 "mcpTool": {
                   "name": "telegram_list_contacts",
                   "parameters": {
@@ -785,7 +785,7 @@
       }
     ]
   },
-  "versionId": "eed6e1bd-80a7-4496-971a-59a67f883f36",
+  "versionId": "8f230b12-f162-4165-838c-400058af523a",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

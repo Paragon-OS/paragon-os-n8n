@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-08T23:57:02.766Z",
+  "updatedAt": "2025-12-09T01:08:21.708Z",
   "createdAt": "2025-12-08T23:57:02.766Z",
   "id": "FoUczbmJALfx29t3",
   "name": "Legacy Telegram Context Enricher",
@@ -1282,7 +1282,7 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "d9248666-cc27-402d-9d3e-3b818dfb0e43",
+  "versionId": "950d67bc-b4bc-4e02-9c11-f1adff09f78c",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

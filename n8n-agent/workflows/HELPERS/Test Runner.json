@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-08T23:57:04.084Z",
+  "updatedAt": "2025-12-09T01:13:47.276Z",
   "createdAt": "2025-12-08T23:57:04.084Z",
   "id": "ArBbxkTrUDP34uXx",
   "name": "[HELPERS] Test Runner",
@@ -355,7 +355,9 @@
         "workflowId": {
           "__rl": true,
           "value": "JOZ88rkvX4SMXq4h",
-          "mode": "id"
+          "mode": "list",
+          "cachedResultName": "Discord Context Scout",
+          "cachedResultUrl": "/workflow/JOZ88rkvX4SMXq4h"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -403,7 +405,9 @@
         "workflowId": {
           "__rl": true,
           "value": "ieeGOfzLVxw1eXwc",
-          "mode": "id"
+          "mode": "list",
+          "cachedResultName": "[LEGACY] Discord Context Enricher",
+          "cachedResultUrl": "/workflow/ieeGOfzLVxw1eXwc"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -649,7 +653,7 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "34dc180a-bed8-4d22-be1e-f9bd07049d33",
+  "versionId": "29d5f58e-1130-4833-9c22-efba8ddf2312",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

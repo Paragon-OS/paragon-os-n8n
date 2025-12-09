@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-08T23:57:04.777Z",
+  "updatedAt": "2025-12-09T01:13:47.424Z",
   "createdAt": "2025-12-08T23:57:04.777Z",
   "id": "kxhTrjW8GOSTT8bi",
   "name": "[LAB] Telegram MCP Client Sequencer",
@@ -348,7 +348,7 @@
           "value": "FoUczbmJALfx29t3",
           "mode": "list",
           "cachedResultUrl": "/workflow/FoUczbmJALfx29t3",
-          "cachedResultName": "[HELPERS] Telegram Context Enricher"
+          "cachedResultName": "Legacy Telegram Context Enricher"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -649,7 +649,7 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "161472ba-03f3-4a55-a73f-d82323a86540",
+  "versionId": "600b2cde-7bb5-45f5-8d00-61f3797082b8",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

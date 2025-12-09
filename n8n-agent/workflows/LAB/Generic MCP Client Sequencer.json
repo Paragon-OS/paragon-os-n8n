@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-08T23:57:04.603Z",
+  "updatedAt": "2025-12-09T01:13:47.371Z",
   "createdAt": "2025-12-08T23:57:04.603Z",
   "id": "M1k7KT6EdDB5O3ky",
   "name": "[LAB] Generic MCP Client Sequencer",
@@ -435,7 +435,7 @@
           "value": "ieeGOfzLVxw1eXwc",
           "mode": "list",
           "cachedResultUrl": "/workflow/ieeGOfzLVxw1eXwc",
-          "cachedResultName": "Discord Context Cache"
+          "cachedResultName": "[LEGACY] Discord Context Enricher"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -811,7 +811,7 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "e1e9ea91-4109-4609-a2a6-ff082ce7a989",
+  "versionId": "a2e3cc8c-a727-4bdd-aedc-32189ec59176",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

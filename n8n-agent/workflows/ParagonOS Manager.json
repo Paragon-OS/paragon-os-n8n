@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-09T00:47:24.000Z",
+  "updatedAt": "2025-12-09T01:15:35.000Z",
   "createdAt": "2025-12-08T23:57:02.831Z",
   "id": "83SfiqHwUffVqrb8",
   "name": "ParagonOS Manager",
@@ -22,7 +22,6 @@
     },
     {
       "parameters": {
-        "modelName": "models/gemini-2.5-flash-lite",
         "options": {
           "temperature": 0.3
         }
@@ -178,7 +177,7 @@
     {
       "parameters": {
         "sessionIdType": "customKey",
-        "sessionKey": "={{ $workflow.id }} v2.18",
+        "sessionKey": "={{ $workflow.id }} v3.19",
         "contextWindowLength": 10
       },
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
@@ -370,7 +369,7 @@
   "staticData": null,
   "meta": null,
   "pinData": {},
-  "versionId": "649c7dd8-94c7-4ba9-8b43-6255f9b3466b",
+  "versionId": "af2390c1-5c80-485a-96c5-6681949399b3",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

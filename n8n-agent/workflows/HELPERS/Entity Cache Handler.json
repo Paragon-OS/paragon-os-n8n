@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-09T00:47:19.000Z",
+  "updatedAt": "2025-12-09T01:13:47.227Z",
   "createdAt": "2025-12-08T23:57:03.791Z",
   "id": "YiMeOLFan6mATy41",
   "name": "[HELPERS] Entity Cache Handler",
@@ -339,7 +339,7 @@
         "json": {
           "cacheKey": "telegramContacts",
           "ttl": 21600000,
-          "fetchWorkflowId": "tN2vDMlNOHIydhBr",
+          "fetchWorkflowId": "SBhY0qCFVdLXt1sG",
           "fetchWorkflowInputs": {
             "limit": 200
           }
@@ -347,7 +347,7 @@
       }
     ]
   },
-  "versionId": "48d815e2-084f-423d-bc1b-fec3d100aef3",
+  "versionId": "7a2eb7b0-a145-427b-b96d-c7316908c422",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

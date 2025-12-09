@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-08T23:57:03.995Z",
+  "updatedAt": "2025-12-09T01:08:22.005Z",
   "createdAt": "2025-12-08T23:57:03.995Z",
   "id": "tN2vDMlNOHIydhBr",
   "name": "[HELPERS] Telegram Contact Fetch",
@@ -158,7 +158,7 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "407749a2-ba32-464b-a8f5-936dbfcbb6ea",
+  "versionId": "d80f42d3-a2a8-4bab-a2c9-bb0c4e06315c",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

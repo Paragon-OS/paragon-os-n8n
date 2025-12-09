@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-09T00:13:59.519Z",
+  "updatedAt": "2025-12-09T01:13:47.205Z",
   "createdAt": "2025-12-08T23:57:02.747Z",
   "id": "gWZlvtay26ou4Wtu",
   "name": "Discord Smart Agent",
@@ -368,8 +368,16 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": null,
-  "versionId": "c7605a03-2ac8-4773-ba0c-be2cda825e5d",
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "userPrompt": "who is pasindu"
+        }
+      }
+    ]
+  },
+  "versionId": "9d5e098f-7734-44cd-b6f9-ecec1c6c0fe7",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

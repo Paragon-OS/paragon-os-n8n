@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-08T23:57:04.031Z",
+  "updatedAt": "2025-12-09T01:08:22.023Z",
   "createdAt": "2025-12-08T23:57:04.031Z",
   "id": "XMb1RsZrRBf4G0PI",
   "name": "[HELPERS] Telegram Message Fetch",
@@ -167,7 +167,7 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "cbad7c39-5198-4fb3-b0c5-f7c5da1ed201",
+  "versionId": "c35a7320-0c43-4a00-a95f-68995e24117c",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

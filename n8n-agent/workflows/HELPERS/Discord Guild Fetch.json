@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-08T23:57:02.935Z",
+  "updatedAt": "2025-12-09T01:08:21.901Z",
   "createdAt": "2025-12-08T23:57:02.935Z",
   "id": "ssmSNWi9AiLqCa5o",
   "name": "[HELPERS] Discord Guild Fetch",
@@ -158,7 +158,7 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "c5d32085-65da-4f51-8e9a-e8f06eb7bc34",
+  "versionId": "377ff206-ac54-4c43-a2b6-f1452a7d1a00",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

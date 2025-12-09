@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-08T23:57:02.698Z",
+  "updatedAt": "2025-12-09T01:13:47.178Z",
   "createdAt": "2025-12-08T23:57:02.698Z",
   "id": "JOZ88rkvX4SMXq4h",
   "name": "Discord Context Scout",
@@ -135,8 +135,8 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": null,
-  "versionId": "3a3022da-7036-49a9-b7ad-a34b2536c5e6",
+  "pinData": {},
+  "versionId": "07918164-74f7-40e0-a150-1a5e972576c5",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

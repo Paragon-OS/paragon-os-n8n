@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-08T23:57:04.799Z",
+  "updatedAt": "2025-12-09T01:13:47.326Z",
   "createdAt": "2025-12-08T23:57:04.799Z",
   "id": "WrI3Hr1Q5HM33aGU",
   "name": "[LEGACY] Telegram MCP Client Sequencer",
@@ -112,7 +112,7 @@
           "value": "tfSCD7ysSOdQZac1",
           "mode": "list",
           "cachedResultUrl": "/workflow/tfSCD7ysSOdQZac1",
-          "cachedResultName": "Global Cache System"
+          "cachedResultName": "[HELPERS] Global Cache System"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -185,7 +185,7 @@
           "value": "tfSCD7ysSOdQZac1",
           "mode": "list",
           "cachedResultUrl": "/workflow/tfSCD7ysSOdQZac1",
-          "cachedResultName": "Global Cache System"
+          "cachedResultName": "[HELPERS] Global Cache System"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -292,7 +292,7 @@
           "value": "tfSCD7ysSOdQZac1",
           "mode": "list",
           "cachedResultUrl": "/workflow/tfSCD7ysSOdQZac1",
-          "cachedResultName": "Global Cache System"
+          "cachedResultName": "[HELPERS] Global Cache System"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -365,7 +365,7 @@
           "value": "tfSCD7ysSOdQZac1",
           "mode": "list",
           "cachedResultUrl": "/workflow/tfSCD7ysSOdQZac1",
-          "cachedResultName": "Global Cache System"
+          "cachedResultName": "[HELPERS] Global Cache System"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -451,7 +451,7 @@
           "value": "tfSCD7ysSOdQZac1",
           "mode": "list",
           "cachedResultUrl": "/workflow/tfSCD7ysSOdQZac1",
-          "cachedResultName": "Global Cache System"
+          "cachedResultName": "[HELPERS] Global Cache System"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -524,7 +524,7 @@
           "value": "tfSCD7ysSOdQZac1",
           "mode": "list",
           "cachedResultUrl": "/workflow/tfSCD7ysSOdQZac1",
-          "cachedResultName": "Global Cache System"
+          "cachedResultName": "[HELPERS] Global Cache System"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -1153,7 +1153,7 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "24e3e60d-4be5-46c2-ba0f-a05566efde9a",
+  "versionId": "e0977160-484f-4f95-af56-2b0f0224ad38",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
