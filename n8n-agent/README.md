@@ -37,7 +37,10 @@ npm run n8n:db:check            # Check for issues (dry-run)
 npm test                        # Run tests
 npm run test:watch              # Watch mode
 npm run test:select             # Interactive selector
+npm run test:integration        # Integration tests (requires podman)
 ```
+
+**Note**: Integration tests automatically inject credentials via CLI. See [docs/CREDENTIALS.md](docs/CREDENTIALS.md) for setup.
 
 ---
 
@@ -81,6 +84,8 @@ n8n-agent/
 
 ## ⚙️ Configuration
 
+### Basic Configuration
+
 ```bash
 # Environment variables
 export N8N_URL="http://localhost:5678"
@@ -88,6 +93,21 @@ export N8N_API_KEY="your-api-key"
 ```
 
 Database: `~/.n8n/database.sqlite`
+
+### Credential Configuration (for Testing)
+
+The test system uses CLI-based credential injection. See [docs/CREDENTIALS.md](docs/CREDENTIALS.md) for details.
+
+**Minimal setup** (required for core tests):
+```bash
+export GOOGLE_GEMINI_API_KEY="your-gemini-api-key"
+export QDRANT_URL="https://your-qdrant-instance.cloud.qdrant.io:6333"
+export QDRANT_API_KEY="your-qdrant-api-key"
+export REDIS_HOST="localhost"
+export REDIS_PORT="6379"
+```
+
+**Full documentation**: [docs/CREDENTIALS.md](docs/CREDENTIALS.md)
 
 ---
 

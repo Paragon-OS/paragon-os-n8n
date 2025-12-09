@@ -7,6 +7,7 @@
 import axios from 'axios';
 import { execa } from 'execa';
 import { logger } from './logger';
+import { setupEssentialCredentials, checkCliAvailability } from './n8n-credentials';
 
 const DEFAULT_TEST_USER = {
   email: 'test@n8n.test',
@@ -839,5 +840,62 @@ export async function waitForN8nApiReady(
   }
 
   throw new Error(`n8n API failed to become ready within ${timeout}ms`);
+}
+
+/**
+ * Setup n8n with user, API key, and credentials via CLI
+ * 
+ * This is the recommended approach for test environments as it:
+ * 1. Creates user and API key via HTTP (reliable)
+ * 2. Injects credentials via CLI (allows exact ID control)
+ * 
+ * @param containerName - Podman container name
+ * @param baseUrl - n8n base URL
+ * @param dataDir - Host data directory (for credential file creation)
+ * @param user - User details (optional)
+ * @returns Object with apiKey
+ */
+export async function setupN8nWithCredentials(
+  containerName: string,
+  baseUrl: string,
+  dataDir: string,
+  user = DEFAULT_TEST_USER
+): Promise<{ apiKey?: string }> {
+  logger.info(`🚀 Setting up n8n with user, API key, and credentials...`);
+  
+  // Step 1: Setup user and API key via HTTP
+  logger.info(`Step 1: Setting up user and API key...`);
+  const { apiKey } = await setupN8nViaCliInContainer(containerName, baseUrl, user);
+  
+  if (!apiKey) {
+    logger.warn(`⚠️  No API key created, some operations may fail`);
+  } else {
+    logger.info(`✅ User and API key setup complete`);
+  }
+  
+  // Step 2: Check if CLI is available for credential import
+  logger.info(`Step 2: Checking n8n CLI availability...`);
+  const cliAvailable = await checkCliAvailability(containerName);
+  
+  if (!cliAvailable) {
+    logger.warn(`⚠️  n8n CLI import:credentials not available, skipping credential setup`);
+    logger.warn(`   Workflows requiring credentials will fail`);
+    return { apiKey };
+  }
+  
+  logger.info(`✅ n8n CLI is available`);
+  
+  // Step 3: Setup credentials via CLI
+  logger.info(`Step 3: Setting up credentials via CLI...`);
+  try {
+    await setupEssentialCredentials(containerName, dataDir);
+    logger.info(`✅ Credentials setup complete`);
+  } catch (error) {
+    logger.error(`Failed to setup credentials: ${error instanceof Error ? error.message : String(error)}`);
+    logger.warn(`⚠️  Some workflows may fail due to missing credentials`);
+  }
+  
+  logger.info(`🎉 n8n setup complete!`);
+  return { apiKey };
 }
 

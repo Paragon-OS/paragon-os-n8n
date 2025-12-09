@@ -377,24 +377,25 @@ export async function startN8nInstance(
       throw new Error(`n8n failed to start within ${timeout}ms. Check logs with: podman logs ${containerName}`);
     }
 
-    // Set up user and API key via CLI
-    logger.info(`Step 6: Setting up n8n user and API key...`);
-    const { setupN8nViaCliInContainer } = await import('./n8n-setup');
+    // Set up user, API key, and credentials
+    logger.info(`Step 6: Setting up n8n user, API key, and credentials...`);
+    const { setupN8nWithCredentials } = await import('./n8n-setup');
     let apiKey: string | undefined;
     try {
-      const setupResult = await setupN8nViaCliInContainer(
+      const setupResult = await setupN8nWithCredentials(
         containerName,
-        baseUrl
+        baseUrl,
+        dataDir
       );
       apiKey = setupResult.apiKey;
       if (apiKey) {
-        logger.info(`✅ n8n API key obtained: ${apiKey.substring(0, 10)}...`);
+        logger.info(`✅ n8n setup complete with API key: ${apiKey.substring(0, 10)}...`);
       } else {
         logger.warn(`⚠️  Could not obtain API key, tests may fail`);
       }
     } catch (error) {
-      logger.error(`Failed to set up n8n via CLI: ${error instanceof Error ? error.message : String(error)}`);
-      logger.warn(`Continuing anyway, but tests will likely fail without API key`);
+      logger.error(`Failed to set up n8n: ${error instanceof Error ? error.message : String(error)}`);
+      logger.warn(`Continuing anyway, but tests will likely fail without proper setup`);
     }
 
     logger.info(`✅ n8n instance ready: ${baseUrl}`);
