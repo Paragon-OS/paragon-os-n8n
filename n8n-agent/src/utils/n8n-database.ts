@@ -152,7 +152,6 @@ function workflowToEntity(workflow: Workflow, preserveId: boolean = true): Parti
   const versionId = generateVersionId();
   
   return {
-    id: preserveId && workflow.id ? workflow.id : undefined as any,
     name: workflow.name,
     active: workflow.active ?? false,
     nodes: JSON.stringify(workflow.nodes || []),
@@ -267,23 +266,23 @@ export function importWorkflowToDatabase(
     
     insert.run(
       workflowId,
-      entity.name,
-      entity.active,
-      entity.nodes,
-      entity.connections,
-      entity.settings,
-      entity.staticData,
-      entity.pinData,
-      entity.versionId,
-      entity.triggerCount,
-      entity.meta,
-      entity.parentFolderId,
-      entity.createdAt,
-      entity.updatedAt,
-      entity.isArchived,
-      entity.versionCounter,
-      entity.description,
-      entity.activeVersionId
+      entity.name ?? '',
+      entity.active ?? false,
+      entity.nodes ?? '[]',
+      entity.connections ?? '{}',
+      entity.settings ?? null,
+      entity.staticData ?? null,
+      entity.pinData ?? null,
+      entity.versionId ?? generateVersionId(),
+      entity.triggerCount ?? 0,
+      entity.meta ?? null,
+      entity.parentFolderId ?? null,
+      entity.createdAt ?? new Date().toISOString().replace('T', ' ').substring(0, 23),
+      entity.updatedAt ?? new Date().toISOString().replace('T', ' ').substring(0, 23),
+      entity.isArchived ?? false,
+      entity.versionCounter ?? 1,
+      entity.description ?? null,
+      entity.activeVersionId ?? null
     );
     
     return getWorkflowById(db, workflowId)!;
