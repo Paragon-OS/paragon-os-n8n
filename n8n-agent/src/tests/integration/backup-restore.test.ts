@@ -328,11 +328,19 @@ describe('Backup/Restore Integration Tests', () => {
       const originalN8nUrl = process.env.N8N_BASE_URL;
       const originalN8nUrl2 = process.env.N8N_URL;
       const originalApiKey = process.env.N8N_API_KEY;
+      const originalSessionCookie = process.env.N8N_SESSION_COOKIE;
       
       process.env.N8N_BASE_URL = instance.baseUrl;
       process.env.N8N_URL = instance.baseUrl;
       if (instance.apiKey) {
         process.env.N8N_API_KEY = instance.apiKey;
+      } else {
+        delete process.env.N8N_API_KEY;
+      }
+      if (instance.sessionCookie) {
+        process.env.N8N_SESSION_COOKIE = instance.sessionCookie;
+      } else {
+        delete process.env.N8N_SESSION_COOKIE;
       }
 
       try {
@@ -370,6 +378,11 @@ describe('Backup/Restore Integration Tests', () => {
         } else {
           delete process.env.N8N_API_KEY;
         }
+        if (originalSessionCookie !== undefined) {
+          process.env.N8N_SESSION_COOKIE = originalSessionCookie;
+        } else {
+          delete process.env.N8N_SESSION_COOKIE;
+        }
       }
     } finally {
       if (fs.existsSync(backupDir)) {
@@ -397,8 +410,14 @@ describe('Backup/Restore Integration Tests', () => {
       // Set N8N_BASE_URL for restore command
       const originalN8nUrl = process.env.N8N_BASE_URL;
       const originalN8nUrl2 = process.env.N8N_URL;
+      const originalSessionCookie = process.env.N8N_SESSION_COOKIE;
       process.env.N8N_BASE_URL = instance.baseUrl;
       process.env.N8N_URL = instance.baseUrl;
+      if (instance.sessionCookie) {
+        process.env.N8N_SESSION_COOKIE = instance.sessionCookie;
+      } else {
+        delete process.env.N8N_SESSION_COOKIE;
+      }
 
       try {
         const { executeRestore } = await import('../../commands/restore');
@@ -421,6 +440,11 @@ describe('Backup/Restore Integration Tests', () => {
           process.env.N8N_URL = originalN8nUrl2;
         } else {
           delete process.env.N8N_URL;
+        }
+        if (originalSessionCookie !== undefined) {
+          process.env.N8N_SESSION_COOKIE = originalSessionCookie;
+        } else {
+          delete process.env.N8N_SESSION_COOKIE;
         }
       }
     } finally {
