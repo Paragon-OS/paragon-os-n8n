@@ -20,12 +20,30 @@ This directory contains AI assistant context and instructions for working with t
 - 🐛 Debugging guide
 - 📋 Implementation checklist
 
+### `n8n-integration-methods.md`
+**Purpose:** Comprehensive reference for all n8n integration methods used in the project.
+
+**When to use:**
+- Understanding which API/CLI method to use for a task
+- Debugging integration issues
+- Planning refactoring or consolidation
+- Checking API endpoint availability
+
+**Key sections:**
+- Quick reference table of all methods
+- Detailed endpoint documentation
+- Integration flow diagrams
+- Decision matrix for choosing methods
+- Known limitations and workarounds
+- File reference map
+
 ## How AI Assistants Should Use This
 
 1. **Start every session** by reading `ai-context.md`
-2. **Check the document** before attempting fixes
-3. **Update the document** when discovering new insights
-4. **Reference specific sections** when debugging
+2. **Check integration methods** in `n8n-integration-methods.md` before choosing an approach
+3. **Check the document** before attempting fixes
+4. **Update the document** when discovering new insights
+5. **Reference specific sections** when debugging
 
 ## Why This Exists
 
@@ -49,4 +67,5 @@ The AI context document captures all learnings to prevent repeating failed appro
 - `../n8n-agent/docs/CREDENTIALS.md` - User guide
 - `../n8n-agent/docs/TESTING.md` - Test guide
 - `../n8n-agent/docs/CLI-CREDENTIAL-IMPLEMENTATION.md` - Implementation details
+- `n8n-integration-methods.md` - Integration methods reference (this directory)
 
