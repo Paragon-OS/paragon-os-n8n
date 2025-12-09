@@ -190,13 +190,33 @@ export async function verifyWorkflowsMatch(
       continue;
     }
 
-    // Compare workflow structure (ignore IDs as they may change)
-    const originalNodes = JSON.stringify(original.nodes || []);
-    const restoredNodes = JSON.stringify(restored.nodes || []);
+    // Compare workflow structure (ignore IDs and workflow references as they may change)
+    // Normalize nodes to ignore workflow reference IDs which change after restore
+    const normalizeNodes = (nodes: any[]) => {
+      return nodes.map(node => {
+        const normalized = { ...node };
+        // Normalize workflow references - keep structure but ignore actual ID values
+        if (normalized.parameters?.workflowId?.value) {
+          normalized.parameters = {
+            ...normalized.parameters,
+            workflowId: {
+              ...normalized.parameters.workflowId,
+              value: '<workflow-id>',  // Normalize to placeholder
+              cachedResultUrl: normalized.parameters.workflowId.cachedResultUrl ? '<url>' : undefined,
+            }
+          };
+        }
+        return normalized;
+      });
+    };
+    
+    const originalNodes = JSON.stringify(normalizeNodes(original.nodes || []), null, 2);
+    const restoredNodes = JSON.stringify(normalizeNodes(restored.nodes || []), null, 2);
     if (originalNodes !== restoredNodes) {
       errors.push(`Workflow "${name}" nodes don't match`);
-      logger.debug(`Original nodes: ${originalNodes.substring(0, 200)}...`);
-      logger.debug(`Restored nodes: ${restoredNodes.substring(0, 200)}...`);
+      logger.error(`❌ Nodes mismatch for workflow "${name}"`);
+      logger.error(`Original nodes (${(original.nodes || []).length} nodes):\n${originalNodes}`);
+      logger.error(`Restored nodes (${(restored.nodes || []).length} nodes):\n${restoredNodes}`);
     }
     
     const originalConnections = JSON.stringify(original.connections || {});

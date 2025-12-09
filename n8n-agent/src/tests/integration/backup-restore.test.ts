@@ -26,9 +26,8 @@ import {
   createTestWorkflows,
   verifyWorkflowReferences,
   clearAllWorkflows,
-  type Workflow 
 } from '../../utils/backup-restore-test';
-import { exportWorkflows } from '../../utils/n8n-api';
+import { exportWorkflows, type Workflow } from '../../utils/n8n-api';
 
 describe('Backup/Restore Integration Tests', () => {
   let instance: N8nInstance | null = null;
@@ -249,6 +248,12 @@ describe('Backup/Restore Integration Tests', () => {
         apiKey: instance.apiKey,
       });
       const refCheck = await verifyWorkflowReferences(instance, restoredWorkflows);
+      
+      // Log errors for debugging
+      if (!result.success) {
+        console.log('❌ Test failed with errors:', result.errors);
+        console.log('⚠️  Warnings:', result.warnings);
+      }
       
       expect(result.success).toBe(true);
       // References might be broken if they reference by ID and IDs changed
@@ -492,6 +497,12 @@ describe('Backup/Restore Integration Tests', () => {
           clearBeforeRestore: true,
         }
       );
+
+      // Log errors for debugging
+      if (!result.success) {
+        console.log('❌ Test failed with errors:', result.errors);
+        console.log('⚠️  Warnings:', result.warnings);
+      }
 
       expect(result.success).toBe(true);
       expect(result.errors).toHaveLength(0);
