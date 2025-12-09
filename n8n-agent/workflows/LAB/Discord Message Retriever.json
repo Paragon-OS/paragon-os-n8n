@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-09T00:03:52.608Z",
+  "updatedAt": "2025-12-09T00:13:59.720Z",
   "createdAt": "2025-12-08T23:57:04.528Z",
   "id": "AaHyRg2G0qzg4EPg",
   "name": "[LAB] Discord Message Retriever",
@@ -549,7 +549,7 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "875f7ffa-58fd-4510-814a-5eeac2015389",
+  "versionId": "a27c8938-dac0-415f-bdd9-558e439b0327",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

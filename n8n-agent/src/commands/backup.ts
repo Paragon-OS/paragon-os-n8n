@@ -250,21 +250,35 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
     logger.info(`Removed ${duplicatesRemoved} duplicate workflow file(s)`);
   }
   
-  // Convert workflow references from ID-based to name-based (stable across imports)
-  logger.info("Syncing workflow references...");
+  // Sync workflow references to match actual n8n IDs
+  // This fixes references that point to old IDs (e.g., after workflows were re-imported with new IDs)
+  logger.info("Syncing workflow references to match n8n IDs...");
   try {
-    const syncResult = await syncWorkflowReferences(tempDir, workflows);
+    // Pass silent=false to show detailed logging
+    const syncResult = await syncWorkflowReferences(tempDir, workflows, false);
     
     if (syncResult.fixed > 0) {
-      logger.info(`Fixed ${syncResult.fixed} workflow reference(s) to match n8n IDs`);
+      logger.info(`✅ Fixed ${syncResult.fixed} workflow reference(s) to match n8n IDs`);
+      if (syncResult.details.length > 0 && syncResult.details.length <= 10) {
+        // Show details for small numbers of fixes
+        syncResult.details.forEach(detail => {
+          logger.info(`   • ${detail.workflowName} → ${detail.nodeName} → ${detail.targetName} (${detail.oldId} → ${detail.newId})`);
+        });
+      } else if (syncResult.details.length > 10) {
+        // Show first few for large numbers
+        syncResult.details.slice(0, 5).forEach(detail => {
+          logger.info(`   • ${detail.workflowName} → ${detail.nodeName} → ${detail.targetName} (${detail.oldId} → ${detail.newId})`);
+        });
+        logger.info(`   ... and ${syncResult.details.length - 5} more`);
+      }
     }
     
     if (syncResult.notFound > 0) {
-      logger.warn(`${syncResult.notFound} referenced workflow(s) not found in n8n`);
+      logger.warn(`⚠️  ${syncResult.notFound} referenced workflow(s) not found in n8n (may have been deleted or renamed)`);
     }
     
     if (syncResult.fixed === 0 && syncResult.notFound === 0) {
-      logger.info("All workflow references are already in sync");
+      logger.info("✓ All workflow references are already in sync with n8n");
     }
   } catch (err) {
     logger.warn("Failed to sync workflow references", err);

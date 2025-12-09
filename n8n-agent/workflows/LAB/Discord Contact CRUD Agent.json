@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-09T00:03:52.478Z",
+  "updatedAt": "2025-12-09T00:13:59.606Z",
   "createdAt": "2025-12-08T23:57:04.394Z",
   "id": "lJlPkH9jUM8fVIvQ",
   "name": "[LAB] Discord Contact CRUD Agent",
@@ -453,7 +453,7 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "3f0c8f10-45d1-4a8d-8207-1ddca210613a",
+  "versionId": "6d8cf113-da20-4834-8acd-290543486267",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

@@ -57,55 +57,20 @@ export async function convertWorkflowReferencesToNames(
       const currentValue = wfParam.value as string;
       const currentMode = wfParam.mode || 'id';
 
-      // If already using name-based reference, keep it
-      if (currentMode === 'list') {
-        return node;
-      }
-
-      // Find workflow by ID or custom ID
+      // Find workflow by ID or name
       let targetWorkflow: Workflow | undefined;
       
       // Try to find by database ID first (only works if workflows are from n8n API)
       targetWorkflow = workflows?.find(w => w.id === currentValue);
       
-      // If not found, try to find by name or custom ID
-      // This handles both:
-      // 1. Custom IDs like "TestDataHelper001" (match by workflow name patterns)
-      // 2. Old database IDs that don't exist anymore (match by workflow name from backup)
+      // If not found, try to find by name (value might be a workflow name)
       if (!targetWorkflow && currentValue) {
-        targetWorkflow = workflows?.find(w => {
-          if (!w.name) return false;
-          // Exact name match
-          if (w.name === currentValue) return true;
-          
-          // Check if workflow has this as a custom ID (stored in JSON file)
-          // Custom IDs are often stored in the workflow JSON but not in the API response
-          // So we need to match by name patterns
-          const nameNoSpaces = w.name.replace(/\s+/g, '').replace(/\[.*?\]/g, '');
-          const valueNoSpaces = currentValue.replace(/\s+/g, '');
-          
-          // Try various matching strategies for custom IDs
-          // 1. Name without spaces/tags matches custom ID
-          if (nameNoSpaces === valueNoSpaces || nameNoSpaces.toLowerCase() === valueNoSpaces.toLowerCase()) {
-            return true;
-          }
-          // 2. Custom ID might be embedded in name (e.g., "TestDataHelper001" in "[HELPERS] Test Data")
-          if (nameNoSpaces.toLowerCase().includes(valueNoSpaces.toLowerCase()) || 
-              valueNoSpaces.toLowerCase().includes(nameNoSpaces.toLowerCase())) {
-            return true;
-          }
-          // 3. Try matching by removing common suffixes/prefixes
-          // "TestDataHelper001" might match "TestData" or "Test Data Helper"
-          const nameWords = nameNoSpaces.toLowerCase().split(/(?=[A-Z])|Helper|001/).filter(Boolean);
-          const valueWords = valueNoSpaces.toLowerCase().split(/(?=[A-Z])|Helper|001/).filter(Boolean);
-          if (nameWords.length > 0 && valueWords.length > 0) {
-            const commonWords = nameWords.filter(w => valueWords.includes(w));
-            if (commonWords.length >= Math.min(nameWords.length, valueWords.length) * 0.7) {
-              return true;
-            }
-          }
-          return false;
-        });
+        targetWorkflow = workflows?.find(w => w.name === currentValue);
+      }
+      
+      // If not found, try by cached name
+      if (!targetWorkflow && wfParam.cachedResultName) {
+        targetWorkflow = workflows?.find(w => w.name === wfParam.cachedResultName);
       }
       
       // Log ID rewrites (when old ID doesn't match new ID)

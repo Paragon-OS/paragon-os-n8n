@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-09T00:03:52.442Z",
+  "updatedAt": "2025-12-09T00:21:23.666Z",
   "createdAt": "2025-12-08T23:57:02.875Z",
   "id": "R5zBSutw5eVSURyz",
   "name": "Telegram Smart Agent",
@@ -141,8 +141,8 @@
           "__rl": true,
           "value": "Bwantxu38HCUo5tm",
           "mode": "list",
-          "cachedResultUrl": "/workflow/Bwantxu38HCUo5tm",
-          "cachedResultName": "Telegram Context Scout"
+          "cachedResultName": "Telegram Context Scout",
+          "cachedResultUrl": "/workflow/Bwantxu38HCUo5tm"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -343,8 +343,16 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": null,
-  "versionId": "d7c2b747-53bb-4517-9fe3-a72a35379af2",
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "userPrompt": "Who is pasindu on Telegram?"
+        }
+      }
+    ]
+  },
+  "versionId": "25875d2c-a830-4da6-a691-48891473e354",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

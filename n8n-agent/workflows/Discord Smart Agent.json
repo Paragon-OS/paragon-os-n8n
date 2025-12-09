@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-09T00:03:52.383Z",
+  "updatedAt": "2025-12-09T00:13:59.519Z",
   "createdAt": "2025-12-08T23:57:02.747Z",
   "id": "gWZlvtay26ou4Wtu",
   "name": "Discord Smart Agent",
@@ -369,7 +369,7 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "00199222-d35e-40bf-8423-930c08e48ab3",
+  "versionId": "c7605a03-2ac8-4773-ba0c-be2cda825e5d",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
