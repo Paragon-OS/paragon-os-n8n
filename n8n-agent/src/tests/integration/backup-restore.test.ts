@@ -242,6 +242,7 @@ describe('Backup/Restore Integration Tests', () => {
       const n8nWorkflows = await exportWorkflows({ 
         baseURL: instance.baseUrl,
         apiKey: instance.apiKey,
+        sessionCookie: instance.sessionCookie,
       });
       const helperId = n8nWorkflows.find(w => w.name === 'Helper Workflow')?.id;
       
@@ -264,6 +265,7 @@ describe('Backup/Restore Integration Tests', () => {
       const restoredWorkflows = await exportWorkflows({ 
         baseURL: instance.baseUrl,
         apiKey: instance.apiKey,
+        sessionCookie: instance.sessionCookie,
       });
       const refCheck = await verifyWorkflowReferences(instance, restoredWorkflows);
       
@@ -346,6 +348,7 @@ describe('Backup/Restore Integration Tests', () => {
           const workflows = await exportWorkflows({ 
             baseURL: instance.baseUrl,
             apiKey: instance.apiKey,
+            sessionCookie: instance.sessionCookie,
           });
           const byName = workflows.filter(w => w.name === 'Multi Restore Test');
           expect(byName.length).toBe(1);
@@ -405,6 +408,7 @@ describe('Backup/Restore Integration Tests', () => {
         const workflows = await exportWorkflows({ 
           baseURL: instance.baseUrl,
           apiKey: instance.apiKey,
+          sessionCookie: instance.sessionCookie,
         });
         expect(workflows.length).toBe(0);
       } finally {
