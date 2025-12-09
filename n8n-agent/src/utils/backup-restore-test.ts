@@ -41,14 +41,30 @@ export async function createTestWorkflows(
   const imported: Workflow[] = [];
   const baseUrl = instance.baseUrl;
 
-  logger.info(`Creating ${workflows.length} test workflow(s) in n8n instance...`);
+  if (!baseUrl) {
+    throw new Error('baseURL is not defined - instance.baseUrl is missing');
+  }
+
+  logger.info(`Creating ${workflows.length} test workflow(s) in n8n instance at ${baseUrl}...`);
 
   for (const workflow of workflows) {
     try {
-      const importedWorkflow = await importWorkflow(workflow, { baseURL: baseUrl });
+      logger.debug(`Importing workflow "${workflow.name}" to ${baseUrl}...`);
+      // Use API key if available
+      const apiConfig = instance.apiKey 
+        ? { baseURL: baseUrl, apiKey: instance.apiKey }
+        : { baseURL: baseUrl };
+      
+      const importedWorkflow = await importWorkflow(workflow, apiConfig);
+      
+      if (!importedWorkflow || !importedWorkflow.id) {
+        throw new Error(`Workflow "${workflow.name}" was imported but has no ID`);
+      }
+      
       imported.push(importedWorkflow);
-      logger.debug(`Created test workflow: ${workflow.name} (ID: ${importedWorkflow.id})`);
+      logger.debug(`✅ Created test workflow: ${workflow.name} (ID: ${importedWorkflow.id})`);
     } catch (error) {
+      logger.error(`Failed to create workflow "${workflow.name}"`, error);
       throw new Error(
         `Failed to create test workflow "${workflow.name}": ${error instanceof Error ? error.message : String(error)}`
       );
@@ -65,15 +81,36 @@ export async function createTestWorkflows(
 export async function clearAllWorkflows(instance: N8nInstance): Promise<void> {
   const baseUrl = instance.baseUrl;
   
-  logger.info('Clearing all workflows from n8n instance...');
+  if (!baseUrl) {
+    throw new Error('baseURL is not defined - instance.baseUrl is missing');
+  }
+  
+  logger.info(`Clearing all workflows from n8n instance at ${baseUrl}...`);
   
   try {
-    const workflows = await exportWorkflows({ baseURL: baseUrl });
+    logger.debug(`Exporting workflows from ${baseUrl}...`);
+    // Use API key if available
+    const apiConfig = instance.apiKey 
+      ? { baseURL: baseUrl, apiKey: instance.apiKey }
+      : { baseURL: baseUrl };
+    
+    const workflows = await exportWorkflows(apiConfig);
+    logger.debug(`Found ${workflows.length} workflow(s) to delete`);
+    
     let deletedCount = 0;
     
     for (const wf of workflows) {
       try {
-        await deleteWorkflow(wf.id, { baseURL: baseUrl });
+        if (!wf.id) {
+          logger.warn(`Skipping workflow without ID: ${wf.name || 'unnamed'}`);
+          continue;
+        }
+        logger.debug(`Deleting workflow: ${wf.name} (${wf.id})`);
+        // Use API key if available
+        const apiConfig = instance.apiKey 
+          ? { baseURL: baseUrl, apiKey: instance.apiKey }
+          : { baseURL: baseUrl };
+        await deleteWorkflow(wf.id, apiConfig);
         deletedCount++;
       } catch (error) {
         logger.warn(`Failed to delete workflow ${wf.id} (${wf.name}): ${error instanceof Error ? error.message : String(error)}`);
@@ -82,6 +119,7 @@ export async function clearAllWorkflows(instance: N8nInstance): Promise<void> {
     
     logger.info(`✅ Deleted ${deletedCount} workflow(s)`);
   } catch (error) {
+    logger.error(`Failed to clear workflows from ${baseUrl}`, error);
     throw new Error(`Failed to clear workflows: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
@@ -98,14 +136,30 @@ export async function verifyWorkflowsMatch(
   const warnings: string[] = [];
   const baseUrl = instance.baseUrl;
 
-  logger.info('Verifying workflows match after restore...');
+  if (!baseUrl) {
+    errors.push('baseURL is not defined - instance.baseUrl is missing');
+    return { matches: false, errors, warnings };
+  }
+
+  logger.info(`Verifying workflows match after restore (${baseUrl})...`);
+  logger.debug(`Original workflows: ${originalWorkflows.length}, names: ${originalWorkflows.map(w => w.name).join(', ')}`);
 
   // Export workflows from n8n
   let restoredWorkflows: Workflow[];
   try {
-    restoredWorkflows = await exportWorkflows({ baseURL: baseUrl });
+    logger.debug(`Exporting workflows from ${baseUrl}...`);
+    // Use API key if available
+    const apiConfig = instance.apiKey 
+      ? { baseURL: baseUrl, apiKey: instance.apiKey }
+      : { baseURL: baseUrl };
+    
+    restoredWorkflows = await exportWorkflows(apiConfig);
+    logger.debug(`Exported ${restoredWorkflows.length} workflow(s) from n8n`);
+    logger.debug(`Restored workflow names: ${restoredWorkflows.map(w => w.name).join(', ')}`);
   } catch (error) {
-    errors.push(`Failed to export workflows from n8n: ${error instanceof Error ? error.message : String(error)}`);
+    const errorMsg = `Failed to export workflows from n8n: ${error instanceof Error ? error.message : String(error)}`;
+    logger.error(errorMsg, error);
+    errors.push(errorMsg);
     return { matches: false, errors, warnings };
   }
 
@@ -200,7 +254,12 @@ export async function verifyWorkflowReferences(
   // Get all workflow IDs from n8n
   let n8nWorkflows: Workflow[];
   try {
-    n8nWorkflows = await exportWorkflows({ baseURL: baseUrl });
+    // Use API key if available
+    const apiConfig = instance.apiKey 
+      ? { baseURL: baseUrl, apiKey: instance.apiKey }
+      : { baseURL: baseUrl };
+    
+    n8nWorkflows = await exportWorkflows(apiConfig);
   } catch (error) {
     return {
       valid: false,

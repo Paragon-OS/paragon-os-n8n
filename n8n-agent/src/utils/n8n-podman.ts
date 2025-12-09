@@ -32,6 +32,7 @@ export interface N8nInstance {
   port: number;
   baseUrl: string;
   dataDir: string;
+  apiKey?: string;
   stop: () => Promise<void>;
   remove: () => Promise<void>;
   restart: () => Promise<void>;
@@ -280,6 +281,12 @@ export async function startN8nInstance(
     envArgs.push('-e', 'N8N_METRICS=false'); // Disable metrics for faster startup
     envArgs.push('-e', 'N8N_DIAGNOSTICS_ENABLED=false'); // Disable diagnostics
     envArgs.push('-e', 'N8N_PAYLOAD_SIZE_MAX=16'); // Increase payload size limit
+    // Don't disable user management - we need it to create a user and API key
+    // envArgs.push('-e', 'N8N_USER_MANAGEMENT_DISABLED=true'); // Disable user management for testing
+    envArgs.push('-e', 'N8N_SKIP_WEBHOOK_DEREGISTRATION_SHUTDOWN=true'); // Skip webhook cleanup
+    envArgs.push('-e', 'N8N_DISABLE_PRODUCTION_MAIN_PROCESS=true'); // Disable production mode (allows API without key)
+    envArgs.push('-e', 'N8N_PERSONALIZATION_ENABLED=false'); // Disable personalization
+    envArgs.push('-e', 'N8N_USER_FOLDER=/home/node/.n8n');
     
     // Add custom environment variables
     for (const [key, value] of Object.entries(envVars)) {
@@ -319,13 +326,28 @@ export async function startN8nInstance(
       throw new Error(`n8n failed to start within ${timeout}ms. Check logs with: podman logs ${containerName}`);
     }
 
-    logger.info(`✅ n8n instance ready: ${baseUrl}`);
+    // Wait for API to be ready and set up user if needed
+    logger.info(`Setting up n8n API access...`);
+    const { waitForN8nApiReady } = await import('./n8n-setup');
+    let apiKey: string | undefined;
+    try {
+      const apiReady = await waitForN8nApiReady(baseUrl, 30000); // 30 seconds for API setup
+      apiKey = apiReady.apiKey;
+      if (apiKey) {
+        logger.debug(`n8n API key obtained: ${apiKey.substring(0, 10)}...`);
+      }
+    } catch (error) {
+      logger.warn(`Failed to set up n8n API access, continuing anyway: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
+    logger.info(`✅ n8n instance ready: ${baseUrl}${apiKey ? ' (with API key)' : ''}`);
 
     return {
       containerName,
       port: actualPort,
       baseUrl,
       dataDir,
+      apiKey,
       async stop() {
         logger.info(`Stopping n8n instance: ${containerName}`);
         try {

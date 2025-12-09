@@ -88,9 +88,16 @@ function getN8nSessionCookie(): string | undefined {
  */
 function createApiClient(config?: N8nApiConfig): AxiosInstance {
   const baseURL = config?.baseURL || getN8nBaseUrl();
+  
+  if (!baseURL) {
+    throw new Error('baseURL is not defined - provide baseURL in config or set N8N_BASE_URL/N8N_URL environment variable');
+  }
+  
   const apiKey = config?.apiKey || getN8nApiKey();
   const sessionCookie = config?.sessionCookie || getN8nSessionCookie();
   const timeout = config?.timeout || 120000; // 2 minutes default
+
+  logger.debug(`Creating API client for ${baseURL}/api/v1`);
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -193,8 +200,14 @@ export async function exportWorkflows(config?: N8nApiConfig): Promise<Workflow[]
         params.cursor = cursor;
       }
 
+      const apiBaseUrl = config?.baseURL || getN8nBaseUrl();
+      logger.debug(`GET /workflows from ${apiBaseUrl}/api/v1/workflows`);
       const response = await client.get<unknown>('/workflows', { params });
+      logger.debug(`GET /workflows response: status=${response.status}, data type=${typeof response.data}`);
+      
       if (response.status !== 200) {
+        logger.error(`Failed to export workflows: status=${response.status}, statusText=${response.statusText}`);
+        logger.error(`Response data: ${JSON.stringify(response.data).substring(0, 500)}`);
         throw new Error(`Failed to export workflows: ${response.status} ${response.statusText}`);
       }
       
@@ -419,14 +432,18 @@ export async function importWorkflow(
       }
       
       // Try POST to /workflows endpoint
+      const apiBaseUrl = config?.baseURL || getN8nBaseUrl();
       try {
+        logger.debug(`POST /workflows to ${apiBaseUrl}/api/v1/workflows`);
         response = await client.post<Workflow>('/workflows', cleanedData);
+        logger.debug(`POST successful: status=${response.status}, workflow ID: ${response.data?.id || 'none'}`);
       } catch (postError) {
         // If POST fails, log more details
         if (axios.isAxiosError(postError)) {
-          logger.debug(`POST /workflows failed: status=${postError.response?.status}, url=${baseURL}/api/v1/workflows`);
+          logger.debug(`POST /workflows failed: status=${postError.response?.status}, url=${apiBaseUrl}/api/v1/workflows`);
           logger.debug(`Request data keys: ${Object.keys(cleanedData).join(', ')}`);
           logger.debug(`Response: ${JSON.stringify(postError.response?.data).substring(0, 500)}`);
+          logger.debug(`Response headers: ${JSON.stringify(postError.response?.headers)}`);
         }
         throw postError;
       }
@@ -454,7 +471,8 @@ export async function importWorkflow(
         : String(response.data).substring(0, 500);
       
       // Log the full response for debugging
-      logger.debug(`Import workflow failed: status=${response.status}, url=${baseURL}/api/v1/workflows`);
+      const apiBaseUrl = config?.baseURL || getN8nBaseUrl();
+      logger.debug(`Import workflow failed: status=${response.status}, url=${apiBaseUrl}/api/v1/workflows`);
       logger.debug(`Response headers:`, response.headers);
       logger.debug(`Response data:`, response.data);
       
