@@ -37,13 +37,32 @@ This directory contains AI assistant context and instructions for working with t
 - Known limitations and workarounds
 - File reference map
 
+### `n8n-api-authentication-guide.md`
+**Purpose:** Comprehensive guide for n8n API authentication, endpoint selection, and common pitfalls.
+
+**When to use:**
+- Debugging authentication failures (401 Unauthorized)
+- Understanding `/rest` vs `/api/v1` endpoint differences
+- Fixing "missing nodes" issues after restore
+- Understanding response format differences
+- Setting up test environments with session cookies
+
+**Key sections:**
+- Quick reference: Which endpoint for which auth method
+- Critical authentication rules
+- Common pitfalls and solutions
+- Do's and don'ts
+- Code patterns and examples
+- Debugging checklist
+
 ## How AI Assistants Should Use This
 
 1. **Start every session** by reading `ai-context.md`
 2. **Check integration methods** in `n8n-integration-methods.md` before choosing an approach
-3. **Check the document** before attempting fixes
-4. **Update the document** when discovering new insights
-5. **Reference specific sections** when debugging
+3. **Check authentication guide** in `n8n-api-authentication-guide.md` when dealing with API auth issues
+4. **Check the document** before attempting fixes
+5. **Update the document** when discovering new insights
+6. **Reference specific sections** when debugging
 
 ## Why This Exists
 
@@ -68,4 +87,5 @@ The AI context document captures all learnings to prevent repeating failed appro
 - `../n8n-agent/docs/TESTING.md` - Test guide
 - `../n8n-agent/docs/CLI-CREDENTIAL-IMPLEMENTATION.md` - Implementation details
 - `n8n-integration-methods.md` - Integration methods reference (this directory)
+- `n8n-api-authentication-guide.md` - API authentication patterns and pitfalls (this directory)
 

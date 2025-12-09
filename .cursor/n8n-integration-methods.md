@@ -34,15 +34,17 @@
 ### 🔑 Key Features
 
 - **Pagination:** Uses cursor-based pagination (`limit`, `cursor`)
-- **Authentication:** API key (`X-N8N-API-KEY`) or session cookie
+- **Authentication:** **API key ONLY** (`X-N8N-API-KEY`) - **Session cookies NOT supported**
 - **Response Format:** `{ data: [...], nextCursor: "..." }` or direct array
 - **ID Handling:** Auto-generates IDs (can't preserve custom IDs)
+- **Full Data:** Returns complete workflow data (nodes, connections, etc.)
 
 ### ⚠️ Limitations
 
 - ❌ **No execution endpoint** - Must use CLI for workflow execution
 - ❌ **Can't preserve workflow IDs** - Auto-generates on POST
 - ❌ **Can't set credential IDs** - Use CLI import instead
+- ❌ **Requires API key** - Session cookies don't work (both GET and POST require API key)
 
 ---
 
@@ -55,20 +57,45 @@
 | `/rest/owner/setup` | POST | Create initial user | `n8n-setup.ts:168` |
 | `/rest/login` | POST | User login (get session) | `n8n-setup.ts:321` |
 | `/rest/api-keys` | POST | Create API key | `n8n-setup.ts:386` |
-| `/rest/workflows` | GET | List workflows (legacy) | `simple-start.test.ts:38` |
+| `/rest/workflows` | GET | List workflows (summary only) | `n8n-api.ts:214` |
+| `/rest/workflows/{id}` | GET | Get workflow (full data) | `n8n-api.ts:214` |
+| `/rest/workflows` | POST | Create workflow | `n8n-api.ts:472` |
 | `/rest/credentials` | GET | List credentials (legacy) | `credential-setup.test.ts:85` |
 
 ### 🔑 Key Features
 
-- **Session-based auth:** Returns cookies for authentication
+- **Session-based auth:** Accepts session cookies (works when API key unavailable)
 - **Initial setup:** Required for first-time user creation
-- **Legacy support:** Still used in some tests
+- **Summary vs Full Data:** `/rest/workflows` returns summaries, `/rest/workflows/{id}` returns full data
+- **Response Format:** Wraps responses in `{ data: {...} }` format
+- **Required Fields:** POST requires `active` field (database constraint)
 
-### ⚠️ Notes
+### ⚠️ Critical Notes
 
-- May be deprecated in future n8n versions
-- Prefer `/api/v1` when possible
-- Required for initial setup (no alternative)
+- **`/rest/workflows` returns summary data** - Missing `nodes` and `connections` fields
+- **Must fetch individually** - Use `/rest/workflows/{id}` to get full workflow data
+- **Response wrapping** - All responses wrapped in `{ data: {...} }` format
+- **Active field required** - POST requests must include `active: boolean` field
+- **Use when API key unavailable** - Primary use case is test environments where API key creation fails
+
+### 🔄 Workaround Pattern
+
+When using `/rest` endpoints for export:
+
+```typescript
+// Step 1: Get workflow summaries (fast, but incomplete)
+const summaries = await client.get('/rest/workflows');
+// Returns: { count: 2, data: [{id, name, ...}] } - NO nodes!
+
+// Step 2: Fetch each workflow individually (slower, but complete)
+for (const summary of summaries.data.data) {
+  const full = await client.get(`/rest/workflows/${summary.id}`);
+  // Returns: { data: {id, name, nodes, connections, ...} } - Full data!
+  workflows.push(full.data.data);
+}
+```
+
+**See:** `.cursor/n8n-api-authentication-guide.md` for detailed patterns and pitfalls
 
 ---
 
