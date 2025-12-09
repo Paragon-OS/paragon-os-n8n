@@ -81,19 +81,33 @@ function generateContainerName(prefix: string = 'n8n-test'): string {
 async function findAvailablePort(startPort: number = 50000): Promise<number> {
   logger.debug(`Finding available port starting from ${startPort}...`);
   return new Promise((resolve, reject) => {
-    const server = net.createServer();
     let attempts = 0;
     const maxAttempts = 100; // Don't try more than 100 ports
     
     const tryPort = (port: number) => {
       attempts++;
       if (attempts > maxAttempts) {
-        server.close();
         reject(new Error(`Could not find available port after ${maxAttempts} attempts`));
         return;
       }
       
-      server.listen(port, () => {
+      // Create a new server for each attempt to avoid "already listening" errors
+      const server = net.createServer();
+      
+      // Register error handler BEFORE calling listen to avoid race conditions
+      server.once('error', (err: NodeJS.ErrnoException) => {
+        server.close();
+        if (err.code === 'EADDRINUSE') {
+          // Port is in use, try next one
+          logger.debug(`Port ${port} in use, trying ${port + 1}...`);
+          tryPort(port + 1);
+        } else {
+          reject(err);
+        }
+      });
+      
+      // Register listening handler
+      server.once('listening', () => {
         const address = server.address();
         if (address && typeof address === 'object') {
           const foundPort = address.port;
@@ -108,16 +122,8 @@ async function findAvailablePort(startPort: number = 50000): Promise<number> {
         }
       });
       
-      server.on('error', (err: NodeJS.ErrnoException) => {
-        if (err.code === 'EADDRINUSE') {
-          // Port is in use, try next one
-          logger.debug(`Port ${port} in use, trying ${port + 1}...`);
-          tryPort(port + 1);
-        } else {
-          server.close();
-          reject(err);
-        }
-      });
+      // Start listening on the port
+      server.listen(port);
     };
     
     tryPort(startPort);

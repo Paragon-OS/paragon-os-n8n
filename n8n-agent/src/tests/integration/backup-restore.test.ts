@@ -299,11 +299,16 @@ describe('Backup/Restore Integration Tests', () => {
       // Create and backup
       const created = await createTestWorkflows(instance, testWorkflows);
       
-      // Set N8N_BASE_URL for backup/restore commands
+      // Set environment variables for backup/restore commands
       const originalN8nUrl = process.env.N8N_BASE_URL;
       const originalN8nUrl2 = process.env.N8N_URL;
+      const originalApiKey = process.env.N8N_API_KEY;
+      
       process.env.N8N_BASE_URL = instance.baseUrl;
       process.env.N8N_URL = instance.baseUrl;
+      if (instance.apiKey) {
+        process.env.N8N_API_KEY = instance.apiKey;
+      }
 
       try {
         const { executeBackup } = await import('../../commands/backup');
@@ -323,6 +328,7 @@ describe('Backup/Restore Integration Tests', () => {
           expect(byName.length).toBe(1);
         }
       } finally {
+        // Restore original environment variables
         if (originalN8nUrl !== undefined) {
           process.env.N8N_BASE_URL = originalN8nUrl;
         } else {
@@ -332,6 +338,11 @@ describe('Backup/Restore Integration Tests', () => {
           process.env.N8N_URL = originalN8nUrl2;
         } else {
           delete process.env.N8N_URL;
+        }
+        if (originalApiKey !== undefined) {
+          process.env.N8N_API_KEY = originalApiKey;
+        } else {
+          delete process.env.N8N_API_KEY;
         }
       }
     } finally {
