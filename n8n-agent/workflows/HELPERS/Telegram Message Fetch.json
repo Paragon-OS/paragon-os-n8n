@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-09T01:35:03.749Z",
+  "updatedAt": "2025-12-09T01:35:05.077Z",
   "createdAt": "2025-12-09T01:23:33.477Z",
   "id": "5FiyNjrGImPs8TWA",
   "name": "[HELPERS] Telegram Message Fetch",
@@ -54,10 +54,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "GIW9StT6wLqEJ4bU",
+          "value": "6BCTh6yGP6H1F3ps",
           "mode": "list",
           "cachedResultName": "[HELPERS] MCP Data Normalizer",
-          "cachedResultUrl": "/workflow/GIW9StT6wLqEJ4bU"
+          "cachedResultUrl": "/workflow/6BCTh6yGP6H1F3ps"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -167,7 +167,7 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "9683be86-f2c5-4d06-88a4-ef5a9eaa4edf",
+  "versionId": "8f2419a3-162d-4db9-a22e-13c5a5fc7705",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

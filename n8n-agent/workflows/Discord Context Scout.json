@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-09T01:35:03.347Z",
+  "updatedAt": "2025-12-09T01:35:05.188Z",
   "createdAt": "2025-12-09T01:23:31.466Z",
   "id": "FvXGq1CLqsmjzL8n",
   "name": "Discord Context Scout",
@@ -45,10 +45,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "3oWOf1fvT3tYjvwF",
+          "value": "Z4qG8RRqjCifiQQj",
           "mode": "list",
           "cachedResultName": "[HELPERS] Generic Context Scout Core",
-          "cachedResultUrl": "/workflow/3oWOf1fvT3tYjvwF"
+          "cachedResultUrl": "/workflow/Z4qG8RRqjCifiQQj"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -136,7 +136,7 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "d4c5f462-b827-48f6-b237-56929c02f0e8",
+  "versionId": "e0ad2c84-ef56-4ebf-9abf-34f37278db41",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

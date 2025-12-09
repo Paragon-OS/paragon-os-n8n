@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-09T01:35:03.398Z",
+  "updatedAt": "2025-12-09T01:35:05.531Z",
   "createdAt": "2025-12-09T01:23:31.805Z",
   "id": "XvgHt5XWXKOZRcJL",
   "name": "Legacy Telegram Context Enricher",
@@ -10,9 +10,9 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "tfSCD7ysSOdQZac1",
+          "value": "dIk4LoS6s39B0WkV",
           "mode": "list",
-          "cachedResultUrl": "/workflow/tfSCD7ysSOdQZac1",
+          "cachedResultUrl": "/workflow/dIk4LoS6s39B0WkV",
           "cachedResultName": "[HELPERS] Global Cache System"
         },
         "workflowInputs": {
@@ -83,9 +83,9 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "tfSCD7ysSOdQZac1",
+          "value": "dIk4LoS6s39B0WkV",
           "mode": "list",
-          "cachedResultUrl": "/workflow/tfSCD7ysSOdQZac1",
+          "cachedResultUrl": "/workflow/dIk4LoS6s39B0WkV",
           "cachedResultName": "[HELPERS] Global Cache System"
         },
         "workflowInputs": {
@@ -338,9 +338,9 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "tfSCD7ysSOdQZac1",
+          "value": "dIk4LoS6s39B0WkV",
           "mode": "list",
-          "cachedResultUrl": "/workflow/tfSCD7ysSOdQZac1",
+          "cachedResultUrl": "/workflow/dIk4LoS6s39B0WkV",
           "cachedResultName": "[HELPERS] Global Cache System"
         },
         "workflowInputs": {
@@ -411,9 +411,9 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "tfSCD7ysSOdQZac1",
+          "value": "dIk4LoS6s39B0WkV",
           "mode": "list",
-          "cachedResultUrl": "/workflow/tfSCD7ysSOdQZac1",
+          "cachedResultUrl": "/workflow/dIk4LoS6s39B0WkV",
           "cachedResultName": "[HELPERS] Global Cache System"
         },
         "workflowInputs": {
@@ -497,9 +497,9 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "tfSCD7ysSOdQZac1",
+          "value": "dIk4LoS6s39B0WkV",
           "mode": "list",
-          "cachedResultUrl": "/workflow/tfSCD7ysSOdQZac1",
+          "cachedResultUrl": "/workflow/dIk4LoS6s39B0WkV",
           "cachedResultName": "[HELPERS] Global Cache System"
         },
         "workflowInputs": {
@@ -570,9 +570,9 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "tfSCD7ysSOdQZac1",
+          "value": "dIk4LoS6s39B0WkV",
           "mode": "list",
-          "cachedResultUrl": "/workflow/tfSCD7ysSOdQZac1",
+          "cachedResultUrl": "/workflow/dIk4LoS6s39B0WkV",
           "cachedResultName": "[HELPERS] Global Cache System"
         },
         "workflowInputs": {
@@ -656,9 +656,9 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "tfSCD7ysSOdQZac1",
+          "value": "dIk4LoS6s39B0WkV",
           "mode": "list",
-          "cachedResultUrl": "/workflow/tfSCD7ysSOdQZac1",
+          "cachedResultUrl": "/workflow/dIk4LoS6s39B0WkV",
           "cachedResultName": "[HELPERS] Global Cache System"
         },
         "workflowInputs": {
@@ -729,9 +729,9 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "tfSCD7ysSOdQZac1",
+          "value": "dIk4LoS6s39B0WkV",
           "mode": "list",
-          "cachedResultUrl": "/workflow/tfSCD7ysSOdQZac1",
+          "cachedResultUrl": "/workflow/dIk4LoS6s39B0WkV",
           "cachedResultName": "[HELPERS] Global Cache System"
         },
         "workflowInputs": {
@@ -1282,7 +1282,7 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "156c0364-c2b7-4f82-a7a7-0d40f58af653",
+  "versionId": "75dd9b31-99ca-48c1-b40d-892c1e22dbb9",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
