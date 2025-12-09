@@ -54,10 +54,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "a4RRtQ8i7NB8Yvvn",
+          "value": "GIW9StT6wLqEJ4bU",
           "mode": "list",
           "cachedResultName": "[HELPERS] MCP Data Normalizer",
-          "cachedResultUrl": "/workflow/a4RRtQ8i7NB8Yvvn"
+          "cachedResultUrl": "/workflow/GIW9StT6wLqEJ4bU"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
