@@ -1,14 +1,14 @@
 /**
- * Convert Execute Workflow node references from ID-based to name-based
- * This eliminates the need for reference fixing - names are stable, IDs are not
+ * Convert Execute Workflow node references to use workflow IDs
+ * Updates references to use current n8n database IDs in the value field
  */
 
 import { logger } from './logger';
 import { exportWorkflows, type Workflow } from './n8n-api';
 
 /**
- * Convert Execute Workflow node references to use names instead of IDs
- * This makes references stable and eliminates the need for reference fixing
+ * Convert Execute Workflow node references to use workflow IDs
+ * Updates references to match current n8n database IDs
  */
 export async function convertWorkflowReferencesToNames(
   workflow: Workflow,
@@ -109,23 +109,19 @@ export async function convertWorkflowReferencesToNames(
       }
       
       // Log ID rewrites (when old ID doesn't match new ID)
-      if (targetWorkflow && currentValue !== targetWorkflow.name) {
-        logger.info(`🔄 Rewriting workflow reference: "${currentValue}" → "${targetWorkflow.name}"`);
+      if (targetWorkflow && targetWorkflow.id && currentValue !== targetWorkflow.id) {
+        logger.info(`🔄 Rewriting workflow reference: "${currentValue}" → "${targetWorkflow.id}"`);
       }
 
-      if (targetWorkflow && targetWorkflow.name) {
-        // Convert to name-based reference
+      if (targetWorkflow && targetWorkflow.id) {
+        // Use ID-based reference (n8n resolves by ID in value field)
         const newWorkflowId = {
           ...wfParam,
-          value: targetWorkflow.name,
+          value: targetWorkflow.id,
           mode: 'list',
           cachedResultName: targetWorkflow.name,
+          cachedResultUrl: `/workflow/${targetWorkflow.id}`,
         };
-        
-        // Keep cachedResultUrl if it exists, or set it based on the workflow ID
-        if (targetWorkflow.id) {
-          newWorkflowId.cachedResultUrl = `/workflow/${targetWorkflow.id}`;
-        }
 
         return {
           ...node,
@@ -135,7 +131,7 @@ export async function convertWorkflowReferencesToNames(
           },
         };
       } else {
-        logger.warn(`⚠️  Could not resolve workflow reference "${currentValue}" to a name, keeping as-is. This may cause broken references.`);
+        logger.warn(`⚠️  Could not resolve workflow reference "${currentValue}" to an ID, keeping as-is. This may cause broken references.`);
         return node;
       }
     }
@@ -147,23 +143,23 @@ export async function convertWorkflowReferencesToNames(
       let targetWorkflow: Workflow | undefined;
       targetWorkflow = workflows?.find(w => w.id === currentValue || w.name === currentValue);
       
-      if (targetWorkflow && targetWorkflow.name) {
-        // Convert to object format with name-based reference
+      if (targetWorkflow && targetWorkflow.id) {
+        // Convert to object format with ID-based reference
         return {
           ...node,
           parameters: {
             ...params,
             workflowId: {
-              value: targetWorkflow.name,
+              value: targetWorkflow.id,
               mode: 'list',
               __rl: true,
               cachedResultName: targetWorkflow.name,
-              ...(targetWorkflow.id ? { cachedResultUrl: `/workflow/${targetWorkflow.id}` } : {}),
+              cachedResultUrl: `/workflow/${targetWorkflow.id}`,
             },
           },
         };
       } else {
-        logger.warn(`⚠️  Could not resolve workflow reference "${currentValue}" to a name, keeping as-is. This may cause broken references.`);
+        logger.warn(`⚠️  Could not resolve workflow reference "${currentValue}" to an ID, keeping as-is. This may cause broken references.`);
         return node;
       }
     }

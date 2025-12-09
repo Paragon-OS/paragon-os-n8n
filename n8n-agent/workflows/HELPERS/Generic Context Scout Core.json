@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T21:25:05.578Z",
-  "createdAt": "2025-12-08T21:19:49.481Z",
-  "id": "Co0F1S4ew57zA2j2",
+  "updatedAt": "2025-12-08T23:57:03.802Z",
+  "createdAt": "2025-12-08T23:57:03.802Z",
+  "id": "3oWOf1fvT3tYjvwF",
   "name": "[HELPERS] Generic Context Scout Core",
   "active": false,
   "isArchived": false,
@@ -668,15 +668,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "4310087c-ebd0-4258-89bb-5247e9fdd180",
+  "versionId": "2daba13a-d355-4316-8983-9f65af55c85a",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T21:19:49.482Z",
-      "createdAt": "2025-12-08T21:19:49.482Z",
+      "updatedAt": "2025-12-08T23:57:03.803Z",
+      "createdAt": "2025-12-08T23:57:03.803Z",
       "role": "workflow:owner",
-      "workflowId": "Co0F1S4ew57zA2j2",
+      "workflowId": "3oWOf1fvT3tYjvwF",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

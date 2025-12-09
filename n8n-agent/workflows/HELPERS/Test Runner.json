@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T21:25:59.479Z",
-  "createdAt": "2025-12-08T21:19:49.603Z",
-  "id": "UBPIR2YorryCp5Ho",
+  "updatedAt": "2025-12-08T23:57:04.084Z",
+  "createdAt": "2025-12-08T23:57:04.084Z",
+  "id": "ArBbxkTrUDP34uXx",
   "name": "[HELPERS] Test Runner",
   "active": false,
   "isArchived": false,
@@ -295,8 +295,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "dmfZW5pOm7xzVmM1",
-          "mode": "id"
+          "value": "[HELPERS] Dynamic RAG",
+          "mode": "list",
+          "cachedResultName": "[HELPERS] Dynamic RAG",
+          "cachedResultUrl": "/workflow/dmfZW5pOm7xzVmM1"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -647,15 +649,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "e9dd10bc-1ed3-4b80-88f5-c507f94ca3e7",
+  "versionId": "34dc180a-bed8-4d22-be1e-f9bd07049d33",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T21:19:49.604Z",
-      "createdAt": "2025-12-08T21:19:49.604Z",
+      "updatedAt": "2025-12-08T23:57:04.084Z",
+      "createdAt": "2025-12-08T23:57:04.084Z",
       "role": "workflow:owner",
-      "workflowId": "UBPIR2YorryCp5Ho",
+      "workflowId": "ArBbxkTrUDP34uXx",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

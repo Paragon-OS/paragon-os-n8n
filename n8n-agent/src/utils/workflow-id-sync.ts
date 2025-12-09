@@ -1,9 +1,8 @@
 /**
- * Workflow Reference Synchronization Utility
+ * Workflow ID Synchronization Utility
  * 
- * Syncs toolWorkflow node references to use name-based references instead of ID-based.
- * This makes references stable across imports/exports since names don't change but IDs do.
- * Also updates cachedResultUrl to match current n8n workflow IDs.
+ * Syncs toolWorkflow node references to match actual workflow IDs from n8n.
+ * Updates both the value field (ID) and cachedResultUrl to match current n8n state.
  */
 
 import * as fs from 'fs';
@@ -65,9 +64,9 @@ function getAllWorkflowFiles(dir: string, fileList: string[] = []): string[] {
 }
 
 /**
- * Sync toolWorkflow references in local files to use name-based references
+ * Sync toolWorkflow references in local files to match n8n workflow IDs
  * 
- * Converts ID-based references to name-based references (stable across imports).
+ * Updates the value field to match current workflow IDs from n8n.
  * Also updates cachedResultUrl to match current n8n workflow IDs.
  * 
  * @param workflowsDir - Directory containing local workflow JSON files
@@ -109,18 +108,14 @@ export async function syncWorkflowReferences(
             const n8nId = n8nNameToId.get(referencedName);
 
             if (n8nId) {
-              // Check if we need to update: either ID changed OR value is not the name
-              const needsUpdate = currentId !== n8nId || currentId !== referencedName;
-              
-              if (needsUpdate) {
+              if (currentId !== n8nId) {
                 if (!silent) {
-                  logger.debug('Syncing workflow reference to name-based', {
+                  logger.debug('Syncing workflow reference to match n8n ID', {
                     workflow: workflow.name,
                     node: node.name,
                     target: referencedName,
-                    oldValue: currentId,
-                    newValue: referencedName,
-                    n8nId: n8nId
+                    oldId: currentId,
+                    newId: n8nId
                   });
                 }
 
@@ -132,8 +127,8 @@ export async function syncWorkflowReferences(
                   newId: n8nId
                 });
 
-                // Use name-based reference (stable across imports/exports)
-                workflowId.value = referencedName;
+                // Use ID in value field (n8n resolves by ID when mode is "list")
+                workflowId.value = n8nId;
                 workflowId.mode = 'list';
                 workflowId.cachedResultUrl = `/workflow/${n8nId}`;
                 modified = true;

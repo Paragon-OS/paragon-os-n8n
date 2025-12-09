@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T21:25:59.252Z",
-  "createdAt": "2025-12-08T21:19:49.320Z",
-  "id": "EaYVXYgGuWQQrzZm",
+  "updatedAt": "2025-12-09T00:03:52.416Z",
+  "createdAt": "2025-12-08T23:57:02.831Z",
+  "id": "83SfiqHwUffVqrb8",
   "name": "ParagonOS Manager",
   "active": false,
   "isArchived": false,
@@ -96,9 +96,9 @@
         "description": "High-level Telegram Smart Agent that uses Telegram Context Scout and a shared Step Executor to plan and execute Telegram operations.\n\n# How It Works:\n\n1. **Context Lookup via Telegram Context Scout**: Searches and normalizes Telegram contacts, chats (DMs/groups/channels), available MCP tools, and your own profile using caching and fuzzy search.\n\n2. **AI Planning**: Given a natural language Telegram request, the agent decides which chats/contacts/tools are relevant and constructs a fully-resolved sequence of Telegram MCP tool calls (`executionSteps`) with concrete ids and parameters.\n\n3. **Sequential Execution**: Executes the planned steps using the shared Step Executor with `targetMcp = \"TELEGRAM\"`, passing data between steps automatically.\n\n4. **Provenance & Answering**: Returns a final markdown answer together with metadata about which chats, contacts, and tools were actually used to satisfy the request.",
         "workflowId": {
           "__rl": true,
-          "value": "Telegram Smart Agent",
+          "value": "R5zBSutw5eVSURyz",
           "mode": "list",
-          "cachedResultUrl": "/workflow/hz3kgdR1n0kcSZIM",
+          "cachedResultUrl": "/workflow/R5zBSutw5eVSURyz",
           "cachedResultName": "Telegram Smart Agent"
         },
         "workflowInputs": {
@@ -206,9 +206,9 @@
         "description": "={{ `\nIntelligently plans and executes Discord operations using cached context and AI-powered sequencing.\\n\\n# How It Works:\\n\\n1. **Context Enrichment**: Automatically retrieves and caches Discord contacts, guilds/servers, channels, available MCP tools, and your profile. Uses a 6-hour cache to minimize API calls.\\n\\n2. **AI Planning**: Analyzes your request against a Discord playbook of common workflows (DMing contacts, catching up on channels, replying messages, searching topics, editing/deleting messages, downloading attachments, triaging guild channels). Recommends relevant tools and generates either:\\n   - A direct answer (if no API calls needed)\\n   - A sequential execution plan with specific MCP tool calls\\n\\n3. **Sequential Execution**: Executes planned steps in order, passing data between steps automatically.\\n\\n4. **Validation & Retry**: Validates execution results against your original request. Automatically retries with refined approach if needed.\\n\\n# Capabilities:\\n\\nRead messages (channels/DMs with pagination, date filtering), search messages, send/edit/delete messages with attachments, download attachments, list guilds/servers/channels/contacts/members, search contacts, manage whitelist/blacklist filters. Supports both server channels and direct messages.\n`}}",
         "workflowId": {
           "__rl": true,
-          "value": "Discord Smart Agent",
+          "value": "gWZlvtay26ou4Wtu",
           "mode": "list",
-          "cachedResultUrl": "/workflow/Uq7cUUz8Lcix1JCZ",
+          "cachedResultUrl": "/workflow/gWZlvtay26ou4Wtu",
           "cachedResultName": "Discord Smart Agent"
         },
         "workflowInputs": {
@@ -381,15 +381,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "ae38b1c5-042b-4f53-a14c-b8ac51c2e18c",
+  "versionId": "f854a71f-fffe-42b6-9c29-21b60862b976",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T21:19:49.321Z",
-      "createdAt": "2025-12-08T21:19:49.321Z",
+      "updatedAt": "2025-12-08T23:57:02.833Z",
+      "createdAt": "2025-12-08T23:57:02.833Z",
       "role": "workflow:owner",
-      "workflowId": "EaYVXYgGuWQQrzZm",
+      "workflowId": "83SfiqHwUffVqrb8",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

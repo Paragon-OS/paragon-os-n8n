@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T21:25:59.370Z",
-  "createdAt": "2025-12-08T21:19:49.441Z",
-  "id": "dmfZW5pOm7xzVmM1",
+  "updatedAt": "2025-12-08T23:57:02.965Z",
+  "createdAt": "2025-12-08T23:57:02.965Z",
+  "id": "jUGz7J644cDACNhG",
   "name": "[HELPERS] Dynamic RAG",
   "active": false,
   "isArchived": false,
@@ -1387,15 +1387,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "16b0f109-d730-41ec-9e38-6c728dedc963",
+  "versionId": "f55a943c-c5d3-432b-a8c4-fc66886637f1",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T21:19:49.442Z",
-      "createdAt": "2025-12-08T21:19:49.442Z",
+      "updatedAt": "2025-12-08T23:57:02.966Z",
+      "createdAt": "2025-12-08T23:57:02.966Z",
       "role": "workflow:owner",
-      "workflowId": "dmfZW5pOm7xzVmM1",
+      "workflowId": "jUGz7J644cDACNhG",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

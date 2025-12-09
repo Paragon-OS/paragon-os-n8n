@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T21:25:06.461Z",
-  "createdAt": "2025-12-08T21:19:49.851Z",
-  "id": "8G2yRVLSQLpESZf7",
+  "updatedAt": "2025-12-08T23:57:04.777Z",
+  "createdAt": "2025-12-08T23:57:04.777Z",
+  "id": "kxhTrjW8GOSTT8bi",
   "name": "[LAB] Telegram MCP Client Sequencer",
   "active": false,
   "isArchived": false,
@@ -649,15 +649,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "2c687ab5-1174-421a-9de7-6da98528320c",
+  "versionId": "161472ba-03f3-4a55-a73f-d82323a86540",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T21:19:49.852Z",
-      "createdAt": "2025-12-08T21:19:49.852Z",
+      "updatedAt": "2025-12-08T23:57:04.778Z",
+      "createdAt": "2025-12-08T23:57:04.778Z",
       "role": "workflow:owner",
-      "workflowId": "8G2yRVLSQLpESZf7",
+      "workflowId": "kxhTrjW8GOSTT8bi",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

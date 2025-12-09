@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T21:25:06.250Z",
-  "createdAt": "2025-12-08T21:19:49.707Z",
-  "id": "h28bjDC1oYeuJ4c6",
+  "updatedAt": "2025-12-09T00:03:52.560Z",
+  "createdAt": "2025-12-08T23:57:04.507Z",
+  "id": "Ao1jad83wCoaoCC7",
   "name": "[LAB] Discord Manager",
   "active": false,
   "isArchived": false,
@@ -64,9 +64,9 @@
         "description": "Call this tool to list messages from a discord username or user ID",
         "workflowId": {
           "__rl": true,
-          "value": "[LAB] Discord MCP Client",
+          "value": "Hevq2OHYHYHTlc6K",
           "mode": "list",
-          "cachedResultUrl": "/workflow/Gj0CeAuqAFACU6BG",
+          "cachedResultUrl": "/workflow/Hevq2OHYHYHTlc6K",
           "cachedResultName": "[LAB] Discord MCP Client"
         },
         "workflowInputs": {
@@ -107,9 +107,9 @@
         "description": "Call this tool to CRUD your discord contact database efficiently when you need to find a discord user contact/profile fast using a partial query.",
         "workflowId": {
           "__rl": true,
-          "value": "[LAB] Discord Contact CRUD Agent",
+          "value": "lJlPkH9jUM8fVIvQ",
           "mode": "list",
-          "cachedResultUrl": "/workflow/9KoJKQf9hoUswP1j",
+          "cachedResultUrl": "/workflow/lJlPkH9jUM8fVIvQ",
           "cachedResultName": "[LAB] Discord Contact CRUD Agent"
         },
         "workflowInputs": {
@@ -150,9 +150,9 @@
         "description": "Call this tool to find matching discord servers/guilds from a partial server name or ID.",
         "workflowId": {
           "__rl": true,
-          "value": "[LAB] Discord MCP Client",
+          "value": "Hevq2OHYHYHTlc6K",
           "mode": "list",
-          "cachedResultUrl": "/workflow/Gj0CeAuqAFACU6BG",
+          "cachedResultUrl": "/workflow/Hevq2OHYHYHTlc6K",
           "cachedResultName": "[LAB] Discord MCP Client"
         },
         "workflowInputs": {
@@ -193,9 +193,9 @@
         "description": "Call this tool to list available discord servers/guilds.",
         "workflowId": {
           "__rl": true,
-          "value": "[LAB] Discord MCP Client",
+          "value": "Hevq2OHYHYHTlc6K",
           "mode": "list",
-          "cachedResultUrl": "/workflow/Gj0CeAuqAFACU6BG",
+          "cachedResultUrl": "/workflow/Hevq2OHYHYHTlc6K",
           "cachedResultName": "[LAB] Discord MCP Client"
         },
         "workflowInputs": {
@@ -250,9 +250,9 @@
         "description": "Call this tool to list channels in a discord server/guild using server name or ID.",
         "workflowId": {
           "__rl": true,
-          "value": "[LAB] Discord MCP Client",
+          "value": "Hevq2OHYHYHTlc6K",
           "mode": "list",
-          "cachedResultUrl": "/workflow/Gj0CeAuqAFACU6BG",
+          "cachedResultUrl": "/workflow/Hevq2OHYHYHTlc6K",
           "cachedResultName": "[LAB] Discord MCP Client"
         },
         "workflowInputs": {
@@ -293,9 +293,9 @@
         "description": "Call this tool to read/fetch messages from a specific discord server channel using channel ID or channel name and guild ID",
         "workflowId": {
           "__rl": true,
-          "value": "[LAB] Discord MCP Client",
+          "value": "Hevq2OHYHYHTlc6K",
           "mode": "list",
-          "cachedResultUrl": "/workflow/Gj0CeAuqAFACU6BG",
+          "cachedResultUrl": "/workflow/Hevq2OHYHYHTlc6K",
           "cachedResultName": "[LAB] Discord MCP Client"
         },
         "workflowInputs": {
@@ -336,9 +336,9 @@
         "description": "Send or reply to messages in Discord server channels. Requires channelId and message content. Optionally provide replyToMessageId to reply to a specific message.",
         "workflowId": {
           "__rl": true,
-          "value": "[LAB] Discord MCP Client",
+          "value": "Hevq2OHYHYHTlc6K",
           "mode": "list",
-          "cachedResultUrl": "/workflow/Gj0CeAuqAFACU6BG",
+          "cachedResultUrl": "/workflow/Hevq2OHYHYHTlc6K",
           "cachedResultName": "[LAB] Discord MCP Client"
         },
         "workflowInputs": {
@@ -379,9 +379,9 @@
         "description": "Send or reply to direct messages in Discord. Requires userId (not channelId) and message content. Optionally provide replyToMessageId to reply to a specific message.",
         "workflowId": {
           "__rl": true,
-          "value": "[LAB] Discord MCP Client",
+          "value": "Hevq2OHYHYHTlc6K",
           "mode": "list",
-          "cachedResultUrl": "/workflow/Gj0CeAuqAFACU6BG",
+          "cachedResultUrl": "/workflow/Hevq2OHYHYHTlc6K",
           "cachedResultName": "[LAB] Discord MCP Client"
         },
         "workflowInputs": {
@@ -549,15 +549,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "9ae80c27-210b-46f1-b61d-ac39fb77aa0a",
+  "versionId": "c664180b-6678-4e31-9b9a-1db31e6e6472",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T21:19:49.708Z",
-      "createdAt": "2025-12-08T21:19:49.708Z",
+      "updatedAt": "2025-12-08T23:57:04.508Z",
+      "createdAt": "2025-12-08T23:57:04.508Z",
       "role": "workflow:owner",
-      "workflowId": "h28bjDC1oYeuJ4c6",
+      "workflowId": "Ao1jad83wCoaoCC7",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

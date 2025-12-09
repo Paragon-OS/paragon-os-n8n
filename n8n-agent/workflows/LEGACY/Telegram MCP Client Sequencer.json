@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T21:25:06.503Z",
-  "createdAt": "2025-12-08T21:19:49.377Z",
-  "id": "E36ZlHCpyprrOU26",
+  "updatedAt": "2025-12-08T23:57:04.799Z",
+  "createdAt": "2025-12-08T23:57:04.799Z",
+  "id": "WrI3Hr1Q5HM33aGU",
   "name": "[LEGACY] Telegram MCP Client Sequencer",
   "active": false,
   "isArchived": false,
@@ -1153,15 +1153,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "a7171413-eaf6-4107-9afc-69c3f18364b0",
+  "versionId": "24e3e60d-4be5-46c2-ba0f-a05566efde9a",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T21:19:49.378Z",
-      "createdAt": "2025-12-08T21:19:49.378Z",
+      "updatedAt": "2025-12-08T23:57:04.799Z",
+      "createdAt": "2025-12-08T23:57:04.799Z",
       "role": "workflow:owner",
-      "workflowId": "E36ZlHCpyprrOU26",
+      "workflowId": "WrI3Hr1Q5HM33aGU",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

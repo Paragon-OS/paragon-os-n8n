@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T21:25:59.623Z",
-  "createdAt": "2025-12-08T21:19:49.763Z",
-  "id": "peQySfvCsNnHGb9A",
+  "updatedAt": "2025-12-08T23:57:04.714Z",
+  "createdAt": "2025-12-08T23:57:04.714Z",
+  "id": "6AEUCkCFsBAxzkOX",
   "name": "[LAB] Legacy Discord MCP Client Sequencer",
   "active": false,
   "isArchived": false,
@@ -692,15 +692,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "98d4b616-92d8-460a-ad6a-787f58ed0005",
+  "versionId": "6667656b-3dd3-4660-ba9a-70d8f9249f89",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T21:19:49.765Z",
-      "createdAt": "2025-12-08T21:19:49.765Z",
+      "updatedAt": "2025-12-08T23:57:04.715Z",
+      "createdAt": "2025-12-08T23:57:04.715Z",
       "role": "workflow:owner",
-      "workflowId": "peQySfvCsNnHGb9A",
+      "workflowId": "6AEUCkCFsBAxzkOX",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

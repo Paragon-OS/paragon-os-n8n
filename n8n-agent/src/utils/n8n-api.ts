@@ -281,8 +281,8 @@ export async function importWorkflow(
   const client = config ? createApiClient(config) : getDefaultClient();
 
   try {
-    // Convert Execute Workflow node references from ID-based to name-based
-    // This eliminates the need for reference fixing - names are stable, IDs are not
+    // Convert Execute Workflow node references to use current n8n IDs
+    // This ensures references match the actual workflow IDs in the database
     // Pass all backup workflows so references can be resolved even if target workflows
     // haven't been imported yet (they'll be matched by name from backup files)
     const { convertWorkflowReferencesToNames } = await import('./workflow-reference-converter');

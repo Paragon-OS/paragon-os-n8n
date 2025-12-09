@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T22:11:27.686Z",
-  "createdAt": "2025-12-08T21:19:49.342Z",
-  "id": "nZTUa5bPxY6Ft6er",
+  "updatedAt": "2025-12-09T00:03:52.442Z",
+  "createdAt": "2025-12-08T23:57:02.875Z",
+  "id": "R5zBSutw5eVSURyz",
   "name": "Telegram Smart Agent",
   "active": false,
   "isArchived": false,
@@ -139,9 +139,9 @@
         "description": "Unified Telegram Context Scout search tool for contacts, chats, tools, self profile, and persistent knowledge base.",
         "workflowId": {
           "__rl": true,
-          "value": "Telegram Context Scout",
+          "value": "Bwantxu38HCUo5tm",
           "mode": "list",
-          "cachedResultUrl": "/workflow/g3NSitBvSs02mjIH",
+          "cachedResultUrl": "/workflow/Bwantxu38HCUo5tm",
           "cachedResultName": "Telegram Context Scout"
         },
         "workflowInputs": {
@@ -193,9 +193,9 @@
         "description": "Call this tool with a valid executionSteps array to execute a sequence of MCP calls and get results from Telegram or Discord.",
         "workflowId": {
           "__rl": true,
-          "value": "[HELPERS] Discord & Telegram Step Executor",
+          "value": "HPTijhww7cLOzHRU",
           "mode": "list",
-          "cachedResultUrl": "/workflow/Jc9WsrcyqmCUkF2O",
+          "cachedResultUrl": "/workflow/HPTijhww7cLOzHRU",
           "cachedResultName": "[HELPERS] Discord & Telegram Step Executor"
         },
         "workflowInputs": {
@@ -343,24 +343,16 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "userPrompt": "Who is Pasindu?"
-        }
-      }
-    ]
-  },
-  "versionId": "e755813d-cd73-4224-a894-8f3a7308fc70",
+  "pinData": null,
+  "versionId": "d7c2b747-53bb-4517-9fe3-a72a35379af2",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T21:19:49.344Z",
-      "createdAt": "2025-12-08T21:19:49.344Z",
+      "updatedAt": "2025-12-08T23:57:02.876Z",
+      "createdAt": "2025-12-08T23:57:02.876Z",
       "role": "workflow:owner",
-      "workflowId": "nZTUa5bPxY6Ft6er",
+      "workflowId": "R5zBSutw5eVSURyz",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T21:25:59.642Z",
-  "createdAt": "2025-12-08T21:19:49.782Z",
-  "id": "g7ZjTEsNVJKmDAvL",
+  "updatedAt": "2025-12-08T23:57:04.724Z",
+  "createdAt": "2025-12-08T23:57:04.724Z",
+  "id": "OCcTJ2xdpEeIGEqk",
   "name": "[LAB] Loop & collect data",
   "active": false,
   "isArchived": false,
@@ -393,15 +393,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "e31ceab1-1a55-4508-9382-b9a7447c9875",
+  "versionId": "8edff411-fa1b-44c4-8d93-9e43867a28cb",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T21:19:49.783Z",
-      "createdAt": "2025-12-08T21:19:49.783Z",
+      "updatedAt": "2025-12-08T23:57:04.724Z",
+      "createdAt": "2025-12-08T23:57:04.724Z",
       "role": "workflow:owner",
-      "workflowId": "g7ZjTEsNVJKmDAvL",
+      "workflowId": "OCcTJ2xdpEeIGEqk",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T21:25:59.335Z",
-  "createdAt": "2025-12-08T21:19:49.400Z",
-  "id": "wSwSWVkFCAIttXrq",
+  "updatedAt": "2025-12-08T23:57:02.924Z",
+  "createdAt": "2025-12-08T23:57:02.924Z",
+  "id": "JateTZIxaU5RpWd1",
   "name": "[HELPERS] Discord Contact Fetch",
   "active": false,
   "isArchived": false,
@@ -158,15 +158,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "c02ccd3b-137d-4693-b4f1-6dfa293ab015",
+  "versionId": "3a4f9440-0ced-409e-b7f9-d104ded003e6",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T21:19:49.400Z",
-      "createdAt": "2025-12-08T21:19:49.400Z",
+      "updatedAt": "2025-12-08T23:57:02.925Z",
+      "createdAt": "2025-12-08T23:57:02.925Z",
       "role": "workflow:owner",
-      "workflowId": "wSwSWVkFCAIttXrq",
+      "workflowId": "JateTZIxaU5RpWd1",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

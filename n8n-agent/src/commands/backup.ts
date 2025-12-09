@@ -250,7 +250,8 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
     logger.info(`Removed ${duplicatesRemoved} duplicate workflow file(s)`);
   }
   
-  // Sync toolWorkflow node references to match actual n8n IDs
+  // Convert workflow references from ID-based to name-based (stable across imports)
+  logger.info("Syncing workflow references...");
   try {
     const syncResult = await syncWorkflowReferences(tempDir, workflows);
     
