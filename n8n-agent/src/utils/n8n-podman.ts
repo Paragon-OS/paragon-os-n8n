@@ -324,6 +324,20 @@ export async function startN8nInstance(
     envArgs.push('-e', 'N8N_PERSONALIZATION_ENABLED=false'); // Disable personalization
     envArgs.push('-e', 'N8N_USER_FOLDER=/home/node/.n8n');
     
+    // Pass through Google Gemini API key from local .env if present
+    const geminiEnvKeys = [
+      'GOOGLE_GEMINI_API_KEY',
+      'GOOGLE_PALM_API_KEY',
+      'GOOGLE_API_KEY', // fallback name some users use
+      'GOOGLE_AI_STUDIO_API_KEY',
+    ];
+    for (const key of geminiEnvKeys) {
+      const val = process.env[key];
+      if (val) {
+        envArgs.push('-e', `${key}=${val}`);
+      }
+    }
+    
     // Add custom environment variables
     for (const [key, value] of Object.entries(envVars)) {
       envArgs.push('-e', `${key}=${value}`);

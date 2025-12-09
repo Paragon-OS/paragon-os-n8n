@@ -24,7 +24,7 @@ npm run n8n:db:check
 
 Fixes in your local `~/.n8n/database.sqlite`:
 - Missing `cachedResultUrl` in toolWorkflow nodes
-- Wrong references in executeWorkflow nodes  
+- Wrong references in executeWorkflow nodes
 - Hardcoded old workflow IDs
 - Friendly names in fetchWorkflowId configs
 
