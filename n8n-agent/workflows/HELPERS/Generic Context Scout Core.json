@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-08T23:57:03.802Z",
+  "updatedAt": "2025-12-09T00:47:25.000Z",
   "createdAt": "2025-12-08T23:57:03.802Z",
   "id": "3oWOf1fvT3tYjvwF",
   "name": "[HELPERS] Generic Context Scout Core",
@@ -106,7 +106,7 @@
       "typeVersion": 2.1,
       "position": [
         976,
-        288
+        280
       ],
       "id": "check-rag-status",
       "name": "Check RAG Status Required"
@@ -115,10 +115,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "ySQWNgGR6o1cJKc9",
+          "value": "YiMeOLFan6mATy41",
           "mode": "list",
-          "cachedResultName": "[HELPERS] Entity Cache Handler",
-          "cachedResultUrl": "/workflow/ySQWNgGR6o1cJKc9"
+          "cachedResultUrl": "/workflow/YiMeOLFan6mATy41",
+          "cachedResultName": "[HELPERS] Entity Cache Handler"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -137,8 +137,7 @@
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
+              "type": "string"
             },
             {
               "id": "ttl",
@@ -147,8 +146,7 @@
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
-              "type": "number",
-              "removed": false
+              "type": "number"
             },
             {
               "id": "fetchWorkflowId",
@@ -157,8 +155,7 @@
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
+              "type": "string"
             },
             {
               "id": "fetchWorkflowInputs",
@@ -167,7 +164,7 @@
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
-              "removed": false
+              "type": "object"
             }
           ],
           "attemptToConvertTypes": false,
@@ -339,7 +336,7 @@
       "type": "n8n-nodes-paragon-os.fuzzySearch",
       "typeVersion": 1,
       "position": [
-        2096,
+        2320,
         208
       ],
       "id": "fuzzy-search",
@@ -373,7 +370,7 @@
       "typeVersion": 2.1,
       "position": [
         2096,
-        400
+        592
       ],
       "id": "check-empty-query-rag",
       "name": "Check Empty Query for RAG"
@@ -386,7 +383,7 @@
       "typeVersion": 2,
       "position": [
         2320,
-        320
+        496
       ],
       "id": "empty-query-response",
       "name": "Empty Query Response"
@@ -448,7 +445,7 @@
       "typeVersion": 1.3,
       "position": [
         2320,
-        480
+        688
       ],
       "id": "rag-search",
       "name": "RAG Search"
@@ -460,8 +457,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2320,
-        336
+        2544,
+        408
       ],
       "id": "merge-results",
       "name": "Merge Results"
@@ -473,8 +470,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2544,
-        352
+        2768,
+        424
       ],
       "id": "format-output",
       "name": "Format Output"
@@ -667,8 +664,128 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": null,
-  "versionId": "2daba13a-d355-4316-8983-9f65af55c85a",
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "query": "Pasindu",
+          "entity": "contact",
+          "platformConfig": {
+            "platform": "TELEGRAM",
+            "mcpCredentialId": "aiYCclLDUqob5iQ0",
+            "cacheKeyPrefix": "telegram",
+            "defaultTTL": 21600000,
+            "entities": {
+              "contact": {
+                "cacheKey": "telegramContacts",
+                "fetchWorkflowId": "SBhY0qCFVdLXt1sG",
+                "mcpTool": {
+                  "name": "telegram_list_contacts",
+                  "parameters": {
+                    "limit": 200
+                  },
+                  "mcpDataKey": "contacts"
+                },
+                "mapper": "(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone, platform: 'TELEGRAM' })",
+                "dataKey": "contacts",
+                "searchType": "rag",
+                "ragConfig": {
+                  "collectionId": "paragon-os-contacts",
+                  "autoIngest": true
+                },
+                "requiresRAGStatusCheck": true
+              },
+              "contact-rag": {
+                "cacheKey": "telegramContacts",
+                "fetchWorkflowId": "SBhY0qCFVdLXt1sG",
+                "mcpTool": {
+                  "name": "telegram_list_contacts",
+                  "parameters": {
+                    "limit": 200
+                  },
+                  "mcpDataKey": "contacts"
+                },
+                "mapper": "(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone, platform: 'TELEGRAM' })",
+                "dataKey": "contacts",
+                "searchType": "rag",
+                "ragConfig": {
+                  "collectionId": "paragon-os-contacts",
+                  "autoIngest": true
+                },
+                "requiresRAGStatusCheck": true
+              },
+              "chat": {
+                "cacheKey": "telegramChannels",
+                "fetchWorkflowId": "wik6TtHPOdmqMDj4",
+                "mcpTool": {
+                  "name": "telegram_list_chats",
+                  "parameters": {
+                    "limit": 50
+                  },
+                  "mcpDataKey": "items"
+                },
+                "mapper": "(g) => ({ id: g.id, name: g.name, members: g.memberCount, kind: g.kind, unread: g.unread })",
+                "dataKey": "channels",
+                "searchType": "fuzzy",
+                "fuzzyConfig": {
+                  "searchKeys": [
+                    "name",
+                    "kind"
+                  ],
+                  "matchQuality": 50,
+                  "limit": 10
+                }
+              },
+              "tool": {
+                "cacheKey": "telegramTools",
+                "fetchWorkflowId": "SXxUoB4mbMLdKgaq",
+                "mapper": "(t) => t",
+                "dataKey": "tools",
+                "searchType": "fuzzy",
+                "fuzzyConfig": {
+                  "searchKeys": [
+                    "name",
+                    "description"
+                  ],
+                  "matchQuality": 50,
+                  "limit": 10
+                }
+              },
+              "self": {
+                "cacheKey": "telegramProfile",
+                "fetchWorkflowId": "0O6vb0bzZBh8KmhH",
+                "mapper": "(p) => p",
+                "dataKey": "myProfile",
+                "searchType": "none",
+                "skipQuery": true
+              },
+              "message-rag": {
+                "cacheKey": "telegramMessages",
+                "fetchWorkflowId": "0c7rvvnr3iITGCoG",
+                "mcpTool": {
+                  "name": "telegram_list_messages",
+                  "parameters": {
+                    "chat_id": "4000551178",
+                    "limit": 100
+                  },
+                  "mcpDataKey": ""
+                },
+                "mapper": "(m) => ({ id: m.id, chatId: m.chatId, text: m.text || '', senderId: m.senderId, senderName: m.senderName || m.from?.name || '', date: m.date || m.timestamp, kind: m.kind || 'message' })",
+                "dataKey": "messages",
+                "searchType": "rag",
+                "ragConfig": {
+                  "collectionId": "paragon-os-messages",
+                  "autoIngest": true
+                },
+                "requiresRAGStatusCheck": true
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "eed6e1bd-80a7-4496-971a-59a67f883f36",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

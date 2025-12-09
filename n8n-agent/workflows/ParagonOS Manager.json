@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-09T00:13:59.553Z",
+  "updatedAt": "2025-12-09T00:47:24.000Z",
   "createdAt": "2025-12-08T23:57:02.831Z",
   "id": "83SfiqHwUffVqrb8",
   "name": "ParagonOS Manager",
@@ -104,8 +104,7 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `Natural language request for Telegram operations. Examples: 'Check for unreplied messages from sebastian', 'Message john about the meeting', 'What did people say about the launch in the dev group?', 'Reply to my pending chats', 'List all contacts', 'Search for messages about deployment in the team group'`, 'string') }}",
-            "metadata": "={{ $json.body.metadata }}"
+            "userPrompt": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('userPrompt', `Natural language request for Telegram operations. Examples: 'Check for unreplied messages from sebastian', 'Message john about the meeting', 'What did people say about the launch in the dev group?', 'Reply to my pending chats', 'List all contacts', 'Search for messages about deployment in the team group'`, 'string') }}"
           },
           "matchingColumns": [
             "userPrompt"
@@ -119,16 +118,6 @@
               "display": true,
               "canBeUsedToMatch": true,
               "type": "string"
-            },
-            {
-              "id": "metadata",
-              "displayName": "metadata",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "object",
-              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -380,8 +369,8 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": null,
-  "versionId": "73b029e2-addc-4782-85cf-acec880f6a85",
+  "pinData": {},
+  "versionId": "649c7dd8-94c7-4ba9-8b43-6255f9b3466b",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

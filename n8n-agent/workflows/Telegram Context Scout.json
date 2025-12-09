@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-08T23:57:02.850Z",
+  "updatedAt": "2025-12-09T00:47:21.000Z",
   "createdAt": "2025-12-08T23:57:02.850Z",
   "id": "Bwantxu38HCUo5tm",
   "name": "Telegram Context Scout",
@@ -61,18 +61,14 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "Co0F1S4ew57zA2j2",
+          "value": "3oWOf1fvT3tYjvwF",
           "mode": "list",
-          "cachedResultName": "[HELPERS] Generic Context Scout Core",
-          "cachedResultUrl": "/workflow/Co0F1S4ew57zA2j2"
+          "cachedResultUrl": "/workflow/3oWOf1fvT3tYjvwF",
+          "cachedResultName": "[HELPERS] Generic Context Scout Core"
         },
         "workflowInputs": {
           "mappingMode": "mapEachItem",
-          "value": {
-            "query": "={{ $json.query }}",
-            "entity": "={{ $json.entity }}",
-            "platformConfig": "={{ $json.platformConfig }}"
-          },
+          "value": {},
           "matchingColumns": [],
           "schema": [
             {
@@ -160,8 +156,17 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": null,
-  "versionId": "791d9018-16f8-46bf-87ac-e65a19c0b86e",
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "entity": "contact",
+          "query": "Pasindu"
+        }
+      }
+    ]
+  },
+  "versionId": "9cc1d29b-c509-4bab-943a-ebea6e36d391",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
