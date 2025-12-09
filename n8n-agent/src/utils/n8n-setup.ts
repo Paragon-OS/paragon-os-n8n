@@ -63,32 +63,44 @@ async function execInContainer(
  */
 async function waitForDbMigrations(
   containerName: string,
-  timeout: number = 60000
+  timeout: number = 90000 // Increased default to 90 seconds
 ): Promise<boolean> {
   const startTime = Date.now();
+  let lastProgressLog = 0;
   
-  logger.info(`⏳ Waiting for n8n DB migrations to complete...`);
+  logger.info(`⏳ Waiting for n8n DB migrations to complete (timeout: ${timeout}ms)...`);
   
   while (Date.now() - startTime < timeout) {
+    const elapsed = Date.now() - startTime;
+    
+    // Log progress every 15 seconds
+    if (elapsed - lastProgressLog >= 15000) {
+      logger.info(`⏳ Still waiting for migrations... (${Math.floor(elapsed / 1000)}s elapsed)`);
+      lastProgressLog = elapsed;
+    }
+    
     try {
       // Check container logs for migration completion
       const { stdout } = await execa(
         'podman',
-        ['logs', '--tail', '50', containerName],
+        ['logs', '--tail', '100', containerName], // Increased tail to 100 lines
         { timeout: 5000, reject: false }
       );
       
       // Look for migration completion message
       if (stdout.includes('Editor is now accessible via:') ||
-          (stdout.includes('Finished migration') && !stdout.includes('Starting migration'))) {
-        logger.info(`✅ DB migrations complete`);
+          (stdout.includes('Finished migration') && !stdout.includes('Starting migration')) ||
+          stdout.includes('Server ready')) { // Added another success indicator
+        const elapsed = Date.now() - startTime;
+        logger.info(`✅ DB migrations complete (took ${Math.floor(elapsed / 1000)}s)`);
         return true;
       }
     } catch (error) {
       // Continue waiting
+      logger.debug(`Migration check error: ${error instanceof Error ? error.message : String(error)}`);
     }
     
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 3000)); // Check every 3 seconds
   }
   
   logger.warn(`⚠️  DB migrations may not be complete after ${timeout}ms`);
@@ -117,84 +129,164 @@ export async function setupN8nViaCliInContainer(
   logger.info(`🔧 Setting up n8n user and API key at ${baseUrl}`);
   
   // Step 1: Wait for DB migrations
-  const migrationsReady = await waitForDbMigrations(containerName);
+  const migrationsReady = await waitForDbMigrations(containerName, 90000); // Increase to 90 seconds
   if (!migrationsReady) {
     logger.warn(`Proceeding despite migration uncertainty...`);
   }
   
-  // Step 2: Wait a bit more for REST API to be fully ready
-  logger.info(`Waiting 5 seconds for REST API to be ready...`);
-  await new Promise(resolve => setTimeout(resolve, 5000));
+  // Step 2: Wait for REST API endpoints to be fully ready
+  logger.info(`Waiting for REST API endpoints to be ready...`);
+  const maxWaitTime = 60000; // 60 seconds max
+  const startTime = Date.now();
+  let endpointsReady = false;
   
-  // Step 3: Try to create user via POST /rest/owner/setup (don't check first, just try)
+  while (Date.now() - startTime < maxWaitTime) {
+    try {
+      // Check if /rest/owner/setup endpoint exists (not 404)
+      const setupCheck = await axios.get(`${baseUrl}/rest/owner/setup`, {
+        timeout: 3000,
+        validateStatus: () => true,
+      });
+      
+      // 200 or 400 means endpoint exists, 404 means it doesn't yet
+      if (setupCheck.status !== 404) {
+        // Also check if it's not returning "starting up" message
+        if (typeof setupCheck.data === 'string' && setupCheck.data.includes('starting up')) {
+          logger.debug(`Setup endpoint still returning "starting up", waiting...`);
+        } else {
+          logger.info(`✅ REST API endpoints are ready`);
+          endpointsReady = true;
+          break;
+        }
+      } else {
+        logger.debug(`Setup endpoint not ready yet (404)`);
+      }
+    } catch (error) {
+      logger.debug(`Endpoint check error: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 3000)); // Check every 3 seconds
+  }
+  
+  if (!endpointsReady) {
+    logger.warn(`⚠️  REST API endpoints may not be fully ready after ${maxWaitTime}ms, proceeding anyway...`);
+  }
+  
+  // Step 3: Additional wait to ensure everything is stable
+  logger.info(`Waiting 3 seconds for system to stabilize...`);
+  await new Promise(resolve => setTimeout(resolve, 3000));
+  
+  // Step 4: Try to create user via POST /rest/owner/setup (don't check first, just try)
   logger.info(`Creating initial user: ${user.email}`);
   let setupResponse;
-  try {
-    setupResponse = await axios.post(
-      `${baseUrl}/rest/owner/setup`,
-      {
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        password: user.password,
-      },
-      {
-        timeout: 15000,
-        validateStatus: () => true, // Don't throw on any status
-        headers: {
-          'Content-Type': 'application/json',
+  let userCreated = false;
+  
+  // Retry user creation up to 3 times
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      logger.info(`User creation attempt ${attempt}/3...`);
+      setupResponse = await axios.post(
+        `${baseUrl}/rest/owner/setup`,
+        {
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          password: user.password,
         },
-      }
-    );
-    
-    logger.info(`Setup response: status=${setupResponse.status}`);
-    logger.debug(`Setup response data: ${JSON.stringify(setupResponse.data).substring(0, 500)}`);
-    
-    if (setupResponse.status === 200 || setupResponse.status === 201) {
-      const data = setupResponse.data as any;
-      // Try multiple possible response formats
-      const userId = data.id || data.user?.id || data.userId || '';
-      const apiKey = data.apiKey || data.api_key || data.key;
+        {
+          timeout: 20000, // Increase timeout to 20 seconds
+          validateStatus: () => true, // Don't throw on any status
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
       
-      if (apiKey) {
-        logger.info(`✅ User created with API key: ${userId || 'unknown'}`);
-        return { apiKey, userId: userId || undefined };
-      }
+      logger.info(`Setup response: status=${setupResponse.status}`);
+      logger.debug(`Setup response data: ${JSON.stringify(setupResponse.data).substring(0, 500)}`);
       
-      if (userId) {
-        logger.info(`✅ User created: ${userId}, will create API key...`);
-        // Wait a bit for user to be fully persisted
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        // Continue to API key creation below
+      if (setupResponse.status === 200 || setupResponse.status === 201) {
+        const data = setupResponse.data as any;
+        // Try multiple possible response formats
+        const userId = data.id || data.user?.id || data.userId || '';
+        const apiKey = data.apiKey || data.api_key || data.key;
+        
+        if (apiKey) {
+          logger.info(`✅ User created with API key: ${userId || 'unknown'}`);
+          return { apiKey, userId: userId || undefined };
+        }
+        
+        if (userId) {
+          logger.info(`✅ User created: ${userId}, will create API key...`);
+          userCreated = true;
+          break; // Exit retry loop
+        } else {
+          logger.warn(`User creation response missing user ID, but status was ${setupResponse.status}`);
+          logger.warn(`Response structure: ${Object.keys(data || {}).join(', ')}`);
+          // Assume user was created even without ID
+          userCreated = true;
+          break;
+        }
+      } else if (setupResponse.status === 400 && 
+                 (setupResponse.data as any)?.message?.includes('already exists')) {
+        logger.info(`User already exists, proceeding to API key creation...`);
+        userCreated = true;
+        break;
       } else {
-        logger.warn(`User creation response missing user ID, but status was ${setupResponse.status}`);
-        logger.warn(`Response structure: ${Object.keys(data || {}).join(', ')}`);
-        // Still proceed to API key creation - user might exist even without ID in response
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        logger.warn(`Setup endpoint returned unexpected status: ${setupResponse.status}`);
+        logger.warn(`Response: ${JSON.stringify(setupResponse.data).substring(0, 300)}`);
+        
+        if (attempt < 3) {
+          const waitTime = attempt * 5000; // 5s, 10s
+          logger.info(`Waiting ${waitTime}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
       }
-    } else if (setupResponse.status === 400 && 
-               (setupResponse.data as any)?.message?.includes('already exists')) {
-      logger.info(`User already exists, proceeding to API key creation...`);
-    } else {
-      logger.warn(`Setup endpoint returned unexpected status: ${setupResponse.status}`);
-      logger.warn(`Response: ${JSON.stringify(setupResponse.data).substring(0, 300)}`);
+    } catch (error) {
+      logger.error(`User creation attempt ${attempt} failed: ${error instanceof Error ? error.message : String(error)}`);
+      
+      if (attempt < 3) {
+        const waitTime = attempt * 5000;
+        logger.info(`Waiting ${waitTime}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      } else {
+        logger.error(`Failed to create user after ${attempt} attempts`);
+        return {};
+      }
     }
-  } catch (error) {
-    logger.error(`Failed to create user via setup endpoint: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  
+  if (!userCreated) {
+    logger.error(`Failed to create user after all attempts`);
     return {};
   }
   
-  // Step 4: Create API key via login + REST API
+  // Wait for user to be fully persisted
+  logger.info(`Waiting 5 seconds for user to be fully persisted...`);
+  await new Promise(resolve => setTimeout(resolve, 5000));
+  
+  // Step 5: Create API key via login + REST API (with retries)
   logger.info(`Creating API key via login...`);
-  const apiKey = await createApiKey(baseUrl, user.email, user.password);
+  let apiKey: string | undefined;
   
-  if (apiKey) {
-    logger.info(`✅ API key created successfully`);
-    return { apiKey };
-  } else {
-    logger.error(`Failed to create API key`);
-    return {};
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    logger.info(`API key creation attempt ${attempt}/5...`);
+    apiKey = await createApiKey(baseUrl, user.email, user.password);
+    
+    if (apiKey) {
+      logger.info(`✅ API key created successfully: ${apiKey.substring(0, 10)}...`);
+      return { apiKey };
+    }
+    
+    if (attempt < 5) {
+      const waitTime = attempt * 3000; // 3s, 6s, 9s, 12s
+      logger.info(`API key creation failed, waiting ${waitTime}ms before retry...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
   }
+  
+  logger.error(`Failed to create API key after 5 attempts`);
+  return {};
 }
 
 /**
