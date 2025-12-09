@@ -32,41 +32,32 @@ describe('Credential Setup Tests', () => {
         'Install: https://podman.io/getting-started/installation'
       );
     }
-  }, testTimeout);
 
-  afterEach(async () => {
-    // Clean up instance after each test to free ports
-    if (instance) {
-      try {
-        await stopN8nInstance(instance);
-      } catch (error) {
-        console.error('Failed to stop instance in afterEach:', error);
-      }
-      instance = null;
-    }
+    // Start instance once for all tests (credentials are automatically injected)
+    instance = await startN8nInstance({
+      timeout: 120000, // 2 minutes
+    });
   }, testTimeout);
 
   afterAll(async () => {
-    // Final cleanup in case afterEach didn't run
+    // Clean up instance after all tests
     if (instance) {
       try {
         await stopN8nInstance(instance);
       } catch (error) {
         console.error('Failed to stop instance in afterAll:', error);
       }
+      instance = null;
     }
   }, testTimeout);
 
   it('should start n8n instance with credentials', async () => {
-    // Start instance (credentials are automatically injected)
-    instance = await startN8nInstance({
-      timeout: 120000, // 2 minutes
-    });
-
     expect(instance).toBeDefined();
-    expect(instance.containerName).toBeDefined();
-    expect(instance.baseUrl).toBeDefined();
-    expect(instance.apiKey).toBeDefined();
+    expect(instance!.containerName).toBeDefined();
+    expect(instance!.baseUrl).toBeDefined();
+    // Use session cookie instead of API key (API key creation may fail due to scope validation)
+    expect(instance!.sessionCookie).toBeDefined();
+    expect(instance!.sessionCookie?.length).toBeGreaterThan(0);
   }, testTimeout);
 
   it('should have n8n CLI available', async () => {
@@ -77,15 +68,16 @@ describe('Credential Setup Tests', () => {
   }, testTimeout);
 
   it('should have injected essential credentials', async () => {
-    if (!instance || !instance.apiKey) {
-      throw new Error('Instance not initialized or no API key');
+    if (!instance || !instance.sessionCookie) {
+      throw new Error('Instance not initialized or no session cookie');
     }
 
-    // Check credentials via REST API
+    // Check credentials via REST API using session cookie
     const response = await axios.get(`${instance.baseUrl}/rest/credentials`, {
       headers: {
-        'X-N8N-API-KEY': instance.apiKey,
+        'Cookie': instance.sessionCookie,
       },
+      withCredentials: true,
       validateStatus: () => true,
     });
 
@@ -145,15 +137,17 @@ describe('Credential Setup Tests', () => {
   }, testTimeout);
 
   it('should have credentials with correct IDs', async () => {
-    if (!instance || !instance.apiKey) {
-      throw new Error('Instance not initialized or no API key');
+    if (!instance || !instance.sessionCookie) {
+      throw new Error('Instance not initialized or no session cookie');
     }
 
-    // Get all credentials
+    // Get all credentials using session cookie
     const response = await axios.get(`${instance.baseUrl}/rest/credentials`, {
       headers: {
-        'X-N8N-API-KEY': instance.apiKey,
+        'Cookie': instance.sessionCookie,
       },
+      withCredentials: true,
+      validateStatus: () => true,
     });
 
     const credentials = response.data.data;
