@@ -4,6 +4,10 @@
  * Uses n8n CLI commands to inject credentials into containers with exact IDs
  */
 
+// Load environment variables from .env file if it exists
+// This is safe to call multiple times - dotenv only loads if not already loaded
+import 'dotenv/config';
+
 import { writeFileSync, mkdirSync, existsSync, rmSync } from 'fs';
 import { join } from 'path';
 import { execa } from 'execa';
@@ -291,8 +295,9 @@ export async function setupCredential(
   });
   
   if (!hasData) {
-    logger.warn(`⚠️  Skipping ${credential.name} - no data available in environment`);
-    return;
+    const errorMsg = `Skipped - no data available in environment`;
+    logger.warn(`⚠️  Skipping ${credential.name} - ${errorMsg}`);
+    throw new Error(errorMsg);
   }
   
   logger.info(`Setting up credential: ${credential.name} (${credential.id})`);
