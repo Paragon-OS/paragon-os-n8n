@@ -678,7 +678,7 @@
             "entities": {
               "contact": {
                 "cacheKey": "telegramContacts",
-                "fetchWorkflowId": "SBhY0qCFVdLXt1sG",
+                "fetchWorkflowId": "tN2vDMlNOHIydhBr",
                 "mcpTool": {
                   "name": "telegram_list_contacts",
                   "parameters": {
@@ -697,7 +697,7 @@
               },
               "contact-rag": {
                 "cacheKey": "telegramContacts",
-                "fetchWorkflowId": "SBhY0qCFVdLXt1sG",
+                "fetchWorkflowId": "tN2vDMlNOHIydhBr",
                 "mcpTool": {
                   "name": "telegram_list_contacts",
                   "parameters": {

@@ -339,7 +339,7 @@
         "json": {
           "cacheKey": "telegramContacts",
           "ttl": 21600000,
-          "fetchWorkflowId": "SBhY0qCFVdLXt1sG",
+          "fetchWorkflowId": "tN2vDMlNOHIydhBr",
           "fetchWorkflowInputs": {
             "limit": 200
           }
