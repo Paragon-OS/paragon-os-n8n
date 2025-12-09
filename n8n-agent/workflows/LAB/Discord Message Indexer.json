@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T23:57:04.518Z",
-  "createdAt": "2025-12-08T23:57:04.518Z",
-  "id": "N8bmD7Gal0xVqux3",
+  "updatedAt": "2025-12-09T01:35:04.476Z",
+  "createdAt": "2025-12-09T01:23:33.970Z",
+  "id": "z28W3p62LYuGoHeL",
   "name": "[LAB] Discord Message Indexer",
   "active": false,
   "isArchived": false,
@@ -579,15 +579,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "851c8202-4209-498b-b106-7468127f382d",
+  "versionId": "10f98d51-2c3c-4a37-8d36-103ca0ecf5fe",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T23:57:04.519Z",
-      "createdAt": "2025-12-08T23:57:04.519Z",
+      "updatedAt": "2025-12-09T01:23:33.971Z",
+      "createdAt": "2025-12-09T01:23:33.971Z",
       "role": "workflow:owner",
-      "workflowId": "N8bmD7Gal0xVqux3",
+      "workflowId": "z28W3p62LYuGoHeL",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

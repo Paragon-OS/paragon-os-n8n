@@ -6,6 +6,7 @@ import { normalizeWorkflowForCompare } from "../utils/workflow";
 import { deepEqual, exportCurrentWorkflowsForCompare } from "../utils/compare";
 import { logger } from "../utils/logger";
 import { importWorkflow, exportWorkflows, checkN8nConnection } from "../utils/n8n-api";
+import { syncWorkflowReferences } from "../utils/workflow-id-sync";
 import type { BackupWorkflowForRestore, WorkflowObject } from "../types/index";
 
 interface RestoreOptions {
@@ -297,9 +298,53 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
       }
       
       if (fixedCount > 0) {
-        logger.info(`✅ Fixed workflow references in ${fixedCount} workflow(s)`);
+        logger.info(`✅ Fixed workflow references in ${fixedCount} workflow(s) in n8n`);
       } else {
-        logger.info("✅ All workflow references are already correct");
+        logger.info("✅ All workflow references are already correct in n8n");
+      }
+      
+      // Now update local files to match n8n state (with fixed references and IDs)
+      logger.info("");
+      logger.info("📝 Updating local workflow files to match n8n state...");
+      try {
+        // Build a map of workflow name -> file path for quick lookup
+        const nameToFilePath = new Map<string, string>();
+        for (const backup of backups) {
+          if (backup.name) {
+            nameToFilePath.set(backup.name, backup.filePath);
+          }
+        }
+        
+        // Update local files with fixed workflows from n8n
+        let updatedFileCount = 0;
+        for (const n8nWorkflow of actualWorkflows) {
+          const filePath = nameToFilePath.get(n8nWorkflow.name);
+          if (filePath && fs.existsSync(filePath)) {
+            try {
+              // Write the fixed workflow from n8n back to local file
+              const jsonContent = JSON.stringify(n8nWorkflow, null, 2) + '\n';
+              fs.writeFileSync(filePath, jsonContent, 'utf-8');
+              updatedFileCount++;
+              logger.debug(`✓ Updated local file: ${path.relative(inputDir, filePath)}`);
+            } catch (error) {
+              logger.warn(`Failed to update local file for "${n8nWorkflow.name}": ${error instanceof Error ? error.message : String(error)}`);
+            }
+          }
+        }
+        
+        logger.info(`✅ Updated ${updatedFileCount} local workflow file(s) with fixed references and IDs`);
+        
+        // Also run sync to catch any edge cases
+        const syncResult = await syncWorkflowReferences(inputDir, actualWorkflows, true);
+        if (syncResult.fixed > 0) {
+          logger.info(`✅ Fixed ${syncResult.fixed} additional workflow reference(s) in local files`);
+        }
+        if (syncResult.notFound > 0) {
+          logger.warn(`⚠️  Could not resolve ${syncResult.notFound} workflow reference(s) in local files`);
+        }
+      } catch (error) {
+        logger.warn("Failed to update local workflow files", error);
+        logger.warn("Local files may still have old IDs. Run: npm run n8n:workflows:downsync to sync");
       }
     } catch (error) {
       logger.warn("Failed to fix workflow references after import", error);

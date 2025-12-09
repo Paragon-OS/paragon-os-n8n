@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T23:57:03.969Z",
-  "createdAt": "2025-12-08T23:57:03.969Z",
-  "id": "GIW9StT6wLqEJ4bU",
+  "updatedAt": "2025-12-09T01:35:03.666Z",
+  "createdAt": "2025-12-09T01:23:33.441Z",
+  "id": "6BCTh6yGP6H1F3ps",
   "name": "[HELPERS] MCP Data Normalizer",
   "active": false,
   "isArchived": false,
@@ -74,15 +74,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "6c0e414c-7757-47a0-837a-543f7500b1e0",
+  "versionId": "cf221acc-943e-4bb7-a735-023161f104fe",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T23:57:03.970Z",
-      "createdAt": "2025-12-08T23:57:03.970Z",
+      "updatedAt": "2025-12-09T01:23:33.443Z",
+      "createdAt": "2025-12-09T01:23:33.443Z",
       "role": "workflow:owner",
-      "workflowId": "GIW9StT6wLqEJ4bU",
+      "workflowId": "6BCTh6yGP6H1F3ps",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-09T01:13:47.227Z",
-  "createdAt": "2025-12-08T23:57:03.791Z",
-  "id": "YiMeOLFan6mATy41",
+  "updatedAt": "2025-12-09T01:35:03.606Z",
+  "createdAt": "2025-12-09T01:23:33.214Z",
+  "id": "Npiol9vFc1xSa64n",
   "name": "[HELPERS] Entity Cache Handler",
   "active": false,
   "isArchived": false,
@@ -333,29 +333,16 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "cacheKey": "telegramContacts",
-          "ttl": 21600000,
-          "fetchWorkflowId": "SBhY0qCFVdLXt1sG",
-          "fetchWorkflowInputs": {
-            "limit": 200
-          }
-        }
-      }
-    ]
-  },
-  "versionId": "7a2eb7b0-a145-427b-b96d-c7316908c422",
+  "pinData": null,
+  "versionId": "eb3cdf03-566c-4bf6-ac3d-4713d191f58e",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T23:57:03.792Z",
-      "createdAt": "2025-12-08T23:57:03.792Z",
+      "updatedAt": "2025-12-09T01:23:33.216Z",
+      "createdAt": "2025-12-09T01:23:33.216Z",
       "role": "workflow:owner",
-      "workflowId": "YiMeOLFan6mATy41",
+      "workflowId": "Npiol9vFc1xSa64n",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-09T00:13:59.789Z",
-  "createdAt": "2025-12-08T23:57:04.765Z",
-  "id": "iLYbIojUq1SRyrrw",
+  "updatedAt": "2025-12-09T01:35:04.845Z",
+  "createdAt": "2025-12-09T01:23:34.280Z",
+  "id": "19BcbyibIn8XnbUQ",
   "name": "[LAB] Playbook v1 ParagonOS Manager",
   "active": false,
   "isArchived": false,
@@ -185,9 +185,9 @@
         "description": "Executes Discord operations. Supports both single operations and multi-step sequential operations.\n\n# Capabilities: \n\nThe Discord MCP tools enable comprehensive Discord integration including reading messages from channels and DMs (with pagination and date filtering), searching message content, sending/editing/deleting messages with file attachment support, downloading attachments, and managing server/channel access. You can list guilds/servers you are part of, list channels, contacts, member counts and guild/server members, search for specific contacts, configure whitelist/blacklist filters for channels and DMs, and retrieve pending channels or DMs that need attention (unread messages or mentions). The tools support both server channels and direct messages, with automatic DM channel creation when sending to users.\n\nSINGLE operations (examples):\n- \"find channel ID for dev-chat in metarune homies guild\"\n- \"send message 'hello' to channel ID 1234567890\"\n- \"list all channels in metarune homies guild\"\n- \"list all guilds i'm in\"\n\nMULTI-STEP operations (the tool will break these down automatically):\n- \"find dev-chat channel and send a message\"\n- \"get channel ID for general then send message 'hello'\"\n- \"list members in server X and find user Y\"\n\nThe tool intelligently plans and executes sequences of Discord operations. For multi-step operations, it will automatically break them down, execute steps sequentially, and pass data between steps.",
         "workflowId": {
           "__rl": true,
-          "value": "frwPOdJc8yxeluow",
+          "value": "MrouTEU4bhUopvcH",
           "mode": "list",
-          "cachedResultUrl": "/workflow/frwPOdJc8yxeluow",
+          "cachedResultUrl": "/workflow/MrouTEU4bhUopvcH",
           "cachedResultName": "[LAB] Discord MCP Client Sequencer"
         },
         "workflowInputs": {
@@ -470,15 +470,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "6f279f03-35ba-4abc-be2f-3fd4a3ad1fba",
+  "versionId": "7b35ff85-aae1-48a2-bdda-bf9655eab196",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T23:57:04.767Z",
-      "createdAt": "2025-12-08T23:57:04.767Z",
+      "updatedAt": "2025-12-09T01:23:34.281Z",
+      "createdAt": "2025-12-09T01:23:34.281Z",
       "role": "workflow:owner",
-      "workflowId": "iLYbIojUq1SRyrrw",
+      "workflowId": "19BcbyibIn8XnbUQ",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

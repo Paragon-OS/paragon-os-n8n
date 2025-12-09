@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-09T01:08:21.857Z",
-  "createdAt": "2025-12-08T23:57:02.850Z",
-  "id": "Bwantxu38HCUo5tm",
+  "updatedAt": "2025-12-09T01:35:03.447Z",
+  "createdAt": "2025-12-09T01:23:32.323Z",
+  "id": "dTqTW6CcHL7gxqQf",
   "name": "Telegram Context Scout",
   "active": false,
   "isArchived": false,
@@ -156,25 +156,16 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "entity": "contact",
-          "query": "Pasindu"
-        }
-      }
-    ]
-  },
-  "versionId": "ae273e77-5e90-4965-8146-f433a0da1ac9",
+  "pinData": null,
+  "versionId": "84d4b653-777a-4ad8-a66c-62484cef340b",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T23:57:02.853Z",
-      "createdAt": "2025-12-08T23:57:02.853Z",
+      "updatedAt": "2025-12-09T01:23:32.326Z",
+      "createdAt": "2025-12-09T01:23:32.326Z",
       "role": "workflow:owner",
-      "workflowId": "Bwantxu38HCUo5tm",
+      "workflowId": "dTqTW6CcHL7gxqQf",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

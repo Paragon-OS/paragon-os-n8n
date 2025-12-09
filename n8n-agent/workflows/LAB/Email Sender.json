@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T23:57:04.537Z",
-  "createdAt": "2025-12-08T23:57:04.537Z",
-  "id": "fy7yrZ4e6z4d19tT",
+  "updatedAt": "2025-12-09T01:35:04.515Z",
+  "createdAt": "2025-12-09T01:23:33.993Z",
+  "id": "9kvPqDlLwXnvHmAz",
   "name": "[LAB] Email Sender",
   "active": false,
   "isArchived": false,
@@ -186,15 +186,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "0c615111-15c7-4a8a-9a42-671ec3447c4e",
+  "versionId": "94e7cb8c-74ca-4358-9faf-c7c06a37466a",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T23:57:04.538Z",
-      "createdAt": "2025-12-08T23:57:04.538Z",
+      "updatedAt": "2025-12-09T01:23:33.994Z",
+      "createdAt": "2025-12-09T01:23:33.994Z",
       "role": "workflow:owner",
-      "workflowId": "fy7yrZ4e6z4d19tT",
+      "workflowId": "9kvPqDlLwXnvHmAz",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

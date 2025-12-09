@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-09T01:13:47.178Z",
-  "createdAt": "2025-12-08T23:57:02.698Z",
-  "id": "JOZ88rkvX4SMXq4h",
+  "updatedAt": "2025-12-09T01:35:03.347Z",
+  "createdAt": "2025-12-09T01:23:31.466Z",
+  "id": "FvXGq1CLqsmjzL8n",
   "name": "Discord Context Scout",
   "active": false,
   "isArchived": false,
@@ -135,16 +135,16 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": {},
-  "versionId": "07918164-74f7-40e0-a150-1a5e972576c5",
+  "pinData": null,
+  "versionId": "d4c5f462-b827-48f6-b237-56929c02f0e8",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T23:57:02.700Z",
-      "createdAt": "2025-12-08T23:57:02.700Z",
+      "updatedAt": "2025-12-09T01:23:31.468Z",
+      "createdAt": "2025-12-09T01:23:31.468Z",
       "role": "workflow:owner",
-      "workflowId": "JOZ88rkvX4SMXq4h",
+      "workflowId": "FvXGq1CLqsmjzL8n",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T23:57:04.748Z",
-  "createdAt": "2025-12-08T23:57:04.748Z",
-  "id": "MvkYoCSppgINTnnP",
+  "updatedAt": "2025-12-09T01:35:04.812Z",
+  "createdAt": "2025-12-09T01:23:34.262Z",
+  "id": "tKNjV4NbmCKDxNkw",
   "name": "[LAB] Pinecone Embeddings",
   "active": false,
   "isArchived": false,
@@ -295,15 +295,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "c3db956e-3d6b-49bb-b891-89f6f8afbb7f",
+  "versionId": "49174794-4541-4a58-baa3-ad1c6c05eab4",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T23:57:04.749Z",
-      "createdAt": "2025-12-08T23:57:04.749Z",
+      "updatedAt": "2025-12-09T01:23:34.263Z",
+      "createdAt": "2025-12-09T01:23:34.263Z",
       "role": "workflow:owner",
-      "workflowId": "MvkYoCSppgINTnnP",
+      "workflowId": "tKNjV4NbmCKDxNkw",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

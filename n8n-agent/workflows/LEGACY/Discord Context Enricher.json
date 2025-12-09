@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-09T01:13:47.301Z",
-  "createdAt": "2025-12-08T23:57:04.787Z",
-  "id": "ieeGOfzLVxw1eXwc",
+  "updatedAt": "2025-12-09T01:35:04.890Z",
+  "createdAt": "2025-12-09T01:23:34.300Z",
+  "id": "2PKv6tqrQ5vK5N00",
   "name": "[LEGACY] Discord Context Enricher",
   "active": false,
   "isArchived": false,
@@ -1247,15 +1247,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "65c6b8d5-8d39-441f-bce1-5843b9df96fc",
+  "versionId": "4f164ba2-7011-46ae-90f7-8ef82db29d38",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T23:57:04.788Z",
-      "createdAt": "2025-12-08T23:57:04.788Z",
+      "updatedAt": "2025-12-09T01:23:34.300Z",
+      "createdAt": "2025-12-09T01:23:34.300Z",
       "role": "workflow:owner",
-      "workflowId": "ieeGOfzLVxw1eXwc",
+      "workflowId": "2PKv6tqrQ5vK5N00",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

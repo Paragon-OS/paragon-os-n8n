@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-09T00:13:59.745Z",
-  "createdAt": "2025-12-08T23:57:04.735Z",
-  "id": "AsOwK4Vztv9Dk11M",
+  "updatedAt": "2025-12-09T01:35:04.783Z",
+  "createdAt": "2025-12-09T01:23:34.249Z",
+  "id": "bRwds7p2RVvGlojT",
   "name": "[LAB] MCP Server",
   "active": false,
   "isArchived": false,
@@ -25,9 +25,9 @@
         "description": "Call this tool to use paragonOS",
         "workflowId": {
           "__rl": true,
-          "value": "83SfiqHwUffVqrb8",
+          "value": "OumZjYgEWItJHJRa",
           "mode": "list",
-          "cachedResultUrl": "/workflow/83SfiqHwUffVqrb8",
+          "cachedResultUrl": "/workflow/OumZjYgEWItJHJRa",
           "cachedResultName": "ParagonOS Manager"
         },
         "workflowInputs": {
@@ -85,15 +85,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "f012468f-94c3-4478-ad72-e03ef9476418",
+  "versionId": "649ce4d5-0a90-4b1d-a822-f1a01d6b0d35",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T23:57:04.735Z",
-      "createdAt": "2025-12-08T23:57:04.735Z",
+      "updatedAt": "2025-12-09T01:23:34.250Z",
+      "createdAt": "2025-12-09T01:23:34.250Z",
       "role": "workflow:owner",
-      "workflowId": "AsOwK4Vztv9Dk11M",
+      "workflowId": "bRwds7p2RVvGlojT",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

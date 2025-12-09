@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T23:57:04.429Z",
-  "createdAt": "2025-12-08T23:57:04.429Z",
-  "id": "sCR59oNbCSVeplp4",
+  "updatedAt": "2025-12-09T01:35:04.347Z",
+  "createdAt": "2025-12-09T01:23:33.882Z",
+  "id": "6uIK5kT89371k3o3",
   "name": "[LAB] Discord Deterministic MCP Client",
   "active": false,
   "isArchived": false,
@@ -530,15 +530,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "b125beb0-2d41-410d-886d-5b3e9b4a9024",
+  "versionId": "528f4391-58ed-4087-865c-1ed0f877ad72",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T23:57:04.430Z",
-      "createdAt": "2025-12-08T23:57:04.430Z",
+      "updatedAt": "2025-12-09T01:23:33.883Z",
+      "createdAt": "2025-12-09T01:23:33.883Z",
       "role": "workflow:owner",
-      "workflowId": "sCR59oNbCSVeplp4",
+      "workflowId": "6uIK5kT89371k3o3",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

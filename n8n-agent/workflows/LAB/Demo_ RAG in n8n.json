@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-08T23:57:04.272Z",
-  "createdAt": "2025-12-08T23:57:04.272Z",
-  "id": "BBf52Kl80O7697bM",
+  "updatedAt": "2025-12-09T01:35:04.111Z",
+  "createdAt": "2025-12-09T01:23:33.729Z",
+  "id": "4kOSSRznHKJBo0vz",
   "name": "[LAB] Demo: RAG in n8n",
   "active": false,
   "isArchived": false,
@@ -229,15 +229,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "825bdf8c-3b67-4ae8-a509-8f0a4d01dc5a",
+  "versionId": "701d04e7-5f7f-4988-8ecb-9dbe96ca25fa",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T23:57:04.273Z",
-      "createdAt": "2025-12-08T23:57:04.273Z",
+      "updatedAt": "2025-12-09T01:23:33.730Z",
+      "createdAt": "2025-12-09T01:23:33.730Z",
       "role": "workflow:owner",
-      "workflowId": "BBf52Kl80O7697bM",
+      "workflowId": "4kOSSRznHKJBo0vz",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

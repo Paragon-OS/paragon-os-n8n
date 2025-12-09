@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-09T01:08:21.901Z",
-  "createdAt": "2025-12-08T23:57:02.935Z",
-  "id": "ssmSNWi9AiLqCa5o",
+  "updatedAt": "2025-12-09T01:35:03.528Z",
+  "createdAt": "2025-12-09T01:23:32.423Z",
+  "id": "htmtJxVazxAWRBmH",
   "name": "[HELPERS] Discord Guild Fetch",
   "active": false,
   "isArchived": false,
@@ -158,15 +158,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "377ff206-ac54-4c43-a2b6-f1452a7d1a00",
+  "versionId": "8fce7b01-7cc9-482f-89c9-a8094b4932eb",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T23:57:02.936Z",
-      "createdAt": "2025-12-08T23:57:02.936Z",
+      "updatedAt": "2025-12-09T01:23:32.423Z",
+      "createdAt": "2025-12-09T01:23:32.423Z",
       "role": "workflow:owner",
-      "workflowId": "ssmSNWi9AiLqCa5o",
+      "workflowId": "htmtJxVazxAWRBmH",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

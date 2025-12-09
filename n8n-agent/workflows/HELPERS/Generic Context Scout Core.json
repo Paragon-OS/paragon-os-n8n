@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-09T01:13:47.249Z",
-  "createdAt": "2025-12-08T23:57:03.802Z",
-  "id": "3oWOf1fvT3tYjvwF",
+  "updatedAt": "2025-12-09T01:35:03.624Z",
+  "createdAt": "2025-12-09T01:23:33.227Z",
+  "id": "Z4qG8RRqjCifiQQj",
   "name": "[HELPERS] Generic Context Scout Core",
   "active": false,
   "isArchived": false,
@@ -664,136 +664,16 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "query": "Pasindu",
-          "entity": "contact",
-          "platformConfig": {
-            "platform": "TELEGRAM",
-            "mcpCredentialId": "aiYCclLDUqob5iQ0",
-            "cacheKeyPrefix": "telegram",
-            "defaultTTL": 21600000,
-            "entities": {
-              "contact": {
-                "cacheKey": "telegramContacts",
-                "fetchWorkflowId": "SBhY0qCFVdLXt1sG",
-                "mcpTool": {
-                  "name": "telegram_list_contacts",
-                  "parameters": {
-                    "limit": 200
-                  },
-                  "mcpDataKey": "contacts"
-                },
-                "mapper": "(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone, platform: 'TELEGRAM' })",
-                "dataKey": "contacts",
-                "searchType": "rag",
-                "ragConfig": {
-                  "collectionId": "paragon-os-contacts",
-                  "autoIngest": true
-                },
-                "requiresRAGStatusCheck": true
-              },
-              "contact-rag": {
-                "cacheKey": "telegramContacts",
-                "fetchWorkflowId": "SBhY0qCFVdLXt1sG",
-                "mcpTool": {
-                  "name": "telegram_list_contacts",
-                  "parameters": {
-                    "limit": 200
-                  },
-                  "mcpDataKey": "contacts"
-                },
-                "mapper": "(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone, platform: 'TELEGRAM' })",
-                "dataKey": "contacts",
-                "searchType": "rag",
-                "ragConfig": {
-                  "collectionId": "paragon-os-contacts",
-                  "autoIngest": true
-                },
-                "requiresRAGStatusCheck": true
-              },
-              "chat": {
-                "cacheKey": "telegramChannels",
-                "fetchWorkflowId": "wik6TtHPOdmqMDj4",
-                "mcpTool": {
-                  "name": "telegram_list_chats",
-                  "parameters": {
-                    "limit": 50
-                  },
-                  "mcpDataKey": "items"
-                },
-                "mapper": "(g) => ({ id: g.id, name: g.name, members: g.memberCount, kind: g.kind, unread: g.unread })",
-                "dataKey": "channels",
-                "searchType": "fuzzy",
-                "fuzzyConfig": {
-                  "searchKeys": [
-                    "name",
-                    "kind"
-                  ],
-                  "matchQuality": 50,
-                  "limit": 10
-                }
-              },
-              "tool": {
-                "cacheKey": "telegramTools",
-                "fetchWorkflowId": "SXxUoB4mbMLdKgaq",
-                "mapper": "(t) => t",
-                "dataKey": "tools",
-                "searchType": "fuzzy",
-                "fuzzyConfig": {
-                  "searchKeys": [
-                    "name",
-                    "description"
-                  ],
-                  "matchQuality": 50,
-                  "limit": 10
-                }
-              },
-              "self": {
-                "cacheKey": "telegramProfile",
-                "fetchWorkflowId": "0O6vb0bzZBh8KmhH",
-                "mapper": "(p) => p",
-                "dataKey": "myProfile",
-                "searchType": "none",
-                "skipQuery": true
-              },
-              "message-rag": {
-                "cacheKey": "telegramMessages",
-                "fetchWorkflowId": "0c7rvvnr3iITGCoG",
-                "mcpTool": {
-                  "name": "telegram_list_messages",
-                  "parameters": {
-                    "chat_id": "4000551178",
-                    "limit": 100
-                  },
-                  "mcpDataKey": ""
-                },
-                "mapper": "(m) => ({ id: m.id, chatId: m.chatId, text: m.text || '', senderId: m.senderId, senderName: m.senderName || m.from?.name || '', date: m.date || m.timestamp, kind: m.kind || 'message' })",
-                "dataKey": "messages",
-                "searchType": "rag",
-                "ragConfig": {
-                  "collectionId": "paragon-os-messages",
-                  "autoIngest": true
-                },
-                "requiresRAGStatusCheck": true
-              }
-            }
-          }
-        }
-      }
-    ]
-  },
-  "versionId": "8f230b12-f162-4165-838c-400058af523a",
+  "pinData": null,
+  "versionId": "c162745e-8978-441d-bc21-a73004123cc9",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T23:57:03.803Z",
-      "createdAt": "2025-12-08T23:57:03.803Z",
+      "updatedAt": "2025-12-09T01:23:33.228Z",
+      "createdAt": "2025-12-09T01:23:33.228Z",
       "role": "workflow:owner",
-      "workflowId": "3oWOf1fvT3tYjvwF",
+      "workflowId": "Z4qG8RRqjCifiQQj",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],

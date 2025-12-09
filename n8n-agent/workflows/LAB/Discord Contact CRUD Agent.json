@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-09T00:13:59.606Z",
-  "createdAt": "2025-12-08T23:57:04.394Z",
-  "id": "lJlPkH9jUM8fVIvQ",
+  "updatedAt": "2025-12-09T01:35:04.240Z",
+  "createdAt": "2025-12-09T01:23:33.850Z",
+  "id": "CcDLEo6GjHBmZlYG",
   "name": "[LAB] Discord Contact CRUD Agent",
   "active": false,
   "isArchived": false,
@@ -179,9 +179,9 @@
         "description": "Call this tool to retrieve a user profile from a discord username or user ID",
         "workflowId": {
           "__rl": true,
-          "value": "Hevq2OHYHYHTlc6K",
+          "value": "f20p5gauvrKQnX4L",
           "mode": "list",
-          "cachedResultUrl": "/workflow/Hevq2OHYHYHTlc6K",
+          "cachedResultUrl": "/workflow/f20p5gauvrKQnX4L",
           "cachedResultName": "[LAB] Discord MCP Client"
         },
         "workflowInputs": {
@@ -453,15 +453,15 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "6d8cf113-da20-4834-8acd-290543486267",
+  "versionId": "43f73b7c-b502-4300-a216-4bba0b1424d9",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-08T23:57:04.395Z",
-      "createdAt": "2025-12-08T23:57:04.395Z",
+      "updatedAt": "2025-12-09T01:23:33.851Z",
+      "createdAt": "2025-12-09T01:23:33.851Z",
       "role": "workflow:owner",
-      "workflowId": "lJlPkH9jUM8fVIvQ",
+      "workflowId": "CcDLEo6GjHBmZlYG",
       "projectId": "GEUEn6ArNROzJ5FY"
     }
   ],
