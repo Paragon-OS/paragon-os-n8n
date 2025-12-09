@@ -169,16 +169,25 @@ export async function checkN8nConnection(config?: N8nApiConfig): Promise<boolean
 
 let defaultClient: AxiosInstance | null = null;
 let lastBaseUrl: string | null = null;
+let lastApiKey: string | undefined = undefined;
 
 /**
  * Get or create default API client instance
- * Resets the client if the base URL environment variable has changed
+ * Resets the client if the base URL or API key environment variables have changed
+ * This ensures tests with different instances/credentials don't share stale clients
  */
 function getDefaultClient(): AxiosInstance {
   const currentBaseUrl = getN8nBaseUrl();
-  if (!defaultClient || lastBaseUrl !== currentBaseUrl) {
+  const currentApiKey = getN8nApiKey();
+  
+  // Reset cache if EITHER base URL OR API key changed
+  // This is critical for test isolation where each test may use different n8n instances
+  if (!defaultClient || 
+      lastBaseUrl !== currentBaseUrl || 
+      lastApiKey !== currentApiKey) {
     defaultClient = createApiClient();
     lastBaseUrl = currentBaseUrl;
+    lastApiKey = currentApiKey;
   }
   return defaultClient;
 }
