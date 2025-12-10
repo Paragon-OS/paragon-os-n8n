@@ -21,11 +21,47 @@ import {
   extractWorkflowResults,
   type WorkflowFile 
 } from "./test-helpers";
+import type { N8nInstance } from "./n8n-podman";
 
 // Test Runner workflow configuration
 const TEST_RUNNER_FILE = 'HELPERS/Test Runner.json';
 const TEST_RUNNER_ID = 'TestRunnerHelper001';
 const TEST_CONFIG_NODE = '⚙️ Test Config';
+
+/**
+ * Build N8nApiConfig from N8nInstance
+ * Helper for tests that manage their own containers
+ * 
+ * @param instance - The n8n instance to convert
+ * @returns API configuration object
+ */
+export function buildApiConfigFromInstance(instance: N8nInstance): N8nApiConfig {
+  return {
+    baseURL: instance.baseUrl,
+    apiKey: instance.apiKey,
+    sessionCookie: instance.sessionCookie,
+  };
+}
+
+/**
+ * Normalize config parameter - accepts either N8nApiConfig or N8nInstance
+ * 
+ * @param config - Either N8nApiConfig or N8nInstance
+ * @returns N8nApiConfig (or undefined if config was undefined)
+ */
+function normalizeConfig(config?: N8nApiConfig | N8nInstance): N8nApiConfig | undefined {
+  if (!config) {
+    return undefined;
+  }
+  
+  // Check if it's an N8nInstance by looking for containerName property
+  if ('containerName' in config) {
+    return buildApiConfigFromInstance(config as N8nInstance);
+  }
+  
+  // Otherwise it's already an N8nApiConfig
+  return config as N8nApiConfig;
+}
 
 /**
  * Resolve workflows directory path.
@@ -121,11 +157,21 @@ async function initTestContext(workflowsDir: string): Promise<TestContext> {
 
 /**
  * Sync workflow to n8n before running test
+ * 
+ * NOTE: This is a legacy function for tests without managed containers.
+ * For new tests using the container reuse pattern, workflows are synced
+ * automatically in executeWorkflowTest(). You typically don't need to call this.
+ * 
+ * @param workflowName - Name of the workflow to sync
+ * @param workflowsDir - Optional workflows directory path
+ * @param config - Either N8nApiConfig or N8nInstance (for convenience)
+ * 
+ * @deprecated Use executeWorkflowTest() which handles sync automatically
  */
 export async function syncWorkflow(
   workflowName: string,
   workflowsDir?: string,
-  config?: N8nApiConfig
+  config?: N8nApiConfig | N8nInstance
 ): Promise<void> {
   const workflowsPath = workflowsDir || resolveWorkflowsDir();
   const allWorkflowFiles = await collectJsonFilesRecursive(workflowsPath);
@@ -151,7 +197,8 @@ export async function syncWorkflow(
 
   if (workflowFile) {
     try {
-      await importWorkflowFromFile(workflowFile.path, config);
+      const apiConfig = normalizeConfig(config);
+      await importWorkflowFromFile(workflowFile.path, apiConfig);
       logger.debug(`Workflow "${workflowName}" synced successfully`);
     } catch (error) {
       // Don't fail the test if sync fails - workflow might already be in n8n
@@ -169,13 +216,31 @@ export async function syncWorkflow(
 
 /**
  * Execute a single workflow test case
+ * 
+ * Automatically syncs the workflow to n8n before execution.
+ * 
+ * @param workflowName - Name of the workflow to test
+ * @param testCase - Test case identifier
+ * @param testData - Test data to pass to the workflow
+ * @param workflowsDir - Optional workflows directory path
+ * @param config - Either N8nApiConfig or N8nInstance (for convenience with container reuse pattern)
+ * @returns Test result with success status, output, or error details
+ * 
+ * @example
+ * ```typescript
+ * // With N8nInstance (recommended for container reuse pattern)
+ * const result = await executeWorkflowTest('MyWorkflow', 'test-case', testData, undefined, instance);
+ * 
+ * // With N8nApiConfig (legacy)
+ * const result = await executeWorkflowTest('MyWorkflow', 'test-case', testData, undefined, { baseURL: '...', apiKey: '...' });
+ * ```
  */
 export async function executeWorkflowTest(
   workflowName: string,
   testCase: string,
   testData: Record<string, unknown>,
   workflowsDir?: string,
-  config?: N8nApiConfig
+  config?: N8nApiConfig | N8nInstance
 ): Promise<WorkflowTestResult> {
   const workflowsPath = workflowsDir || resolveWorkflowsDir();
   
@@ -188,6 +253,9 @@ export async function executeWorkflowTest(
     };
   }
   
+  // Normalize config (convert N8nInstance to N8nApiConfig if needed)
+  const apiConfig = normalizeConfig(config);
+  
   const context = await initTestContext(workflowsPath);
 
   try {
@@ -196,7 +264,7 @@ export async function executeWorkflowTest(
 
     if (workflowFile) {
       try {
-        await importWorkflowFromFile(workflowFile.path, config);
+        await importWorkflowFromFile(workflowFile.path, apiConfig);
       } catch (error) {
         logger.warn(`Warning: Failed to auto-sync workflow "${workflowName}"`, error, { workflow: workflowName });
         // Continue with test anyway
@@ -253,7 +321,7 @@ export async function executeWorkflowTest(
     // Import modified Test Runner using API and get the actual database ID
     let testRunnerDatabaseId: string;
     try {
-      const importedWorkflow = await importWorkflowFromFile(context.tempPath, config);
+      const importedWorkflow = await importWorkflowFromFile(context.tempPath, apiConfig);
       // After import, we get the actual database ID (not the custom ID from JSON)
       if (!importedWorkflow.id) {
         throw new Error('Imported workflow did not return an ID');
@@ -273,8 +341,8 @@ export async function executeWorkflowTest(
       // Use the database ID returned from import (this is what n8n CLI --id expects after restore)
       // The custom ID (TestRunnerHelper001) won't work after workflows are restored with new IDs
       const executionConfig: N8nApiConfig = {
-        ...config,
-        timeout: config?.timeout || 2 * 60 * 1000, // 2 minutes default
+        ...apiConfig,
+        timeout: apiConfig?.timeout || 2 * 60 * 1000, // 2 minutes default
       };
       executionResult = await executeWorkflow(testRunnerDatabaseId, undefined, executionConfig);
     } catch (error) {
@@ -345,7 +413,7 @@ export async function executeWorkflowTest(
     // Restore original Test Runner configuration by importing the original file
     try {
       // Restore from the original test runner file path using API
-      await importWorkflowFromFile(context.testRunnerPath, config);
+      await importWorkflowFromFile(context.testRunnerPath, apiConfig);
     } catch {
       // Ignore cleanup errors - Test Runner will be restored on next test or can be manually restored
       logger.debug('Failed to restore Test Runner configuration during cleanup');

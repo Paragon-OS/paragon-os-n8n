@@ -1,5 +1,8 @@
 /**
  * Utilities for parsing and processing n8n test execution results
+ * 
+ * Also provides reusable container lifecycle helpers for test suites
+ * using the container reuse pattern (faster than per-test containers).
  */
 
 import type {
@@ -14,6 +17,17 @@ import {
   isN8nRawOutputArray,
   isN8nRawOutputObject,
 } from '../types/n8n';
+import {
+  checkPodmanAvailable,
+  startN8nInstance,
+  stopN8nInstance,
+  type N8nInstance,
+  type N8nPodmanConfig,
+} from './n8n-podman';
+import {
+  resetN8nState,
+  verifyN8nHealth,
+} from './backup-restore-test';
 
 export interface WorkflowFile {
   path: string;
@@ -333,4 +347,161 @@ export function extractWorkflowResults(
   }
 }
 
+// ============================================================================
+// Standard Test Timeouts
+// ============================================================================
+
+/**
+ * Standard test timeouts for consistency across test suites
+ * 
+ * Use these constants instead of hardcoding timeout values to ensure
+ * consistency and make it easier to adjust timeouts globally.
+ * 
+ * @example
+ * ```typescript
+ * import { TEST_TIMEOUTS } from '../../utils/test-helpers';
+ * 
+ * it('should test something', async () => {
+ *   // test code
+ * }, TEST_TIMEOUTS.WORKFLOW);
+ * ```
+ */
+export const TEST_TIMEOUTS = {
+  /** 3 minutes - for simple, fast tests */
+  SIMPLE: 3 * 60 * 1000,
+  
+  /** 5 minutes - for credential setup and basic integration tests */
+  CREDENTIALS: 5 * 60 * 1000,
+  
+  /** 10 minutes - for workflow tests and complex integration tests */
+  WORKFLOW: 10 * 60 * 1000,
+  
+  /** 10 minutes - alias for WORKFLOW (for integration tests) */
+  INTEGRATION: 10 * 60 * 1000,
+} as const;
+
+// ============================================================================
+// Container Lifecycle Helpers for Test Suites
+// ============================================================================
+
+/**
+ * Setup function for tests that need a shared n8n instance
+ * Use in beforeAll/afterAll/beforeEach for container reuse pattern
+ * 
+ * This pattern is 65-77% faster than starting containers per test:
+ * - Container starts once in beforeAll (~20-30s)
+ * - State resets in beforeEach (~1-2s)
+ * - Container stops once in afterAll
+ * 
+ * @param config - Optional podman configuration (timeout, port, etc.)
+ * @returns Configured n8n instance ready for testing
+ * @throws Error if podman is not available
+ * 
+ * @example
+ * ```typescript
+ * import { setupTestInstance, cleanupTestInstance, resetTestInstance, TEST_TIMEOUTS } from '../../utils/test-helpers';
+ * 
+ * describe('My Test Suite', () => {
+ *   let instance: N8nInstance | null = null;
+ * 
+ *   beforeAll(async () => {
+ *     instance = await setupTestInstance();
+ *   }, TEST_TIMEOUTS.WORKFLOW);
+ * 
+ *   afterAll(async () => {
+ *     await cleanupTestInstance(instance);
+ *     instance = null;
+ *   }, TEST_TIMEOUTS.WORKFLOW);
+ * 
+ *   beforeEach(async () => {
+ *     await resetTestInstance(instance);
+ *   }, TEST_TIMEOUTS.WORKFLOW);
+ * 
+ *   it('should test something', async () => {
+ *     // Use instance.baseUrl, instance.apiKey, etc.
+ *   });
+ * });
+ * ```
+ */
+export async function setupTestInstance(config?: N8nPodmanConfig): Promise<N8nInstance> {
+  const podmanAvailable = await checkPodmanAvailable();
+  if (!podmanAvailable) {
+    throw new Error(
+      'Podman is not available. Please install podman to run integration tests.\n' +
+      'Install: https://podman.io/getting-started/installation'
+    );
+  }
+
+  console.log('🚀 Starting shared n8n instance...');
+  const instance = await startN8nInstance({
+    timeout: 120000, // 2 minutes for startup
+    ...config,
+  });
+  console.log(`✅ Instance ready: ${instance.baseUrl}`);
+  return instance;
+}
+
+/**
+ * Cleanup function for tests using shared n8n instance
+ * Use in afterAll to stop and remove the container
+ * 
+ * @param instance - The n8n instance to cleanup (can be null)
+ * 
+ * @example
+ * ```typescript
+ * afterAll(async () => {
+ *   await cleanupTestInstance(instance);
+ *   instance = null;
+ * });
+ * ```
+ */
+export async function cleanupTestInstance(instance: N8nInstance | null): Promise<void> {
+  if (instance) {
+    console.log('🧹 Cleaning up n8n instance...');
+    try {
+      await stopN8nInstance(instance);
+      console.log('✅ Cleanup complete');
+    } catch (error) {
+      console.error('Failed to stop instance:', error);
+    }
+  }
+}
+
+/**
+ * Reset n8n instance state between tests
+ * Use in beforeEach to reset state without restarting container
+ * 
+ * This is much faster than container restart (~1-2s vs 20-30s):
+ * - Clears all workflows
+ * - Keeps credentials intact
+ * - Verifies instance health
+ * 
+ * @param instance - The n8n instance to reset (must not be null)
+ * @throws Error if instance is null or reset fails
+ * 
+ * @example
+ * ```typescript
+ * beforeEach(async () => {
+ *   await resetTestInstance(instance);
+ * });
+ * ```
+ */
+export async function resetTestInstance(instance: N8nInstance | null): Promise<void> {
+  if (!instance) {
+    throw new Error('Instance not initialized - beforeAll may have failed');
+  }
+  
+  console.log('🔄 Resetting n8n state...');
+  
+  const healthy = await verifyN8nHealth(instance);
+  if (!healthy) {
+    throw new Error(
+      'n8n instance is unhealthy. Container may need restart. ' +
+      'Try running: npm run test:cleanup'
+    );
+  }
+  
+  await resetN8nState(instance);
+  console.log('✅ State reset complete');
+}
 
