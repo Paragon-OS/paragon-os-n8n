@@ -13,8 +13,11 @@ describe('TelegramContextScout', () => {
 
   beforeAll(async () => {
     instance = await setupTestInstance();
-    // Sync workflow once before all tests
+    // Sync workflows once before all tests (import dependencies first)
     if (instance) {
+      // Import dependency workflow first
+      await syncWorkflow('Generic Context Scout Core', undefined, instance);
+      // Then import the main workflow
       await syncWorkflow('TelegramContextScout', undefined, instance);
     }
   }, TEST_TIMEOUTS.WORKFLOW);
@@ -26,8 +29,10 @@ describe('TelegramContextScout', () => {
 
   beforeEach(async () => {
     await resetTestInstance(instance);
-    // Re-sync workflow after reset (reset clears all workflows)
+    // Re-sync workflows after reset (reset clears all workflows)
+    // Import dependencies first, then main workflow
     if (instance) {
+      await syncWorkflow('Generic Context Scout Core', undefined, instance);
       await syncWorkflow('TelegramContextScout', undefined, instance);
     }
   }, TEST_TIMEOUTS.WORKFLOW);

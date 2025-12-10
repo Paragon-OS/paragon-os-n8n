@@ -198,7 +198,7 @@ export async function syncWorkflow(
   if (workflowFile) {
     try {
       const apiConfig = normalizeConfig(config);
-      await importWorkflowFromFile(workflowFile.path, apiConfig);
+      await importWorkflowFromFile(workflowFile, apiConfig);
       logger.debug(`Workflow "${workflowName}" synced successfully`);
     } catch (error) {
       // Don't fail the test if sync fails - workflow might already be in n8n
@@ -259,12 +259,27 @@ export async function executeWorkflowTest(
   const context = await initTestContext(workflowsPath);
 
   try {
+    // Auto-import dependency workflows first (if needed)
+    // Discord/Telegram Context Scout depends on Generic Context Scout Core
+    if (workflowName === 'DiscordContextScout' || workflowName === 'TelegramContextScout') {
+      const coreWorkflowFile = findWorkflowFile('Generic Context Scout Core', context.workflowFiles);
+      if (coreWorkflowFile) {
+        try {
+          await importWorkflowFromFile(coreWorkflowFile, apiConfig);
+          logger.debug(`Dependency workflow "Generic Context Scout Core" synced successfully`);
+        } catch (error) {
+          logger.warn(`Warning: Failed to auto-sync dependency workflow "Generic Context Scout Core"`, error);
+          // Continue anyway - might already be imported
+        }
+      }
+    }
+
     // Auto-import the workflow being tested
     const workflowFile = findWorkflowFile(workflowName, context.workflowFiles);
 
     if (workflowFile) {
       try {
-        await importWorkflowFromFile(workflowFile.path, apiConfig);
+        await importWorkflowFromFile(workflowFile, apiConfig);
       } catch (error) {
         logger.warn(`Warning: Failed to auto-sync workflow "${workflowName}"`, error, { workflow: workflowName });
         // Continue with test anyway
