@@ -86,7 +86,7 @@ function getN8nSessionCookie(): string | undefined {
 /**
  * Create axios instance with n8n API configuration
  */
-function createApiClient(config?: N8nApiConfig): AxiosInstance {
+export function createApiClient(config?: N8nApiConfig): AxiosInstance {
   const baseURL = config?.baseURL || getN8nBaseUrl();
   
   if (!baseURL) {
@@ -752,12 +752,16 @@ export async function executeWorkflow(
   try {
     // Use the EXACT same approach as working test.ts - direct runN8nCapture call
     // Add --rawOutput flag to ensure we get JSON output
+    // NOTE: For workflows with manual triggers, we MUST use webhook execution!
     const args = ['execute', `--id=${workflowId}`, '--rawOutput'];
+    
+    // For workflows with executeWorkflowTrigger, pass data using --input flag (not --data)
     if (inputData) {
-      args.push('--data', JSON.stringify(inputData));
+      args.push(`--input=${JSON.stringify(inputData)}`);
     }
     
-    logger.debug(`Executing workflow with args: ${args.join(' ')}`);
+    logger.info(`Executing workflow with args: ${args.join(' ')}`);
+    logger.info(`Workflow ID: ${workflowId}, Input data: ${inputData ? JSON.stringify(inputData).substring(0, 200) : 'none'}`);
     // This is what test.ts does and it works!
     const { code, stdout, stderr } = await runN8nCapture(args, timeout);
     
@@ -773,11 +777,15 @@ export async function executeWorkflow(
     const filteredStderr = filterVersionWarnings(stderr);
     const combinedOutput = filteredStdout + (filteredStderr ? '\n' + filteredStderr : '');
     
-    logger.debug(`Captured output: code=${code}, stdout=${stdout.length}, stderr=${stderr.length}, filtered=${combinedOutput.length}`);
-    logger.debug(`Raw stdout (first 500 chars): ${stdout.substring(0, 500)}`);
-    logger.debug(`Raw stderr (first 500 chars): ${stderr.substring(0, 500)}`);
+    logger.info(`Captured output: code=${code}, stdout=${stdout.length}, stderr=${stderr.length}, filtered=${combinedOutput.length}`);
+    logger.info(`Raw stdout (first 1000 chars): ${stdout.substring(0, 1000)}`);
+    logger.info(`Raw stderr (first 1000 chars): ${stderr.substring(0, 1000)}`);
     if (combinedOutput.trim()) {
-      logger.debug(`Output preview: ${combinedOutput.substring(0, 200)}`);
+      logger.info(`Output preview: ${combinedOutput.substring(0, 500)}`);
+    } else {
+      logger.warn(`⚠️  NO OUTPUT from workflow execution! Exit code: ${code}`);
+      logger.info(`Full stdout: ${stdout}`);
+      logger.info(`Full stderr: ${stderr}`);
     }
     
     if (code === 124) {
@@ -789,8 +797,8 @@ export async function executeWorkflow(
     if (!combinedOutput.trim()) {
       // OUTSIDE THE BOX: Maybe successful executions don't output JSON by default?
       // Try querying the executions API to get the result!
-      logger.debug(`No CLI output, trying to get execution from API...`);
-      logger.debug(`Workflow ID provided: ${workflowId}`);
+      logger.info(`No CLI output, trying to get execution from API...`);
+      logger.info(`Workflow ID provided: ${workflowId}`);
       const client = config ? createApiClient(config) : getDefaultClient();
       
       try {
@@ -829,47 +837,55 @@ export async function executeWorkflow(
           params: { workflowId: resolvedWorkflowId, limit: 1 },
         });
         
-        logger.debug(`Executions API response status: ${execResponse.status}`);
-        logger.debug(`Executions API response data type: ${typeof execResponse.data}, isArray: ${Array.isArray(execResponse.data)}`);
-        logger.debug(`Executions API response keys: ${Object.keys(execResponse.data || {}).join(', ')}`);
+        logger.info(`Executions API response status: ${execResponse.status}`);
+        logger.info(`Executions API response data type: ${typeof execResponse.data}, isArray: ${Array.isArray(execResponse.data)}`);
+        logger.info(`Executions API response keys: ${Object.keys(execResponse.data || {}).join(', ')}`);
         
         if (execResponse.status === 200) {
           // Handle paginated response format: { data: [...], nextCursor: "..." }
           let executions: unknown[] = [];
           if (Array.isArray(execResponse.data)) {
             executions = execResponse.data;
+            logger.info(`✓ Response is array with ${executions.length} executions`);
           } else if (execResponse.data && typeof execResponse.data === 'object') {
             // Try different possible response structures
             if ('data' in execResponse.data && Array.isArray(execResponse.data.data)) {
               executions = execResponse.data.data;
+              logger.info(`✓ Response has data array with ${executions.length} executions`);
             } else if ('executions' in execResponse.data && Array.isArray(execResponse.data.executions)) {
               executions = execResponse.data.executions;
+              logger.info(`✓ Response has executions array with ${executions.length} executions`);
             } else if ('results' in execResponse.data && Array.isArray(execResponse.data.results)) {
               executions = execResponse.data.results;
+              logger.info(`✓ Response has results array with ${executions.length} executions`);
             }
           }
           
-          logger.debug(`Found ${executions.length} execution(s) in response`);
+          logger.info(`Found ${executions.length} execution(s) in response`);
           if (executions.length === 0 && execResponse.data && typeof execResponse.data === 'object') {
-            logger.debug(`Full response structure: ${JSON.stringify(Object.keys(execResponse.data)).substring(0, 500)}`);
-            logger.debug(`Response data.data type: ${typeof (execResponse.data as any).data}, isArray: ${Array.isArray((execResponse.data as any).data)}`);
+            logger.warn(`⚠️  NO EXECUTIONS FOUND!`);
+            logger.info(`Full response structure: ${JSON.stringify(Object.keys(execResponse.data)).substring(0, 500)}`);
+            logger.info(`Response data.data type: ${typeof (execResponse.data as any).data}, isArray: ${Array.isArray((execResponse.data as any).data)}`);
+            logger.info(`Full response (first 2000 chars): ${JSON.stringify(execResponse.data).substring(0, 2000)}`);
             if ((execResponse.data as any).data) {
-              logger.debug(`data.data length: ${Array.isArray((execResponse.data as any).data) ? (execResponse.data as any).data.length : 'not an array'}`);
+              logger.info(`data.data length: ${Array.isArray((execResponse.data as any).data) ? (execResponse.data as any).data.length : 'not an array'}`);
             }
           }
           
           if (executions.length > 0) {
-            const exec = executions[0] as { id: string };
-            logger.debug(`Fetching execution details for: ${exec.id}`);
+            const exec = executions[0] as { id: string; status?: string; finished?: boolean };
+            logger.info(`Fetching execution details for: ${exec.id}, status: ${exec.status}, finished: ${exec.finished}`);
             const detailResponse = await client.get(`/executions/${exec.id}`);
             if (detailResponse.status === 200) {
-              logger.debug(`Found execution via API: ${exec.id}`);
+              logger.info(`✓ Found execution via API: ${exec.id}`);
+              logger.info(`Execution data keys: ${Object.keys(detailResponse.data || {}).join(', ')}`);
+              logger.info(`Execution status: ${(detailResponse.data as any).status}, finished: ${(detailResponse.data as any).finished}`);
               return detailResponse.data as N8nExecutionResponse;
             } else {
-              logger.debug(`Failed to get execution details: status ${detailResponse.status}`);
+              logger.warn(`Failed to get execution details: status ${detailResponse.status}`);
             }
           } else {
-            logger.debug(`No executions found for workflow ${resolvedWorkflowId}. Response structure: ${JSON.stringify(Object.keys(execResponse.data || {})).substring(0, 200)}`);
+            logger.warn(`No executions found for workflow ${resolvedWorkflowId}. Response structure: ${JSON.stringify(Object.keys(execResponse.data || {})).substring(0, 200)}`);
           }
         } else {
           logger.debug(`Executions API returned non-200 status: ${execResponse.status}`);

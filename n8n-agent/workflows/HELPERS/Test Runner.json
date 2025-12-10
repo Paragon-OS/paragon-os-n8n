@@ -7,15 +7,21 @@
   "isArchived": false,
   "nodes": [
     {
-      "parameters": {},
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "test-runner",
+        "responseMode": "lastNode",
+        "options": {}
+      },
       "id": "test-runner-trigger",
       "name": "Run Test",
-      "type": "n8n-nodes-base.manualTrigger",
+      "type": "n8n-nodes-base.webhook",
       "position": [
         240,
         300
       ],
-      "typeVersion": 1
+      "typeVersion": 2,
+      "webhookId": "test-runner-webhook"
     },
     {
       "parameters": {

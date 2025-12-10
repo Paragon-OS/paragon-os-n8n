@@ -5,11 +5,14 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import axios from "axios";
 import { 
   importWorkflowFromFile, 
   executeWorkflow, 
   formatExecutionResult,
   getWorkflow,
+  getN8nBaseUrl,
+  createApiClient,
   type N8nExecutionResponse,
   type N8nApiConfig
 } from "./n8n-api";
@@ -259,19 +262,18 @@ export async function executeWorkflowTest(
   const context = await initTestContext(workflowsPath);
 
   try {
-    // Auto-import dependency workflows first (if needed)
-    // Discord/Telegram Context Scout depends on Generic Context Scout Core
-    if (workflowName === 'DiscordContextScout' || workflowName === 'TelegramContextScout') {
-      const coreWorkflowFile = findWorkflowFile('Generic Context Scout Core', context.workflowFiles);
-      if (coreWorkflowFile) {
+    // Auto-import all helper workflows to ensure Test Runner dependencies are met
+    const helpersDir = path.join(context.workflowsDir, 'HELPERS');
+    if (fs.existsSync(helpersDir)) {
+      const helperFiles = await collectJsonFilesRecursive(helpersDir);
+      for (const helperFile of helperFiles) {
         try {
-          await importWorkflowFromFile(coreWorkflowFile, apiConfig);
-          logger.debug(`Dependency workflow "Generic Context Scout Core" synced successfully`);
+          await importWorkflowFromFile(helperFile, apiConfig);
         } catch (error) {
-          logger.warn(`Warning: Failed to auto-sync dependency workflow "Generic Context Scout Core"`, error);
-          // Continue anyway - might already be imported
+          logger.warn(`Warning: Failed to auto-sync helper workflow "${path.basename(helperFile)}"`, error);
         }
       }
+      logger.debug(`Synced ${helperFiles.length} helper workflows`);
     }
 
     // Auto-import the workflow being tested
@@ -333,46 +335,69 @@ export async function executeWorkflowTest(
       };
     }
 
-    // Import modified Test Runner using API and get the actual database ID
+    // Import and activate Test Runner workflow to enable webhook
     let testRunnerDatabaseId: string;
     try {
       const importedWorkflow = await importWorkflowFromFile(context.tempPath, apiConfig);
-      // After import, we get the actual database ID (not the custom ID from JSON)
       if (!importedWorkflow.id) {
         throw new Error('Imported workflow did not return an ID');
       }
       testRunnerDatabaseId = importedWorkflow.id;
-      logger.debug(`Test Runner workflow imported successfully with database ID: ${testRunnerDatabaseId}`);
+      logger.debug(`Test Runner imported with ID: ${testRunnerDatabaseId}`);
+      
+      // Activate the workflow to enable webhook
+      const client = createApiClient(apiConfig);
+      await client.patch(`/workflows/${testRunnerDatabaseId}`, { active: true });
+      logger.debug(`Test Runner activated`);
+      
+      // Wait for webhook to be registered
+      await new Promise(resolve => setTimeout(resolve, 2000));
     } catch (error) {
       return {
         testCase,
         success: false,
-        error: `Failed to import test runner workflow: ${error instanceof Error ? error.message : String(error)}`,
+        error: `Failed to import/activate test runner: ${error instanceof Error ? error.message : String(error)}`,
       };
     }
 
     let executionResult: N8nExecutionResponse;
     try {
-      // Use the database ID returned from import (this is what n8n CLI --id expects after restore)
-      // The custom ID (TestRunnerHelper001) won't work after workflows are restored with new IDs
-      const executionConfig: N8nApiConfig = {
-        ...apiConfig,
-        timeout: apiConfig?.timeout || 2 * 60 * 1000, // 2 minutes default
+      // Call the production webhook
+      const baseUrl = apiConfig?.baseURL || getN8nBaseUrl();
+      const webhookUrl = `${baseUrl.replace('/rest', '')}/webhook/test-runner`;
+      
+      logger.debug(`Calling webhook: ${webhookUrl}`);
+      logger.debug(`Request body: ${JSON.stringify({ workflow: workflowName, testCase, testData }).substring(0, 300)}`);
+      
+      const webhookResponse = await axios.post(webhookUrl, 
+        { workflow: workflowName, testCase, testData },
+        { 
+          timeout: apiConfig?.timeout || 2 * 60 * 1000,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+      
+      logger.debug(`Webhook response status: ${webhookResponse.status}`);
+      logger.debug(`Webhook response data (first 1000 chars): ${JSON.stringify(webhookResponse.data).substring(0, 1000)}`);
+      
+      // Convert webhook response to N8nExecutionResponse format
+      executionResult = {
+        code: 0,
+        data: webhookResponse.data,
+        raw: JSON.stringify(webhookResponse.data)
       };
-      executionResult = await executeWorkflow(testRunnerDatabaseId, undefined, executionConfig);
     } catch (error) {
-      // Handle timeout or execution errors
-      if (error instanceof Error && error.message.includes('timed out')) {
-        return {
-          testCase,
-          success: false,
-          error: `Test timed out after 2 minutes. The workflow may be stuck or taking too long to execute.`,
-        };
+      let errorMsg = `Webhook execution failed: ${error instanceof Error ? error.message : String(error)}`;
+      if (axios.isAxiosError(error) && error.response) {
+        errorMsg += `\nStatus: ${error.response.status}`;
+        errorMsg += `\nResponse: ${JSON.stringify(error.response.data).substring(0, 500)}`;
       }
+      logger.error(errorMsg);
+      
       return {
         testCase,
         success: false,
-        error: `Failed to execute workflow: ${error instanceof Error ? error.message : String(error)}`,
+        error: errorMsg,
       };
     }
 
@@ -411,6 +436,9 @@ export async function executeWorkflowTest(
       };
     }
     
+    logger.debug(`Execution JSON type: ${typeof executionJson}, is array: ${Array.isArray(executionJson)}`);
+    logger.debug(`Execution JSON (first 1000 chars): ${JSON.stringify(executionJson).substring(0, 1000)}`);
+    
     const { success, output, error, errorDetails } = extractWorkflowResults(executionJson);
     
     if (success) {
@@ -445,4 +473,5 @@ export async function executeWorkflowTest(
     }
   }
 }
+
 

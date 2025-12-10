@@ -133,79 +133,50 @@ export async function clearAllWorkflows(instance: N8nInstance): Promise<void> {
   logger.info(`Clearing all workflows from n8n instance at ${baseUrl}...`);
   
   try {
-    logger.debug(`Exporting workflows from ${baseUrl}...`);
     const apiConfig = buildApiConfig(instance);
-    
+    const client = (await import('axios')).default;
+    const headers: any = {};
+    if (apiConfig.apiKey) {
+      headers['X-N8N-API-KEY'] = apiConfig.apiKey; // Corrected header
+    } else if (apiConfig.sessionCookie) {
+      headers['Cookie'] = apiConfig.sessionCookie;
+    }
+
     const workflows = await exportWorkflows(apiConfig);
     logger.debug(`Found ${workflows.length} workflow(s) to delete`);
     
     let deletedCount = 0;
     
     for (const wf of workflows) {
+      if (!wf.id) {
+        logger.warn(`Skipping workflow without ID: ${wf.name || 'unnamed'}`);
+        continue;
+      }
       try {
-        if (!wf.id) {
-          logger.warn(`Skipping workflow without ID: ${wf.name || 'unnamed'}`);
-          continue;
+        // Deactivate workflow if it's active using the correct endpoint
+        if (wf.active) {
+          await client.post(
+            `${apiConfig.baseURL}/rest/workflows/${wf.id}/deactivate`,
+            {}, // No body needed for deactivation
+            { headers, withCredentials: true, timeout: 10000 }
+          );
+          logger.debug(`Deactivated workflow ${wf.name} (${wf.id})`);
         }
-        logger.debug(`Deleting workflow: ${wf.name} (${wf.id})`);
-        
-        // Try direct delete first
-        try {
-          await deleteWorkflow(wf.id, apiConfig);
-          deletedCount++;
-        } catch (error: any) {
-          // If delete fails due to archive requirement, use DELETE with force parameter
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          if (errorMessage.includes('archived') || errorMessage.includes('archive')) {
-            logger.debug(`Workflow ${wf.id} requires archiving, attempting force delete...`);
-            
-            // Try force delete using DELETE with query parameter
-            const axios = (await import('axios')).default;
-            const headers: any = {};
-            if (apiConfig.apiKey) {
-              headers['X-N8N-API-KEY'] = apiConfig.apiKey;
-            } else if (apiConfig.sessionCookie) {
-              headers['Cookie'] = apiConfig.sessionCookie;
-            }
-            
-            try {
-              // Try DELETE with force=true parameter
-              await axios.delete(
-                `${apiConfig.baseURL}/rest/workflows/${wf.id}`,
-                { 
-                  headers, 
-                  withCredentials: true, 
-                  timeout: 10000,
-                  params: { force: true }
-                }
-              );
-              logger.debug(`Force deleted workflow ${wf.id}`);
-              deletedCount++;
-            } catch (forceError: any) {
-              // If force delete also fails, try the archive endpoint
-              logger.debug(`Force delete failed, trying archive endpoint...`);
-              try {
-                // Archive the workflow first
-                await axios.post(
-                  `${apiConfig.baseURL}/rest/workflows/${wf.id}/archive`,
-                  {},
-                  { headers, withCredentials: true, timeout: 10000 }
-                );
-                logger.debug(`Archived workflow ${wf.id}, retrying deletion...`);
-                
-                // Now try delete again
-                await deleteWorkflow(wf.id, apiConfig);
-                deletedCount++;
-              } catch (archiveError) {
-                logger.warn(`Failed to archive/delete workflow ${wf.id}: ${archiveError instanceof Error ? archiveError.message : String(archiveError)}`);
-              }
-            }
-          } else {
-            throw error;
-          }
-        }
+
+        // Now, delete the workflow
+        await client.delete(
+          `${apiConfig.baseURL}/rest/workflows/${wf.id}`,
+          { headers, withCredentials: true, timeout: 10000 }
+        );
+        logger.debug(`Deleted workflow ${wf.name} (${wf.id})`);
+        deletedCount++;
       } catch (error) {
-        logger.warn(`Failed to delete workflow ${wf.id} (${wf.name}): ${error instanceof Error ? error.message : String(error)}`);
+        const axiosError = error as import('axios').AxiosError;
+        if (axiosError.response) {
+          logger.warn(`Failed to delete workflow ${wf.id} (${wf.name}): Status ${axiosError.response.status} - ${JSON.stringify(axiosError.response.data)}`);
+        } else {
+          logger.warn(`Failed to delete workflow ${wf.id} (${wf.name}): ${axiosError.message}`);
+        }
       }
     }
     

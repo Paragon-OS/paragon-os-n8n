@@ -27,16 +27,6 @@ describe('DiscordContextScout', () => {
     instance = null;
   }, TEST_TIMEOUTS.WORKFLOW);
 
-  beforeEach(async () => {
-    await resetTestInstance(instance);
-    // Re-sync workflows after reset (reset clears all workflows)
-    // Import dependencies first, then main workflow
-    if (instance) {
-      await syncWorkflow('Generic Context Scout Core', undefined, instance);
-      await syncWorkflow('DiscordContextScout', undefined, instance);
-    }
-  }, TEST_TIMEOUTS.WORKFLOW);
-
   test.each([
     {
       testCase: 'contact-fuzzy',
