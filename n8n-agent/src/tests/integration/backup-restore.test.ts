@@ -26,6 +26,8 @@ import {
   createTestWorkflows,
   verifyWorkflowReferences,
   clearAllWorkflows,
+  resetN8nState,
+  verifyN8nHealth,
 } from '../../utils/backup-restore-test';
 import { exportWorkflows, type Workflow } from '../../utils/n8n-api';
 
@@ -42,28 +44,50 @@ describe('Backup/Restore Integration Tests', () => {
         'Install: https://podman.io/getting-started/installation'
       );
     }
-  });
 
-  afterAll(async () => {
-    if (instance) {
-      await stopN8nInstance(instance);
-    }
-  });
-
-  beforeEach(async () => {
-    // Start a fresh n8n instance for each test
+    // Start ONE container for all tests (credentials are automatically injected)
+    console.log('🚀 Starting shared n8n instance for all tests...');
     instance = await startN8nInstance({
       timeout: 120000, // 2 minutes for startup
     });
-  });
+    console.log(`✅ Shared instance ready: ${instance.baseUrl}`);
+  }, testTimeout);
 
-  afterEach(async () => {
-    // Clean up instance after each test
+  afterAll(async () => {
+    // Clean up instance after all tests
     if (instance) {
-      await stopN8nInstance(instance);
+      console.log('🧹 Cleaning up shared n8n instance...');
+      try {
+        await stopN8nInstance(instance);
+        console.log('✅ Cleanup complete');
+      } catch (error) {
+        console.error('Failed to stop instance in afterAll:', error);
+      }
       instance = null;
     }
-  });
+  }, testTimeout);
+
+  beforeEach(async () => {
+    // Reset state between tests (much faster than container restart)
+    if (!instance) {
+      throw new Error('Instance not initialized - beforeAll may have failed');
+    }
+    
+    console.log('🔄 Resetting n8n state for next test...');
+    
+    // Health check
+    const healthy = await verifyN8nHealth(instance);
+    if (!healthy) {
+      throw new Error(
+        'n8n instance is unhealthy. Container may need restart. ' +
+        'Try running: npm run test:cleanup'
+      );
+    }
+    
+    // Reset state
+    await resetN8nState(instance);
+    console.log('✅ State reset complete');
+  }, testTimeout);
 
   /**
    * Test 1: Basic backup and restore

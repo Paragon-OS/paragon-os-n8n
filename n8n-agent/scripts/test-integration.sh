@@ -274,7 +274,7 @@ elif [ "$LOG_MODE" = true ]; then
 else
   # Normal mode - run with timeout and show output
   # Calculate timeout based on test type
-  local timeout_seconds=600  # 10 minutes default
+  timeout_seconds=600  # 10 minutes default
   case "$TEST_NAME" in
     all|backup|backup-restore)
       timeout_seconds=900  # 15 minutes for full suite

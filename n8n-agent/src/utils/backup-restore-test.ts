@@ -102,6 +102,7 @@ export async function createTestWorkflows(
 
 /**
  * Clear all workflows from n8n instance
+ * Handles archived workflows that require archiving before deletion
  */
 export async function clearAllWorkflows(instance: N8nInstance): Promise<void> {
   const baseUrl = instance.baseUrl;
@@ -128,9 +129,62 @@ export async function clearAllWorkflows(instance: N8nInstance): Promise<void> {
           continue;
         }
         logger.debug(`Deleting workflow: ${wf.name} (${wf.id})`);
-        const apiConfig = buildApiConfig(instance);
-        await deleteWorkflow(wf.id, apiConfig);
-        deletedCount++;
+        
+        // Try direct delete first
+        try {
+          await deleteWorkflow(wf.id, apiConfig);
+          deletedCount++;
+        } catch (error: any) {
+          // If delete fails due to archive requirement, use DELETE with force parameter
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          if (errorMessage.includes('archived') || errorMessage.includes('archive')) {
+            logger.debug(`Workflow ${wf.id} requires archiving, attempting force delete...`);
+            
+            // Try force delete using DELETE with query parameter
+            const axios = (await import('axios')).default;
+            const headers: any = {};
+            if (apiConfig.apiKey) {
+              headers['X-N8N-API-KEY'] = apiConfig.apiKey;
+            } else if (apiConfig.sessionCookie) {
+              headers['Cookie'] = apiConfig.sessionCookie;
+            }
+            
+            try {
+              // Try DELETE with force=true parameter
+              await axios.delete(
+                `${apiConfig.baseURL}/rest/workflows/${wf.id}`,
+                { 
+                  headers, 
+                  withCredentials: true, 
+                  timeout: 10000,
+                  params: { force: true }
+                }
+              );
+              logger.debug(`Force deleted workflow ${wf.id}`);
+              deletedCount++;
+            } catch (forceError: any) {
+              // If force delete also fails, try the archive endpoint
+              logger.debug(`Force delete failed, trying archive endpoint...`);
+              try {
+                // Archive the workflow first
+                await axios.post(
+                  `${apiConfig.baseURL}/rest/workflows/${wf.id}/archive`,
+                  {},
+                  { headers, withCredentials: true, timeout: 10000 }
+                );
+                logger.debug(`Archived workflow ${wf.id}, retrying deletion...`);
+                
+                // Now try delete again
+                await deleteWorkflow(wf.id, apiConfig);
+                deletedCount++;
+              } catch (archiveError) {
+                logger.warn(`Failed to archive/delete workflow ${wf.id}: ${archiveError instanceof Error ? archiveError.message : String(archiveError)}`);
+              }
+            }
+          } else {
+            throw error;
+          }
+        }
       } catch (error) {
         logger.warn(`Failed to delete workflow ${wf.id} (${wf.name}): ${error instanceof Error ? error.message : String(error)}`);
       }
@@ -592,5 +646,69 @@ export async function runBackupRestoreTest(
     warnings,
     stats,
   };
+}
+
+/**
+ * Verify n8n instance is healthy and responsive
+ */
+export async function verifyN8nHealth(instance: N8nInstance): Promise<boolean> {
+  try {
+    const axios = (await import('axios')).default;
+    const response = await axios.get(`${instance.baseUrl}/healthz`, {
+      timeout: 5000,
+      validateStatus: () => true,
+    });
+    return response.status === 200;
+  } catch (error) {
+    logger.warn(`Health check failed: ${error instanceof Error ? error.message : String(error)}`);
+    return false;
+  }
+}
+
+/**
+ * Reset n8n instance state between tests
+ * - Clears all workflows
+ * - Keeps credentials intact
+ * - Faster than container restart (~1-2s vs 20-30s)
+ */
+export async function resetN8nState(instance: N8nInstance): Promise<void> {
+  logger.info('🔄 Resetting n8n instance state...');
+  
+  try {
+    // Clear all workflows
+    await clearAllWorkflows(instance);
+    
+    // Verify state is clean
+    const apiConfig = buildApiConfig(instance);
+    const workflows = await exportWorkflows(apiConfig);
+    
+    if (workflows.length > 0) {
+      logger.warn(`⚠️  ${workflows.length} workflow(s) still present after reset`);
+      // Try again with force
+      for (const wf of workflows) {
+        if (wf.id) {
+          try {
+            await deleteWorkflow(wf.id, apiConfig);
+          } catch (error) {
+            logger.error(`Failed to force-delete workflow ${wf.id}: ${error instanceof Error ? error.message : String(error)}`);
+          }
+        }
+      }
+      
+      // Final verification
+      const remainingWorkflows = await exportWorkflows(apiConfig);
+      if (remainingWorkflows.length > 0) {
+        throw new Error(
+          `Failed to reset state: ${remainingWorkflows.length} workflow(s) still present after force cleanup. ` +
+          `Names: ${remainingWorkflows.map(w => w.name).join(', ')}`
+        );
+      }
+    }
+    
+    logger.info('✅ n8n instance state reset complete');
+  } catch (error) {
+    logger.error('Failed to reset n8n state:', error);
+    throw new Error(`Failed to reset n8n state: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
