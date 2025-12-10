@@ -3,6 +3,13 @@
  * 
  * Provides utilities for testing backup and restore operations
  * with verification and validation.
+ * 
+ * Also exports reusable utilities for container reuse pattern:
+ * - `resetN8nState()` - Reset instance state between tests (~1-2s)
+ * - `verifyN8nHealth()` - Check if instance is healthy
+ * - `clearAllWorkflows()` - Clear all workflows from instance
+ * 
+ * These utilities can be used by any test suite that manages n8n containers.
  */
 
 import * as fs from 'fs';
@@ -102,7 +109,19 @@ export async function createTestWorkflows(
 
 /**
  * Clear all workflows from n8n instance
- * Handles archived workflows that require archiving before deletion
+ * 
+ * Reusable utility for any test suite using the container reuse pattern.
+ * Handles archived workflows that require archiving before deletion.
+ * 
+ * @param instance - The n8n instance to clear workflows from
+ * @throws Error if workflows cannot be cleared
+ * 
+ * @example
+ * ```typescript
+ * beforeEach(async () => {
+ *   await clearAllWorkflows(instance);
+ * });
+ * ```
  */
 export async function clearAllWorkflows(instance: N8nInstance): Promise<void> {
   const baseUrl = instance.baseUrl;
@@ -650,6 +669,22 @@ export async function runBackupRestoreTest(
 
 /**
  * Verify n8n instance is healthy and responsive
+ * 
+ * Reusable utility for any test suite using the container reuse pattern.
+ * Use in beforeEach to ensure instance is ready before each test.
+ * 
+ * @param instance - The n8n instance to check
+ * @returns true if instance is healthy, false otherwise
+ * 
+ * @example
+ * ```typescript
+ * beforeEach(async () => {
+ *   const healthy = await verifyN8nHealth(instance);
+ *   if (!healthy) {
+ *     throw new Error('Instance is unhealthy');
+ *   }
+ * });
+ * ```
  */
 export async function verifyN8nHealth(instance: N8nInstance): Promise<boolean> {
   try {
@@ -667,9 +702,23 @@ export async function verifyN8nHealth(instance: N8nInstance): Promise<boolean> {
 
 /**
  * Reset n8n instance state between tests
+ * 
+ * Reusable utility for any test suite using the container reuse pattern.
+ * Use in beforeEach to reset state between tests without restarting containers.
+ * 
  * - Clears all workflows
  * - Keeps credentials intact
  * - Faster than container restart (~1-2s vs 20-30s)
+ * 
+ * @param instance - The n8n instance to reset
+ * @throws Error if reset fails or workflows cannot be cleared
+ * 
+ * @example
+ * ```typescript
+ * beforeEach(async () => {
+ *   await resetN8nState(instance);
+ * });
+ * ```
  */
 export async function resetN8nState(instance: N8nInstance): Promise<void> {
   logger.info('🔄 Resetting n8n instance state...');
