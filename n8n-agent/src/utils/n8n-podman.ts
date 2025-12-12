@@ -332,6 +332,11 @@ export async function startN8nInstance(
     envArgs.push('-e', 'N8N_SKIP_WEBHOOK_DEREGISTRATION_SHUTDOWN=true'); // Skip webhook cleanup
     envArgs.push('-e', 'N8N_PERSONALIZATION_ENABLED=false'); // Disable personalization
     envArgs.push('-e', 'N8N_USER_FOLDER=/home/node/.n8n');
+
+    // Enhanced logging for better error visibility
+    envArgs.push('-e', 'N8N_LOG_LEVEL=debug'); // Enable debug logging for detailed execution info
+    envArgs.push('-e', 'N8N_LOG_OUTPUT=console,file'); // Log to both console and file
+    envArgs.push('-e', 'N8N_LOG_FILE_LOCATION=/home/node/.n8n/n8n.log'); // Persistent log file
     
     // Pass through Google Gemini API key from local .env if present
     const geminiEnvKeys = [
@@ -508,16 +513,69 @@ export async function isInstanceRunning(containerName: string): Promise<boolean>
 }
 
 /**
- * Get container logs
+ * Get container logs (stdout/stderr)
+ * @param containerName - Name of the container
+ * @param tail - Number of lines to retrieve (default 1000 for better error context)
  */
-export async function getContainerLogs(containerName: string, tail: number = 100): Promise<string> {
+export async function getContainerLogs(containerName: string, tail: number = 1000): Promise<string> {
   try {
-    const { stdout } = await execa('podman', ['logs', '--tail', String(tail), containerName], {
+    const { stdout, stderr } = await execa('podman', ['logs', '--tail', String(tail), containerName], {
+      timeout: 30000, // Increased timeout for larger log retrieval
+    });
+    // Combine stdout and stderr for complete picture
+    return stderr ? `${stdout}\n--- STDERR ---\n${stderr}` : stdout;
+  } catch (error) {
+    throw new Error(`Failed to get logs for container ${containerName}: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * Get n8n log file from inside the container
+ * This provides detailed execution logs when N8N_LOG_OUTPUT=file is enabled
+ * @param containerName - Name of the container
+ * @param tail - Number of lines to retrieve (default 500)
+ */
+export async function getN8nLogFile(containerName: string, tail: number = 500): Promise<string> {
+  try {
+    const { stdout } = await execa('podman', [
+      'exec', containerName,
+      'tail', '-n', String(tail), '/home/node/.n8n/n8n.log'
+    ], {
       timeout: 10000,
     });
     return stdout;
   } catch (error) {
-    throw new Error(`Failed to get logs for container ${containerName}: ${error instanceof Error ? error.message : String(error)}`);
+    // Log file might not exist yet or container might be stopped
+    logger.debug(`Could not read n8n log file: ${error instanceof Error ? error.message : String(error)}`);
+    return '';
   }
+}
+
+/**
+ * Get comprehensive logs from container (both container logs and n8n log file)
+ * Use this for debugging failed tests
+ * @param containerName - Name of the container
+ * @param containerLogTail - Lines from container stdout/stderr (default 500)
+ * @param n8nLogTail - Lines from n8n.log file (default 500)
+ */
+export async function getComprehensiveLogs(
+  containerName: string,
+  containerLogTail: number = 500,
+  n8nLogTail: number = 500
+): Promise<{ containerLogs: string; n8nLogs: string; combined: string }> {
+  const [containerLogs, n8nLogs] = await Promise.all([
+    getContainerLogs(containerName, containerLogTail).catch(() => '(container logs unavailable)'),
+    getN8nLogFile(containerName, n8nLogTail).catch(() => '(n8n log file unavailable)'),
+  ]);
+
+  const combined = [
+    '=== CONTAINER LOGS (stdout/stderr) ===',
+    containerLogs,
+    '',
+    '=== N8N LOG FILE (/home/node/.n8n/n8n.log) ===',
+    n8nLogs,
+  ].join('\n');
+
+  return { containerLogs, n8nLogs, combined };
 }
 

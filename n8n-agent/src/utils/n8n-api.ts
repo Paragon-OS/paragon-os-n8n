@@ -65,7 +65,7 @@ export interface N8nExecutionResponse {
 /**
  * Get n8n base URL from environment or use default
  */
-function getN8nBaseUrl(): string {
+export function getN8nBaseUrl(): string {
   return process.env.N8N_URL || process.env.N8N_BASE_URL || 'http://localhost:5678';
 }
 

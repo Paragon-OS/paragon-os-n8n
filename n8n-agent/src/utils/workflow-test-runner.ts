@@ -6,14 +6,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import axios from "axios";
-import { 
-  importWorkflowFromFile, 
-  executeWorkflow, 
-  formatExecutionResult,
-  getWorkflow,
-  getN8nBaseUrl,
+import {
+  importWorkflowFromFile,
   createApiClient,
-  type N8nExecutionResponse,
+  getN8nBaseUrl,
   type N8nApiConfig
 } from "./n8n-api";
 import { collectJsonFilesRecursive } from "./file";
@@ -396,27 +392,27 @@ export async function executeWorkflowTest(
       };
     }
 
-    let executionResult: N8nExecutionResponse;
+    let executionResult: { code: number; data: unknown; raw: string };
     try {
       // Call the production webhook
       const baseUrl = apiConfig?.baseURL || getN8nBaseUrl();
       const webhookUrl = `${baseUrl.replace('/rest', '')}/webhook/test-runner`;
-      
+
       logger.debug(`Calling webhook: ${webhookUrl}`);
       logger.debug(`Request body: ${JSON.stringify({ workflow: workflowName, testCase, testData }).substring(0, 300)}`);
-      
-      const webhookResponse = await axios.post(webhookUrl, 
+
+      const webhookResponse = await axios.post(webhookUrl,
         { workflow: workflowName, testCase, testData },
-        { 
+        {
           timeout: apiConfig?.timeout || 2 * 60 * 1000,
           headers: { 'Content-Type': 'application/json' }
         }
       );
-      
+
       logger.debug(`Webhook response status: ${webhookResponse.status}`);
       logger.debug(`Webhook response data (first 1000 chars): ${JSON.stringify(webhookResponse.data).substring(0, 1000)}`);
-      
-      // Convert webhook response to N8nExecutionResponse format
+
+      // Simple response format that formatExecutionResult can handle
       executionResult = {
         code: 0,
         data: webhookResponse.data,
@@ -430,16 +426,84 @@ export async function executeWorkflowTest(
       }
       logger.error(errorMsg);
 
-      // Try to get container logs to help diagnose the error
-      let containerLogs = '';
+      // Collect comprehensive diagnostic information
+      const errorDetails: Record<string, unknown> = {};
+
       if (config && 'containerName' in config) {
+        const instance = config as N8nInstance;
+
+        // Get comprehensive logs (container stdout + n8n log file)
         try {
-          const { getContainerLogs } = await import('./n8n-podman');
-          const instance = config as N8nInstance;
-          containerLogs = await getContainerLogs(instance.containerName, 500);
-          logger.error(`\n📋 n8n Container Logs (last 200 lines):\n${containerLogs}`);
+          const { getComprehensiveLogs } = await import('./n8n-podman');
+          const logs = await getComprehensiveLogs(instance.containerName, 500, 500);
+          errorDetails.containerLogs = logs.containerLogs;
+          errorDetails.n8nLogs = logs.n8nLogs;
+          logger.error(`\n📋 CONTAINER LOGS:\n${logs.containerLogs.substring(0, 3000)}`);
+          if (logs.n8nLogs) {
+            logger.error(`\n📋 N8N LOG FILE:\n${logs.n8nLogs.substring(0, 3000)}`);
+          }
         } catch (logError) {
           logger.warn(`Could not fetch container logs: ${logError instanceof Error ? logError.message : String(logError)}`);
+        }
+
+        // Query n8n execution history for detailed error info
+        try {
+          const client = createApiClient(apiConfig);
+          const execResponse = await client.get('/executions', {
+            params: { limit: 5 },
+          });
+
+          if (execResponse.status === 200 && execResponse.data) {
+            const executions = Array.isArray(execResponse.data)
+              ? execResponse.data
+              : (execResponse.data.data || execResponse.data.executions || []);
+
+            if (executions.length > 0) {
+              // Get the most recent execution details
+              const latestExec = executions[0] as { id: string; status?: string };
+              const detailResponse = await client.get(`/executions/${latestExec.id}`);
+
+              if (detailResponse.status === 200) {
+                const execData = detailResponse.data as {
+                  id: string;
+                  status?: string;
+                  data?: {
+                    resultData?: {
+                      error?: unknown;
+                      runData?: Record<string, Array<{ error?: unknown; executionStatus?: string }>>
+                    }
+                  }
+                };
+
+                errorDetails.executionId = execData.id;
+                errorDetails.executionStatus = execData.status;
+
+                // Extract error details from execution
+                if (execData.data?.resultData?.error) {
+                  errorDetails.executionError = execData.data.resultData.error;
+                  logger.error(`\n📋 EXECUTION ERROR:\n${JSON.stringify(execData.data.resultData.error, null, 2)}`);
+                }
+
+                // Find nodes that failed
+                const runData = execData.data?.resultData?.runData;
+                if (runData) {
+                  const failedNodes = Object.entries(runData)
+                    .filter(([, data]) => data.some(d => d.executionStatus === 'error' || d.error))
+                    .map(([nodeName, data]) => ({
+                      nodeName,
+                      error: data.find(d => d.error)?.error,
+                    }));
+
+                  if (failedNodes.length > 0) {
+                    errorDetails.failedNodes = failedNodes;
+                    logger.error(`\n📋 FAILED NODES:\n${JSON.stringify(failedNodes, null, 2)}`);
+                  }
+                }
+              }
+            }
+          }
+        } catch (execError) {
+          logger.debug(`Could not query execution history: ${execError instanceof Error ? execError.message : String(execError)}`);
         }
       }
 
@@ -447,12 +511,13 @@ export async function executeWorkflowTest(
         testCase,
         success: false,
         error: errorMsg,
-        errorDetails: containerLogs ? { containerLogs } : undefined,
+        errorDetails: Object.keys(errorDetails).length > 0 ? errorDetails : undefined,
       };
     }
 
-    // Format execution result to match expected format
-    const executionJson = formatExecutionResult(executionResult);
+    // The webhook response is the direct workflow output
+    // formatExecutionResult is for CLI execution output, not webhook responses
+    const executionJson = executionResult.data;
     
     // Check for empty output
     if (
