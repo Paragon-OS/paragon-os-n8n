@@ -355,6 +355,31 @@ if (!result.success && result.errorDetails) {
 }
 ```
 
+### Workflow Test Runner Logging
+
+The `executeWorkflowTest()` function logs detailed webhook and execution info:
+
+**Webhook request/response:**
+```
+🌐 WEBHOOK REQUEST: POST http://localhost:50000/webhook/test-runner
+   Workflow: DynamicRAG, TestCase: status
+✅ WEBHOOK RESPONSE: 200 (1234ms)
+```
+
+**Execution lifecycle (on success):**
+```
+📊 EXECUTION SAVED: ID=1, status=success, workflow=gS11X4tiyb4SgqWA, duration=27ms
+```
+
+**On failure:**
+```
+❌ WEBHOOK FAILED after 120000ms
+📋 CONTAINER LOGS: ...
+📋 N8N LOG FILE: ...
+📋 EXECUTION ERROR: ...
+📋 FAILED NODES: ...
+```
+
 ### Manual debugging
 
 ```bash
@@ -368,6 +393,30 @@ podman logs -f n8n-debug
 
 # Access n8n UI at http://localhost:5678
 # Login: setup a user, then manually run workflows
+```
+
+### Checking execution history
+
+Executions are saved and can be queried via the REST API. **Note the nested response structure:**
+
+```typescript
+const response = await axios.get(
+  `${instance.baseUrl}/rest/executions`,
+  { headers: { Cookie: instance.sessionCookie }, params: { limit: 10 } }
+);
+
+// IMPORTANT: Executions are in response.data.data.results, NOT response.data.data
+const executions = response.data?.data?.results || [];
+```
+
+Container logs show detailed execution lifecycle for debugging:
+```
+Received webhook "POST" for path "test-runner"
+Execution added {"executionId":"1"...}
+Start executing node "Webhook"
+Running node "Webhook" finished successfully
+Save execution progress to database for execution ID 1
+Workflow execution finished successfully
 ```
 
 ## Test Data Patterns

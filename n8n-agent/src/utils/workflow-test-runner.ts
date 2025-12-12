@@ -397,20 +397,27 @@ export async function executeWorkflowTest(
       // Call the production webhook
       const baseUrl = apiConfig?.baseURL || getN8nBaseUrl();
       const webhookUrl = `${baseUrl.replace('/rest', '')}/webhook/test-runner`;
+      const requestBody = { workflow: workflowName, testCase, testData };
+      const startTime = Date.now();
 
-      logger.debug(`Calling webhook: ${webhookUrl}`);
-      logger.debug(`Request body: ${JSON.stringify({ workflow: workflowName, testCase, testData }).substring(0, 300)}`);
+      // Log webhook request details
+      logger.info(`🌐 WEBHOOK REQUEST: POST ${webhookUrl}`);
+      logger.info(`   Workflow: ${workflowName}, TestCase: ${testCase}`);
+      logger.debug(`   Request body: ${JSON.stringify(requestBody).substring(0, 500)}`);
 
       const webhookResponse = await axios.post(webhookUrl,
-        { workflow: workflowName, testCase, testData },
+        requestBody,
         {
           timeout: apiConfig?.timeout || 2 * 60 * 1000,
           headers: { 'Content-Type': 'application/json' }
         }
       );
 
-      logger.debug(`Webhook response status: ${webhookResponse.status}`);
-      logger.debug(`Webhook response data (first 1000 chars): ${JSON.stringify(webhookResponse.data).substring(0, 1000)}`);
+      const duration = Date.now() - startTime;
+
+      // Log webhook response details
+      logger.info(`✅ WEBHOOK RESPONSE: ${webhookResponse.status} (${duration}ms)`);
+      logger.debug(`   Response data (first 1000 chars): ${JSON.stringify(webhookResponse.data).substring(0, 1000)}`);
 
       // Simple response format that formatExecutionResult can handle
       executionResult = {
@@ -418,12 +425,41 @@ export async function executeWorkflowTest(
         data: webhookResponse.data,
         raw: JSON.stringify(webhookResponse.data)
       };
+
+      // Log execution lifecycle - query n8n execution history for details
+      if (config && 'containerName' in config) {
+        try {
+          const client = createApiClient(apiConfig);
+          const execResponse = await client.get('/executions', {
+            params: { limit: 1 },
+          });
+
+          if (execResponse.status === 200 && execResponse.data) {
+            // n8n REST API returns { data: { results: [...] } } structure
+            const executions = execResponse.data?.data?.results ||
+                               execResponse.data?.results ||
+                               (Array.isArray(execResponse.data) ? execResponse.data : []);
+
+            if (executions.length > 0) {
+              const latestExec = executions[0] as { id: string; status?: string; workflowId?: string; stoppedAt?: string; startedAt?: string };
+              const execDuration = latestExec.stoppedAt && latestExec.startedAt
+                ? new Date(latestExec.stoppedAt).getTime() - new Date(latestExec.startedAt).getTime()
+                : 0;
+              logger.info(`📊 EXECUTION SAVED: ID=${latestExec.id}, status=${latestExec.status}, workflow=${latestExec.workflowId}, duration=${execDuration}ms`);
+            }
+          }
+        } catch (execError) {
+          logger.debug(`Could not query execution history: ${execError instanceof Error ? execError.message : String(execError)}`);
+        }
+      }
     } catch (error) {
+      const duration = Date.now() - startTime;
       let errorMsg = `Webhook execution failed: ${error instanceof Error ? error.message : String(error)}`;
       if (axios.isAxiosError(error) && error.response) {
         errorMsg += `\nStatus: ${error.response.status}`;
         errorMsg += `\nResponse: ${JSON.stringify(error.response.data).substring(0, 500)}`;
       }
+      logger.error(`❌ WEBHOOK FAILED after ${duration}ms`);
       logger.error(errorMsg);
 
       // Collect comprehensive diagnostic information

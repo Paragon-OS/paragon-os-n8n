@@ -287,6 +287,23 @@ const n8nLogs = await getN8nLogFile(containerName);
 const { containerLogs, n8nLogs, combined } = await getComprehensiveLogs(containerName);
 ```
 
+### What Container Logs Show (Webhook Execution)
+
+When webhooks are called, container logs show detailed execution lifecycle:
+
+```
+Received webhook "POST" for path "test-runner"
+Execution added {"executionId":"1"...}
+Execution ID 1 had Execution data. Running with payload.
+Workflow execution started {"workflowId":"gS11X4tiyb4SgqWA"...}
+Start executing node "Webhook"
+Running node "Webhook" finished successfully
+Save execution progress to database for execution ID 1
+Workflow execution finished successfully
+Save execution data to database for execution ID 1
+Execution finalized {"executionId":"1"...}
+```
+
 ### What to Look For in Logs
 
 **Successful workflow reference rewriting:**
@@ -303,6 +320,56 @@ const { containerLogs, n8nLogs, combined } = await getComprehensiveLogs(containe
 ```
 Error in handling webhook request POST /webhook/test-runner: No item to return was found
 ```
+
+## Execution History API
+
+n8n saves execution history that can be queried via the REST API.
+
+### API Response Format
+
+**IMPORTANT:** The executions API returns a nested structure:
+```json
+{
+  "data": {
+    "results": [
+      {
+        "id": "1",
+        "workflowId": "gS11X4tiyb4SgqWA",
+        "mode": "webhook",
+        "status": "success",
+        "startedAt": "2025-12-12T21:34:08.695Z",
+        "stoppedAt": "2025-12-12T21:34:08.722Z"
+      }
+    ],
+    "count": 1,
+    "estimated": false
+  }
+}
+```
+
+The actual executions array is at `response.data.data.results`, NOT `response.data.data` or `response.data`.
+
+### Querying Executions
+```typescript
+const response = await axios.get(
+  `${instance.baseUrl}/rest/executions`,
+  {
+    headers: { Cookie: instance.sessionCookie },
+    params: { limit: 10 },
+  }
+);
+
+// Correct parsing:
+const executions = response.data?.data?.results || [];
+console.log(`Found ${executions.length} executions`);
+```
+
+### When Executions Are Saved
+
+- **Webhook executions**: Always saved (mode: "webhook")
+- **Manual trigger via UI**: Saved
+- **CLI `n8n execute --id=X`**: May not be saved (depends on execution mode)
+- **REST API `/run` endpoint**: Returns 500 for manual trigger workflows (use webhooks instead)
 
 ## Workflow Reference Resolution
 
