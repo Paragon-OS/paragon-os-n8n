@@ -9,8 +9,6 @@
     "n8n:workflows:tree": "ts-node src/n8n-workflows-cli.ts tree",
     "n8n:verify": "ts-node src/n8n-workflows-cli.ts verify",
     "n8n:delete-all": "ts-node src/n8n-workflows-cli.ts delete-all",
-    "n8n:db:fix": "python3 scripts/fix-workflow-references.py",
-    "n8n:db:check": "python3 scripts/fix-workflow-references.py --check-only",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
