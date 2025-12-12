@@ -223,3 +223,109 @@ REDIS_PORT=6379
 - `workflows/` - JSON workflow definitions organized by tags
 - `scripts/fix-workflow-references.py` - Python script for database fixes
 - `scripts/test-integration.sh` - Integration test runner with logging support
+
+## Custom n8n Docker Image
+
+The project uses a custom n8n Docker image (`localhost/n8n-paragon-os:latest`) with the `n8n-nodes-paragon-os` custom nodes pre-installed. This is required for workflow tests that use custom nodes like FuzzySearch and JsonDocumentLoader.
+
+### Building the Custom Image
+
+```bash
+./docker/build-custom-image.sh    # Builds localhost/n8n-paragon-os:latest
+npm run docker:build              # Same as above
+```
+
+The build process:
+1. Builds the n8n-nodes package from `../n8n-nodes/`
+2. Removes TextManipulation node (ESM incompatibility with n8n)
+3. Copies package with dependencies into Docker image
+4. Installs production dependencies (`npm install --omit=dev`)
+
+### Docker Files
+
+- `docker/n8n-custom.Dockerfile` - Custom n8n image definition
+- `docker/docker-entrypoint.sh` - Entrypoint that copies custom nodes at runtime
+- `docker/build-custom-image.sh` - Build script
+
+### Critical Implementation Details
+
+**N8N_USER_FOLDER Nesting Issue:**
+When `N8N_USER_FOLDER=/home/node/.n8n` is set (which the test framework does), n8n creates a NESTED `.n8n` subfolder:
+- Config saved to: `/home/node/.n8n/.n8n/config`
+- Nodes expected at: `/home/node/.n8n/.n8n/nodes/`
+
+The entrypoint copies custom nodes to BOTH locations to handle this:
+```sh
+mkdir -p /home/node/.n8n/nodes/node_modules
+mkdir -p /home/node/.n8n/.n8n/nodes/node_modules
+cp -r /opt/n8n-custom-nodes/... /home/node/.n8n/nodes/node_modules/
+cp -r /opt/n8n-custom-nodes/... /home/node/.n8n/.n8n/nodes/node_modules/
+```
+
+**Custom Node Dependencies:**
+Custom nodes MUST include their `node_modules/` dependencies (e.g., `minisearch` for FuzzySearch). Copying only `dist/` contents will cause "Cannot find module" errors at runtime.
+
+**Package Structure for n8n Custom Nodes:**
+```
+~/.n8n/nodes/
+├── package.json                           # {"dependencies": {"n8n-nodes-paragon-os": "1.4.2"}}
+└── node_modules/
+    └── n8n-nodes-paragon-os/
+        ├── package.json                   # Must have "n8n" section with nodes array
+        ├── dist/
+        │   └── nodes/
+        │       ├── FuzzySearch/
+        │       └── JsonDocumentLoader/
+        └── node_modules/                  # Dependencies like minisearch
+```
+
+### Debugging Custom Node Issues
+
+**"Unrecognized node type" Error:**
+This means n8n didn't find/load the custom node. Check:
+1. Nodes are in correct directory (see N8N_USER_FOLDER nesting above)
+2. `package.json` has valid `n8n.nodes` array pointing to compiled `.node.js` files
+3. All dependencies are installed (`node_modules/` present in package)
+4. No ESM/CommonJS compatibility issues (n8n uses CommonJS)
+
+**"Cannot find module 'X'" Error:**
+The node's dependencies aren't installed. Ensure `npm install --omit=dev` runs in the package directory during Docker build.
+
+**Verifying Custom Nodes Load:**
+```bash
+# Start container with debug logging
+podman run -d --name n8n-debug -p 5678:5678 \
+  -e N8N_LOG_LEVEL=debug \
+  localhost/n8n-paragon-os:latest
+
+# Check for node loading
+podman logs n8n-debug 2>&1 | grep -i "loaded.*nodes\|paragon\|fuzzy"
+# Should see: "Loaded all credentials and nodes from n8n-nodes-paragon-os"
+```
+
+### Test Framework Integration
+
+The test framework (`test-helpers.ts`) automatically uses the custom image:
+```typescript
+export const DEFAULT_N8N_CUSTOM_IMAGE = 'localhost/n8n-paragon-os:latest';
+```
+
+Container startup in `n8n-podman.ts`:
+```typescript
+const containerArgs = [
+  'run', '-d',
+  '--name', containerName,
+  '-p', `${port}:5678`,
+  '-v', `${dataDir}:/home/node/.n8n`,  // Volume mount
+  '-e', 'N8N_USER_FOLDER=/home/node/.n8n',
+  imageName,
+];
+```
+
+### Troubleshooting Checklist
+
+1. **Image exists?** `podman images | grep n8n-paragon-os`
+2. **Rebuild image:** `./docker/build-custom-image.sh`
+3. **Check entrypoint ran:** Look for "Setting up custom nodes..." in container logs
+4. **Check node directories:** `podman exec <container> ls -la /home/node/.n8n/.n8n/nodes/node_modules/`
+5. **Check package.json:** Verify `n8n.nodes` array doesn't reference deleted files (like TextManipulation)
