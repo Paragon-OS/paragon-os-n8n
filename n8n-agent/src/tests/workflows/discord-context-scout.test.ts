@@ -1,11 +1,10 @@
-import { describe, test, expect, beforeAll, afterAll, beforeEach } from 'vitest';
-import { executeWorkflowTest, syncWorkflow } from '../../utils/workflow-test-runner';
-import { 
-  setupTestInstance, 
-  cleanupTestInstance, 
-  resetTestInstance, 
+import { describe, test, expect, beforeAll, afterAll } from 'vitest';
+import { executeWorkflowTest } from '../../utils/workflow-test-runner';
+import {
+  setupTestInstance,
+  cleanupTestInstance,
   TEST_TIMEOUTS,
-  type N8nInstance 
+  type N8nInstance
 } from '../../utils/test-helpers';
 
 describe('DiscordContextScout', () => {
@@ -13,13 +12,8 @@ describe('DiscordContextScout', () => {
 
   beforeAll(async () => {
     instance = await setupTestInstance();
-    // Sync workflows once before all tests (import dependencies first)
-    if (instance) {
-      // Import dependency workflow first
-      await syncWorkflow('Generic Context Scout Core', undefined, instance);
-      // Then import the main workflow
-      await syncWorkflow('DiscordContextScout', undefined, instance);
-    }
+    // Note: executeWorkflowTest() auto-imports all helper workflows in correct dependency order
+    // No need to manually call syncWorkflow() - it doesn't handle transitive dependencies
   }, TEST_TIMEOUTS.WORKFLOW);
 
   afterAll(async () => {

@@ -78,7 +78,7 @@ Tests that execute actual n8n workflows using a Test Runner helper workflow. Use
 
 **Workflow Test Runner Pattern:**
 ```typescript
-import { executeWorkflowTest, syncWorkflow } from '../../utils/workflow-test-runner';
+import { executeWorkflowTest } from '../../utils/workflow-test-runner';
 import { setupTestInstance, cleanupTestInstance, TEST_TIMEOUTS, type N8nInstance } from '../../utils/test-helpers';
 
 describe('MyWorkflow', () => {
@@ -86,9 +86,8 @@ describe('MyWorkflow', () => {
 
   beforeAll(async () => {
     instance = await setupTestInstance();
-    // Sync dependency workflows first, then main workflow
-    await syncWorkflow('DependencyWorkflow', undefined, instance);
-    await syncWorkflow('MyWorkflow', undefined, instance);
+    // NOTE: Do NOT call syncWorkflow() here!
+    // executeWorkflowTest() auto-imports all helpers in correct dependency order
   }, TEST_TIMEOUTS.WORKFLOW);
 
   afterAll(async () => {
@@ -107,11 +106,14 @@ describe('MyWorkflow', () => {
 ```
 
 **Key Functions (`workflow-test-runner.ts`):**
-- `executeWorkflowTest(workflowName, testCase, testData, workflowsDir?, config?)` - Execute workflow with test data via Test Runner
-- `syncWorkflow(workflowName, workflowsDir?, config?)` - Import workflow to n8n instance (handles dependencies)
+- `executeWorkflowTest(workflowName, testCase, testData, workflowsDir?, config?)` - Execute workflow with test data via Test Runner. **Auto-imports all helper workflows in correct dependency order.**
+- `syncWorkflow(workflowName, workflowsDir?, config?)` - Import single workflow (deprecated for tests - doesn't handle transitive dependencies)
 - `buildApiConfigFromInstance(instance)` - Convert N8nInstance to N8nApiConfig
 
 **Test Runner Workflow:** `workflows/HELPERS/Test Runner.json` - A special workflow that wraps other workflows for testing. It injects test data and captures output.
+
+**IMPORTANT - Workflow Reference Resolution:**
+Workflow JSON files contain hardcoded IDs that must be rewritten when imported to a new n8n instance. The `workflow-reference-converter.ts` handles this, but only if dependencies are imported FIRST. See `src/tests/workflows/CLAUDE.md` for details on debugging reference issues.
 
 ### Integration Tests (`src/tests/integration/`)
 

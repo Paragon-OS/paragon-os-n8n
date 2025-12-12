@@ -448,19 +448,27 @@ export async function executeWorkflowTest(
 
         // Query n8n execution history for detailed error info
         try {
+          logger.info(`📋 Querying execution history from n8n API...`);
           const client = createApiClient(apiConfig);
           const execResponse = await client.get('/executions', {
             params: { limit: 5 },
           });
 
+          logger.info(`📋 Executions API response status: ${execResponse.status}`);
+          logger.debug(`📋 Executions API raw response: ${JSON.stringify(execResponse.data).substring(0, 500)}`);
+
           if (execResponse.status === 200 && execResponse.data) {
+            // n8n REST API returns { data: [...], nextCursor: ... } structure
             const executions = Array.isArray(execResponse.data)
               ? execResponse.data
-              : (execResponse.data.data || execResponse.data.executions || []);
+              : (execResponse.data.data || execResponse.data.executions || execResponse.data.results || []);
+
+            logger.info(`📋 Found ${executions?.length ?? 0} execution(s) in history`);
 
             if (executions.length > 0) {
               // Get the most recent execution details
-              const latestExec = executions[0] as { id: string; status?: string };
+              const latestExec = executions[0] as { id: string; status?: string; workflowId?: string };
+              logger.info(`📋 Fetching details for execution: ${latestExec.id} (status: ${latestExec.status}, workflowId: ${latestExec.workflowId})`);
               const detailResponse = await client.get(`/executions/${latestExec.id}`);
 
               if (detailResponse.status === 200) {
@@ -477,6 +485,7 @@ export async function executeWorkflowTest(
 
                 errorDetails.executionId = execData.id;
                 errorDetails.executionStatus = execData.status;
+                logger.info(`📋 Execution ${execData.id} status: ${execData.status}`);
 
                 // Extract error details from execution
                 if (execData.data?.resultData?.error) {
@@ -487,6 +496,9 @@ export async function executeWorkflowTest(
                 // Find nodes that failed
                 const runData = execData.data?.resultData?.runData;
                 if (runData) {
+                  const nodeNames = Object.keys(runData);
+                  logger.info(`📋 Nodes executed: ${nodeNames.join(', ')}`);
+
                   const failedNodes = Object.entries(runData)
                     .filter(([, data]) => data.some(d => d.executionStatus === 'error' || d.error))
                     .map(([nodeName, data]) => ({
@@ -497,13 +509,19 @@ export async function executeWorkflowTest(
                   if (failedNodes.length > 0) {
                     errorDetails.failedNodes = failedNodes;
                     logger.error(`\n📋 FAILED NODES:\n${JSON.stringify(failedNodes, null, 2)}`);
+                  } else {
+                    logger.info(`📋 No nodes reported errors in execution data`);
                   }
+                } else {
+                  logger.warn(`📋 No runData in execution response`);
                 }
               }
+            } else {
+              logger.warn(`📋 No executions found in n8n history - workflow may not have been saved`);
             }
           }
         } catch (execError) {
-          logger.debug(`Could not query execution history: ${execError instanceof Error ? execError.message : String(execError)}`);
+          logger.warn(`📋 Could not query execution history: ${execError instanceof Error ? execError.message : String(execError)}`);
         }
       }
 

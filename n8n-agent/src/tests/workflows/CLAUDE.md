@@ -55,7 +55,7 @@ Tests that execute actual n8n workflows using the **Test Runner** helper workflo
 
 ```typescript
 import { describe, test, expect, beforeAll, afterAll } from 'vitest';
-import { executeWorkflowTest, syncWorkflow } from '../../utils/workflow-test-runner';
+import { executeWorkflowTest } from '../../utils/workflow-test-runner';
 import {
   setupTestInstance,
   cleanupTestInstance,
@@ -68,10 +68,8 @@ describe('MyWorkflow', () => {
 
   beforeAll(async () => {
     instance = await setupTestInstance();
-    // Sync dependency workflows first
-    await syncWorkflow('DependencyWorkflow', undefined, instance);
-    // Then sync the workflow under test
-    await syncWorkflow('MyWorkflow', undefined, instance);
+    // NOTE: Do NOT manually call syncWorkflow() here!
+    // executeWorkflowTest() auto-imports all helper workflows in correct dependency order
   }, TEST_TIMEOUTS.WORKFLOW);
 
   afterAll(async () => {
@@ -111,6 +109,26 @@ describe('MyWorkflow', () => {
     expect(result.output).toBeDefined();
   }, TEST_TIMEOUTS.WORKFLOW);
 });
+```
+
+### IMPORTANT: Do NOT Use syncWorkflow() in beforeAll
+
+**Why?** `syncWorkflow()` imports a single workflow without its transitive dependencies. This causes broken workflow references because:
+
+1. Workflow JSON files contain **hardcoded workflow IDs** from the original n8n instance
+2. When imported to a fresh test container, workflows get **new IDs**
+3. The reference converter rewrites these IDs, but only if dependencies are already imported
+4. If you import `Generic Context Scout Core` before `Dynamic RAG`, the reference to Dynamic RAG can't be resolved
+
+**The Fix:** Let `executeWorkflowTest()` handle all imports. It:
+1. Imports ALL helper workflows from `workflows/HELPERS/` in correct dependency order
+2. Imports the target workflow being tested
+3. Rewrites workflow references to use the new container's IDs
+
+**Symptoms of broken references:**
+```
+⚠️ Could not resolve workflow reference "BVI8WfWulWFCFvwk" to an ID, keeping as-is
+Error: No item to return was found
 ```
 
 ### Test Result Structure
@@ -205,7 +223,7 @@ Edit `workflows/HELPERS/Test Runner.json` to add a route for your workflow:
 ```typescript
 // src/tests/workflows/my-workflow.test.ts
 import { describe, test, expect, beforeAll, afterAll } from 'vitest';
-import { executeWorkflowTest, syncWorkflow } from '../../utils/workflow-test-runner';
+import { executeWorkflowTest } from '../../utils/workflow-test-runner';
 import {
   setupTestInstance,
   cleanupTestInstance,
@@ -218,8 +236,7 @@ describe('MyWorkflow', () => {
 
   beforeAll(async () => {
     instance = await setupTestInstance();
-    // Sync any dependencies your workflow needs
-    await syncWorkflow('MyWorkflow', undefined, instance);
+    // executeWorkflowTest() handles all workflow imports automatically
   }, TEST_TIMEOUTS.WORKFLOW);
 
   afterAll(async () => {
@@ -263,6 +280,29 @@ If you see `"Unrecognized node type: n8n-nodes-paragon-os.fuzzySearch"`, the cus
 
 ## Debugging Workflow Tests
 
+### Workflow Reference Errors
+
+```
+⚠️ Could not resolve workflow reference "BVI8WfWulWFCFvwk" to an ID, keeping as-is
+Error: No item to return was found
+```
+
+**Root Cause:** Workflow references are broken because dependencies weren't imported in the correct order.
+
+**How workflow references work:**
+1. Workflow JSON files contain `workflowId` fields with hardcoded IDs (e.g., `"value": "BVI8WfWulWFCFvwk"`)
+2. These IDs are from the original n8n instance where workflows were created
+3. When imported to a fresh test container, workflows get NEW database IDs
+4. The `workflow-reference-converter.ts` rewrites old IDs → new IDs using `cachedResultName` (workflow name)
+5. BUT this only works if the referenced workflow is ALREADY imported
+
+**Solution:** Don't manually call `syncWorkflow()`. Let `executeWorkflowTest()` handle imports.
+
+**To verify references are being rewritten correctly, look for:**
+```
+🔄 Rewriting workflow reference: "BVI8WfWulWFCFvwk" → "a4AQxibvAESCiaDe"
+```
+
 ### Test fails with webhook error
 
 ```
@@ -273,6 +313,17 @@ The Test Runner workflow isn't activated. Check:
 1. Workflow was imported: Look for "Test Runner imported with ID: ..."
 2. Workflow was activated: Look for "Test Runner activated"
 3. Webhook registered: 2-second wait happens after activation
+
+### "No item to return was found" error
+
+```
+Error in handling webhook request POST /webhook/test-runner: No item to return was found
+```
+
+This means the Test Runner workflow executed, but the "Respond to Webhook" node received no data. Causes:
+1. **Broken workflow references** - Most common! Check for `⚠️ Could not resolve workflow reference` warnings
+2. **Routing not configured** - The Test Runner switch node doesn't have a route for your workflow
+3. **Sub-workflow returns empty** - The target workflow executed but returned no output
 
 ### Empty output error
 
@@ -285,13 +336,22 @@ The target workflow ran but produced no output. Check:
 2. Routing in Test Runner is correct
 3. Target workflow output node returns data
 
-### Container logs
+### Container logs and n8n debug logging
 
-On webhook failure, container logs are automatically captured:
+Test containers run with enhanced logging:
+- `N8N_LOG_LEVEL=debug` - Detailed execution logging
+- `N8N_LOG_OUTPUT=console,file` - Logs to stdout AND `/home/node/.n8n/n8n.log`
+
+On webhook failure, these are automatically captured in `errorDetails`:
+- `containerLogs` - Container stdout/stderr (last 500 lines)
+- `n8nLogs` - n8n log file content
+- `executionId`, `executionStatus`, `failedNodes` - From execution history API
 
 ```typescript
-if (!result.success && result.errorDetails?.containerLogs) {
+if (!result.success && result.errorDetails) {
   console.log('Container logs:', result.errorDetails.containerLogs);
+  console.log('n8n logs:', result.errorDetails.n8nLogs);
+  console.log('Failed nodes:', result.errorDetails.failedNodes);
 }
 ```
 

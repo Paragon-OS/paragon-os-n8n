@@ -261,3 +261,61 @@ Tests with `:log` suffix write output to `/tmp/n8n-tests/`:
 npm run test:backup-restore:log
 cat /tmp/n8n-tests/backup-restore-*.log
 ```
+
+## n8n Container Logging
+
+Test containers run with enhanced logging for better error visibility:
+
+### Environment Variables (set automatically)
+```bash
+N8N_LOG_LEVEL=debug              # Detailed execution logging
+N8N_LOG_OUTPUT=console,file      # Log to stdout AND file
+N8N_LOG_FILE_LOCATION=/home/node/.n8n/n8n.log
+EXECUTIONS_DATA_SAVE_ON_ERROR=all
+EXECUTIONS_DATA_SAVE_ON_SUCCESS=all
+```
+
+### Log Capture Functions (`src/utils/n8n-podman.ts`)
+```typescript
+// Get container stdout/stderr (last 1000 lines by default)
+const logs = await getContainerLogs(containerName);
+
+// Get n8n log file from inside container
+const n8nLogs = await getN8nLogFile(containerName);
+
+// Get both combined
+const { containerLogs, n8nLogs, combined } = await getComprehensiveLogs(containerName);
+```
+
+### What to Look For in Logs
+
+**Successful workflow reference rewriting:**
+```
+🔄 Rewriting workflow reference: "BVI8WfWulWFCFvwk" → "a4AQxibvAESCiaDe"
+```
+
+**Broken workflow references (problem!):**
+```
+⚠️ Could not resolve workflow reference "BVI8WfWulWFCFvwk" to an ID, keeping as-is
+```
+
+**Webhook errors:**
+```
+Error in handling webhook request POST /webhook/test-runner: No item to return was found
+```
+
+## Workflow Reference Resolution
+
+When workflows are imported to a fresh test container, their internal references to other workflows must be rewritten because the workflow IDs change.
+
+### How It Works
+1. Workflow JSON files have `workflowId: { value: "oldId", cachedResultName: "Workflow Name" }`
+2. On import, `workflow-reference-converter.ts` looks up the workflow by `cachedResultName`
+3. If found, it rewrites `value` to the new database ID
+4. If NOT found, it logs a warning and the reference stays broken
+
+### Why Order Matters
+The converter can only rewrite a reference if the target workflow is ALREADY imported. This is why `executeWorkflowTest()` imports helpers in a specific dependency order defined in `workflow-test-runner.ts`.
+
+### Common Pitfall
+**Don't manually call `syncWorkflow()` in test `beforeAll`!** It imports workflows out of order, causing broken references. Let `executeWorkflowTest()` handle all imports.

@@ -337,6 +337,12 @@ export async function startN8nInstance(
     envArgs.push('-e', 'N8N_LOG_LEVEL=debug'); // Enable debug logging for detailed execution info
     envArgs.push('-e', 'N8N_LOG_OUTPUT=console,file'); // Log to both console and file
     envArgs.push('-e', 'N8N_LOG_FILE_LOCATION=/home/node/.n8n/n8n.log'); // Persistent log file
+
+    // Execution saving for debugging - save all executions including errors
+    envArgs.push('-e', 'EXECUTIONS_DATA_SAVE_ON_ERROR=all'); // Save execution data on errors
+    envArgs.push('-e', 'EXECUTIONS_DATA_SAVE_ON_SUCCESS=all'); // Save execution data on success
+    envArgs.push('-e', 'EXECUTIONS_DATA_SAVE_ON_PROGRESS=true'); // Save progress during execution
+    envArgs.push('-e', 'EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS=true'); // Save manual/test executions
     
     // Pass through Google Gemini API key from local .env if present
     const geminiEnvKeys = [
@@ -530,19 +536,40 @@ export async function getContainerLogs(containerName: string, tail: number = 100
 }
 
 /**
- * Get n8n log file from inside the container
+ * Get n8n log file from inside the container (MOST RECENT entries)
  * This provides detailed execution logs when N8N_LOG_OUTPUT=file is enabled
  * @param containerName - Name of the container
- * @param tail - Number of lines to retrieve (default 500)
+ * @param tail - Number of lines to retrieve from END of file (default 500)
  */
 export async function getN8nLogFile(containerName: string, tail: number = 500): Promise<string> {
   try {
-    const { stdout } = await execa('podman', [
-      'exec', containerName,
-      'tail', '-n', String(tail), '/home/node/.n8n/n8n.log'
-    ], {
-      timeout: 10000,
-    });
+    // Note: N8N_LOG_FILE_LOCATION is /home/node/.n8n/n8n.log but due to N8N_USER_FOLDER nesting
+    // the actual location might be /home/node/.n8n/.n8n/n8n.log
+    // Try both locations
+    let stdout = '';
+    const locations = [
+      '/home/node/.n8n/n8n.log',
+      '/home/node/.n8n/.n8n/n8n.log',
+    ];
+
+    for (const location of locations) {
+      try {
+        const result = await execa('podman', [
+          'exec', containerName,
+          'tail', '-n', String(tail), location
+        ], {
+          timeout: 10000,
+        });
+        if (result.stdout) {
+          stdout = result.stdout;
+          logger.debug(`Found n8n log at ${location}`);
+          break;
+        }
+      } catch {
+        // Try next location
+      }
+    }
+
     return stdout;
   } catch (error) {
     // Log file might not exist yet or container might be stopped
