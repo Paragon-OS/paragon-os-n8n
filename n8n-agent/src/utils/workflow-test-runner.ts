@@ -263,17 +263,53 @@ export async function executeWorkflowTest(
 
   try {
     // Auto-import all helper workflows to ensure Test Runner dependencies are met
+    // Import order matters due to workflow references between helpers
     const helpersDir = path.join(context.workflowsDir, 'HELPERS');
     if (fs.existsSync(helpersDir)) {
       const helperFiles = await collectJsonFilesRecursive(helpersDir);
-      for (const helperFile of helperFiles) {
+
+      // Sort helper files by dependency order
+      // Workflows that are dependencies must be imported before workflows that reference them
+      const dependencyOrder = [
+        'Global Cache System',      // No dependencies - must be first
+        'MCP Data Normalizer',      // No dependencies
+        'Test Data',                // No dependencies
+        'Dynamic RAG',              // No dependencies (or self-contained)
+        'Entity Cache Handler',     // Depends on Global Cache System
+        'Discord & Telegram Step Executor', // No dependencies
+        'Discord Contact Fetch',    // Depends on MCP Data Normalizer
+        'Discord Guild Fetch',      // Depends on MCP Data Normalizer
+        'Discord Profile Fetch',    // No dependencies
+        'Discord Tool Fetch',       // No dependencies
+        'Telegram Chat Fetch',      // Depends on MCP Data Normalizer
+        'Telegram Contact Fetch',   // Depends on MCP Data Normalizer
+        'Telegram Message Fetch',   // Depends on MCP Data Normalizer
+        'Telegram Profile Fetch',   // No dependencies
+        'Telegram Tool Fetch',      // No dependencies
+        'Generic Context Scout Core', // Depends on Entity Cache Handler, Dynamic RAG
+        'Test Runner',              // Depends on Test Data, Dynamic RAG - must be last
+      ];
+
+      // Sort files by dependency order
+      const sortedHelperFiles = [...helperFiles].sort((a, b) => {
+        const aName = path.basename(a, '.json');
+        const bName = path.basename(b, '.json');
+        const aIndex = dependencyOrder.findIndex(name => aName.includes(name) || name.includes(aName));
+        const bIndex = dependencyOrder.findIndex(name => bName.includes(name) || name.includes(bName));
+        // If not in the dependency order list, put at the end
+        const aOrder = aIndex === -1 ? dependencyOrder.length : aIndex;
+        const bOrder = bIndex === -1 ? dependencyOrder.length : bIndex;
+        return aOrder - bOrder;
+      });
+
+      for (const helperFile of sortedHelperFiles) {
         try {
           await importWorkflowFromFile(helperFile, apiConfig);
         } catch (error) {
           logger.warn(`Warning: Failed to auto-sync helper workflow "${path.basename(helperFile)}"`, error);
         }
       }
-      logger.debug(`Synced ${helperFiles.length} helper workflows`);
+      logger.debug(`Synced ${sortedHelperFiles.length} helper workflows in dependency order`);
     }
 
     // Auto-import the workflow being tested
@@ -393,11 +429,25 @@ export async function executeWorkflowTest(
         errorMsg += `\nResponse: ${JSON.stringify(error.response.data).substring(0, 500)}`;
       }
       logger.error(errorMsg);
-      
+
+      // Try to get container logs to help diagnose the error
+      let containerLogs = '';
+      if (config && 'containerName' in config) {
+        try {
+          const { getContainerLogs } = await import('./n8n-podman');
+          const instance = config as N8nInstance;
+          containerLogs = await getContainerLogs(instance.containerName, 200);
+          logger.error(`\n📋 n8n Container Logs (last 200 lines):\n${containerLogs}`);
+        } catch (logError) {
+          logger.warn(`Could not fetch container logs: ${logError instanceof Error ? logError.message : String(logError)}`);
+        }
+      }
+
       return {
         testCase,
         success: false,
         error: errorMsg,
+        errorDetails: containerLogs ? { containerLogs } : undefined,
       };
     }
 
