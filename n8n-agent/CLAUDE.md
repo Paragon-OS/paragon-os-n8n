@@ -62,7 +62,56 @@ npm run test:backup-restore:log
 
 ### Test Structure (`src/tests/`)
 - `integration/` - Container-based integration tests (backup-restore, credentials, simple-start)
-- `workflows/` - Workflow-specific tests (discord, telegram agents, RAG)
+- `workflows/` - Workflow execution tests (Discord, Telegram agents, RAG)
+
+### Workflow Tests (`src/tests/workflows/`)
+
+Tests that execute actual n8n workflows using a Test Runner helper workflow. Uses `test.each()` pattern with test cases defined inline.
+
+| Test File | Workflow | Test Cases |
+|-----------|----------|------------|
+| `discord-smart-agent.test.ts` | DiscordSmartAgent | simple-query, list-contacts, read-messages |
+| `telegram-smart-agent.test.ts` | TelegramSmartAgent | search-messages, find-message-content, list-contacts, simple-query, ingest-metarune-messages |
+| `discord-context-scout.test.ts` | DiscordContextScout | contact-fuzzy, guild-search, tool-lookup, self-profile, contact-empty-query |
+| `telegram-context-scout.test.ts` | TelegramContextScout | contact-rag, message-rag, chat-with-all-params, contact-search, chat-search, tool-lookup, self-profile |
+| `dynamic-rag.test.ts` | DynamicRAG | status, search-contacts, search-metarune, cleanup/create/clear/insert/search/delete collection |
+
+**Workflow Test Runner Pattern:**
+```typescript
+import { executeWorkflowTest, syncWorkflow } from '../../utils/workflow-test-runner';
+import { setupTestInstance, cleanupTestInstance, TEST_TIMEOUTS, type N8nInstance } from '../../utils/test-helpers';
+
+describe('MyWorkflow', () => {
+  let instance: N8nInstance | null = null;
+
+  beforeAll(async () => {
+    instance = await setupTestInstance();
+    // Sync dependency workflows first, then main workflow
+    await syncWorkflow('DependencyWorkflow', undefined, instance);
+    await syncWorkflow('MyWorkflow', undefined, instance);
+  }, TEST_TIMEOUTS.WORKFLOW);
+
+  afterAll(async () => {
+    await cleanupTestInstance(instance);
+    instance = null;
+  }, TEST_TIMEOUTS.WORKFLOW);
+
+  test.each([
+    { testCase: 'my-test', testData: { userPrompt: 'Test input' } },
+  ])('$testCase', async ({ testCase, testData }) => {
+    const result = await executeWorkflowTest('MyWorkflow', testCase, testData, undefined, instance);
+    expect(result.success).toBe(true);
+    expect(result.output).toBeDefined();
+  }, TEST_TIMEOUTS.WORKFLOW);
+});
+```
+
+**Key Functions (`workflow-test-runner.ts`):**
+- `executeWorkflowTest(workflowName, testCase, testData, workflowsDir?, config?)` - Execute workflow with test data via Test Runner
+- `syncWorkflow(workflowName, workflowsDir?, config?)` - Import workflow to n8n instance (handles dependencies)
+- `buildApiConfigFromInstance(instance)` - Convert N8nInstance to N8nApiConfig
+
+**Test Runner Workflow:** `workflows/HELPERS/Test Runner.json` - A special workflow that wraps other workflows for testing. It injects test data and captures output.
 
 ### Integration Tests (`src/tests/integration/`)
 
