@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "n8n:workflows:downsync": "ts-node src/n8n-workflows-cli.ts backup",
-    "n8n:workflows:upsync": "ts-node src/n8n-workflows-cli.ts restore --preserve-ids ",
+    "n8n:workflows:upsync": "ts-node src/n8n-workflows-cli.ts restore",
     "n8n:workflows:sync": "ts-node scripts/post-backup-sync.ts",
     "n8n:workflows:tree": "ts-node src/n8n-workflows-cli.ts tree",
     "n8n:verify": "ts-node src/n8n-workflows-cli.ts verify",
@@ -39,9 +39,7 @@
   "description": "",
   "dependencies": {
     "@n8n/rest-api-client": "^2.0.0-rc.3",
-    "@types/better-sqlite3": "^7.6.13",
     "axios": "^1.13.2",
-    "better-sqlite3": "^12.5.0",
     "boxen": "^8.0.1",
     "chalk": "^5.6.2",
     "commander": "^14.0.2",

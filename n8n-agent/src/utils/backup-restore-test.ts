@@ -414,7 +414,6 @@ export async function runBackupRestoreTest(
   testWorkflows: Workflow[],
   backupDir: string,
   options?: {
-    preserveIds?: boolean;
     verifyReferences?: boolean;
     clearBeforeRestore?: boolean;
   }
@@ -510,9 +509,9 @@ export async function runBackupRestoreTest(
     }
 
     // Step 4: Restore workflows
-    logger.info(`\n📥 Step 4: Running restore${options?.preserveIds ? ' with ID preservation' : ''}...`);
+    logger.info(`\n📥 Step 4: Running restore...`);
     logger.debug(`Restore environment: N8N_BASE_URL=${instance.baseUrl}, N8N_URL=${instance.baseUrl}, N8N_API_KEY=${instance.apiKey ? 'set' : 'not set'}, N8N_SESSION_COOKIE=${instance.sessionCookie ? 'set' : 'not set'}`);
-    logger.debug(`Restore options: input=${backupDir}, preserveIds=${options?.preserveIds || false}`);
+    logger.debug(`Restore options: input=${backupDir}`);
     try {
       // Set both environment variables to ensure API client picks it up
       process.env.N8N_BASE_URL = instance.baseUrl;
@@ -529,10 +528,9 @@ export async function runBackupRestoreTest(
       }
       logger.debug(`Starting restore command...`);
       const { executeRestore } = await import('../commands/restore');
-      await executeRestore({ 
-        input: backupDir, 
-        yes: true, 
-        preserveIds: options?.preserveIds 
+      await executeRestore({
+        input: backupDir,
+        yes: true
       }, []);
       logger.debug(`Restore command completed`);
     } catch (error) {
