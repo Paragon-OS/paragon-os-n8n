@@ -28,7 +28,7 @@ import {
   resetN8nState,
   verifyN8nHealth,
 } from './backup-restore-test';
-
+export type { N8nInstance }
 export interface WorkflowFile {
   path: string;
   content: {
@@ -63,7 +63,7 @@ export function findWorkflowFile(
   workflowFiles: WorkflowFile[]
 ): string | undefined {
   const normalizedIdentifier = normalizeWorkflowName(workflowIdentifier);
-  
+
   for (const file of workflowFiles) {
     // Match by ID (most reliable)
     if (file.content.id === workflowIdentifier) {
@@ -85,7 +85,7 @@ export function findWorkflowFile(
     if (file.basename === workflowIdentifier || basenameWithoutTag === workflowIdentifier) {
       return file.path;
     }
-    
+
     // Match by normalized basename
     if (normalizeWorkflowName(basenameWithoutTag) === normalizedIdentifier) {
       return file.path;
@@ -104,7 +104,7 @@ export function findWorkflowFile(
  */
 export function parseExecutionOutput(stdout: string): N8nExecutionJson {
   const trimmed = stdout.trim();
-  
+
   // Try to parse the entire output as JSON first (for --rawOutput format)
   try {
     const parsed = JSON.parse(trimmed);
@@ -117,7 +117,7 @@ export function parseExecutionOutput(stdout: string): N8nExecutionJson {
 
   const lines = stdout.split('\n');
   const separatorIndex = lines.findIndex(line => line.trim().startsWith('==='));
-  
+
   if (separatorIndex >= 0 && separatorIndex < lines.length - 1) {
     // JSON block after separator line
     const jsonLines = lines.slice(separatorIndex + 1).join('\n');
@@ -130,7 +130,7 @@ export function parseExecutionOutput(stdout: string): N8nExecutionJson {
       // Continue to fallback
     }
   }
-  
+
   // Fallback: try to find JSON object or array anywhere in output
   const jsonMatch = stdout.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
   if (jsonMatch) {
@@ -143,7 +143,7 @@ export function parseExecutionOutput(stdout: string): N8nExecutionJson {
       // Continue to error
     }
   }
-  
+
   throw new Error('No JSON found in execution output');
 }
 
@@ -170,19 +170,19 @@ export function extractWorkflowResults(
     if (isN8nRawOutputArray(executionJson)) {
       // Empty array indicates failure or no output
       if (executionJson.length === 0) {
-        return { 
-          success: false, 
-          error: 'Workflow returned empty output (possible error in sub-workflow)' 
+        return {
+          success: false,
+          error: 'Workflow returned empty output (possible error in sub-workflow)'
         };
       }
-      
+
       const firstItem = executionJson[0];
-      
+
       // Check for error indicators in raw output
       if (firstItem && typeof firstItem === 'object') {
         // Check for error fields
         if ('error' in firstItem || 'errorMessage' in firstItem || 'message' in firstItem) {
-          const errorMsg = 
+          const errorMsg =
             (firstItem as { error?: { message?: string }; errorMessage?: string; message?: string }).error?.message ||
             (firstItem as { errorMessage?: string }).errorMessage ||
             (firstItem as { message?: string }).message ||
@@ -193,13 +193,13 @@ export function extractWorkflowResults(
             errorDetails: firstItem as N8nExecutionError,
           };
         }
-        
+
         // Check if it looks like workflow output (has 'output' field)
         if ('output' in firstItem) {
           return { success: true, output: firstItem };
         }
       }
-      
+
       // If we have items but they don't match expected format, return them
       return { success: true, output: executionJson };
     }
@@ -208,7 +208,7 @@ export function extractWorkflowResults(
     if (isN8nRawOutputObject(executionJson)) {
       // Check for error indicators
       if ('error' in executionJson || 'errorMessage' in executionJson) {
-        const errorMsg = 
+        const errorMsg =
           (executionJson as { error?: { message?: string }; errorMessage?: string }).error?.message ||
           (executionJson as { errorMessage?: string }).errorMessage ||
           'Unknown error in workflow execution';
@@ -228,7 +228,7 @@ export function extractWorkflowResults(
         // Check if there's a top-level error in resultData
         const topLevelError = executionJson.data?.resultData?.error;
         if (topLevelError) {
-          const errorMsg = 
+          const errorMsg =
             (topLevelError && typeof topLevelError === 'object' && 'message' in topLevelError
               ? (topLevelError as { message?: string }).message
               : undefined) ||
@@ -248,21 +248,21 @@ export function extractWorkflowResults(
           Array.isArray(data) &&
           data.some((exec) => exec.executionStatus === 'error')
       );
-      
+
       if (errorNodes.length > 0) {
         // Find the most relevant error (prefer "Run: " nodes, but any error is important)
         const runNodeError = errorNodes.find(([name]) => name.startsWith('Run: '));
         const [nodeName, nodeData] = runNodeError || errorNodes[0];
-        
+
         if (Array.isArray(nodeData)) {
           const errorExec = nodeData.find(
             (exec) => exec.executionStatus === 'error'
           );
           if (errorExec) {
             const errorObj = errorExec.error;
-            const errorMessage = 
-              (errorObj && typeof errorObj === 'object' && 'message' in errorObj 
-                ? (errorObj as { message?: string }).message 
+            const errorMessage =
+              (errorObj && typeof errorObj === 'object' && 'message' in errorObj
+                ? (errorObj as { message?: string }).message
                 : undefined) ||
               (typeof errorObj === 'string' ? errorObj : 'Unknown error');
             return {
@@ -334,15 +334,14 @@ export function extractWorkflowResults(
     ) {
       return { success: false, error: 'No execution data found' };
     }
-    
+
     // Return the raw JSON if it doesn't match known formats but is still valid
     return { success: true, output: executionJson };
   } catch (error) {
     return {
       success: false,
-      error: `Failed to parse execution result: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
+      error: `Failed to parse execution result: ${error instanceof Error ? error.message : String(error)
+        }`,
     };
   }
 }
@@ -369,13 +368,13 @@ export function extractWorkflowResults(
 export const TEST_TIMEOUTS = {
   /** 3 minutes - for simple, fast tests */
   SIMPLE: 3 * 60 * 1000,
-  
+
   /** 5 minutes - for credential setup and basic integration tests */
   CREDENTIALS: 5 * 60 * 1000,
-  
+
   /** 10 minutes - for workflow tests and complex integration tests */
   WORKFLOW: 10 * 60 * 1000,
-  
+
   /** 10 minutes - alias for WORKFLOW (for integration tests) */
   INTEGRATION: 10 * 60 * 1000,
 } as const;
@@ -490,9 +489,9 @@ export async function resetTestInstance(instance: N8nInstance | null): Promise<v
   if (!instance) {
     throw new Error('Instance not initialized - beforeAll may have failed');
   }
-  
+
   console.log('🔄 Resetting n8n state...');
-  
+
   const healthy = await verifyN8nHealth(instance);
   if (!healthy) {
     throw new Error(
@@ -500,7 +499,7 @@ export async function resetTestInstance(instance: N8nInstance | null): Promise<v
       'Try running: npm run test:cleanup'
     );
   }
-  
+
   await resetN8nState(instance);
   console.log('✅ State reset complete');
 }
