@@ -948,6 +948,9 @@ export async function getWorkflow(
 
 /**
  * Delete workflow by ID
+ *
+ * n8n requires workflows to be archived before deletion.
+ * This function automatically archives the workflow first, then deletes it.
  */
 export async function deleteWorkflow(
   workflowId: string,
@@ -957,8 +960,36 @@ export async function deleteWorkflow(
 
   try {
     logger.debug(`Attempting to delete workflow ${workflowId}`);
+
+    // Step 1: Archive the workflow first (required by n8n)
+    // Use POST /workflows/{id}/archive endpoint
+    try {
+      const archiveResponse = await client.post(`/workflows/${workflowId}/archive`, {});
+
+      if (archiveResponse.status === 200) {
+        logger.debug(`Archived workflow ${workflowId} before deletion`);
+      } else if (archiveResponse.status === 404) {
+        // Workflow doesn't exist - treat as already deleted
+        logger.debug(`Workflow ${workflowId} not found (may already be deleted) - treating as success`);
+        return;
+      } else {
+        logger.debug(`Archive response for ${workflowId}: status=${archiveResponse.status}`);
+      }
+    } catch (archiveError) {
+      if (axios.isAxiosError(archiveError)) {
+        if (archiveError.response?.status === 404) {
+          // Workflow doesn't exist - treat as already deleted
+          logger.debug(`Workflow ${workflowId} not found during archive - treating as success`);
+          return;
+        }
+        // Log but continue - maybe the delete will work anyway
+        logger.debug(`Archive failed for ${workflowId}: ${archiveError.response?.status} ${archiveError.response?.data?.message || archiveError.message}`);
+      }
+    }
+
+    // Step 2: Delete the workflow
     const response = await client.delete(`/workflows/${workflowId}`);
-    
+
     // Log full response for debugging
     logger.debug(`Delete response for workflow ${workflowId}`, undefined, {
       status: response.status,
@@ -966,14 +997,14 @@ export async function deleteWorkflow(
       headers: response.headers,
       data: response.data,
     });
-    
+
     // n8n API returns 200 or 204 on successful deletion
     // 404 means workflow doesn't exist (already deleted) - treat as success
     if (response.status === 404) {
       logger.debug(`Workflow ${workflowId} not found (may already be deleted) - treating as success`);
       return;
     }
-    
+
     if (response.status !== 200 && response.status !== 204) {
       const errorMessage = response.data?.message || response.statusText || 'Unknown error';
       const errorDetails = response.data ? JSON.stringify(response.data).substring(0, 200) : '';
@@ -985,11 +1016,11 @@ export async function deleteWorkflow(
       });
       throw new Error(`Failed to delete workflow: ${response.status} ${errorMessage}${errorDetails ? ` - ${errorDetails}` : ''}`);
     }
-    
+
     // Verify the workflow was actually deleted by trying to fetch it
     // Wait a small amount to allow the deletion to propagate
     await new Promise(resolve => setTimeout(resolve, 100));
-    
+
     try {
       const verifyResponse = await client.get(`/workflows/${workflowId}`);
       if (verifyResponse.status === 200) {
@@ -1004,7 +1035,7 @@ export async function deleteWorkflow(
         logger.debug(`Could not verify deletion of ${workflowId}: ${verifyError instanceof Error ? verifyError.message : String(verifyError)}`);
       }
     }
-    
+
     logger.debug(`Delete request successful for workflow ${workflowId} (status: ${response.status})`);
   } catch (error) {
     if (axios.isAxiosError(error)) {

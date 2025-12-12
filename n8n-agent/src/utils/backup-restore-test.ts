@@ -125,45 +125,72 @@ export async function createTestWorkflows(
  */
 export async function clearAllWorkflows(instance: N8nInstance): Promise<void> {
   const baseUrl = instance.baseUrl;
-  
+
   if (!baseUrl) {
     throw new Error('baseURL is not defined - instance.baseUrl is missing');
   }
-  
+
   logger.info(`Clearing all workflows from n8n instance at ${baseUrl}...`);
-  
+
   try {
     const apiConfig = buildApiConfig(instance);
     const client = (await import('axios')).default;
-    const headers: any = {};
+    const headers: any = {
+      'Content-Type': 'application/json',
+    };
     if (apiConfig.apiKey) {
-      headers['X-N8N-API-KEY'] = apiConfig.apiKey; // Corrected header
+      headers['X-N8N-API-KEY'] = apiConfig.apiKey;
     } else if (apiConfig.sessionCookie) {
       headers['Cookie'] = apiConfig.sessionCookie;
     }
 
     const workflows = await exportWorkflows(apiConfig);
     logger.debug(`Found ${workflows.length} workflow(s) to delete`);
-    
+
     let deletedCount = 0;
-    
+
     for (const wf of workflows) {
       if (!wf.id) {
         logger.warn(`Skipping workflow without ID: ${wf.name || 'unnamed'}`);
         continue;
       }
       try {
-        // Deactivate workflow if it's active using the correct endpoint
+        // Step 1: Deactivate workflow if it's active
         if (wf.active) {
           await client.post(
             `${apiConfig.baseURL}/rest/workflows/${wf.id}/deactivate`,
-            {}, // No body needed for deactivation
+            {},
             { headers, withCredentials: true, timeout: 10000 }
           );
           logger.debug(`Deactivated workflow ${wf.name} (${wf.id})`);
         }
 
-        // Now, delete the workflow
+        // Step 2: Archive the workflow before deletion (required by n8n)
+        // Use POST /rest/workflows/{id}/archive endpoint
+        let archived = false;
+        try {
+          const archiveRes = await client.post(
+            `${apiConfig.baseURL}/rest/workflows/${wf.id}/archive`,
+            {},
+            { headers, withCredentials: true, timeout: 10000 }
+          );
+
+          if (archiveRes.status === 200) {
+            logger.debug(`Archived workflow ${wf.name} (${wf.id})`);
+            archived = true;
+          } else {
+            logger.warn(`Archive request returned status ${archiveRes.status} for ${wf.id}`);
+          }
+        } catch (archiveError) {
+          const axiosError = archiveError as import('axios').AxiosError;
+          logger.warn(`Failed to archive workflow ${wf.id}: Status ${axiosError.response?.status} - ${JSON.stringify(axiosError.response?.data)}`);
+        }
+
+        if (!archived) {
+          logger.warn(`Workflow ${wf.id} could not be archived, delete will likely fail`);
+        }
+
+        // Step 3: Delete the workflow
         await client.delete(
           `${apiConfig.baseURL}/rest/workflows/${wf.id}`,
           { headers, withCredentials: true, timeout: 10000 }
@@ -179,7 +206,7 @@ export async function clearAllWorkflows(instance: N8nInstance): Promise<void> {
         }
       }
     }
-    
+
     logger.info(`✅ Deleted ${deletedCount} workflow(s)`);
   } catch (error) {
     logger.error(`Failed to clear workflows from ${baseUrl}`, error);
