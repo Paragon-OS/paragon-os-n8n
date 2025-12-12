@@ -23,6 +23,8 @@ export interface N8nPodmanConfig {
   port?: number;
   dataDir?: string;
   n8nVersion?: string;
+  /** Custom image to use instead of n8nio/n8n. Use for images with custom nodes pre-installed. */
+  image?: string;
   timeout?: number;
   env?: Record<string, string>;
 }
@@ -259,6 +261,8 @@ export async function startN8nInstance(
   const containerName = config?.containerName || generateContainerName();
   const requestedPort = config?.port;
   const n8nVersion = config?.n8nVersion || DEFAULT_N8N_VERSION;
+  const customImage = config?.image;
+  const imageName = customImage || `n8nio/n8n:${n8nVersion}`;
   const timeout = config?.timeout || DEFAULT_STARTUP_TIMEOUT;
   const envVars = config?.env || {};
   
@@ -291,16 +295,20 @@ export async function startN8nInstance(
 
   try {
     // Check if image exists locally first (faster than trying to pull)
-    logger.info(`Step 2: Checking if n8n image exists locally: n8nio/n8n:${n8nVersion}...`);
+    logger.info(`Step 2: Checking if n8n image exists locally: ${imageName}...`);
     try {
-      await execa('podman', ['inspect', `n8nio/n8n:${n8nVersion}`], {
+      await execa('podman', ['inspect', imageName], {
         timeout: 5000,
       });
       logger.info(`✅ Image already exists locally`);
     } catch (error) {
+      // For custom local images, we don't try to pull - just error
+      if (customImage && customImage.startsWith('localhost/')) {
+        throw new Error(`Custom image "${imageName}" not found. Build it first with: docker/build-custom-image.sh`);
+      }
       logger.info(`Image not found locally, pulling from registry...`);
       try {
-        await execa('podman', ['pull', `n8nio/n8n:${n8nVersion}`], {
+        await execa('podman', ['pull', imageName], {
           timeout: 180000, // 3 minutes for pull
         });
         logger.info(`✅ Image pulled successfully`);
@@ -345,7 +353,7 @@ export async function startN8nInstance(
     }
 
     // Start container
-    logger.info(`Step 4: Starting container...`);
+    logger.info(`Step 4: Starting container with image ${imageName}...`);
     const containerArgs = [
       'run',
       '-d',
@@ -353,7 +361,7 @@ export async function startN8nInstance(
       '-p', `${actualPort}:5678`,
       '-v', `${dataDir}:/home/node/.n8n`,
       ...envArgs,
-      `n8nio/n8n:${n8nVersion}`,
+      imageName,
     ];
 
     logger.info(`Executing: podman run -d --name ${containerName} -p ${actualPort}:5678 ...`);

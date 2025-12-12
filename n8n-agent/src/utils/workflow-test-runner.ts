@@ -436,7 +436,7 @@ export async function executeWorkflowTest(
         try {
           const { getContainerLogs } = await import('./n8n-podman');
           const instance = config as N8nInstance;
-          containerLogs = await getContainerLogs(instance.containerName, 200);
+          containerLogs = await getContainerLogs(instance.containerName, 500);
           logger.error(`\n📋 n8n Container Logs (last 200 lines):\n${containerLogs}`);
         } catch (logError) {
           logger.warn(`Could not fetch container logs: ${logError instanceof Error ? logError.message : String(logError)}`);

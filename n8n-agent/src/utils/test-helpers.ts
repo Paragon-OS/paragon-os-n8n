@@ -422,6 +422,12 @@ export const TEST_TIMEOUTS = {
  * });
  * ```
  */
+/**
+ * Default custom n8n image with paragon-os nodes pre-installed.
+ * Build with: npm run docker:build (or ./docker/build-custom-image.sh)
+ */
+export const DEFAULT_N8N_CUSTOM_IMAGE = 'localhost/n8n-paragon-os:latest';
+
 export async function setupTestInstance(config?: N8nPodmanConfig): Promise<N8nInstance> {
   const podmanAvailable = await checkPodmanAvailable();
   if (!podmanAvailable) {
@@ -431,9 +437,13 @@ export async function setupTestInstance(config?: N8nPodmanConfig): Promise<N8nIn
     );
   }
 
-  console.log('🚀 Starting shared n8n instance...');
+  // Use custom image with paragon-os nodes by default for workflow tests
+  const useCustomImage = config?.image ?? DEFAULT_N8N_CUSTOM_IMAGE;
+
+  console.log(`🚀 Starting shared n8n instance with image: ${useCustomImage}...`);
   const instance = await startN8nInstance({
     timeout: 120000, // 2 minutes for startup
+    image: useCustomImage,
     ...config,
   });
   console.log(`✅ Instance ready: ${instance.baseUrl}`);
