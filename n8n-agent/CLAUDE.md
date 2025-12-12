@@ -115,6 +115,13 @@ describe('MyWorkflow', () => {
 **IMPORTANT - Workflow Reference Resolution:**
 Workflow JSON files contain hardcoded IDs that must be rewritten when imported to a new n8n instance. The `workflow-reference-converter.ts` handles this, but only if dependencies are imported FIRST. See `src/tests/workflows/CLAUDE.md` for details on debugging reference issues.
 
+**IMPORTANT - Workflow IDs in JavaScript Code:**
+Some workflows (Discord/Telegram Context Scout) embed workflow IDs as string literals in Code node JavaScript. These use the pattern:
+```javascript
+fetchWorkflowId: "JateTZIxaU5RpWd1", // [HELPERS] Discord Contact Fetch
+```
+The comment `// [HELPERS] Workflow Name` is **required** - it tells `workflow-reference-converter.ts` how to rewrite the ID during import. Without this comment, the workflow will fail with "workflow not found" errors.
+
 ### Integration Tests (`src/tests/integration/`)
 
 Three test suites that validate core functionality using isolated podman containers:

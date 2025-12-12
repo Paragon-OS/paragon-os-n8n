@@ -393,12 +393,12 @@ export async function executeWorkflowTest(
     }
 
     let executionResult: { code: number; data: unknown; raw: string };
+    const startTime = Date.now();
     try {
       // Call the production webhook
       const baseUrl = apiConfig?.baseURL || getN8nBaseUrl();
       const webhookUrl = `${baseUrl.replace('/rest', '')}/webhook/test-runner`;
       const requestBody = { workflow: workflowName, testCase, testData };
-      const startTime = Date.now();
 
       // Log webhook request details
       logger.info(`🌐 WEBHOOK REQUEST: POST ${webhookUrl}`);
