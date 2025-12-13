@@ -58,9 +58,10 @@ echo "Step 2: Creating build context..."
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
-# Copy Dockerfile and entrypoint script
+# Copy Dockerfile, entrypoint script, and node registration script
 cp "$SCRIPT_DIR/n8n-custom.Dockerfile" "$BUILD_DIR/Dockerfile"
 cp "$SCRIPT_DIR/docker-entrypoint.sh" "$BUILD_DIR/docker-entrypoint.sh"
+cp "$SCRIPT_DIR/register-nodes.js" "$BUILD_DIR/register-nodes.js"
 
 # Copy n8n-nodes-paragon-os (excluding node_modules and dev files)
 echo "  Copying n8n-nodes-paragon-os package..."

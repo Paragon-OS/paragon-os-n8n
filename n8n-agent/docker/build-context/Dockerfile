@@ -39,6 +39,9 @@ COPY --chown=node:node n8n-nodes-paragon-os /opt/n8n-custom-nodes/node_modules/n
 # Copy the full nodes manifest as package.json (lists all nodes for n8n)
 COPY --chown=node:node nodes-manifest.json /opt/n8n-custom-nodes/package.json
 
+# Copy the node registration script (registers nodes in n8n database at startup)
+COPY --chown=node:node register-nodes.js /opt/n8n-custom-nodes/register-nodes.js
+
 # Install runtime dependencies for the paragon-os package
 WORKDIR /opt/n8n-custom-nodes/node_modules/n8n-nodes-paragon-os
 RUN npm install --omit=dev --ignore-scripts
