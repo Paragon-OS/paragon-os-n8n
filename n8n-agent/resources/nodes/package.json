@@ -1,0 +1,8 @@
+{
+  "name": "installed-nodes",
+  "private": true,
+  "dependencies": {
+    "n8n-nodes-paragon-os": "1.4.2",
+    "n8n-nodes-mcp": "0.1.33"
+  }
+}

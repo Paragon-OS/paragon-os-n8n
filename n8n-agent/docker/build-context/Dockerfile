@@ -1,11 +1,27 @@
-# Custom n8n image with paragon-os nodes pre-installed
+# Custom n8n image with community nodes pre-installed
 # Based on the official n8n image
 #
-# Custom nodes need the full package with node_modules for dependencies.
-# We store the package at /opt/n8n-custom-nodes and copy to ~/.n8n/nodes
+# Nodes are installed from two sources:
+# 1. npm registry (e.g., n8n-nodes-mcp)
+# 2. Local source (n8n-nodes-paragon-os)
+#
+# All nodes are stored at /opt/n8n-custom-nodes and copied to ~/.n8n/nodes
 # at runtime to survive volume mounts.
 
+# ARG must be before FROM to be used in FROM statements
 ARG N8N_VERSION=latest
+
+# Stage 1: Install npm-based community nodes
+FROM node:20-alpine AS community-builder
+WORKDIR /build
+
+# Copy package.json for npm-sourced community nodes
+COPY community-nodes-package.json package.json
+
+# Install community nodes (handles empty dependencies gracefully)
+RUN npm install --omit=dev 2>/dev/null || mkdir -p node_modules
+
+# Stage 2: Final n8n image
 FROM n8nio/n8n:${N8N_VERSION}
 
 # Switch to root to install packages
@@ -14,17 +30,20 @@ USER root
 # Create a persistent location for custom nodes
 RUN mkdir -p /opt/n8n-custom-nodes/node_modules
 
-# Copy the full n8n-nodes-paragon-os package
+# Copy npm-installed community nodes from builder stage
+COPY --from=community-builder --chown=node:node /build/node_modules /opt/n8n-custom-nodes/node_modules/
+
+# Copy the locally-built n8n-nodes-paragon-os package
 COPY --chown=node:node n8n-nodes-paragon-os /opt/n8n-custom-nodes/node_modules/n8n-nodes-paragon-os
 
-# Create package.json for n8n to recognize the custom nodes
-RUN echo '{"name":"installed-nodes","private":true,"dependencies":{"n8n-nodes-paragon-os":"1.4.2"}}' > /opt/n8n-custom-nodes/package.json
+# Copy the full nodes manifest as package.json (lists all nodes for n8n)
+COPY --chown=node:node nodes-manifest.json /opt/n8n-custom-nodes/package.json
 
-# Install node dependencies for the custom package (minisearch, etc.)
+# Install runtime dependencies for the paragon-os package
 WORKDIR /opt/n8n-custom-nodes/node_modules/n8n-nodes-paragon-os
 RUN npm install --omit=dev --ignore-scripts
 
-# Set proper ownership
+# Set proper ownership for everything
 RUN chown -R node:node /opt/n8n-custom-nodes
 
 # Copy the startup script
