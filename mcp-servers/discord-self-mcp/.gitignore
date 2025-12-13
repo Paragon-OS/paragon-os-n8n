@@ -48,6 +48,3 @@ temp/
 # Optional eslint cache
 .eslintcache
 
-# User guidelines (following project rules)
-CLAUDE.md
-docs.md
