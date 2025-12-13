@@ -154,14 +154,12 @@ Tests depend on these helper workflows in `workflows/HELPERS/`:
 | **Test Data** | Provides test case data | None |
 | **Dynamic RAG** | Vector database operations | Qdrant credentials |
 | **Generic Context Scout Core** | Shared context scout logic | Entity Cache Handler, Dynamic RAG |
-| **Entity Cache Handler** | Redis caching for entities | Global Cache System |
+| **Discord Entity Cache Handler** | Redis caching for Discord entities | Global Cache System, Universal Entity Fetcher |
+| **Telegram Entity Cache Handler** | Redis caching for Telegram entities | Global Cache System, Universal Entity Fetcher |
 | **Global Cache System** | Redis connection management | Redis credentials |
 | **MCP Data Normalizer** | Normalizes MCP tool responses | None |
-| **Discord Contact Fetch** | Fetches Discord contacts via MCP | MCP Data Normalizer |
-| **Discord Guild Fetch** | Fetches Discord guilds via MCP | MCP Data Normalizer |
-| **Telegram Contact Fetch** | Fetches Telegram contacts via MCP | MCP Data Normalizer |
-| **Telegram Chat Fetch** | Fetches Telegram chats via MCP | MCP Data Normalizer |
-| **Telegram Message Fetch** | Fetches Telegram messages via MCP | MCP Data Normalizer |
+| **Universal Entity Fetcher** | Fetches all entity types (contact, guild, chat, tool, self, message) for both platforms | None (inline normalization) |
+| **Discord & Telegram Step Executor** | Executes MCP tool sequences | None |
 
 ### Dependency Order
 
@@ -174,17 +172,10 @@ const dependencyOrder = [
   'MCP Data Normalizer',          // No dependencies
   'Test Data',                     // No dependencies
   'Dynamic RAG',                   // No dependencies
-  'Entity Cache Handler',          // Depends on Global Cache System
-  'Discord & Telegram Step Executor',
-  'Discord Contact Fetch',         // Depends on MCP Data Normalizer
-  'Discord Guild Fetch',
-  'Discord Profile Fetch',
-  'Discord Tool Fetch',
-  'Telegram Chat Fetch',
-  'Telegram Contact Fetch',
-  'Telegram Message Fetch',
-  'Telegram Profile Fetch',
-  'Telegram Tool Fetch',
+  'Discord & Telegram Step Executor', // No dependencies
+  'Universal Entity Fetcher',      // Handles all platform+entity fetch operations
+  'Discord Entity Cache Handler',  // Depends on Global Cache System + Universal Entity Fetcher
+  'Telegram Entity Cache Handler', // Depends on Global Cache System + Universal Entity Fetcher
   'Generic Context Scout Core',    // Depends on Entity Cache Handler, Dynamic RAG
   'Test Runner',                   // Depends on Test Data, Dynamic RAG - last
 ];

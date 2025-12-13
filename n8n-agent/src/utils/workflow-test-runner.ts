@@ -293,17 +293,9 @@ export async function executeWorkflowTest(
         'Test Data',                // No dependencies
         'Dynamic RAG',              // No dependencies (or self-contained)
         'Discord & Telegram Step Executor', // No dependencies
-        'Discord Contact Fetch',    // Depends on MCP Data Normalizer
-        'Discord Guild Fetch',      // Depends on MCP Data Normalizer
-        'Discord Profile Fetch',    // No dependencies
-        'Discord Tool Fetch',       // No dependencies
-        'Telegram Chat Fetch',      // Depends on MCP Data Normalizer
-        'Telegram Contact Fetch',   // Depends on MCP Data Normalizer
-        'Telegram Message Fetch',   // Depends on MCP Data Normalizer
-        'Telegram Profile Fetch',   // No dependencies
-        'Telegram Tool Fetch',      // No dependencies
-        'Discord Entity Cache Handler', // Depends on Global Cache System + Discord fetch workflows
-        'Telegram Entity Cache Handler', // Depends on Global Cache System + Telegram fetch workflows
+        'Universal Entity Fetcher', // Handles all platform+entity fetch operations
+        'Discord Entity Cache Handler', // Depends on Global Cache System + Universal Entity Fetcher
+        'Telegram Entity Cache Handler', // Depends on Global Cache System + Universal Entity Fetcher
         'Generic Context Scout Core', // Depends on platform cache handlers, Dynamic RAG
         'Test Runner',              // Depends on Test Data, Dynamic RAG - must be last
       ];

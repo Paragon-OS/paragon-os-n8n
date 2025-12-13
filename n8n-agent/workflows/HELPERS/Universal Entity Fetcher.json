@@ -1,0 +1,246 @@
+{
+  "name": "[HELPERS] Universal Entity Fetcher",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "platform"
+            },
+            {
+              "name": "entityType"
+            },
+            {
+              "name": "params",
+              "type": "object"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [200, 400],
+      "id": "trigger",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "const { platform, entityType, params } = $input.first().json;\n\n// Normalize RAG entity types (contact-rag -> contact, message-rag -> message)\nconst normalizedEntity = entityType.replace('-rag', '');\n\nconst configs = {\n  DISCORD: {\n    contact: {\n      operation: 'executeTool',\n      toolName: 'discord_list_contacts',\n      toolParams: { limit: 100 },\n      dataKey: 'contacts',\n      mcpDataKey: 'contacts',\n      mapper: \"(c) => ({ id: c.id, username: c.tag, displayName: c.displayName, lastMessage: c.lastMessageAtRelative, contactType: c.type, platform: 'DISCORD' })\",\n      errorMsg: 'No valid contacts found'\n    },\n    guild: {\n      operation: 'executeTool',\n      toolName: 'discord_list_guilds',\n      toolParams: {},\n      dataKey: 'guilds',\n      mcpDataKey: 'guilds',\n      mapper: \"(g) => ({ id: g.id, name: g.name, members: g.memberCount, channels: g.channels ?? [] })\",\n      errorMsg: 'No valid guilds found'\n    },\n    self: {\n      operation: 'executeTool',\n      toolName: 'discord_get_user_info',\n      toolParams: {},\n      normalizeType: 'profile'\n    },\n    tool: {\n      operation: 'listTools',\n      normalizeType: 'tools'\n    }\n  },\n  TELEGRAM: {\n    contact: {\n      operation: 'executeTool',\n      toolName: 'telegram_list_contacts',\n      toolParams: { limit: 200 },\n      dataKey: 'contacts',\n      mcpDataKey: 'contacts',\n      mapper: \"(c) => ({ id: c.id, username: c.username, displayName: c.name, lastMessage: c.lastMessageAtRelative, contactType: c.type, phone: c.phone, platform: 'TELEGRAM' })\",\n      errorMsg: 'No valid contacts found'\n    },\n    chat: {\n      operation: 'executeTool',\n      toolName: 'telegram_list_chats',\n      toolParams: { limit: 50 },\n      dataKey: 'channels',\n      mcpDataKey: 'items',\n      mapper: \"(g) => ({ id: g.id, name: g.name, members: g.memberCount, kind: g.kind, unread: g.unread })\",\n      errorMsg: 'No valid chats found'\n    },\n    self: {\n      operation: 'executeTool',\n      toolName: 'telegram_get_me',\n      toolParams: {},\n      normalizeType: 'profile'\n    },\n    tool: {\n      operation: 'listTools',\n      normalizeType: 'tools'\n    },\n    message: {\n      operation: 'executeTool',\n      toolName: 'telegram_list_messages',\n      toolParams: {\n        chat_id: params?.chat_id || '4000551178',\n        limit: params?.limit || 100\n      },\n      dataKey: 'messages',\n      mcpDataKey: '',\n      mapper: \"(m) => ({ id: m.id, chatId: m.chatId, text: m.text || '', senderId: m.senderId, senderName: m.senderName || m.from?.name || '', date: m.date || m.timestamp, kind: m.kind || 'message' })\",\n      errorMsg: 'No valid messages found'\n    }\n  }\n};\n\nconst platformConfig = configs[platform];\nif (!platformConfig) {\n  throw new Error(`Unknown platform: ${platform}`);\n}\n\nconst entityConfig = platformConfig[normalizedEntity];\nif (!entityConfig) {\n  throw new Error(`Unknown entity type: ${normalizedEntity} for platform: ${platform}`);\n}\n\nreturn {\n  platform,\n  entityType: normalizedEntity,\n  config: entityConfig\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [424, 400],
+      "id": "build-config",
+      "name": "Build Config"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "platform-discord",
+                    "leftValue": "={{ $json.platform }}",
+                    "rightValue": "DISCORD",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "discord"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "platform-telegram",
+                    "leftValue": "={{ $json.platform }}",
+                    "rightValue": "TELEGRAM",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "telegram"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "none"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [648, 400],
+      "id": "route-platform",
+      "name": "Route by Platform"
+    },
+    {
+      "parameters": {
+        "connectionType": "sse",
+        "uriOverride": " http://0.0.0.0:8000/sse",
+        "operation": "={{ $json.config.operation }}",
+        "toolName": "={{ $json.config.toolName || '' }}",
+        "toolParameters": "={{ JSON.stringify($json.config.toolParams || {}) }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [872, 300],
+      "id": "discord-mcp",
+      "name": "Discord MCP",
+      "credentials": {
+        "mcpClientSseApi": {
+          "id": "discordMcpSseCredential",
+          "name": "Discord MCP Client (SSE) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "connectionType": "sse",
+        "uriOverride": " http://0.0.0.0:8001/sse",
+        "operation": "={{ $json.config.operation }}",
+        "toolName": "={{ $json.config.toolName || '' }}",
+        "toolParameters": "={{ JSON.stringify($json.config.toolParams || {}) }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [872, 500],
+      "id": "telegram-mcp",
+      "name": "Telegram MCP",
+      "credentials": {
+        "mcpClientSseApi": {
+          "id": "telegramMcpSseCredential",
+          "name": "Telegram MCP Client (SSE) account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [1096, 400],
+      "id": "merge-mcp-results",
+      "name": "Merge MCP Results"
+    },
+    {
+      "parameters": {
+        "jsCode": "const mcpResponse = $input.first().json;\nconst config = $('Build Config').first().json.config;\n\n// Handle profile normalization (single object)\nif (config.normalizeType === 'profile') {\n  let profile = null;\n  try {\n    if (mcpResponse.result?.content?.[0]?.text) {\n      profile = JSON.parse(mcpResponse.result.content[0].text);\n    } else if (mcpResponse.myProfile) {\n      profile = mcpResponse.myProfile;\n    } else {\n      throw new Error('No profile found');\n    }\n    return { myProfile: profile };\n  } catch (error) {\n    return { myProfile: null, error: error.message };\n  }\n}\n\n// Handle tools normalization (object or array)\nif (config.normalizeType === 'tools') {\n  let tools = [];\n  try {\n    if (mcpResponse.result?.content?.[0]?.text) {\n      const parsed = JSON.parse(mcpResponse.result.content[0].text);\n      tools = parsed.tools || parsed;\n    } else if (mcpResponse.tools) {\n      tools = mcpResponse.tools;\n    }\n    \n    // Ensure tools is an array\n    if (!Array.isArray(tools)) {\n      tools = Object.values(tools);\n    }\n    \n    return {\n      output: { tools }\n    };\n  } catch (error) {\n    return {\n      error: error.message,\n      output: { tools: [] }\n    };\n  }\n}\n\n// Standard MCP Data Normalizer logic (contacts, guilds, chats, messages)\nconst { dataKey, mcpDataKey, mapper, errorMsg } = config;\nlet extractedData = [];\n\ntry {\n  // Extract data from MCP response\n  if (mcpResponse.result?.content?.[0]?.text) {\n    const parsed = JSON.parse(mcpResponse.result.content[0].text);\n    extractedData = mcpDataKey ? (parsed[mcpDataKey] || []) : (Array.isArray(parsed) ? parsed : []);\n  } else if (mcpResponse[dataKey]) {\n    extractedData = mcpResponse[dataKey];\n  }\n  \n  if (!Array.isArray(extractedData) || extractedData.length === 0) {\n    return { [dataKey]: [], error: errorMsg };\n  }\n  \n  // Apply mapper function\n  const mapperFunc = new Function('item', `return (${mapper})(item)`);\n  return { [dataKey]: extractedData.map(mapperFunc) };\n} catch (error) {\n  return { [dataKey]: [], error: error.message };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 400],
+      "id": "normalize",
+      "name": "Normalize Data"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Build Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Config": {
+      "main": [
+        [
+          {
+            "node": "Route by Platform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Platform": {
+      "main": [
+        [
+          {
+            "node": "Discord MCP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram MCP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord MCP": {
+      "main": [
+        [
+          {
+            "node": "Merge MCP Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram MCP": {
+      "main": [
+        [
+          {
+            "node": "Merge MCP Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge MCP Results": {
+      "main": [
+        [
+          {
+            "node": "Normalize Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "tags": []
+}

@@ -508,15 +508,7 @@ grep -r "mcpClientSseApi" --include="*.json" workflows/
 ### Workflow Files with MCP Nodes
 
 Helper workflows that use MCP nodes:
-- `workflows/HELPERS/Discord Contact Fetch.json`
-- `workflows/HELPERS/Discord Tool Fetch.json`
-- `workflows/HELPERS/Discord Guild Fetch.json`
-- `workflows/HELPERS/Discord Profile Fetch.json`
-- `workflows/HELPERS/Telegram Profile Fetch.json`
-- `workflows/HELPERS/Telegram Tool Fetch.json`
-- `workflows/HELPERS/Telegram Chat Fetch.json`
-- `workflows/HELPERS/Telegram Contact Fetch.json`
-- `workflows/HELPERS/Telegram Message Fetch.json`
+- `workflows/HELPERS/Universal Entity Fetcher.json` (fetches all entity types for both Discord and Telegram)
 - `workflows/HELPERS/Discord & Telegram Step Executor.json` (has both Discord and Telegram nodes)
 - `workflows/Legacy Telegram Context Enricher.json` (has 5 Telegram MCP nodes)
 
