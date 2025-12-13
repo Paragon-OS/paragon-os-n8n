@@ -189,6 +189,22 @@ In n8n, configure an MCP Client credential with:
 - **Transport Type**: SSE
 - **SSE Endpoint**: `http://localhost:8000/sse` (when in same pod)
 
+## Monorepo Context
+
+This is part of the `paragon-os-app` monorepo:
+```
+paragon-os-app/
+├── n8n-agent/              # Workflow management & testing
+├── n8n-nodes/              # Custom n8n nodes
+└── mcp-servers/
+    ├── telegram-mcp/       # This project (82 tools)
+    └── discord-self-mcp/   # Discord MCP (TypeScript, 14 tools)
+```
+
+### Integration Testing from n8n-agent
+
+The `n8n-agent` project includes integration tests that run this MCP server in a container with SSE transport. See `n8n-agent/src/tests/integration/mcp-container.test.ts`.
+
 ## Claude Desktop Integration
 
 Add to Claude Desktop config:

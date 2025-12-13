@@ -345,14 +345,14 @@ REDIS_HOST=localhost  # Container tests use host.containers.internal automatical
 REDIS_PORT=6379
 
 # MCP Credentials (for Discord/Telegram workflow tests)
-# These paths are auto-mounted into test containers
+# MCP servers are in the monorepo at ../mcp-servers/
 DISCORD_MCP_COMMAND=node
-DISCORD_MCP_ARGS=/path/to/discord-self-mcp/dist/index.js
+DISCORD_MCP_ARGS=/Users/nipuna/Software/paragon-os/paragon-os-app/mcp-servers/discord-self-mcp/dist/index.js
 DISCORD_MCP_ENV={"DISCORD_TOKEN":"your-token"}
 
-TELEGRAM_MCP_COMMAND=node
-TELEGRAM_MCP_ARGS=/path/to/telegram-self-mcp/dist/index.js
-TELEGRAM_MCP_ENV={"TELEGRAM_API_ID":"...","TELEGRAM_API_HASH":"..."}
+TELEGRAM_MCP_COMMAND=python
+TELEGRAM_MCP_ARGS=/Users/nipuna/Software/paragon-os/paragon-os-app/mcp-servers/telegram-mcp/main.py
+TELEGRAM_MCP_ENV={"TELEGRAM_API_ID":"...","TELEGRAM_API_HASH":"...","TELEGRAM_SESSION_STRING":"..."}
 
 # Local n8n testing mode (bypasses container startup)
 USE_LOCAL_N8N=true
@@ -368,6 +368,33 @@ USE_LOCAL_N8N=true
 - `workflows/` - JSON workflow definitions organized by tags
 - `scripts/fix-workflow-references.py` - Python script for database fixes
 - `scripts/test-integration.sh` - Integration test runner with logging support
+
+## Monorepo Structure
+
+This project is part of the `paragon-os-app` monorepo:
+
+```
+paragon-os-app/
+├── n8n-agent/              # This project - workflow management & testing
+├── n8n-nodes/              # Custom n8n nodes (paragon-os nodes)
+└── mcp-servers/            # MCP server implementations
+    ├── telegram-mcp/       # Telegram MCP (Python/FastMCP) - 82 tools
+    └── discord-self-mcp/   # Discord MCP (TypeScript/Node.js) - 14 tools
+```
+
+### MCP Servers
+
+**Telegram MCP** (`../mcp-servers/telegram-mcp/`):
+- Python-based using `mcp.server.fastmcp.FastMCP`
+- 82 tools for chats, messages, contacts, media, admin, reactions
+- Supports both STDIO and SSE transport modes
+- See `mcp-servers/telegram-mcp/CLAUDE.md` for details
+
+**Discord MCP** (`../mcp-servers/discord-self-mcp/`):
+- TypeScript/Node.js based
+- 14 tools for messages, guilds, channels, users
+- Entry point: `dist/index.js`
+- Build: `npm run build` in that directory
 
 ## Additional Documentation
 

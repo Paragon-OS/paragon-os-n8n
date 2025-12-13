@@ -25,8 +25,8 @@ const N8N_CONTAINER_NAME = 'n8n-mcp-test';
 const MCP_IMAGE = 'telegram-mcp-sse:latest';
 const N8N_IMAGE = 'localhost/n8n-paragon-os:latest';
 
-// Paths
-const TELEGRAM_MCP_PATH = '/Users/nipuna/Software/paragon-os/telegram-mcp';
+// Paths - MCP servers are in the monorepo
+const TELEGRAM_MCP_PATH = '/Users/nipuna/Software/paragon-os/paragon-os-app/mcp-servers/telegram-mcp';
 
 interface McpToolsResponse {
   jsonrpc: string;
