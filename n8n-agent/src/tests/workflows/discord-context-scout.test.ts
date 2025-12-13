@@ -83,7 +83,8 @@ describe('DiscordContextScout', () => {
       throw new Error('Instance not initialized');
     }
 
-    const result = await executeWorkflowTest('Discord Context Scout', testCase, testData, undefined, instance);
+    // Note: Use 'DiscordContextScout' (no spaces) to match Test Runner routing
+    const result = await executeWorkflowTest('DiscordContextScout', testCase, testData, undefined, instance);
 
     if (!result.success) {
       const errorMsg = result.error || 'Test failed with unknown error';
