@@ -428,6 +428,98 @@ paragon-os-app/
 - Entry point: `dist/index.js`
 - Build: `npm run build` in that directory
 
+## MCP Node Configuration in Workflow JSON
+
+When working with MCP nodes in workflow JSON files, there are two transport modes: STDIO (default) and SSE.
+
+### STDIO vs SSE Configuration
+
+**STDIO Mode (default):**
+```json
+{
+  "parameters": {
+    "operation": "executeTool",
+    "toolName": "=discord_list_guilds",
+    "toolParameters": "={}"
+  },
+  "type": "n8n-nodes-mcp.mcpClient",
+  "credentials": {
+    "mcpClientApi": {
+      "id": "ZFofx3k2ze1wsifx",
+      "name": "Discord MCP Client (STDIO) account"
+    }
+  }
+}
+```
+
+**SSE Mode (for pod-based deployment):**
+```json
+{
+  "parameters": {
+    "connectionType": "sse",
+    "uriOverride": " http://0.0.0.0:8000/sse",
+    "operation": "executeTool",
+    "toolName": "=discord_list_guilds",
+    "toolParameters": "={}"
+  },
+  "type": "n8n-nodes-mcp.mcpClient",
+  "credentials": {
+    "mcpClientSseApi": {
+      "id": "discordMcpSseCredential",
+      "name": "Discord MCP Client (SSE) account"
+    }
+  }
+}
+```
+
+### Key Differences for SSE Configuration
+
+1. **Add to parameters:**
+   - `"connectionType": "sse"`
+   - `"uriOverride": " http://0.0.0.0:<PORT>/sse"` (note: space before http is intentional)
+
+2. **Change credential type:**
+   - From: `mcpClientApi` → To: `mcpClientSseApi`
+
+3. **Port assignments:**
+   - Discord MCP: port 8000
+   - Telegram MCP: port 8001
+
+### Credential ID Mappings
+
+| Platform | STDIO Credential | SSE Credential |
+|----------|-----------------|----------------|
+| Discord | `mcpClientApi` / `ZFofx3k2ze1wsifx` / "Discord MCP Client (STDIO) account" | `mcpClientSseApi` / `discordMcpSseCredential` / "Discord MCP Client (SSE) account" |
+| Telegram | `mcpClientApi` / `aiYCclLDUqob5iQ0` / "Telegram MCP Client (STDIO) account" | `mcpClientSseApi` / `telegramMcpSseCredential` / "Telegram MCP Client (SSE) account" |
+
+### Finding MCP Nodes to Fix
+
+```bash
+# Find all files with MCP nodes
+grep -r "n8n-nodes-mcp\.mcpClient" --include="*.json" workflows/
+
+# Check for STDIO credentials (need fixing)
+grep -r "mcpClientApi" --include="*.json" workflows/
+
+# Check for SSE credentials (already fixed)
+grep -r "mcpClientSseApi" --include="*.json" workflows/
+```
+
+### Workflow Files with MCP Nodes
+
+Helper workflows that use MCP nodes:
+- `workflows/HELPERS/Discord Contact Fetch.json`
+- `workflows/HELPERS/Discord Tool Fetch.json`
+- `workflows/HELPERS/Discord Guild Fetch.json`
+- `workflows/HELPERS/Discord Profile Fetch.json`
+- `workflows/HELPERS/Telegram Profile Fetch.json`
+- `workflows/HELPERS/Telegram Tool Fetch.json`
+- `workflows/HELPERS/Telegram Chat Fetch.json`
+- `workflows/HELPERS/Telegram Contact Fetch.json`
+- `workflows/HELPERS/Telegram Message Fetch.json`
+- `workflows/HELPERS/Discord & Telegram Step Executor.json` (has both Discord and Telegram nodes)
+- `workflows/Legacy Telegram Context Enricher.json` (has 5 Telegram MCP nodes)
+
 ## Additional Documentation
 
 Detailed documentation is available in subdirectory CLAUDE.md files:
