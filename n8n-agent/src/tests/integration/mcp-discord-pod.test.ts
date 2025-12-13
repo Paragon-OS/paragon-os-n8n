@@ -26,13 +26,41 @@ import { startMcpPod, type McpPodInstance } from '../../utils/mcp-pod-manager';
 import { TEST_TIMEOUTS } from '../../utils/test-helpers';
 import axios from 'axios';
 
+/**
+ * Get Discord token from environment
+ * Supports both DISCORD_TOKEN directly and DISCORD_MCP_ENV JSON format
+ */
+function getDiscordToken(): string | undefined {
+  // Direct token
+  if (process.env.DISCORD_TOKEN) {
+    return process.env.DISCORD_TOKEN;
+  }
+
+  // Token from DISCORD_MCP_ENV JSON
+  const mcpEnv = process.env.DISCORD_MCP_ENV;
+  if (mcpEnv) {
+    try {
+      const parsed = JSON.parse(mcpEnv);
+      if (parsed.DISCORD_TOKEN) {
+        return parsed.DISCORD_TOKEN;
+      }
+    } catch {
+      // Not valid JSON
+    }
+  }
+
+  return undefined;
+}
+
 describe('Discord MCP Pod', () => {
   let pod: McpPodInstance | null = null;
 
   beforeAll(async () => {
-    // Skip if DISCORD_TOKEN is not set (no env file or token)
-    if (!process.env.DISCORD_TOKEN) {
+    // Skip if DISCORD_TOKEN is not available
+    const discordToken = getDiscordToken();
+    if (!discordToken) {
       console.log('Skipping Discord MCP Pod test - DISCORD_TOKEN not set');
+      console.log('Set DISCORD_TOKEN or DISCORD_MCP_ENV={"DISCORD_TOKEN":"..."}');
       return;
     }
 
@@ -41,7 +69,7 @@ describe('Discord MCP Pod', () => {
         {
           type: 'discord',
           env: {
-            DISCORD_TOKEN: process.env.DISCORD_TOKEN || '',
+            DISCORD_TOKEN: discordToken,
           },
         },
       ],

@@ -64,7 +64,10 @@ export interface McpPodConfig {
 export interface McpPodInstance {
   podName: string;
   n8nInstance: N8nInstance;
-  mcpEndpoints: Record<string, string>; // type -> SSE endpoint URL
+  /** Internal MCP endpoints (for n8n to use within the pod via localhost:8000) */
+  mcpEndpointsInternal: Record<string, string>;
+  /** External MCP endpoints (for tests to verify from outside the pod) */
+  mcpEndpoints: Record<string, string>;
   cleanup: () => Promise<void>;
 }
 
@@ -347,7 +350,8 @@ export async function startMcpPod(config: McpPodConfig): Promise<McpPodInstance>
     '-p', `${mcpExternalPort}:${DEFAULT_MCP_PORT}`,
   ]);
 
-  const mcpEndpoints: Record<string, string> = {};
+  const mcpEndpoints: Record<string, string> = {}; // External endpoints for test access
+  const mcpEndpointsInternal: Record<string, string> = {}; // Internal endpoints for n8n
   const mcpContainerNames: string[] = [];
 
   try {
@@ -404,8 +408,10 @@ export async function startMcpPod(config: McpPodConfig): Promise<McpPodInstance>
         throw new Error(`${mcpConfig.type} MCP server failed to become ready`);
       }
 
-      // n8n will connect via localhost:8000 (within the pod)
-      mcpEndpoints[mcpConfig.type] = `http://localhost:${DEFAULT_MCP_PORT}/sse`;
+      // Internal endpoint for n8n (within the pod via localhost:8000)
+      mcpEndpointsInternal[mcpConfig.type] = `http://localhost:${DEFAULT_MCP_PORT}/sse`;
+      // External endpoint for test verification (from outside the pod)
+      mcpEndpoints[mcpConfig.type] = `http://localhost:${mcpExternalPort}/sse`;
     }
 
     // Start n8n container
@@ -484,13 +490,17 @@ export async function startMcpPod(config: McpPodConfig): Promise<McpPodInstance>
     logger.info(`Pod ${podName} ready!`);
     logger.info(`  n8n: ${baseUrl}`);
     for (const [type, endpoint] of Object.entries(mcpEndpoints)) {
-      logger.info(`  ${type} MCP: ${endpoint}`);
+      logger.info(`  ${type} MCP (external): ${endpoint}`);
+    }
+    for (const [type, endpoint] of Object.entries(mcpEndpointsInternal)) {
+      logger.info(`  ${type} MCP (internal): ${endpoint}`);
     }
 
     return {
       podName,
       n8nInstance,
       mcpEndpoints,
+      mcpEndpointsInternal,
       async cleanup() {
         logger.info(`Cleaning up pod: ${podName}`);
         await execa('podman', ['pod', 'rm', '-f', podName], { reject: false });
