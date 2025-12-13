@@ -161,11 +161,13 @@ export class JsonDocumentLoader implements INodeType {
 						name: 'Split Array',
 						value: 'splitArray',
 						description: 'Split a JSON array into individual documents',
+						action: 'Split a JSON array into individual documents',
 					},
 					{
 						name: 'Auto Split',
 						value: 'autoSplit',
 						description: 'Auto-detect and split arrays within an object',
+						action: 'Auto detect and split arrays within an object',
 					},
 				],
 				default: 'autoSplit',
@@ -262,7 +264,7 @@ export class JsonDocumentLoader implements INodeType {
 						type: 'string',
 						default: 'id',
 						description: 'Field to use as document ID (supports dot notation)',
-						placeholder: 'id, _id, uuid',
+						placeholder: 'ID, _id, uuid',
 					},
 					{
 						displayName: 'Metadata Fields',

@@ -7,7 +7,8 @@ This directory contains the custom n8n Docker image configuration with `n8n-node
 | File | Purpose |
 |------|---------|
 | `n8n-custom.Dockerfile` | Custom n8n image definition |
-| `docker-entrypoint.sh` | Runtime entrypoint that copies custom nodes to survive volume mounts |
+| `docker-entrypoint.sh` | Runtime entrypoint that copies custom nodes and triggers database registration |
+| `register-nodes.js` | Script to register community nodes in n8n's SQLite database |
 | `build-custom-image.sh` | Build script (or `npm run docker:build`) |
 | `build-context/` | Staging directory for Docker build context |
 
@@ -90,7 +91,80 @@ n8n expects this exact structure in `~/.n8n/nodes/`:
             └── ...
 ```
 
+### Community Node Database Registration
+
+**Critical insight:** n8n requires community nodes to be registered in **two places**:
+1. **Filesystem** (`~/.n8n/nodes/node_modules/`) - for n8n to load and execute nodes
+2. **Database** (`installed_packages` and `installed_nodes` tables) - for nodes to appear in Settings > Community Nodes UI
+
+Without database registration, nodes will **load and work correctly** but won't appear in the Community Nodes UI section. Users won't be able to see what's installed or manage them through the UI.
+
+**The timing problem:** On first container start, the entrypoint script runs **before** n8n creates the database (database is created during n8n's migration process). This means synchronous registration at startup will fail.
+
+**Solution:** `register-nodes.js` runs as a **background process** with retries:
+```sh
+# In docker-entrypoint.sh
+(
+    MAX_RETRIES=30
+    RETRY_INTERVAL=2
+    for i in $(seq 1 $MAX_RETRIES); do
+        sleep $RETRY_INTERVAL
+        if [ -f /home/node/.n8n/database.sqlite ]; then
+            node /opt/n8n-custom-nodes/register-nodes.js && exit 0
+        fi
+    done
+) &
+exec n8n "$@"
+```
+
+**Database location:** The database is at `/home/node/.n8n/database.sqlite` (NOT in the nested `.n8n/.n8n/` folder, despite the N8N_USER_FOLDER nesting for nodes).
+
+**What register-nodes.js does:**
+1. Finds the SQLite database (checks multiple paths)
+2. Waits for `installed_packages` and `installed_nodes` tables to exist
+3. Scans `~/.n8n/nodes/node_modules/` for `n8n-nodes-*` packages
+4. Reads each package's `package.json` for version and node definitions
+5. Inserts/updates records in `installed_packages` and `installed_nodes` tables
+
+**Verifying registration:**
+```bash
+# Check database registration worked
+podman exec <container> node -e "
+const sqlite3 = require('/usr/local/lib/node_modules/n8n/node_modules/.pnpm/sqlite3@5.1.7/node_modules/sqlite3');
+const db = new sqlite3.Database('/home/node/.n8n/database.sqlite');
+db.all('SELECT packageName, installedVersion FROM installed_packages', (e,r) => console.log(r));
+"
+```
+
 ## Debugging Custom Node Issues
+
+### Community nodes work but don't appear in Settings > Community Nodes
+
+Nodes load and execute correctly but aren't visible in the UI. This means database registration failed.
+
+**Check background registration logs:**
+```bash
+podman logs <container> 2>&1 | grep -E "\[Background\]|Registration"
+```
+
+**Expected output:**
+```
+Starting background node registration (will wait for database)...
+[Background] Database found, attempting registration (attempt 2)...
+  Found 2 community package(s) to register
+  Registered: n8n-nodes-mcp@0.1.33
+    - McpClient
+  Registered: n8n-nodes-paragon-os@1.4.2
+    - FuzzySearch
+    - JsonDocumentLoader
+  Registration complete
+[Background] Node registration completed successfully
+```
+
+**If registration failed**, manually run it:
+```bash
+podman exec <container> node /opt/n8n-custom-nodes/register-nodes.js
+```
 
 ### "Unrecognized node type: n8n-nodes-paragon-os.fuzzySearch"
 
