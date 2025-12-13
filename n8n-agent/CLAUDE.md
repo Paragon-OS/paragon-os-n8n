@@ -131,7 +131,8 @@ Three test suites that validate core functionality using isolated podman contain
 | Simple Start | `simple-start.test.ts` | `npm run test:simple` | Container starts, API accessible, session auth works |
 | Credentials | `credential-setup.test.ts` | `npm run test:credentials` | CLI availability, credential injection, ID matching |
 | Backup/Restore | `backup-restore.test.ts` | `npm run test:backup-restore` | Workflow export/import, references, deduplication |
-| MCP Container | `mcp-container.test.ts` | `npx vitest run src/tests/integration/mcp-container.test.ts` | MCP server in container with SSE transport, pod networking |
+| MCP Container | `mcp-container.test.ts` | `npx vitest run src/tests/integration/mcp-container.test.ts` | Telegram MCP in container with SSE transport |
+| MCP Discord Pod | `mcp-discord-pod.test.ts` | `npx vitest run src/tests/integration/mcp-discord-pod.test.ts` | Discord MCP + n8n in podman pod with SSE |
 
 **Backup/Restore Test Cases:**
 1. Simple workflows - basic backup/restore cycle
@@ -275,7 +276,7 @@ npx vitest run src/tests/integration/mcp-container.test.ts
 - Verifies MCP tools/list returns 82 Telegram tools
 - Confirms n8n container can reach MCP via localhost
 
-**Local n8n Setup:**
+**Local n8n Setup (Required for MCP Workflow Tests):**
 ```bash
 # 1. Start n8n locally
 n8n start
@@ -290,6 +291,16 @@ N8N_API_KEY=your-api-key  # Create in n8n Settings → API
 # 4. Run tests
 LOG_DIR=./logs LOG_LEVEL=debug npx vitest run src/tests/workflows/discord-context-scout.test.ts -t "contact-fuzzy"
 ```
+
+**Why Local Mode for MCP Workflows:**
+MCP workflows use STDIO transport which spawns local subprocesses. This doesn't work in containers because:
+1. MCP script paths are host paths that don't exist in containers
+2. Even with volume mounts, subprocess spawning is complex
+
+**Pod-Based SSE Mode (For CI/CD):**
+For fully containerized testing, use the MCP pod manager which runs both n8n and MCP servers in a podman pod using SSE transport:
+- See `src/utils/mcp-pod-manager.ts` for the implementation
+- See `src/tests/integration/mcp-discord-pod.test.ts` for an example test
 
 **Smart Setup Functions:**
 ```typescript

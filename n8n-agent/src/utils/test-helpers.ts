@@ -605,6 +605,16 @@ export async function connectToLocalN8n(): Promise<N8nInstance> {
     port: parseInt(new URL(baseUrl).port || '5678', 10),
     sessionCookie: sessionCookie || '',
     apiKey,
+    // No-op methods for local instances (can't stop/remove local n8n)
+    async stop() {
+      console.log('Local n8n instance - stop is a no-op');
+    },
+    async remove() {
+      console.log('Local n8n instance - remove is a no-op');
+    },
+    async restart() {
+      console.log('Local n8n instance - restart is a no-op');
+    },
   };
 }
 
@@ -638,4 +648,8 @@ export async function cleanupTestInstanceSmart(instance: N8nInstance | null): Pr
 
   return cleanupTestInstance(instance);
 }
+
+// Re-export MCP pod manager for tests that need it
+export { startMcpPod, type McpPodInstance, type McpPodConfig, type McpServerConfig } from './mcp-pod-manager';
+export { rewriteMcpCredentialsToSse, type McpSseCredentialMapping } from './workflow-reference-converter';
 

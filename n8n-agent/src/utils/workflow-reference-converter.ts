@@ -151,6 +151,71 @@ export async function convertWorkflowReferencesToNames(
  * Pattern matched: `fetchWorkflowId: "OLD_ID"` or `fetchWorkflowId: 'OLD_ID'`
  * The comment after the ID (e.g., `// [HELPERS] Workflow Name`) is used to find the new ID.
  */
+/**
+ * MCP SSE credential mapping for container mode
+ * Maps STDIO credential IDs to SSE credential IDs
+ */
+export interface McpSseCredentialMapping {
+  /** STDIO credential ID */
+  stdioId: string;
+  /** SSE credential ID to use instead */
+  sseId: string;
+  /** SSE credential name */
+  sseName: string;
+}
+
+/**
+ * Rewrite MCP node credentials from STDIO to SSE transport for container mode.
+ * This allows workflows designed for local STDIO MCP to work in containers
+ * using SSE transport.
+ *
+ * @param nodes - Workflow nodes to process
+ * @param mappings - Credential mappings (STDIO ID -> SSE ID)
+ * @returns Updated nodes with SSE credentials
+ */
+export function rewriteMcpCredentialsToSse(
+  nodes: any[],
+  mappings: McpSseCredentialMapping[]
+): any[] {
+  // Build mapping lookup
+  const credentialMap = new Map<string, { sseId: string; sseName: string }>();
+  for (const mapping of mappings) {
+    credentialMap.set(mapping.stdioId, {
+      sseId: mapping.sseId,
+      sseName: mapping.sseName,
+    });
+  }
+
+  return nodes.map((node: any) => {
+    // Check if this is an MCP node with mcpClientApi credential
+    if (!node?.credentials?.mcpClientApi) {
+      return node;
+    }
+
+    const stdioCredential = node.credentials.mcpClientApi;
+    const mapping = credentialMap.get(stdioCredential.id);
+
+    if (!mapping) {
+      return node;
+    }
+
+    logger.info(`🔄 Rewriting MCP credential from STDIO to SSE: "${stdioCredential.name}" → "${mapping.sseName}"`);
+
+    // Replace mcpClientApi with mcpClientSseApi
+    const updatedCredentials = { ...node.credentials };
+    delete updatedCredentials.mcpClientApi;
+    updatedCredentials.mcpClientSseApi = {
+      id: mapping.sseId,
+      name: mapping.sseName,
+    };
+
+    return {
+      ...node,
+      credentials: updatedCredentials,
+    };
+  });
+}
+
 function rewriteFetchWorkflowIdsInJsCode(nodes: any[], allWorkflows: Workflow[]): any[] {
   // Build a name-to-ID mapping from all workflows
   const nameToIdMap = new Map<string, string>();

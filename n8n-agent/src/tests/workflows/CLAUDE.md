@@ -541,15 +541,66 @@ Missing credentials will cause specific workflows to fail. The test framework in
 
 ## MCP Workflow Testing
 
-Workflows using MCP nodes (Discord Contact Fetch, Telegram Chat Fetch, etc.) require special handling:
+Workflows using MCP nodes (Discord Contact Fetch, Telegram Chat Fetch, etc.) require special handling because they spawn external processes.
 
-### Why MCP Workflows Need Local Testing
-MCP nodes spawn external processes (e.g., `node /path/to/discord-self-mcp/index.js`). When running in a container:
-1. The MCP script path doesn't exist inside the container
-2. Even with volume mounts, the spawned process can't access Discord API easily
-3. Container networking adds complexity
+### Testing Approaches
 
-**Solution:** Use local n8n mode (`USE_LOCAL_N8N=true`) for MCP workflow tests.
+**1. Local n8n Mode (Recommended for Development)**
+
+Use local n8n with STDIO-based MCP credentials. MCP spawns as a local subprocess.
+
+```bash
+# Start n8n locally
+n8n start
+
+# Configure environment
+USE_LOCAL_N8N=true
+N8N_URL=http://localhost:5678
+N8N_SESSION_COOKIE=your-session-cookie  # From browser DevTools
+
+# Run tests
+npx vitest run src/tests/workflows/discord-context-scout.test.ts
+```
+
+**Advantages:**
+- Fast (~4 seconds per test)
+- MCP processes spawn directly on your machine
+- All existing credentials work
+- Easy debugging
+
+**Disadvantages:**
+- Requires local n8n running
+- Not suitable for CI/CD
+
+**2. Pod-Based SSE Mode (For CI/CD)**
+
+Run both n8n and MCP servers in a podman pod using SSE transport.
+
+```typescript
+import { startMcpPod } from '../../utils/mcp-pod-manager';
+
+const pod = await startMcpPod({
+  mcpServers: [{ type: 'discord' }],
+});
+// pod.n8nInstance - n8n container
+// pod.mcpEndpoints.discord - SSE endpoint (http://localhost:8000/sse)
+```
+
+**Advantages:**
+- Fully isolated
+- Works in CI/CD
+- No local dependencies
+
+**Disadvantages:**
+- Slower (~2+ minutes for startup)
+- Requires credential rewriting (STDIO → SSE)
+
+### Why STDIO Doesn't Work in Containers
+
+MCP nodes with STDIO transport spawn external processes:
+1. The MCP script path is a host path (e.g., `/Users/.../discord-self-mcp/index.js`)
+2. This path doesn't exist inside the n8n container
+3. Even with volume mounts, the node dependencies might not work correctly
 
 ### MCP Credential Configuration
 MCP credentials are defined in `src/utils/n8n-credentials.ts`. The `discordMcp` credential uses:

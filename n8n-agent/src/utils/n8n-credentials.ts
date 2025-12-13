@@ -85,7 +85,7 @@ export const TEST_CREDENTIALS: Record<string, CredentialDefinition> = {
     },
   },
 
-  // Discord MCP Client (STDIO)
+  // Discord MCP Client (STDIO) - for local n8n testing
   discordMcp: {
     id: 'ZFofx3k2ze1wsifx',
     name: 'Discord MCP Client (STDIO) account',
@@ -94,6 +94,17 @@ export const TEST_CREDENTIALS: Record<string, CredentialDefinition> = {
       command: process.env.DISCORD_MCP_COMMAND || 'node',
       args: process.env.DISCORD_MCP_ARGS || '/path/to/discord-mcp/index.js',
       env: process.env.DISCORD_MCP_ENV || '{}',
+    },
+  },
+
+  // Discord MCP Client (SSE) - for container-based testing via pods
+  discordMcpSse: {
+    id: 'discordMcpSseCredential',
+    name: 'Discord MCP Client (SSE) account',
+    type: 'mcpClientSseApi',
+    data: {
+      // SSE endpoint - localhost works within a pod
+      sseEndpoint: process.env.DISCORD_MCP_SSE_ENDPOINT || 'http://localhost:8000/sse',
     },
   },
 
