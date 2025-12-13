@@ -29,6 +29,7 @@ import axios from 'axios';
 import { logger } from './logger';
 import type { N8nInstance } from './n8n-podman';
 import { setupN8nWithCredentials } from './n8n-setup';
+import { type McpSseCredentialMapping } from './workflow-reference-converter';
 
 // Paths to MCP servers in the monorepo
 const DISCORD_MCP_PATH = path.resolve(__dirname, '../../../mcp-servers/discord-self-mcp');
@@ -68,6 +69,12 @@ export interface McpPodInstance {
   mcpEndpointsInternal: Record<string, string>;
   /** External MCP endpoints (for tests to verify from outside the pod) */
   mcpEndpoints: Record<string, string>;
+  /**
+   * Credential mappings for rewriting STDIO credentials to SSE.
+   * Pass these to executeWorkflowTest() via options.mcpCredentialMappings
+   * to allow workflows designed for STDIO MCP to work with SSE in the pod.
+   */
+  mcpCredentialMappings: McpSseCredentialMapping[];
   cleanup: () => Promise<void>;
 }
 
@@ -492,6 +499,7 @@ export async function startMcpPod(config: McpPodConfig): Promise<McpPodInstance>
     logger.info('Setting up n8n user and credentials...');
     let sessionCookie: string | undefined;
     let apiKey: string | undefined;
+    let mcpCredentialMappings: McpSseCredentialMapping[] = [];
     try {
       const setupResult = await setupN8nWithCredentials(
         n8nContainerName,
@@ -501,9 +509,9 @@ export async function startMcpPod(config: McpPodConfig): Promise<McpPodInstance>
       sessionCookie = setupResult.sessionCookie;
       apiKey = setupResult.apiKey;
 
-      // Inject MCP SSE credentials that replace the STDIO ones
-      // This allows workflows to use the same credential IDs but connect via SSE
-      await injectMcpSseCredentials(
+      // Inject MCP SSE credentials and get credential mappings for workflow rewriting
+      // The mappings allow workflows designed for STDIO MCP to work with SSE in the pod
+      mcpCredentialMappings = await injectMcpSseCredentials(
         n8nContainerName,
         dataDir,
         config.mcpServers,
@@ -540,12 +548,19 @@ export async function startMcpPod(config: McpPodConfig): Promise<McpPodInstance>
     for (const [type, endpoint] of Object.entries(mcpEndpointsInternal)) {
       logger.info(`  ${type} MCP (internal): ${endpoint}`);
     }
+    if (mcpCredentialMappings.length > 0) {
+      logger.info(`  Credential mappings: ${mcpCredentialMappings.length} (STDIO → SSE)`);
+      for (const mapping of mcpCredentialMappings) {
+        logger.info(`    ${mapping.stdioId} → ${mapping.sseId} (${mapping.sseName})`);
+      }
+    }
 
     return {
       podName,
       n8nInstance,
       mcpEndpoints,
       mcpEndpointsInternal,
+      mcpCredentialMappings,
       async cleanup() {
         logger.info(`Cleaning up pod: ${podName}`);
         await execa('podman', ['pod', 'rm', '-f', podName], { reject: false });
@@ -567,43 +582,64 @@ export async function startMcpPod(config: McpPodConfig): Promise<McpPodInstance>
   }
 }
 
-// MCP credential IDs that match the STDIO credentials in n8n-credentials.ts
-const MCP_CREDENTIAL_IDS: Record<string, string> = {
-  discord: 'ZFofx3k2ze1wsifx',  // Same ID as discordMcp STDIO credential
-  telegram: 'aiYCclLDUqob5iQ0', // Same ID as telegramMcp STDIO credential
+// MCP STDIO credential IDs from n8n-credentials.ts
+const MCP_STDIO_CREDENTIAL_IDS: Record<string, string> = {
+  discord: 'ZFofx3k2ze1wsifx',
+  telegram: 'aiYCclLDUqob5iQ0',
+};
+
+// MCP SSE credential IDs (separate from STDIO to allow proper credential rewriting)
+const MCP_SSE_CREDENTIAL_IDS: Record<string, string> = {
+  discord: 'discordMcpSseCredential',
+  telegram: 'telegramMcpSseCredential',
+};
+
+// MCP SSE credential names
+const MCP_SSE_CREDENTIAL_NAMES: Record<string, string> = {
+  discord: 'Discord MCP Client (SSE) account',
+  telegram: 'Telegram MCP Client (SSE) account',
 };
 
 /**
- * Inject MCP SSE credentials with the same IDs as STDIO credentials
- * This allows workflows to use the same credential references but connect via SSE
+ * Inject MCP SSE credentials into n8n container.
+ * Uses separate SSE credential IDs - workflow nodes will be rewritten to use these
+ * via the mcpCredentialMappings returned by startMcpPod().
+ *
+ * @returns Credential mappings for workflow rewriting
  */
 async function injectMcpSseCredentials(
   containerName: string,
   dataDir: string,
   mcpServers: McpServerConfig[],
   mcpEndpointsInternal: Record<string, string>
-): Promise<void> {
+): Promise<McpSseCredentialMapping[]> {
   logger.info('🔐 Injecting MCP SSE credentials...');
 
+  const mappings: McpSseCredentialMapping[] = [];
+
   for (const mcpConfig of mcpServers) {
-    const credentialId = MCP_CREDENTIAL_IDS[mcpConfig.type];
+    const stdioCredentialId = MCP_STDIO_CREDENTIAL_IDS[mcpConfig.type];
+    const sseCredentialId = MCP_SSE_CREDENTIAL_IDS[mcpConfig.type];
+    const sseCredentialName = MCP_SSE_CREDENTIAL_NAMES[mcpConfig.type];
     const sseEndpoint = mcpEndpointsInternal[mcpConfig.type];
 
-    if (!credentialId || !sseEndpoint) {
-      logger.warn(`No credential ID or endpoint for ${mcpConfig.type} MCP`);
+    if (!stdioCredentialId || !sseCredentialId || !sseEndpoint) {
+      logger.warn(`Missing credential config for ${mcpConfig.type} MCP`);
       continue;
     }
 
     const credentialDef = {
-      id: credentialId,
-      name: `${mcpConfig.type.charAt(0).toUpperCase() + mcpConfig.type.slice(1)} MCP Client (SSE) account`,
+      id: sseCredentialId,
+      name: sseCredentialName,
       type: 'mcpClientSseApi',
       data: {
         sseEndpoint,
       },
     };
 
-    logger.info(`  Injecting ${mcpConfig.type} MCP SSE credential (ID: ${credentialId})`);
+    logger.info(`  Injecting ${mcpConfig.type} MCP SSE credential`);
+    logger.info(`    SSE credential ID: ${sseCredentialId}`);
+    logger.info(`    STDIO credential ID: ${stdioCredentialId} (will be rewritten → ${sseCredentialId})`);
     logger.info(`    SSE endpoint: ${sseEndpoint}`);
 
     // Create credential file
@@ -612,7 +648,7 @@ async function injectMcpSseCredentials(
       fs.mkdirSync(credDir, { recursive: true });
     }
 
-    const credFile = path.join(credDir, `credential-${credentialId}.json`);
+    const credFile = path.join(credDir, `credential-${sseCredentialId}.json`);
     const credentialJson = [{
       id: credentialDef.id,
       name: credentialDef.name,
@@ -638,6 +674,13 @@ async function injectMcpSseCredentials(
       logger.error(`Failed to import ${mcpConfig.type} MCP SSE credential: ${result.stderr}`);
     } else {
       logger.info(`  ✅ ${mcpConfig.type} MCP SSE credential injected`);
+
+      // Add mapping for successful injection
+      mappings.push({
+        stdioId: stdioCredentialId,
+        sseId: sseCredentialId,
+        sseName: sseCredentialName,
+      });
     }
 
     // Clean up
@@ -648,6 +691,9 @@ async function injectMcpSseCredentials(
   // Clean up credential directory
   const credDir = path.join(dataDir, '.n8n-credentials');
   try { fs.rmSync(credDir, { recursive: true, force: true }); } catch { /* ignore */ }
+
+  logger.info(`📋 Generated ${mappings.length} credential mapping(s) for workflow rewriting`);
+  return mappings;
 }
 
 /**

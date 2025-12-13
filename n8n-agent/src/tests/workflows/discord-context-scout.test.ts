@@ -7,6 +7,7 @@ import {
   type N8nInstance
 } from '../../utils/test-helpers';
 import { startMcpPod, type McpPodInstance } from '../../utils/mcp-pod-manager';
+import { type McpSseCredentialMapping } from '../../utils/workflow-reference-converter';
 
 /**
  * Discord Context Scout Workflow Tests
@@ -51,6 +52,7 @@ function getDiscordToken(): string | undefined {
 describe('DiscordContextScout', () => {
   let instance: N8nInstance | null = null;
   let mcpPod: McpPodInstance | null = null;
+  let mcpCredentialMappings: McpSseCredentialMapping[] = [];
 
   beforeAll(async () => {
     // Check for Discord token
@@ -64,6 +66,7 @@ describe('DiscordContextScout', () => {
       // Local mode: use local n8n with STDIO MCP
       console.log('🏠 Using local n8n mode');
       instance = await connectToLocalN8n();
+      // No credential rewriting needed - local uses STDIO directly
     } else {
       // Pod mode: start MCP pod with Discord MCP + n8n
       console.log('🐳 Starting MCP pod with Discord MCP + n8n...');
@@ -77,9 +80,11 @@ describe('DiscordContextScout', () => {
         timeout: 180000, // 3 minutes for startup
       });
       instance = mcpPod.n8nInstance;
+      mcpCredentialMappings = mcpPod.mcpCredentialMappings;
       console.log(`✅ MCP pod ready: ${mcpPod.podName}`);
       console.log(`   n8n: ${instance.baseUrl}`);
       console.log(`   Discord MCP (internal): ${mcpPod.mcpEndpointsInternal.discord}`);
+      console.log(`   Credential mappings: ${mcpCredentialMappings.length}`);
     }
     // Note: executeWorkflowTest() auto-imports all helper workflows in correct dependency order
   }, TEST_TIMEOUTS.WORKFLOW);
@@ -138,7 +143,15 @@ describe('DiscordContextScout', () => {
     }
 
     // Note: Use 'DiscordContextScout' (no spaces) to match Test Runner routing
-    const result = await executeWorkflowTest('DiscordContextScout', testCase, testData, undefined, instance);
+    // Pass credential mappings to rewrite STDIO credentials to SSE for pod mode
+    const result = await executeWorkflowTest(
+      'DiscordContextScout',
+      testCase,
+      testData,
+      undefined,
+      instance,
+      { mcpCredentialMappings }
+    );
 
     if (!result.success) {
       const errorMsg = result.error || 'Test failed with unknown error';

@@ -12,6 +12,7 @@ import {
   getN8nBaseUrl,
   type N8nApiConfig
 } from "./n8n-api";
+import { type McpSseCredentialMapping } from "./workflow-reference-converter";
 import { collectJsonFilesRecursive } from "./file";
 import { logger } from "./logger";
 import { 
@@ -214,24 +215,39 @@ export async function syncWorkflow(
 }
 
 /**
+ * Options for workflow test execution
+ */
+export interface ExecuteWorkflowTestOptions {
+  /** Optional workflows directory path */
+  workflowsDir?: string;
+  /** Either N8nApiConfig or N8nInstance */
+  config?: N8nApiConfig | N8nInstance;
+  /** MCP credential mappings for container mode (rewrites STDIO to SSE) */
+  mcpCredentialMappings?: McpSseCredentialMapping[];
+}
+
+/**
  * Execute a single workflow test case
- * 
+ *
  * Automatically syncs the workflow to n8n before execution.
- * 
+ *
  * @param workflowName - Name of the workflow to test
  * @param testCase - Test case identifier
  * @param testData - Test data to pass to the workflow
- * @param workflowsDir - Optional workflows directory path
- * @param config - Either N8nApiConfig or N8nInstance (for convenience with container reuse pattern)
+ * @param workflowsDir - Optional workflows directory path (legacy, use options.workflowsDir)
+ * @param config - Either N8nApiConfig or N8nInstance (legacy, use options.config)
+ * @param options - Additional options including MCP credential mappings
  * @returns Test result with success status, output, or error details
- * 
+ *
  * @example
  * ```typescript
  * // With N8nInstance (recommended for container reuse pattern)
  * const result = await executeWorkflowTest('MyWorkflow', 'test-case', testData, undefined, instance);
- * 
- * // With N8nApiConfig (legacy)
- * const result = await executeWorkflowTest('MyWorkflow', 'test-case', testData, undefined, { baseURL: '...', apiKey: '...' });
+ *
+ * // With MCP credential mappings (for pod mode)
+ * const result = await executeWorkflowTest('MyWorkflow', 'test-case', testData, undefined, instance, {
+ *   mcpCredentialMappings: [{ stdioId: 'xxx', sseId: 'yyy', sseName: 'Discord MCP SSE' }]
+ * });
  * ```
  */
 export async function executeWorkflowTest(
@@ -239,10 +255,15 @@ export async function executeWorkflowTest(
   testCase: string,
   testData: Record<string, unknown>,
   workflowsDir?: string,
-  config?: N8nApiConfig | N8nInstance
+  config?: N8nApiConfig | N8nInstance,
+  options?: ExecuteWorkflowTestOptions
 ): Promise<WorkflowTestResult> {
-  const workflowsPath = workflowsDir || resolveWorkflowsDir();
-  
+  // Allow options to override workflowsDir and config if provided
+  const effectiveWorkflowsDir = options?.workflowsDir ?? workflowsDir;
+  const effectiveConfig = options?.config ?? config;
+  const mcpCredentialMappings = options?.mcpCredentialMappings;
+  const workflowsPath = effectiveWorkflowsDir || resolveWorkflowsDir();
+
   // Verify workflows directory exists
   if (!fs.existsSync(workflowsPath)) {
     return {
@@ -251,9 +272,9 @@ export async function executeWorkflowTest(
       error: `Workflows directory not found: ${workflowsPath}. Current working directory: ${process.cwd()}`,
     };
   }
-  
+
   // Normalize config (convert N8nInstance to N8nApiConfig if needed)
-  const apiConfig = normalizeConfig(config);
+  const apiConfig = normalizeConfig(effectiveConfig);
   
   const context = await initTestContext(workflowsPath);
 
@@ -300,7 +321,7 @@ export async function executeWorkflowTest(
 
       for (const helperFile of sortedHelperFiles) {
         try {
-          await importWorkflowFromFile(helperFile, apiConfig);
+          await importWorkflowFromFile(helperFile, apiConfig, mcpCredentialMappings);
         } catch (error) {
           logger.warn(`Warning: Failed to auto-sync helper workflow "${path.basename(helperFile)}"`, error);
         }
@@ -313,7 +334,7 @@ export async function executeWorkflowTest(
 
     if (workflowFile) {
       try {
-        await importWorkflowFromFile(workflowFile, apiConfig);
+        await importWorkflowFromFile(workflowFile, apiConfig, mcpCredentialMappings);
       } catch (error) {
         logger.warn(`Warning: Failed to auto-sync workflow "${workflowName}"`, error, { workflow: workflowName });
         // Continue with test anyway
@@ -370,7 +391,7 @@ export async function executeWorkflowTest(
     // Import and activate Test Runner workflow to enable webhook
     let testRunnerDatabaseId: string;
     try {
-      const importedWorkflow = await importWorkflowFromFile(context.tempPath, apiConfig);
+      const importedWorkflow = await importWorkflowFromFile(context.tempPath, apiConfig, mcpCredentialMappings);
       if (!importedWorkflow.id) {
         throw new Error('Imported workflow did not return an ID');
       }
@@ -634,7 +655,7 @@ export async function executeWorkflowTest(
     // Restore original Test Runner configuration by importing the original file
     try {
       // Restore from the original test runner file path using API
-      await importWorkflowFromFile(context.testRunnerPath, apiConfig);
+      await importWorkflowFromFile(context.testRunnerPath, apiConfig, mcpCredentialMappings);
     } catch {
       // Ignore cleanup errors - Test Runner will be restored on next test or can be manually restored
       logger.debug('Failed to restore Test Runner configuration during cleanup');

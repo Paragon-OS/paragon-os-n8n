@@ -11,6 +11,7 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
 import { logger } from './logger';
+import { type McpSseCredentialMapping } from './workflow-reference-converter';
 
 export interface N8nApiConfig {
   baseURL?: string;
@@ -453,13 +454,22 @@ function cleanWorkflowForApi(workflowData: Workflow, useRestEndpoint: boolean = 
 
 /**
  * Import/update a workflow in n8n
+ *
+ * @param workflowData - The workflow data to import
+ * @param config - API configuration (baseURL, apiKey, sessionCookie)
+ * @param forceCreate - If true, always create new workflow instead of updating existing
+ * @param existingWorkflowId - Optional known database ID to update
+ * @param allBackupWorkflows - All workflows from backup for reference resolution
+ * @param mcpCredentialMappings - Optional MCP credential mappings for container mode
+ *                               (rewrites STDIO credentials to SSE transport)
  */
 export async function importWorkflow(
   workflowData: Workflow,
   config?: N8nApiConfig,
   forceCreate: boolean = false,
   existingWorkflowId?: string,
-  allBackupWorkflows?: Workflow[]
+  allBackupWorkflows?: Workflow[],
+  mcpCredentialMappings?: McpSseCredentialMapping[]
 ): Promise<Workflow> {
   const client = config ? createApiClient(config) : getDefaultClient();
 
@@ -468,8 +478,18 @@ export async function importWorkflow(
     // This ensures references match the actual workflow IDs in the database
     // Pass all backup workflows so references can be resolved even if target workflows
     // haven't been imported yet (they'll be matched by name from backup files)
-    const { convertWorkflowReferencesToNames } = await import('./workflow-reference-converter');
-    const workflowWithNameReferences = await convertWorkflowReferencesToNames(workflowData, allBackupWorkflows, config);
+    const { convertWorkflowReferencesToNames, rewriteMcpCredentialsToSse } = await import('./workflow-reference-converter');
+    let workflowWithNameReferences = await convertWorkflowReferencesToNames(workflowData, allBackupWorkflows, config);
+
+    // Rewrite MCP credentials from STDIO to SSE if mappings are provided
+    // This allows workflows designed for local STDIO MCP to work in containers
+    if (mcpCredentialMappings && mcpCredentialMappings.length > 0 && workflowWithNameReferences.nodes) {
+      logger.info(`🔄 Applying MCP credential rewriting for ${mcpCredentialMappings.length} mapping(s)`);
+      workflowWithNameReferences = {
+        ...workflowWithNameReferences,
+        nodes: rewriteMcpCredentialsToSse(workflowWithNameReferences.nodes as any[], mcpCredentialMappings),
+      };
+    }
     
     // Determine if we're using /rest endpoints (session cookie only) or /api/v1 (API key)
     const apiKey = config ? (config.apiKey ?? undefined) : getN8nApiKey();
@@ -652,10 +672,16 @@ export async function importWorkflow(
 
 /**
  * Import workflow from file path
+ *
+ * @param filePath - Path to the workflow JSON file
+ * @param config - API configuration (baseURL, apiKey, sessionCookie)
+ * @param mcpCredentialMappings - Optional MCP credential mappings for container mode
+ *                               (rewrites STDIO credentials to SSE transport)
  */
 export async function importWorkflowFromFile(
   filePath: string,
-  config?: N8nApiConfig
+  config?: N8nApiConfig,
+  mcpCredentialMappings?: McpSseCredentialMapping[]
 ): Promise<Workflow> {
   try {
     const content = await fs.promises.readFile(filePath, 'utf-8');
@@ -664,7 +690,8 @@ export async function importWorkflowFromFile(
       throw new Error(`Workflow file is empty: ${filePath}`);
     }
     const workflowData = JSON.parse(content) as Workflow;
-    return importWorkflow(workflowData, config);
+    // Pass MCP credential mappings for container mode credential rewriting
+    return importWorkflow(workflowData, config, false, undefined, undefined, mcpCredentialMappings);
   } catch (error) {
     if (error instanceof SyntaxError) {
       // JSON parsing error - provide more context
