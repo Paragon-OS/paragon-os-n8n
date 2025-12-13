@@ -131,6 +131,7 @@ Three test suites that validate core functionality using isolated podman contain
 | Simple Start | `simple-start.test.ts` | `npm run test:simple` | Container starts, API accessible, session auth works |
 | Credentials | `credential-setup.test.ts` | `npm run test:credentials` | CLI availability, credential injection, ID matching |
 | Backup/Restore | `backup-restore.test.ts` | `npm run test:backup-restore` | Workflow export/import, references, deduplication |
+| MCP Container | `mcp-container.test.ts` | `npx vitest run src/tests/integration/mcp-container.test.ts` | MCP server in container with SSE transport, pod networking |
 
 **Backup/Restore Test Cases:**
 1. Simple workflows - basic backup/restore cycle
@@ -221,6 +222,58 @@ TEST_TIMEOUTS.WORKFLOW     // 10 min - workflow/integration tests
 - MCP processes spawn directly on your machine (no container issues)
 - All existing credentials work
 - Tests complete in ~4 seconds vs ~2+ minutes
+
+### MCP Container Testing (SSE Transport)
+
+For fully containerized MCP testing, use **podman pods** with MCP servers running in **SSE mode**:
+
+**Architecture:**
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Podman Pod                           │
+│  (shared localhost network)                             │
+│                                                         │
+│  ┌─────────────────┐      ┌─────────────────┐          │
+│  │  MCP Container  │      │  n8n Container  │          │
+│  │  (SSE server)   │◄────►│                 │          │
+│  │  Port 8000      │      │  Port 5678      │          │
+│  └─────────────────┘      └─────────────────┘          │
+│         ▲                          ▲                    │
+└─────────│──────────────────────────│────────────────────┘
+          │                          │
+    localhost:8000             localhost:5678
+```
+
+**Key Discoveries:**
+1. **SSE Transport**: The `mcp` Python package (`mcp.server.fastmcp.FastMCP`) supports SSE mode via `run_sse_async()`. Configure host/port via `mcp.settings`:
+   ```python
+   mcp.settings.host = "0.0.0.0"  # Bind to all interfaces
+   mcp.settings.port = 8000
+   await mcp.run_sse_async()
+   ```
+
+2. **Pod Networking**: Containers in the same podman pod share localhost. n8n can connect to MCP at `http://localhost:8000/sse`.
+
+3. **SSE Protocol Flow**:
+   - Client connects to `/sse` endpoint (EventSource)
+   - Server sends `endpoint` event with session-specific message URL
+   - Client POSTs JSON-RPC requests to `/messages/?session_id=xxx`
+   - Server responds via the SSE stream
+
+4. **Redis Host Translation**: The credential injection automatically translates `localhost` → `host.containers.internal` for container networking (see `n8n-credentials.ts`).
+
+**Test File:** `src/tests/integration/mcp-container.test.ts`
+
+**Running the Test:**
+```bash
+npx vitest run src/tests/integration/mcp-container.test.ts
+```
+
+**What It Tests:**
+- Builds Telegram MCP container with SSE support
+- Creates podman pod with both MCP and n8n containers
+- Verifies MCP tools/list returns 82 Telegram tools
+- Confirms n8n container can reach MCP via localhost
 
 **Local n8n Setup:**
 ```bash

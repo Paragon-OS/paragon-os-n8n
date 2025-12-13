@@ -9,7 +9,8 @@ src/tests/
 ├── integration/           # Core infrastructure tests
 │   ├── simple-start.test.ts      # Basic container startup
 │   ├── credential-setup.test.ts  # Credential injection
-│   └── backup-restore.test.ts    # Backup/restore functionality
+│   ├── backup-restore.test.ts    # Backup/restore functionality
+│   └── mcp-container.test.ts     # MCP server in container with SSE transport
 └── workflows/             # Workflow execution tests
     ├── discord-context-scout.test.ts
     ├── dynamic-rag.test.ts
@@ -38,12 +39,101 @@ npm run test:cleanup
 LOG_DIR=./logs LOG_LEVEL=debug npx vitest run src/tests/workflows/discord-context-scout.test.ts -t "contact-fuzzy"
 ```
 
+## MCP Container Testing (SSE Transport)
+
+For fully containerized MCP testing without spawning local processes, use **podman pods** with MCP servers running in **SSE transport mode**.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Podman Pod                           │
+│  (shared localhost network)                             │
+│                                                         │
+│  ┌─────────────────┐      ┌─────────────────┐          │
+│  │  MCP Container  │      │  n8n Container  │          │
+│  │  (SSE server)   │◄────►│                 │          │
+│  │  Port 8000      │      │  Port 5678      │          │
+│  └─────────────────┘      └─────────────────┘          │
+│         ▲                          ▲                    │
+└─────────│──────────────────────────│────────────────────┘
+          │                          │
+    localhost:8000             localhost:5678
+```
+
+### Key Discoveries
+
+1. **SSE Transport**: The `mcp` Python package (`mcp.server.fastmcp.FastMCP`) supports SSE mode:
+   ```python
+   from mcp.server.fastmcp import FastMCP
+
+   mcp = FastMCP("my-server")
+   mcp.settings.host = "0.0.0.0"  # Bind to all interfaces for container access
+   mcp.settings.port = 8000
+   await mcp.run_sse_async()
+   ```
+
+2. **SSE Protocol Flow**:
+   - Client connects to `/sse` endpoint via EventSource
+   - Server sends `endpoint` event: `data: /messages/?session_id=xxx`
+   - Client POSTs JSON-RPC requests to the session-specific endpoint
+   - Server sends responses via the SSE stream as `message` events
+
+3. **Pod Networking**: Containers in the same podman pod share localhost network. n8n can connect to MCP at `http://localhost:8000/sse` as if they were on the same machine.
+
+4. **n8n MCP Credential for SSE**: Configure n8n's MCP credential with SSE endpoint:
+   - SSE Endpoint: `http://localhost:8000/sse`
+   - n8n's MCP Client Tool node supports SSE transport
+
+### Running the Test
+
+```bash
+npx vitest run src/tests/integration/mcp-container.test.ts
+```
+
+### What the Test Validates
+
+- Builds Telegram MCP container with SSE support (creates `Dockerfile.sse` and `run_sse.py`)
+- Creates podman pod with published ports 8000 (MCP) and 5678 (n8n)
+- Starts MCP container with Telegram client connected
+- Starts n8n container in the same pod
+- Verifies MCP tools/list returns 82 Telegram tools via SSE protocol
+- Confirms n8n container can reach MCP via localhost:8000
+
+### Creating Your Own MCP SSE Container
+
+To containerize any MCP server with SSE:
+
+1. **Create SSE entrypoint** (`run_sse.py`):
+   ```python
+   from your_mcp_server import mcp, cleanup
+
+   async def main():
+       mcp.settings.host = "0.0.0.0"
+       mcp.settings.port = 8000
+       await mcp.run_sse_async()
+   ```
+
+2. **Add to Dockerfile**:
+   ```dockerfile
+   COPY run_sse.py .
+   EXPOSE 8000
+   CMD ["python", "run_sse.py"]
+   ```
+
+3. **Run in a pod with n8n**:
+   ```bash
+   podman pod create --name mcp-n8n-pod -p 5678:5678 -p 8000:8000
+   podman run -d --pod mcp-n8n-pod --name mcp-server your-mcp-sse-image
+   podman run -d --pod mcp-n8n-pod --name n8n n8n-image
+   ```
+
 ## Local n8n Testing Mode
 
 For MCP-based workflow tests (Discord, Telegram), use local n8n instead of containers. This is **much faster** (~4 seconds vs ~2+ minutes) and avoids container networking issues with MCP processes.
 
 ### Why Local Mode?
-- **MCP processes** need to spawn on your machine (can't run inside container)
+- **MCP processes** need to spawn on your machine (can't run inside container with STDIO)
 - **Container networking** makes it hard to access host services (Redis, MCP)
 - **Volume mounts** add complexity for MCP script paths
 - **Tests run faster** (4s vs 2+ minutes)
