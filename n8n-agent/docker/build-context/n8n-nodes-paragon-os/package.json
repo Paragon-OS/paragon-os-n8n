@@ -13,10 +13,8 @@
     "prepare": "npm run build",
     "dev": "tsc --watch",
     "format": "prettier nodes --write",
-    "tsc": "tsc",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "n8n:run": "n8n"
+    "test:watch": "vitest"
   },
   "files": [
     "dist"

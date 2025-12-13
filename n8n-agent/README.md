@@ -8,10 +8,6 @@ Workflow management and automation tools for n8n.
 # Sync workflows
 npm run n8n:workflows:downsync  # Export from n8n
 npm run n8n:workflows:upsync    # Import to n8n
-
-# Fix workflow issues
-npm run n8n:db:fix              # Fix all issues
-npm run n8n:db:check            # Check without fixing
 ```
 
 ---
@@ -24,12 +20,6 @@ npm run n8n:workflows:downsync  # Export workflows from n8n
 npm run n8n:workflows:upsync    # Import workflows to n8n
 npm run n8n:workflows:tree      # Show workflow tree
 npm run n8n:verify              # Verify workflows
-```
-
-### Database Fixes
-```bash
-npm run n8n:db:fix              # Fix all workflow reference issues
-npm run n8n:db:check            # Check for issues (dry-run)
 ```
 
 ### Testing
@@ -64,14 +54,7 @@ npm run test:cleanup            # Stop and remove test containers
 ### After Importing Workflows
 ```bash
 npm run n8n:workflows:upsync
-npm run n8n:db:fix
-# Restart n8n
-```
-
-### Troubleshooting "Workflow not found"
-```bash
-npm run n8n:db:fix
-# Restart n8n
+# Restart n8n if needed
 ```
 
 ### Daily Sync
@@ -87,9 +70,7 @@ npm run n8n:workflows:downsync
 ```
 n8n-agent/
 ├── README.md                   # This file
-├── scripts/
-│   ├── fix-workflow-references.py  # Main fix script
-│   └── *.ts                    # Workflow utilities
+├── scripts/                    # Utility scripts
 ├── src/                        # Source code
 ├── workflows/                  # Workflow JSON files
 └── docs/                       # Documentation
@@ -129,10 +110,8 @@ export REDIS_PORT="6379"
 ## 🐛 Troubleshooting
 
 **"Workflow does not exist"**
-```bash
-npm run n8n:db:fix
-# Restart n8n
-```
+- Ensure workflow is imported: `npm run n8n:workflows:upsync`
+- Restart n8n
 
 **Check logs**
 ```bash
@@ -143,24 +122,17 @@ tail -100 ~/.n8n/n8nEventLog.log | grep -i error
 
 ## 📚 Documentation
 
-- `scripts/README.md` - Script documentation
-- `README-WORKFLOW-FIXES.md` - Detailed fix guide
-- `docs/archive/` - Historical docs
+- `docs/TESTING.md` - Testing guide
+- `docs/CREDENTIALS.md` - Credential configuration
 
 ---
 
 ## 🔒 Safety
 
-All scripts are:
+All sync operations are:
 - ✅ Idempotent (safe to run multiple times)
-- ✅ Non-destructive (only fix broken references)
-- ✅ Smart (skip dynamic expressions)
-
-Optional backup:
-```bash
-cp ~/.n8n/database.sqlite ~/.n8n/database.sqlite.backup
-```
+- ✅ Non-destructive
 
 ---
 
-**Last Updated**: 2025-12-08
+**Last Updated**: 2025-12-14

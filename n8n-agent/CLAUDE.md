@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the **n8n Agent** - a CLI tool for managing n8n workflows. It provides backup/restore functionality, workflow synchronization, database fixes, and integration testing infrastructure using podman containers.
+This is the **n8n Agent** - a CLI tool for managing n8n workflows. It provides backup/restore functionality, workflow synchronization, and integration testing infrastructure using podman containers.
 
 ## Common Commands
 
@@ -15,10 +15,6 @@ npm run n8n:workflows:upsync       # Import workflows to n8n (preserves IDs)
 npm run n8n:workflows:tree         # Show workflow folder structure
 npm run n8n:verify                 # Verify workflow trigger inputs
 npm run n8n:delete-all             # Delete all workflows from n8n
-
-# Database Fixes (for workflow reference issues)
-npm run n8n:db:fix                 # Fix broken workflow references
-npm run n8n:db:check               # Check for issues (dry-run)
 
 # Pod Management (n8n + Discord MCP + Telegram MCP)
 npm run n8n:pod:start              # Start pod with n8n + both MCP servers

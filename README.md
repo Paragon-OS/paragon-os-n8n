@@ -134,43 +134,7 @@ ts-node src/n8n-workflows-cli.ts organize
 npm run n8n:workflows:tree
 ```
 
-#### 5. `test` (Integration Testing)
-
-**Purpose**: Run integration tests against n8n workflows
-
-**Implementation** (`src/commands/test.ts`):
-- Loads test cases from `test-cases.js`
-- Auto-syncs workflow to n8n before testing
-- Modifies Test Runner workflow's "⚙️ Test Config" node with test parameters
-- Executes Test Runner workflow via `n8n execute --id=TestRunnerHelper001`
-- Parses execution output and extracts results
-- Supports single test or batch mode (all tests for a workflow)
-
-**Test Runner Workflow** (`HELPERS/[HELPERS] Test Runner.json`):
-- Uses "Route to Workflow" switch node to route to target workflow
-- Routes based on `workflow` field from test config
-- Supported workflows: TelegramContextScout, DynamicRAG, DiscordContextScout, DiscordSmartAgent, TelegramSmartAgent
-- Each workflow has a corresponding "Run: X" execute workflow node
-
-**Test Data Helper** (`HELPERS/[HELPERS] Test Data.json`):
-- Loads test cases from same `test-cases.js` file
-- Returns test data based on workflow name and test case ID
-
-**Key Features**:
-- Auto-sync: automatically imports workflow before testing
-- Timeout handling: 2-minute timeout for workflow execution
-- Output parsing: handles both `--rawOutput` format and full execution JSON
-- Error detection: identifies errors in workflow execution nodes
-- Batch mode: runs all tests for a workflow with summary
-
-**Usage**:
-```bash
-npm run n8n:test -- --list                              # List available tests
-npm run n8n:test -- --workflow DynamicRAG              # Run all tests
-npm run n8n:test -- --workflow DynamicRAG --test status # Run specific test
-```
-
-#### 6. `verify` (Verify Trigger Inputs)
+#### 5. `verify` (Verify Trigger Inputs)
 
 **Purpose**: Verify workflow trigger inputs match between JSON files and database
 
@@ -478,41 +442,33 @@ npm run test:watch
 
 ### Integration Tests
 
-**Framework**: n8n workflow execution via CLI
+**Framework**: Vitest with podman containers or local n8n
 
-**Test Cases File**: `n8n-agent/test-cases.js`
+**Test Location**: `n8n-agent/src/tests/`
+- `integration/` - Container-based integration tests (backup-restore, credentials, simple-start)
+- `workflows/` - Workflow execution tests (Discord, Telegram agents, RAG)
 
-**Structure**:
-```javascript
-const TESTS = {
-  'WorkflowName': {
-    'test-case-id': {
-      param1: 'value1',
-      param2: 'value2'
-    }
-  }
-};
-```
-
-**Supported Workflows**:
-- TelegramContextScout (8 tests)
-- DynamicRAG (8 tests)
-- DiscordContextScout (5 tests)
-- DiscordSmartAgent (3 tests)
-- TelegramSmartAgent (5 tests)
+**Workflow Tests** (`src/tests/workflows/`):
+- `discord-smart-agent.test.ts` - DiscordSmartAgent workflow tests
+- `telegram-smart-agent.test.ts` - TelegramSmartAgent workflow tests
+- `discord-context-scout.test.ts` - DiscordContextScout workflow tests
+- `telegram-context-scout.test.ts` - TelegramContextScout workflow tests
+- `dynamic-rag.test.ts` - DynamicRAG workflow tests
 
 **Test Execution Flow**:
-1. CLI loads test cases from `test-cases.js`
-2. CLI modifies Test Runner workflow's config node
-3. CLI imports modified Test Runner to n8n
-4. CLI executes Test Runner workflow
-5. Test Runner routes to target workflow
-6. Target workflow executes with test data
-7. CLI parses execution output and displays results
+1. Vitest starts a podman container with n8n (or uses local n8n)
+2. Test imports workflow and dependencies via Test Runner helper
+3. Test executes workflow with test data via webhook
+4. Test validates results and assertions
 
-**Output Formats**:
-- Single test: Detailed output with test input and results
-- Batch mode: Summary with pass/fail counts and failed test list
+**Running Tests**:
+```bash
+npm run test:integration           # All integration tests
+npm run test:credentials           # Credential setup tests
+npm run test:backup-restore        # Backup/restore tests
+npm run test:simple                # Quick smoke test
+npx vitest run src/tests/workflows/discord-context-scout.test.ts  # Single workflow
+```
 
 ---
 
@@ -594,18 +550,32 @@ workflows/
 ### Adding a New Testable Workflow
 
 1. **Create Workflow** in n8n
-2. **Add Test Cases** to `test-cases.js`:
-   ```javascript
-   'NewWorkflow': {
-     'test-1': { param1: 'value1' },
-     'test-2': { param2: 'value2' }
-   }
+2. **Create Test File** in `n8n-agent/src/tests/workflows/`:
+   ```typescript
+   import { executeWorkflowTest } from '../../utils/workflow-test-runner';
+   import { setupTestInstance, cleanupTestInstance, TEST_TIMEOUTS, type N8nInstance } from '../../utils/test-helpers';
+
+   describe('NewWorkflow', () => {
+     let instance: N8nInstance | null = null;
+
+     beforeAll(async () => {
+       instance = await setupTestInstance();
+     }, TEST_TIMEOUTS.WORKFLOW);
+
+     afterAll(async () => {
+       await cleanupTestInstance(instance);
+     }, TEST_TIMEOUTS.WORKFLOW);
+
+     test.each([
+       { testCase: 'test-1', testData: { param1: 'value1' } },
+       { testCase: 'test-2', testData: { param2: 'value2' } },
+     ])('$testCase', async ({ testCase, testData }) => {
+       const result = await executeWorkflowTest('NewWorkflow', testCase, testData, undefined, instance);
+       expect(result.success).toBe(true);
+     }, TEST_TIMEOUTS.WORKFLOW);
+   });
    ```
-3. **Update Test Runner**:
-   - Add route condition in "Route to Workflow" switch
-   - Add "Run: NewWorkflow" execute workflow node
-   - Connect route → execute → Results
-4. **Test**: `npm run n8n:test -- --workflow NewWorkflow`
+3. **Test**: `npx vitest run src/tests/workflows/new-workflow.test.ts`
 
 ### Adding a New Custom Node
 
@@ -651,18 +621,17 @@ paragon-os-app/
 ├── n8n-agent/                    # CLI tooling
 │   ├── src/
 │   │   ├── commands/             # CLI commands
+│   │   ├── tests/                # Integration & workflow tests
 │   │   ├── utils/                # Utilities
 │   │   └── n8n-workflows-cli.ts  # Entry point
 │   ├── workflows/                # Workflow backups
-│   ├── test-cases.js             # Integration test cases
 │   └── package.json
 ├── n8n-nodes/                    # Custom nodes
 │   ├── nodes/
 │   │   ├── FuzzySearch/
-│   │   ├── JsonDocumentLoader/
-│   │   └── TextManipulation/
+│   │   └── JsonDocumentLoader/
 │   └── package.json
-└── PROJECT_DOCUMENTATION.md      # This file
+└── README.md                     # This file
 ```
 
 ---
@@ -670,7 +639,6 @@ paragon-os-app/
 ## Maintenance Notes
 
 - **Workflow IDs**: Some workflows have fixed IDs for CLI/test system integration
-- **Test Cases**: Must be kept in sync between `test-cases.js` and Test Data workflow
 - **Redis**: Must be running for Global Cache System to work
 - **n8n CLI**: Must be installed and configured for CLI tooling to work
 - **Workflow Tags**: Used for organization; extracted from workflow names
