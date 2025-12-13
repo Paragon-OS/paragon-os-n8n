@@ -264,6 +264,8 @@ async function waitForMcpReady(
   logger.info(`Waiting for MCP server at port ${port}...`);
 
   while (Date.now() - startTime < timeout) {
+    let healthCheckPassed = false;
+
     try {
       // Try health endpoint first (Discord MCP has this)
       const response = await axios.get(endpoint, {
@@ -275,7 +277,11 @@ async function waitForMcpReady(
         return true;
       }
     } catch {
-      // Try SSE endpoint as fallback
+      // Health endpoint failed, will try SSE
+    }
+
+    // Try SSE endpoint as fallback (Telegram MCP uses this)
+    if (!healthCheckPassed) {
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 2000);

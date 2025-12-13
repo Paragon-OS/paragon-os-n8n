@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { startMcpPod } from '../src/utils/mcp-pod-manager';
 import { importWorkflowFromFile } from '../src/utils/n8n-api';
 import * as fs from 'fs';
@@ -21,11 +22,39 @@ async function main() {
     process.exit(1);
   }
 
-  console.log('🚀 Starting MCP pod with Discord MCP + n8n...');
+  // Get Telegram credentials
+  let telegramApiId = process.env.TELEGRAM_API_ID;
+  let telegramApiHash = process.env.TELEGRAM_API_HASH;
+  let telegramSessionString = process.env.TELEGRAM_SESSION_STRING;
+
+  if (!telegramApiId || !telegramApiHash || !telegramSessionString) {
+    const mcpEnv = process.env.TELEGRAM_MCP_ENV;
+    if (mcpEnv) {
+      try {
+        const parsed = JSON.parse(mcpEnv);
+        telegramApiId = telegramApiId || parsed.TELEGRAM_API_ID;
+        telegramApiHash = telegramApiHash || parsed.TELEGRAM_API_HASH;
+        telegramSessionString = telegramSessionString || parsed.TELEGRAM_SESSION_STRING;
+      } catch { /* ignore */ }
+    }
+  }
+
+  if (!telegramApiId || !telegramApiHash || !telegramSessionString) {
+    console.error('❌ Telegram credentials not set');
+    console.error('   Set TELEGRAM_API_ID, TELEGRAM_API_HASH, TELEGRAM_SESSION_STRING or TELEGRAM_MCP_ENV');
+    process.exit(1);
+  }
+
+  console.log('🚀 Starting MCP pod with Discord MCP + Telegram MCP + n8n...');
 
   const pod = await startMcpPod({
     mcpServers: [
       { type: 'discord', env: { DISCORD_TOKEN: discordToken } },
+      { type: 'telegram', env: {
+        TELEGRAM_API_ID: telegramApiId,
+        TELEGRAM_API_HASH: telegramApiHash,
+        TELEGRAM_SESSION_STRING: telegramSessionString
+      } },
     ],
     timeout: 180000,
   });
@@ -33,6 +62,7 @@ async function main() {
   console.log(`✅ Pod ready: ${pod.podName}`);
   console.log(`   n8n URL: ${pod.n8nInstance.baseUrl}`);
   console.log(`   Discord MCP (internal): ${pod.mcpEndpointsInternal.discord}`);
+  console.log(`   Telegram MCP (internal): ${pod.mcpEndpointsInternal.telegram}`);
 
   // Build API config (note: N8nApiConfig uses baseURL not baseUrl)
   const apiConfig = {
