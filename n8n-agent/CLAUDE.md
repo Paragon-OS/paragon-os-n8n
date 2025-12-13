@@ -20,6 +20,11 @@ npm run n8n:delete-all             # Delete all workflows from n8n
 npm run n8n:db:fix                 # Fix broken workflow references
 npm run n8n:db:check               # Check for issues (dry-run)
 
+# Pod Management (n8n + Discord MCP + Telegram MCP)
+npm run n8n:pod:start              # Start pod with n8n + both MCP servers
+npm run n8n:pod:stop               # Stop and remove all n8n MCP pods
+npm run n8n:pod:status             # Show running pods, containers, URLs
+
 # Unit Tests
 npm test                           # Run all unit tests with vitest
 npm run test:watch                 # Watch mode
@@ -284,6 +289,19 @@ npx vitest run src/tests/integration/mcp-container.test.ts
 npx vitest run src/tests/integration/mcp-discord-pod.test.ts
 ```
 
+**Interactive Pod Management (for n8n UI access):**
+```bash
+npm run n8n:pod:start    # Start pod with n8n + Discord MCP + Telegram MCP
+npm run n8n:pod:status   # Show running pods and URLs
+npm run n8n:pod:stop     # Stop and cleanup all pods
+```
+
+When the pod starts:
+- n8n UI available at: http://localhost:50000
+- Discord MCP SSE endpoint: http://localhost:50001/sse
+- Telegram MCP SSE endpoint: http://localhost:50002/sse
+- All workflows are auto-imported with MCP credentials rewritten for SSE transport
+
 **Multi-MCP Pod Example:**
 ```typescript
 const pod = await startMcpPod({
@@ -417,6 +435,9 @@ USE_LOCAL_N8N=true
 
 ## Key Files
 - `workflows/` - JSON workflow definitions organized by tags
+- `scripts/start-n8n-pod.ts` - Start podman pod with n8n + Discord MCP + Telegram MCP
+- `scripts/stop-n8n-pod.ts` - Stop and remove n8n MCP pods
+- `scripts/status-n8n-pod.ts` - Show pod status and URLs
 - `scripts/fix-workflow-references.py` - Python script for database fixes
 - `scripts/test-integration.sh` - Integration test runner with logging support
 
