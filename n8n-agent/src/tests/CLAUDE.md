@@ -43,34 +43,45 @@ LOG_DIR=./logs LOG_LEVEL=debug npx vitest run src/tests/workflows/discord-contex
 
 For fully containerized MCP testing without spawning local processes, use **podman pods** with MCP servers running in **SSE transport mode**.
 
-### Architecture
+### Architecture (Multiple MCP Servers)
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Podman Pod                           │
-│  (shared localhost network)                             │
-│                                                         │
-│  ┌─────────────────┐      ┌─────────────────┐          │
-│  │  MCP Container  │      │  n8n Container  │          │
-│  │  (SSE server)   │◄────►│                 │          │
-│  │  Port 8000      │      │  Port 5678      │          │
-│  └─────────────────┘      └─────────────────┘          │
-│         ▲                          ▲                    │
-└─────────│──────────────────────────│────────────────────┘
-          │                          │
-    localhost:8000             localhost:5678
+┌──────────────────────────────────────────────────────────────────────┐
+│                         Podman Pod                                   │
+│  (shared localhost network)                                          │
+│                                                                      │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐      │
+│  │  Discord MCP    │  │  Telegram MCP   │  │      n8n        │      │
+│  │  (SSE server)   │  │  (SSE server)   │  │   (workflows)   │      │
+│  │  Port 8000      │  │  Port 8001      │  │   Port 5678     │      │
+│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘      │
+│           │                    │                    │                │
+│           └────────────────────┴────────────────────┘                │
+│                    (all share localhost)                             │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
-### Key Discoveries
+### Port Allocation
 
-1. **SSE Transport**: The `mcp` Python package (`mcp.server.fastmcp.FastMCP`) supports SSE mode:
+The `mcp-pod-manager.ts` automatically allocates unique ports for each MCP server:
+- Each MCP server config can specify a `port` property (optional)
+- If not specified, ports are allocated sequentially: 8000, 8001, 8002, etc.
+- The `MCP_PORT` env var is passed to each container at startup
+
+### Key Features
+
+1. **Port Configuration via Environment**: MCP servers read port from `MCP_PORT` env var:
    ```python
-   from mcp.server.fastmcp import FastMCP
-
-   mcp = FastMCP("my-server")
-   mcp.settings.host = "0.0.0.0"  # Bind to all interfaces for container access
-   mcp.settings.port = 8000
+   # Telegram MCP (Python/FastMCP)
+   import os
+   port = int(os.environ.get("MCP_PORT", "8000"))
+   mcp.settings.host = "0.0.0.0"
+   mcp.settings.port = port
    await mcp.run_sse_async()
+   ```
+   ```typescript
+   // Discord MCP (TypeScript)
+   const PORT = parseInt(process.env.MCP_PORT || '8000', 10)
    ```
 
 2. **SSE Protocol Flow**:
@@ -79,38 +90,58 @@ For fully containerized MCP testing without spawning local processes, use **podm
    - Client POSTs JSON-RPC requests to the session-specific endpoint
    - Server sends responses via the SSE stream as `message` events
 
-3. **Pod Networking**: Containers in the same podman pod share localhost network. n8n can connect to MCP at `http://localhost:8000/sse` as if they were on the same machine.
+3. **Pod Networking**: Containers in the same podman pod share localhost network. n8n connects to:
+   - Discord MCP: `http://localhost:8000/sse`
+   - Telegram MCP: `http://localhost:8001/sse`
 
-4. **n8n MCP Credential for SSE**: Configure n8n's MCP credential with SSE endpoint:
-   - SSE Endpoint: `http://localhost:8000/sse`
-   - n8n's MCP Client Tool node supports SSE transport
+4. **n8n MCP Credentials for SSE**: Two SSE credentials available in `n8n-credentials.ts`:
+   - `discordMcpSse`: endpoint `http://localhost:8000/sse`
+   - `telegramMcpSse`: endpoint `http://localhost:8001/sse`
 
-### Running the Test
+### Running the Tests
 
 ```bash
+# Single MCP (Telegram)
 npx vitest run src/tests/integration/mcp-container.test.ts
+
+# Discord MCP pod
+npx vitest run src/tests/integration/mcp-discord-pod.test.ts
 ```
 
-### What the Test Validates
+### Multi-MCP Pod Example
 
-- Builds Telegram MCP container with SSE support (creates `Dockerfile.sse` and `run_sse.py`)
-- Creates podman pod with published ports 8000 (MCP) and 5678 (n8n)
-- Starts MCP container with Telegram client connected
-- Starts n8n container in the same pod
-- Verifies MCP tools/list returns 82 Telegram tools via SSE protocol
-- Confirms n8n container can reach MCP via localhost:8000
+```typescript
+import { startMcpPod } from '../../utils/mcp-pod-manager';
+
+const pod = await startMcpPod({
+  mcpServers: [
+    { type: 'discord', env: { DISCORD_TOKEN: '...' } },
+    { type: 'telegram', env: { TELEGRAM_API_ID: '...', TELEGRAM_API_HASH: '...', TELEGRAM_SESSION_STRING: '...' } },
+  ],
+});
+
+// Endpoints:
+// pod.mcpEndpointsInternal.discord -> http://localhost:8000/sse
+// pod.mcpEndpointsInternal.telegram -> http://localhost:8001/sse
+// pod.mcpEndpoints.discord -> http://localhost:50001/sse (external)
+// pod.mcpEndpoints.telegram -> http://localhost:50002/sse (external)
+
+await pod.cleanup();
+```
 
 ### Creating Your Own MCP SSE Container
 
 To containerize any MCP server with SSE:
 
-1. **Create SSE entrypoint** (`run_sse.py`):
+1. **Create SSE entrypoint** (`run_sse.py`) that reads port from environment:
    ```python
+   import os
    from your_mcp_server import mcp, cleanup
 
    async def main():
+       port = int(os.environ.get("MCP_PORT", "8000"))
        mcp.settings.host = "0.0.0.0"
-       mcp.settings.port = 8000
+       mcp.settings.port = port
        await mcp.run_sse_async()
    ```
 

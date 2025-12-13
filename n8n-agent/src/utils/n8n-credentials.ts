@@ -108,6 +108,17 @@ export const TEST_CREDENTIALS: Record<string, CredentialDefinition> = {
     },
   },
 
+  // Telegram MCP Client (SSE) - for container-based testing via pods
+  telegramMcpSse: {
+    id: 'telegramMcpSseCredential',
+    name: 'Telegram MCP Client (SSE) account',
+    type: 'mcpClientSseApi',
+    data: {
+      // SSE endpoint - localhost works within a pod (port 8001 when both Discord and Telegram run)
+      sseEndpoint: process.env.TELEGRAM_MCP_SSE_ENDPOINT || 'http://localhost:8001/sse',
+    },
+  },
+
   // Telegram MCP Client (STDIO)
   telegramMcp: {
     id: 'aiYCclLDUqob5iQ0',

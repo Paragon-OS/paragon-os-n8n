@@ -147,11 +147,12 @@ async function buildTelegramMcpImage(): Promise<string> {
   const imageName = 'telegram-mcp-sse:latest';
   logger.info('Building Telegram MCP SSE container image...');
 
-  // Create SSE entrypoint script
+  // Create SSE entrypoint script - reads MCP_PORT from environment
   const ssePythonScript = `#!/usr/bin/env python3
 """SSE mode entrypoint for Telegram MCP server."""
 import asyncio
 import sys
+import os
 import nest_asyncio
 
 nest_asyncio.apply()
@@ -160,12 +161,16 @@ from main import mcp, client, cleanup
 
 async def main():
     try:
+        # Read port from environment, default to 8000
+        port = int(os.environ.get("MCP_PORT", "8000"))
+        host = os.environ.get("MCP_HOST", "0.0.0.0")
+
         print("Starting Telegram client...", flush=True)
         await client.start()
-        print("Telegram client started. Running MCP SSE server on port 8000...", flush=True)
+        print(f"Telegram client started. Running MCP SSE server on {host}:{port}...", flush=True)
 
-        mcp.settings.host = "0.0.0.0"
-        mcp.settings.port = 8000
+        mcp.settings.host = host
+        mcp.settings.port = port
 
         await mcp.run_sse_async()
     except Exception as e:
@@ -201,6 +206,10 @@ ENV TELEGRAM_API_ID=""
 ENV TELEGRAM_API_HASH=""
 ENV TELEGRAM_SESSION_NAME="telegram_mcp_session"
 ENV TELEGRAM_SESSION_STRING=""
+
+# MCP server port (can be overridden at runtime)
+ENV MCP_PORT=8000
+ENV MCP_HOST=0.0.0.0
 
 EXPOSE 8000
 
@@ -327,27 +336,45 @@ export async function startMcpPod(config: McpPodConfig): Promise<McpPodInstance>
   const podName = generatePodName();
   const timeout = config.timeout || DEFAULT_STARTUP_TIMEOUT;
 
-  // Find available ports
+  // Find available ports - one for n8n and one for each MCP server
   const n8nExternalPort = await findAvailablePort(50000);
-  // MCP port only needs to be accessible within the pod (localhost:8000)
-  // but we expose it for debugging
-  const mcpExternalPort = await findAvailablePort(n8nExternalPort + 1);
+
+  // Allocate unique ports for each MCP server
+  // Each server gets: { internalPort, externalPort }
+  const mcpPortAllocations: Map<string, { internalPort: number; externalPort: number }> = new Map();
+  let nextExternalPort = n8nExternalPort + 1;
+  let nextInternalPort = DEFAULT_MCP_PORT;
+
+  for (const mcpConfig of config.mcpServers) {
+    const internalPort = mcpConfig.port || nextInternalPort;
+    const externalPort = await findAvailablePort(nextExternalPort);
+    mcpPortAllocations.set(mcpConfig.type, { internalPort, externalPort });
+    nextExternalPort = externalPort + 1;
+    nextInternalPort = internalPort + 1;
+  }
 
   logger.info(`Creating pod: ${podName}`);
   logger.info(`  n8n port: ${n8nExternalPort}`);
-  logger.info(`  MCP port: ${mcpExternalPort}`);
+  for (const [type, ports] of mcpPortAllocations) {
+    logger.info(`  ${type} MCP: internal=${ports.internalPort}, external=${ports.externalPort}`);
+  }
 
   // Create data directory for n8n
   const tmpDir = os.tmpdir();
   const dataDir = path.join(tmpDir, 'n8n-test-instances', podName);
   fs.mkdirSync(dataDir, { recursive: true });
 
+  // Build port publishing args for pod creation
+  const portArgs: string[] = ['-p', `${n8nExternalPort}:${DEFAULT_N8N_PORT}`];
+  for (const [_type, ports] of mcpPortAllocations) {
+    portArgs.push('-p', `${ports.externalPort}:${ports.internalPort}`);
+  }
+
   // Create the pod with published ports
   await execa('podman', [
     'pod', 'create',
     '--name', podName,
-    '-p', `${n8nExternalPort}:${DEFAULT_N8N_PORT}`,
-    '-p', `${mcpExternalPort}:${DEFAULT_MCP_PORT}`,
+    ...portArgs,
   ]);
 
   const mcpEndpoints: Record<string, string> = {}; // External endpoints for test access
@@ -359,6 +386,12 @@ export async function startMcpPod(config: McpPodConfig): Promise<McpPodInstance>
     for (const mcpConfig of config.mcpServers) {
       const containerName = `${podName}-${mcpConfig.type}-mcp`;
       mcpContainerNames.push(containerName);
+
+      // Get allocated ports for this MCP server
+      const ports = mcpPortAllocations.get(mcpConfig.type);
+      if (!ports) {
+        throw new Error(`No port allocation found for ${mcpConfig.type}`);
+      }
 
       let imageName: string;
       let envFile: string | undefined;
@@ -388,6 +421,9 @@ export async function startMcpPod(config: McpPodConfig): Promise<McpPodInstance>
         containerArgs.push('--env-file', envFile);
       }
 
+      // Set MCP_PORT environment variable to configure server port
+      containerArgs.push('-e', `MCP_PORT=${ports.internalPort}`);
+
       // Add custom env vars
       if (mcpConfig.env) {
         for (const [key, value] of Object.entries(mcpConfig.env)) {
@@ -397,21 +433,21 @@ export async function startMcpPod(config: McpPodConfig): Promise<McpPodInstance>
 
       containerArgs.push(imageName);
 
-      logger.info(`Starting ${mcpConfig.type} MCP container: ${containerName}`);
+      logger.info(`Starting ${mcpConfig.type} MCP container: ${containerName} (port ${ports.internalPort})`);
       await execa('podman', containerArgs, { timeout: 30000 });
 
       // Wait for MCP to be ready - use external port for health checks
-      const isReady = await waitForMcpReady(mcpExternalPort, timeout);
+      const isReady = await waitForMcpReady(ports.externalPort, timeout);
       if (!isReady) {
         const logs = await execa('podman', ['logs', containerName], { reject: false });
         logger.error(`MCP container logs:\n${logs.stdout}\n${logs.stderr}`);
         throw new Error(`${mcpConfig.type} MCP server failed to become ready`);
       }
 
-      // Internal endpoint for n8n (within the pod via localhost:8000)
-      mcpEndpointsInternal[mcpConfig.type] = `http://localhost:${DEFAULT_MCP_PORT}/sse`;
+      // Internal endpoint for n8n (within the pod via localhost:<port>)
+      mcpEndpointsInternal[mcpConfig.type] = `http://localhost:${ports.internalPort}/sse`;
       // External endpoint for test verification (from outside the pod)
-      mcpEndpoints[mcpConfig.type] = `http://localhost:${mcpExternalPort}/sse`;
+      mcpEndpoints[mcpConfig.type] = `http://localhost:${ports.externalPort}/sse`;
     }
 
     // Start n8n container

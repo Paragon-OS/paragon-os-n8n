@@ -228,53 +228,76 @@ TEST_TIMEOUTS.WORKFLOW     // 10 min - workflow/integration tests
 
 For fully containerized MCP testing, use **podman pods** with MCP servers running in **SSE mode**:
 
-**Architecture:**
+**Architecture (Multiple MCP Servers):**
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Podman Pod                           │
-│  (shared localhost network)                             │
-│                                                         │
-│  ┌─────────────────┐      ┌─────────────────┐          │
-│  │  MCP Container  │      │  n8n Container  │          │
-│  │  (SSE server)   │◄────►│                 │          │
-│  │  Port 8000      │      │  Port 5678      │          │
-│  └─────────────────┘      └─────────────────┘          │
-│         ▲                          ▲                    │
-└─────────│──────────────────────────│────────────────────┘
-          │                          │
-    localhost:8000             localhost:5678
+┌──────────────────────────────────────────────────────────────────────┐
+│                         Podman Pod                                   │
+│  (shared localhost network)                                          │
+│                                                                      │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐      │
+│  │  Discord MCP    │  │  Telegram MCP   │  │      n8n        │      │
+│  │  (SSE server)   │  │  (SSE server)   │  │   (workflows)   │      │
+│  │  Port 8000      │  │  Port 8001      │  │   Port 5678     │      │
+│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘      │
+│           │                    │                    │                │
+│           └────────────────────┴────────────────────┘                │
+│                    (all share localhost)                             │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
-**Key Discoveries:**
-1. **SSE Transport**: The `mcp` Python package (`mcp.server.fastmcp.FastMCP`) supports SSE mode via `run_sse_async()`. Configure host/port via `mcp.settings`:
+**Key Features:**
+1. **Multi-MCP Support**: The `mcp-pod-manager.ts` allocates unique ports for each MCP server automatically:
+   - Discord MCP: port 8000 (default)
+   - Telegram MCP: port 8001
+   - Additional servers: 8002, 8003, etc.
+
+2. **Port Configuration via Environment**: MCP servers read port from `MCP_PORT` env var:
    ```python
-   mcp.settings.host = "0.0.0.0"  # Bind to all interfaces
-   mcp.settings.port = 8000
-   await mcp.run_sse_async()
+   # Telegram MCP (Python/FastMCP)
+   port = int(os.environ.get("MCP_PORT", "8000"))
+   mcp.settings.port = port
+   ```
+   ```typescript
+   // Discord MCP (TypeScript)
+   const PORT = parseInt(process.env.MCP_PORT || '8000', 10)
    ```
 
-2. **Pod Networking**: Containers in the same podman pod share localhost. n8n can connect to MCP at `http://localhost:8000/sse`.
+3. **Pod Networking**: Containers in the same podman pod share localhost. n8n connects to:
+   - Discord: `http://localhost:8000/sse`
+   - Telegram: `http://localhost:8001/sse`
 
-3. **SSE Protocol Flow**:
+4. **SSE Protocol Flow**:
    - Client connects to `/sse` endpoint (EventSource)
    - Server sends `endpoint` event with session-specific message URL
    - Client POSTs JSON-RPC requests to `/messages/?session_id=xxx`
    - Server responds via the SSE stream
 
-4. **Redis Host Translation**: The credential injection automatically translates `localhost` → `host.containers.internal` for container networking (see `n8n-credentials.ts`).
+5. **Redis Host Translation**: The credential injection automatically translates `localhost` → `host.containers.internal` for container networking (see `n8n-credentials.ts`).
 
-**Test File:** `src/tests/integration/mcp-container.test.ts`
+**Test Files:**
+- `src/tests/integration/mcp-container.test.ts` - Single MCP (Telegram)
+- `src/tests/integration/mcp-discord-pod.test.ts` - Discord MCP pod
 
-**Running the Test:**
+**Running the Tests:**
 ```bash
 npx vitest run src/tests/integration/mcp-container.test.ts
+npx vitest run src/tests/integration/mcp-discord-pod.test.ts
 ```
 
-**What It Tests:**
-- Builds Telegram MCP container with SSE support
-- Creates podman pod with both MCP and n8n containers
-- Verifies MCP tools/list returns 82 Telegram tools
-- Confirms n8n container can reach MCP via localhost
+**Multi-MCP Pod Example:**
+```typescript
+const pod = await startMcpPod({
+  mcpServers: [
+    { type: 'discord', env: { DISCORD_TOKEN: '...' } },
+    { type: 'telegram', env: { TELEGRAM_API_ID: '...', TELEGRAM_API_HASH: '...', TELEGRAM_SESSION_STRING: '...' } },
+  ],
+});
+
+// Endpoints available:
+// pod.mcpEndpointsInternal.discord -> http://localhost:8000/sse
+// pod.mcpEndpointsInternal.telegram -> http://localhost:8001/sse
+// pod.n8nInstance.baseUrl -> http://localhost:50000
+```
 
 **Local n8n Setup (Required for MCP Workflow Tests):**
 ```bash

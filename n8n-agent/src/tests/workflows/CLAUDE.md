@@ -574,26 +574,41 @@ npx vitest run src/tests/workflows/discord-context-scout.test.ts
 
 **2. Pod-Based SSE Mode (For CI/CD)**
 
-Run both n8n and MCP servers in a podman pod using SSE transport.
+Run n8n and multiple MCP servers in a podman pod using SSE transport.
 
 ```typescript
 import { startMcpPod } from '../../utils/mcp-pod-manager';
 
+// Single MCP server
 const pod = await startMcpPod({
-  mcpServers: [{ type: 'discord' }],
+  mcpServers: [{ type: 'discord', env: { DISCORD_TOKEN: '...' } }],
 });
-// pod.n8nInstance - n8n container
-// pod.mcpEndpoints.discord - SSE endpoint (http://localhost:8000/sse)
+
+// Multiple MCP servers (each gets unique port automatically)
+const pod = await startMcpPod({
+  mcpServers: [
+    { type: 'discord', env: { DISCORD_TOKEN: '...' } },
+    { type: 'telegram', env: { TELEGRAM_API_ID: '...', TELEGRAM_API_HASH: '...', TELEGRAM_SESSION_STRING: '...' } },
+  ],
+});
+
+// Endpoints:
+// pod.mcpEndpointsInternal.discord -> http://localhost:8000/sse
+// pod.mcpEndpointsInternal.telegram -> http://localhost:8001/sse
+// pod.n8nInstance.baseUrl -> http://localhost:50000
 ```
+
+**Port Allocation:** Each MCP server gets a unique internal port (8000, 8001, etc.) via `MCP_PORT` env var.
 
 **Advantages:**
 - Fully isolated
 - Works in CI/CD
 - No local dependencies
+- Supports multiple MCP servers in one pod
 
 **Disadvantages:**
 - Slower (~2+ minutes for startup)
-- Requires credential rewriting (STDIO → SSE)
+- Requires SSE credentials (see `discordMcpSse`, `telegramMcpSse` in `n8n-credentials.ts`)
 
 ### Why STDIO Doesn't Work in Containers
 
