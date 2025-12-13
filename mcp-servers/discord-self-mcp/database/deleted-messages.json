@@ -1,0 +1,144 @@
+{
+  "deletedMessages": {
+    "1339810789975920691": {
+      "messageId": "1339810789975920691",
+      "channelId": "1062649759975878657",
+      "originalAuthor": {
+        "id": "969499062120382494",
+        "username": "metaops123",
+        "discriminator": "0",
+        "tag": "metaops123"
+      },
+      "deletedBy": "711983662144421991",
+      "deletedAt": 1761260451425,
+      "reason": "soft_delete",
+      "originalContent": "https://discord.gg/zazCuUev",
+      "originalTimestamp": 1739506184811
+    },
+    "1296704300751257601": {
+      "messageId": "1296704300751257601",
+      "channelId": "1062649759975878657",
+      "originalAuthor": {
+        "id": "969499062120382494",
+        "username": "metaops123",
+        "discriminator": "0",
+        "tag": "metaops123"
+      },
+      "deletedBy": "711983662144421991",
+      "deletedAt": 1761260469318,
+      "reason": "soft_delete",
+      "originalContent": "https://discord.gg/2yXhW5sj",
+      "originalTimestamp": 1729228796900
+    },
+    "1277671984729161842": {
+      "messageId": "1277671984729161842",
+      "channelId": "1062649759975878657",
+      "originalAuthor": {
+        "id": "969499062120382494",
+        "username": "metaops123",
+        "discriminator": "0",
+        "tag": "metaops123"
+      },
+      "deletedBy": "711983662144421991",
+      "deletedAt": 1761260474831,
+      "reason": "soft_delete",
+      "originalContent": "https://discord.gg/sk4SkZYX",
+      "originalTimestamp": 1724691139157
+    },
+    "1277671920132685946": {
+      "messageId": "1277671920132685946",
+      "channelId": "1062649759975878657",
+      "originalAuthor": {
+        "id": "969499062120382494",
+        "username": "metaops123",
+        "discriminator": "0",
+        "tag": "metaops123"
+      },
+      "deletedBy": "711983662144421991",
+      "deletedAt": 1761260477745,
+      "reason": "soft_delete",
+      "originalContent": "https://discord.gg/emanvc46",
+      "originalTimestamp": 1724691123756
+    },
+    "1277594015017205872": {
+      "messageId": "1277594015017205872",
+      "channelId": "1062649759975878657",
+      "originalAuthor": {
+        "id": "969499062120382494",
+        "username": "metaops123",
+        "discriminator": "0",
+        "tag": "metaops123"
+      },
+      "deletedBy": "711983662144421991",
+      "deletedAt": 1761260480240,
+      "reason": "soft_delete",
+      "originalContent": "https://discord.gg/aHdKdZ9B",
+      "originalTimestamp": 1724672549729
+    },
+    "1277593975414456403": {
+      "messageId": "1277593975414456403",
+      "channelId": "1062649759975878657",
+      "originalAuthor": {
+        "id": "969499062120382494",
+        "username": "metaops123",
+        "discriminator": "0",
+        "tag": "metaops123"
+      },
+      "deletedBy": "711983662144421991",
+      "deletedAt": 1761260482685,
+      "reason": "soft_delete",
+      "originalContent": "https://discord.gg/sk4SkZYX",
+      "originalTimestamp": 1724672540287
+    },
+    "1277593786360401972": {
+      "messageId": "1277593786360401972",
+      "channelId": "1062649759975878657",
+      "originalAuthor": {
+        "id": "969499062120382494",
+        "username": "metaops123",
+        "discriminator": "0",
+        "tag": "metaops123"
+      },
+      "deletedBy": "711983662144421991",
+      "deletedAt": 1761260485310,
+      "reason": "soft_delete",
+      "originalContent": "https://discord.gg/emanvc46",
+      "originalTimestamp": 1724672495213
+    },
+    "1178390178260336790": {
+      "messageId": "1178390178260336790",
+      "channelId": "1062649759975878657",
+      "originalAuthor": {
+        "id": "969499062120382494",
+        "username": "metaops123",
+        "discriminator": "0",
+        "tag": "metaops123"
+      },
+      "deletedBy": "711983662144421991",
+      "deletedAt": 1761260487977,
+      "reason": "soft_delete",
+      "originalContent": "https://discord.gg/mm8QS4hn",
+      "originalTimestamp": 1701020511928
+    },
+    "1277643174986256477": {
+      "messageId": "1277643174986256477",
+      "channelId": "1062649759975878657",
+      "originalAuthor": {
+        "id": "969499062120382494",
+        "username": "metaops123",
+        "discriminator": "0",
+        "tag": "metaops123"
+      },
+      "deletedBy": "711983662144421991",
+      "deletedAt": 1761260565548,
+      "reason": "soft_delete",
+      "originalContent": "https://discord.gg/aHdKdZ9B",
+      "originalTimestamp": 1724684270379
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "createdAt": "2025-01-23T22:45:00.000Z",
+    "lastUpdated": "2025-10-23T23:02:45.548Z"
+  }
+}
