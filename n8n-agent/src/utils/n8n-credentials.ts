@@ -43,12 +43,20 @@ export const TEST_CREDENTIALS: Record<string, CredentialDefinition> = {
 
   // Redis (used by Global Cache System)
   // Note: When running in container, use 'host.containers.internal' to reach host's Redis
+  // If REDIS_HOST is 'localhost' or '127.0.0.1', we need to translate it for container access
   redis: {
     id: 'I9K02BUMIbHYp1nQ',
     name: 'Redis account',
     type: 'redis',
     data: {
-      host: process.env.REDIS_HOST || 'host.containers.internal',
+      // For container testing: translate localhost to host.containers.internal
+      host: (() => {
+        const envHost = process.env.REDIS_HOST || 'host.containers.internal';
+        if (envHost === 'localhost' || envHost === '127.0.0.1') {
+          return 'host.containers.internal';
+        }
+        return envHost;
+      })(),
       port: parseInt(process.env.REDIS_PORT || '6379', 10),
       database: parseInt(process.env.REDIS_DB || '0', 10),
       password: process.env.REDIS_PASSWORD || '',
