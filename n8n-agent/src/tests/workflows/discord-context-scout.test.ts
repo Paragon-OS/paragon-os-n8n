@@ -1,11 +1,12 @@
 import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 import { executeWorkflowTest } from '../../utils/workflow-test-runner';
 import {
-  setupTestInstanceSmart,
   cleanupTestInstanceSmart,
+  connectToLocalN8n,
   TEST_TIMEOUTS,
   type N8nInstance
 } from '../../utils/test-helpers';
+import { startMcpPod, type McpPodInstance } from '../../utils/mcp-pod-manager';
 
 /**
  * Discord Context Scout Workflow Tests
@@ -17,29 +18,82 @@ import {
  * - Retrieve the authenticated user's profile
  *
  * TESTING MODES:
- * 1. Local n8n (recommended for MCP workflows):
+ * 1. Local n8n (recommended for fast iteration):
  *    - Set USE_LOCAL_N8N=true in environment
  *    - MCP spawns as a local subprocess (faster, more reliable)
  *    - Requires local n8n running with MCP credentials configured
  *
- * 2. Container mode (for CI/CD):
- *    - Uses podman containers with SSE transport
- *    - MCP runs in a separate container in the same pod
- *    - Slower but fully isolated
+ * 2. MCP Pod mode (for CI/CD - default):
+ *    - Creates a podman pod with Discord MCP (SSE) + n8n containers
+ *    - MCP runs on port 8000 within the pod
+ *    - Fully isolated, no local dependencies
  */
+
+// Get Discord token from environment
+function getDiscordToken(): string | undefined {
+  if (process.env.DISCORD_TOKEN) {
+    return process.env.DISCORD_TOKEN;
+  }
+  const mcpEnv = process.env.DISCORD_MCP_ENV;
+  if (mcpEnv) {
+    try {
+      const parsed = JSON.parse(mcpEnv);
+      if (parsed.DISCORD_TOKEN) {
+        return parsed.DISCORD_TOKEN;
+      }
+    } catch {
+      // Not valid JSON
+    }
+  }
+  return undefined;
+}
+
 describe('DiscordContextScout', () => {
   let instance: N8nInstance | null = null;
+  let mcpPod: McpPodInstance | null = null;
 
   beforeAll(async () => {
-    // Use smart setup - prefers local n8n if USE_LOCAL_N8N=true,
-    // otherwise falls back to container with auto-mounted MCP directories
-    instance = await setupTestInstanceSmart();
+    // Check for Discord token
+    const discordToken = getDiscordToken();
+    if (!discordToken) {
+      console.log('⚠️  DISCORD_TOKEN not set - tests will be skipped');
+      return;
+    }
+
+    if (process.env.USE_LOCAL_N8N === 'true') {
+      // Local mode: use local n8n with STDIO MCP
+      console.log('🏠 Using local n8n mode');
+      instance = await connectToLocalN8n();
+    } else {
+      // Pod mode: start MCP pod with Discord MCP + n8n
+      console.log('🐳 Starting MCP pod with Discord MCP + n8n...');
+      mcpPod = await startMcpPod({
+        mcpServers: [
+          {
+            type: 'discord',
+            env: { DISCORD_TOKEN: discordToken },
+          },
+        ],
+        timeout: 180000, // 3 minutes for startup
+      });
+      instance = mcpPod.n8nInstance;
+      console.log(`✅ MCP pod ready: ${mcpPod.podName}`);
+      console.log(`   n8n: ${instance.baseUrl}`);
+      console.log(`   Discord MCP (internal): ${mcpPod.mcpEndpointsInternal.discord}`);
+    }
     // Note: executeWorkflowTest() auto-imports all helper workflows in correct dependency order
   }, TEST_TIMEOUTS.WORKFLOW);
 
   afterAll(async () => {
-    await cleanupTestInstanceSmart(instance);
-    instance = null;
+    if (mcpPod) {
+      console.log('🧹 Cleaning up MCP pod...');
+      await mcpPod.cleanup();
+      mcpPod = null;
+      instance = null;
+    } else if (instance) {
+      await cleanupTestInstanceSmart(instance);
+      instance = null;
+    }
   }, TEST_TIMEOUTS.WORKFLOW);
 
   test.each([
