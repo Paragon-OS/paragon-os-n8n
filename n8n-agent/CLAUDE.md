@@ -57,7 +57,7 @@ npm run test:backup-restore:log
 - `n8n-credentials.ts` - Credential injection via CLI
 - `backup-restore-test.ts` - Test utilities for backup/restore operations
 - `test-helpers.ts` - Shared test utilities and container lifecycle helpers
-- `workflow-reference-converter.ts` - Convert workflow references between ID and name formats
+- `workflow-reference-converter.ts` - Convert workflow references between ID and name formats, rewrite MCP credentials (STDIO→SSE)
 - `logger.ts` - Pino-based logging
 
 ### Test Structure (`src/tests/`)
@@ -106,7 +106,7 @@ describe('MyWorkflow', () => {
 ```
 
 **Key Functions (`workflow-test-runner.ts`):**
-- `executeWorkflowTest(workflowName, testCase, testData, workflowsDir?, config?)` - Execute workflow with test data via Test Runner. **Auto-imports all helper workflows in correct dependency order.**
+- `executeWorkflowTest(workflowName, testCase, testData, workflowsDir?, config?, options?)` - Execute workflow with test data via Test Runner. **Auto-imports all helper workflows in correct dependency order.** Options include `mcpCredentialMappings` for pod mode.
 - `syncWorkflow(workflowName, workflowsDir?, config?)` - Import single workflow (deprecated for tests - doesn't handle transitive dependencies)
 - `buildApiConfigFromInstance(instance)` - Convert N8nInstance to N8nApiConfig
 
@@ -297,7 +297,24 @@ const pod = await startMcpPod({
 // pod.mcpEndpointsInternal.discord -> http://localhost:8000/sse
 // pod.mcpEndpointsInternal.telegram -> http://localhost:8001/sse
 // pod.n8nInstance.baseUrl -> http://localhost:50000
+
+// Credential mappings for workflow rewriting:
+// pod.mcpCredentialMappings -> [{ stdioId: 'xxx', sseId: 'yyy', sseName: '...' }]
 ```
+
+6. **MCP Credential Rewriting**: Workflows designed for STDIO MCP can work with SSE in pods via automatic credential rewriting:
+   - `mcp-pod-manager.ts` returns `mcpCredentialMappings` with STDIO→SSE ID mappings
+   - Pass mappings to `executeWorkflowTest()` via `options.mcpCredentialMappings`
+   - `workflow-reference-converter.ts` rewrites `mcpClientApi` → `mcpClientSseApi` during import
+
+   ```typescript
+   // In your test:
+   const pod = await startMcpPod({ mcpServers: [...] });
+   const result = await executeWorkflowTest(
+     'MyWorkflow', testCase, testData, undefined, pod.n8nInstance,
+     { mcpCredentialMappings: pod.mcpCredentialMappings }
+   );
+   ```
 
 **Local n8n Setup (Required for MCP Workflow Tests):**
 ```bash

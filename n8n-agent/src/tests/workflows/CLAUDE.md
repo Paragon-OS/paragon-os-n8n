@@ -574,31 +574,40 @@ npx vitest run src/tests/workflows/discord-context-scout.test.ts
 
 **2. Pod-Based SSE Mode (For CI/CD)**
 
-Run n8n and multiple MCP servers in a podman pod using SSE transport.
+Run n8n and multiple MCP servers in a podman pod using SSE transport. Requires **MCP credential rewriting** to convert STDIO credentials to SSE.
 
 ```typescript
 import { startMcpPod } from '../../utils/mcp-pod-manager';
+import { executeWorkflowTest } from '../../utils/workflow-test-runner';
 
-// Single MCP server
 const pod = await startMcpPod({
   mcpServers: [{ type: 'discord', env: { DISCORD_TOKEN: '...' } }],
 });
 
-// Multiple MCP servers (each gets unique port automatically)
-const pod = await startMcpPod({
-  mcpServers: [
-    { type: 'discord', env: { DISCORD_TOKEN: '...' } },
-    { type: 'telegram', env: { TELEGRAM_API_ID: '...', TELEGRAM_API_HASH: '...', TELEGRAM_SESSION_STRING: '...' } },
-  ],
-});
-
 // Endpoints:
 // pod.mcpEndpointsInternal.discord -> http://localhost:8000/sse
-// pod.mcpEndpointsInternal.telegram -> http://localhost:8001/sse
 // pod.n8nInstance.baseUrl -> http://localhost:50000
+
+// IMPORTANT: Pass credential mappings to rewrite STDIO → SSE
+const result = await executeWorkflowTest(
+  'DiscordContextScout',
+  testCase,
+  testData,
+  undefined,
+  pod.n8nInstance,
+  { mcpCredentialMappings: pod.mcpCredentialMappings }  // Required for pod mode!
+);
+
+await pod.cleanup();
 ```
 
 **Port Allocation:** Each MCP server gets a unique internal port (8000, 8001, etc.) via `MCP_PORT` env var.
+
+**Credential Rewriting:** The `mcpCredentialMappings` maps STDIO credential IDs to SSE:
+- `ZFofx3k2ze1wsifx` (Discord STDIO) → `discordMcpSseCredential` (Discord SSE)
+- `aiYCclLDUqob5iQ0` (Telegram STDIO) → `telegramMcpSseCredential` (Telegram SSE)
+
+The rewriting happens automatically in `workflow-reference-converter.ts` during import.
 
 **Advantages:**
 - Fully isolated
@@ -608,7 +617,7 @@ const pod = await startMcpPod({
 
 **Disadvantages:**
 - Slower (~2+ minutes for startup)
-- Requires SSE credentials (see `discordMcpSse`, `telegramMcpSse` in `n8n-credentials.ts`)
+- Requires credential mappings for workflow import
 
 ### Why STDIO Doesn't Work in Containers
 

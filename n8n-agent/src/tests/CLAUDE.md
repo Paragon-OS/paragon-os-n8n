@@ -126,8 +126,52 @@ const pod = await startMcpPod({
 // pod.mcpEndpoints.discord -> http://localhost:50001/sse (external)
 // pod.mcpEndpoints.telegram -> http://localhost:50002/sse (external)
 
+// Credential mappings for workflow rewriting (STDIO → SSE):
+// pod.mcpCredentialMappings -> [{ stdioId: '...', sseId: '...', sseName: '...' }]
+
 await pod.cleanup();
 ```
+
+### MCP Credential Rewriting (STDIO → SSE)
+
+Workflows designed for STDIO MCP (local subprocess) need credential rewriting to work with SSE in pods:
+
+**Problem:** Workflow JSON files contain `mcpClientApi` (STDIO) credentials, but pod mode uses `mcpClientSseApi` (SSE).
+
+**Solution:** The `mcp-pod-manager.ts` returns `mcpCredentialMappings` that map STDIO credential IDs to SSE credential IDs. Pass these to `executeWorkflowTest()`:
+
+```typescript
+import { startMcpPod } from '../../utils/mcp-pod-manager';
+import { executeWorkflowTest } from '../../utils/workflow-test-runner';
+
+const pod = await startMcpPod({
+  mcpServers: [{ type: 'discord', env: { DISCORD_TOKEN: '...' } }],
+});
+
+// mcpCredentialMappings contains:
+// [{ stdioId: 'ZFofx3k2ze1wsifx', sseId: 'discordMcpSseCredential', sseName: 'Discord MCP Client (SSE) account' }]
+
+const result = await executeWorkflowTest(
+  'DiscordContextScout',
+  testCase,
+  testData,
+  undefined,
+  pod.n8nInstance,
+  { mcpCredentialMappings: pod.mcpCredentialMappings }  // Pass the mappings
+);
+```
+
+**How it works:**
+1. `startMcpPod()` injects SSE credentials and returns `mcpCredentialMappings`
+2. `executeWorkflowTest()` passes mappings to `importWorkflowFromFile()`
+3. `workflow-reference-converter.ts` rewrites `mcpClientApi` → `mcpClientSseApi` in workflow nodes
+4. n8n uses SSE credentials to connect to MCP servers in the pod
+
+**Credential IDs:**
+| Type | STDIO ID | SSE ID |
+|------|----------|--------|
+| Discord | `ZFofx3k2ze1wsifx` | `discordMcpSseCredential` |
+| Telegram | `aiYCclLDUqob5iQ0` | `telegramMcpSseCredential` |
 
 ### Creating Your Own MCP SSE Container
 
