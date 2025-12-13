@@ -1,6 +1,7 @@
 import { confirm } from "../cli";
-import { exportWorkflows, deleteWorkflow } from "../utils/n8n-api";
+import { exportWorkflows, deleteWorkflow, type N8nApiConfig } from "../utils/n8n-api";
 import { logger } from "../utils/logger";
+import { getRunningPodConnection, buildApiConfigFromPod } from "../utils/pod-connection";
 
 interface DeleteAllOptions {
   yes?: boolean;
@@ -22,10 +23,22 @@ export async function executeDeleteAll(options: DeleteAllOptions): Promise<void>
 
   logger.info(""); // Empty line after confirmation
 
+  // Connect to running pod
+  logger.info("Connecting to n8n pod...");
+  let apiConfig: N8nApiConfig;
+  try {
+    const podConnection = await getRunningPodConnection();
+    apiConfig = buildApiConfigFromPod(podConnection);
+    logger.info(`Connected to pod: ${podConnection.podName}`);
+  } catch (err) {
+    logger.error("Failed to connect to n8n pod", err);
+    process.exit(1);
+  }
+
   try {
     // Get all workflows
     logger.info("Fetching workflows from n8n...");
-    const workflows = await exportWorkflows();
+    const workflows = await exportWorkflows(apiConfig);
 
     if (workflows.length === 0) {
       logger.info("No workflows found. Nothing to delete.");
@@ -76,7 +89,7 @@ export async function executeDeleteAll(options: DeleteAllOptions): Promise<void>
 
         try {
           logger.info(`Deleting: ${workflowName} (${workflowId})...`);
-          await deleteWorkflow(workflowId);
+          await deleteWorkflow(workflowId, apiConfig);
           deletedCount++;
           logger.info(`✓ Deleted: ${workflowName}`);
         } catch (error) {
@@ -108,7 +121,7 @@ export async function executeDeleteAll(options: DeleteAllOptions): Promise<void>
     logger.info("Verifying deletions...");
     let remainingWorkflows: number;
     try {
-      const remaining = await exportWorkflows();
+      const remaining = await exportWorkflows(apiConfig);
       remainingWorkflows = remaining.length;
     } catch (error) {
       logger.warn("Could not verify deletions", error instanceof Error ? error : undefined, {

@@ -9,7 +9,6 @@ import axios from "axios";
 import {
   importWorkflowFromFile,
   createApiClient,
-  getN8nBaseUrl,
   type N8nApiConfig
 } from "./n8n-api";
 import { type McpSseCredentialMapping } from "./workflow-reference-converter";
@@ -45,20 +44,21 @@ export function buildApiConfigFromInstance(instance: N8nInstance): N8nApiConfig 
 
 /**
  * Normalize config parameter - accepts either N8nApiConfig or N8nInstance
- * 
+ *
  * @param config - Either N8nApiConfig or N8nInstance
- * @returns N8nApiConfig (or undefined if config was undefined)
+ * @returns N8nApiConfig
+ * @throws Error if config is not provided
  */
-function normalizeConfig(config?: N8nApiConfig | N8nInstance): N8nApiConfig | undefined {
+function normalizeConfig(config: N8nApiConfig | N8nInstance | undefined): N8nApiConfig {
   if (!config) {
-    return undefined;
+    throw new Error('Config is required for workflow test runner');
   }
-  
+
   // Check if it's an N8nInstance by looking for containerName property
   if ('containerName' in config) {
     return buildApiConfigFromInstance(config as N8nInstance);
   }
-  
+
   // Otherwise it's already an N8nApiConfig
   return config as N8nApiConfig;
 }
@@ -426,7 +426,10 @@ export async function executeWorkflowTest(
     const startTime = Date.now();
     try {
       // Call the production webhook
-      const baseUrl = apiConfig?.baseURL || getN8nBaseUrl();
+      if (!apiConfig.baseURL) {
+        throw new Error('baseURL is required in config');
+      }
+      const baseUrl = apiConfig.baseURL;
       const webhookUrl = `${baseUrl.replace('/rest', '')}/webhook/test-runner`;
       const requestBody = { workflow: workflowName, testCase, testData };
 

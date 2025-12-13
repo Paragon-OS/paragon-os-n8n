@@ -52,6 +52,8 @@ npm run test:backup-restore:log
 - `delete-all.ts` - Remove all workflows
 
 ### Utilities (`src/utils/`)
+- `pod-connection.ts` - Pod detection utility for CLI commands (queries podman to find running pods)
+- `mcp-pod-manager.ts` - MCP pod lifecycle management (n8n + MCP servers in pods)
 - `n8n-podman.ts` - Podman container lifecycle management for isolated n8n test instances
 - `n8n-api.ts` - n8n REST API client
 - `n8n-setup.ts` - User/credential setup for test containers
@@ -210,22 +212,14 @@ TEST_TIMEOUTS.CREDENTIALS  // 5 min - credential setup
 TEST_TIMEOUTS.WORKFLOW     // 10 min - workflow/integration tests
 ```
 
-### Container vs Local n8n Testing
+### Container Testing
 
-**Container Testing (Default):**
-- Uses isolated podman containers with fresh n8n instances
+Tests use isolated podman containers with fresh n8n instances:
 - Credentials are auto-injected from `ESSENTIAL_CREDENTIALS` in `n8n-credentials.ts`
-- MCP directories are auto-mounted based on `DISCORD_MCP_ARGS`/`TELEGRAM_MCP_ARGS` env vars
 - Container uses `host.containers.internal` to reach host services (Redis, etc.)
-- Good for CI/CD and isolation, but MCP workflows may timeout (~2+ minutes)
+- For MCP workflows, use pod-based testing with SSE transport (see below)
 
-**Local n8n Testing (Recommended for MCP Workflows):**
-- Uses your running local n8n instance
-- MCP processes spawn directly on your machine (no container issues)
-- All existing credentials work
-- Tests complete in ~4 seconds vs ~2+ minutes
-
-### MCP Container Testing (SSE Transport)
+### MCP Pod Testing (SSE Transport)
 
 For fully containerized MCP testing, use **podman pods** with MCP servers running in **SSE mode**:
 
@@ -330,40 +324,19 @@ const pod = await startMcpPod({
    );
    ```
 
-**Local n8n Setup (Required for MCP Workflow Tests):**
+**Running MCP Workflow Tests:**
 ```bash
-# 1. Start n8n locally
-n8n start
-
-# 2. Get session cookie from browser (DevTools → Application → Cookies → n8n-auth)
-
-# 3. Configure .env
-USE_LOCAL_N8N=true
-N8N_SESSION_COOKIE=n8n-auth=your-jwt-token
-N8N_API_KEY=your-api-key  # Create in n8n Settings → API
-
-# 4. Run tests
+# Run tests (pods are automatically managed)
 LOG_DIR=./logs LOG_LEVEL=debug npx vitest run src/tests/workflows/discord-context-scout.test.ts -t "contact-fuzzy"
 ```
 
-**Why Local Mode for MCP Workflows:**
-MCP workflows use STDIO transport which spawns local subprocesses. This doesn't work in containers because:
-1. MCP script paths are host paths that don't exist in containers
-2. Even with volume mounts, subprocess spawning is complex
+**Pod-Based Testing:**
+MCP tests use pods with SSE transport. The test framework automatically:
+- Creates a pod with n8n and MCP servers
+- Injects SSE credentials and rewrites workflow references
+- Cleans up pods after tests complete
 
-**Pod-Based SSE Mode (For CI/CD):**
-For fully containerized testing, use the MCP pod manager which runs both n8n and MCP servers in a podman pod using SSE transport:
-- See `src/utils/mcp-pod-manager.ts` for the implementation
-- See `src/tests/integration/mcp-discord-pod.test.ts` for an example test
-
-**Smart Setup Functions:**
-```typescript
-import {
-  setupTestInstanceSmart,    // Uses local n8n if USE_LOCAL_N8N=true, else container
-  cleanupTestInstanceSmart,  // No-op for local, stops container otherwise
-  connectToLocalN8n,         // Direct connect to local n8n
-} from '../../utils/test-helpers';
-```
+See `src/utils/mcp-pod-manager.ts` for implementation and `src/tests/integration/mcp-discord-pod.test.ts` for examples.
 
 ### Credential Injection
 
@@ -398,30 +371,21 @@ The `workflow-test-runner.ts` automatically detects which endpoint to use based 
 
 ### Environment Variables (`.env`)
 ```bash
-N8N_URL=http://localhost:5678
-N8N_API_KEY=your-api-key
-N8N_SESSION_COOKIE=n8n-auth=your-jwt-token  # For local n8n testing
-
-# For integration tests
+# External services for workflows
 GOOGLE_GEMINI_API_KEY=your-key
 QDRANT_URL=https://your-instance.cloud.qdrant.io:6333
 QDRANT_API_KEY=your-key
 REDIS_HOST=localhost  # Container tests use host.containers.internal automatically
 REDIS_PORT=6379
 
-# MCP Credentials (for Discord/Telegram workflow tests)
-# MCP servers are in the monorepo at ../mcp-servers/
-DISCORD_MCP_COMMAND=node
-DISCORD_MCP_ARGS=/Users/nipuna/Software/paragon-os/paragon-os-app/mcp-servers/discord-self-mcp/dist/index.js
-DISCORD_MCP_ENV={"DISCORD_TOKEN":"your-token"}
-
-TELEGRAM_MCP_COMMAND=python
-TELEGRAM_MCP_ARGS=/Users/nipuna/Software/paragon-os/paragon-os-app/mcp-servers/telegram-mcp/main.py
-TELEGRAM_MCP_ENV={"TELEGRAM_API_ID":"...","TELEGRAM_API_HASH":"...","TELEGRAM_SESSION_STRING":"..."}
-
-# Local n8n testing mode (bypasses container startup)
-USE_LOCAL_N8N=true
+# MCP Server credentials (for pods)
+DISCORD_TOKEN=your-discord-token
+TELEGRAM_API_ID=your-api-id
+TELEGRAM_API_HASH=your-api-hash
+TELEGRAM_SESSION_STRING=your-session-string
 ```
+
+**Note:** n8n connection is handled via pods. CLI commands automatically detect running pods started with `npm run n8n:pod:start`.
 
 ### Vitest Configuration
 - Test files: `src/**/*.test.ts`

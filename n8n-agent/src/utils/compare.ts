@@ -1,6 +1,6 @@
 import { isEqual } from "lodash";
 import type { WorkflowObject } from "../types/index";
-import { exportWorkflows } from "./n8n-api";
+import { exportWorkflows, type N8nApiConfig } from "./n8n-api";
 import { logger } from "./logger";
 import type { Workflow } from "./n8n-api";
 
@@ -10,11 +10,13 @@ import type { Workflow } from "./n8n-api";
  */
 export const deepEqual = isEqual;
 
-export async function exportCurrentWorkflowsForCompare(): Promise<Map<string, WorkflowObject>> {
+export async function exportCurrentWorkflowsForCompare(
+  config: N8nApiConfig
+): Promise<Map<string, WorkflowObject>> {
   let workflows: Workflow[];
 
   try {
-    workflows = await exportWorkflows();
+    workflows = await exportWorkflows(config);
   } catch (err) {
     logger.error("Failed to export workflows from n8n API while preparing selective restore", err);
     throw new Error("Failed to export current workflows for comparison.");

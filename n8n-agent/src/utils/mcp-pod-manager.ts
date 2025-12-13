@@ -30,6 +30,7 @@ import { logger } from './logger';
 import type { N8nInstance } from './n8n-podman';
 import { setupN8nWithCredentials } from './n8n-setup';
 import { type McpSseCredentialMapping } from './workflow-reference-converter';
+import { POD_SESSION_COOKIE_PATH, POD_MCP_MAPPINGS_PATH } from './pod-connection';
 
 // Paths to MCP servers in the monorepo
 const DISCORD_MCP_PATH = path.resolve(__dirname, '../../../mcp-servers/discord-self-mcp');
@@ -523,6 +524,9 @@ export async function startMcpPod(config: McpPodConfig): Promise<McpPodInstance>
         config.mcpServers,
         mcpEndpointsInternal
       );
+
+      // Save session cookie and MCP mappings to container for CLI commands to access
+      await savePodConnectionInfo(n8nContainerName, sessionCookie, mcpCredentialMappings);
     } catch (error) {
       logger.warn(`Failed to set up n8n credentials: ${error}`);
     }
@@ -585,6 +589,45 @@ export async function startMcpPod(config: McpPodConfig): Promise<McpPodInstance>
       fs.rmSync(dataDir, { recursive: true, force: true });
     } catch { /* ignore */ }
     throw error;
+  }
+}
+
+/**
+ * Save session cookie and MCP credential mappings to container for CLI access.
+ * These files are read by pod-connection.ts when CLI commands need to connect.
+ */
+async function savePodConnectionInfo(
+  containerName: string,
+  sessionCookie: string | undefined,
+  mcpCredentialMappings: McpSseCredentialMapping[]
+): Promise<void> {
+  logger.info('Saving pod connection info for CLI access...');
+
+  // Save session cookie
+  if (sessionCookie) {
+    try {
+      await execa('podman', [
+        'exec', containerName,
+        'sh', '-c', `echo '${sessionCookie}' > ${POD_SESSION_COOKIE_PATH}`,
+      ], { timeout: 5000 });
+      logger.info(`  Saved session cookie to ${POD_SESSION_COOKIE_PATH}`);
+    } catch (error) {
+      logger.warn(`Failed to save session cookie: ${error}`);
+    }
+  }
+
+  // Save MCP credential mappings
+  if (mcpCredentialMappings.length > 0) {
+    try {
+      const mappingsJson = JSON.stringify(mcpCredentialMappings);
+      await execa('podman', [
+        'exec', containerName,
+        'sh', '-c', `echo '${mappingsJson}' > ${POD_MCP_MAPPINGS_PATH}`,
+      ], { timeout: 5000 });
+      logger.info(`  Saved ${mcpCredentialMappings.length} MCP credential mappings to ${POD_MCP_MAPPINGS_PATH}`);
+    } catch (error) {
+      logger.warn(`Failed to save MCP credential mappings: ${error}`);
+    }
   }
 }
 

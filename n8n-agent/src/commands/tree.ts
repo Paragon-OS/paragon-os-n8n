@@ -1,5 +1,6 @@
 import { exportWorkflows } from "../utils/n8n-api";
 import { logger } from "../utils/logger";
+import { getRunningPodConnection, buildApiConfigFromPod } from "../utils/pod-connection";
 import type { ExportedWorkflow } from "../types/index";
 import type { Workflow } from "../utils/n8n-api";
 
@@ -7,7 +8,7 @@ export async function executeTree(remainingArgs: string[] = []): Promise<void> {
   // Parse filtering options from remaining args
   let filterById: string | undefined;
   let filterActive: boolean | undefined;
-  
+
   for (const arg of remainingArgs) {
     if (arg.startsWith("--id=")) {
       filterById = arg.substring(5);
@@ -19,10 +20,23 @@ export async function executeTree(remainingArgs: string[] = []): Promise<void> {
     // Note: --all flag is ignored (we always fetch all workflows via API)
   }
 
-  let workflows: Workflow[];
-  
+  // Connect to running pod
+  logger.info("Connecting to n8n pod...");
+  let apiConfig;
   try {
-    workflows = await exportWorkflows();
+    const podConnection = await getRunningPodConnection();
+    apiConfig = buildApiConfigFromPod(podConnection);
+    logger.info(`Connected to pod: ${podConnection.podName}`);
+  } catch (err) {
+    logger.error("Failed to connect to n8n pod", err);
+    process.exit(1);
+    return;
+  }
+
+  let workflows: Workflow[];
+
+  try {
+    workflows = await exportWorkflows(apiConfig);
   } catch (err) {
     logger.error("Failed to export workflows from n8n API", err);
     process.exit(1);

@@ -203,49 +203,6 @@ To containerize any MCP server with SSE:
    podman run -d --pod mcp-n8n-pod --name n8n n8n-image
    ```
 
-## Local n8n Testing Mode
-
-For MCP-based workflow tests (Discord, Telegram), use local n8n instead of containers. This is **much faster** (~4 seconds vs ~2+ minutes) and avoids container networking issues with MCP processes.
-
-### Why Local Mode?
-- **MCP processes** need to spawn on your machine (can't run inside container with STDIO)
-- **Container networking** makes it hard to access host services (Redis, MCP)
-- **Volume mounts** add complexity for MCP script paths
-- **Tests run faster** (4s vs 2+ minutes)
-
-### Setup Local Mode
-```bash
-# 1. Start n8n locally
-n8n start
-
-# 2. Configure .env
-USE_LOCAL_N8N=true
-N8N_URL=http://localhost:5678
-N8N_API_KEY=your-api-key           # Create in n8n Settings → API
-N8N_SESSION_COOKIE=your-cookie     # From browser DevTools → Cookies → n8n-auth
-
-# 3. Run tests
-npx vitest run src/tests/workflows/discord-context-scout.test.ts
-```
-
-### Smart Setup Functions
-```typescript
-import {
-  setupTestInstanceSmart,     // Uses local if USE_LOCAL_N8N=true, else container
-  cleanupTestInstanceSmart,   // No-op for local, stops container otherwise
-  connectToLocalN8n,          // Direct local n8n connection
-} from '../../utils/test-helpers';
-
-// In your test:
-beforeAll(async () => {
-  instance = await setupTestInstanceSmart();  // Auto-detects mode
-}, TEST_TIMEOUTS.WORKFLOW);
-
-afterAll(async () => {
-  await cleanupTestInstanceSmart(instance);   // Safe for both modes
-}, TEST_TIMEOUTS.WORKFLOW);
-```
-
 ## Test Timeouts
 
 Standard timeouts are defined in `src/utils/test-helpers.ts`:

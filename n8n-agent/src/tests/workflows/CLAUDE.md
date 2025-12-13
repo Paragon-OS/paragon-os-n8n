@@ -529,55 +529,21 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 
 # Required for MCP-based workflows (Discord, Telegram)
-DISCORD_MCP_COMMAND=node
-DISCORD_MCP_ARGS=/path/to/discord-self-mcp/dist/index.js
-DISCORD_MCP_ENV={"DISCORD_TOKEN":"your-discord-token"}
-
-# For local n8n testing (recommended for MCP workflows)
-USE_LOCAL_N8N=true
-N8N_URL=http://localhost:5678
-N8N_API_KEY=your-api-key
-N8N_SESSION_COOKIE=your-session-cookie
+DISCORD_TOKEN=your-discord-token
+TELEGRAM_API_ID=your-api-id
+TELEGRAM_API_HASH=your-api-hash
+TELEGRAM_SESSION_STRING=your-session-string
 ```
 
-Missing credentials will cause specific workflows to fail. The test framework injects these as n8n credentials during container setup.
+Missing credentials will cause specific workflows to fail. The test framework injects these as n8n credentials during container/pod setup.
 
 ## MCP Workflow Testing
 
 Workflows using MCP nodes (Discord Contact Fetch, Telegram Chat Fetch, etc.) require special handling because they spawn external processes.
 
-### Testing Approaches
+### Testing Approach: Pod-Based SSE Mode
 
-**1. Local n8n Mode (Recommended for Development)**
-
-Use local n8n with STDIO-based MCP credentials. MCP spawns as a local subprocess.
-
-```bash
-# Start n8n locally
-n8n start
-
-# Configure environment
-USE_LOCAL_N8N=true
-N8N_URL=http://localhost:5678
-N8N_SESSION_COOKIE=your-session-cookie  # From browser DevTools
-
-# Run tests
-npx vitest run src/tests/workflows/discord-context-scout.test.ts
-```
-
-**Advantages:**
-- Fast (~4 seconds per test)
-- MCP processes spawn directly on your machine
-- All existing credentials work
-- Easy debugging
-
-**Disadvantages:**
-- Requires local n8n running
-- Not suitable for CI/CD
-
-**2. Pod-Based SSE Mode (For CI/CD)**
-
-Run n8n and multiple MCP servers in a podman pod using SSE transport. Requires **MCP credential rewriting** to convert STDIO credentials to SSE.
+Run n8n and MCP servers in a podman pod using SSE transport. Requires **MCP credential rewriting** to convert STDIO credentials to SSE.
 
 ```typescript
 import { startMcpPod } from '../../utils/mcp-pod-manager';
@@ -612,15 +578,11 @@ await pod.cleanup();
 
 The rewriting happens automatically in `workflow-reference-converter.ts` during import.
 
-**Advantages:**
-- Fully isolated
+**Key features:**
+- Fully isolated (no local dependencies)
 - Works in CI/CD
-- No local dependencies
 - Supports multiple MCP servers in one pod
-
-**Disadvantages:**
-- Slower (~2+ minutes for startup)
-- Requires credential mappings for workflow import
+- Credential mappings handle STDIO→SSE rewriting automatically
 
 ### Why STDIO Doesn't Work in Containers
 
@@ -630,25 +592,27 @@ MCP nodes with STDIO transport spawn external processes:
 3. Even with volume mounts, the node dependencies might not work correctly
 
 ### MCP Credential Configuration
-MCP credentials are defined in `src/utils/n8n-credentials.ts`. The `discordMcp` credential uses:
-- `DISCORD_MCP_COMMAND` - Command to run (usually `node`)
-- `DISCORD_MCP_ARGS` - Path to MCP script
-- `DISCORD_MCP_ENV` - JSON object with environment variables (e.g., `DISCORD_TOKEN`)
 
-### Container Networking (if using containers)
-If you must use containers, the test infrastructure supports:
-- **Volume mounts:** Auto-mounts MCP directories based on `DISCORD_MCP_ARGS` path
-- **Host networking:** Adds `--add-host=host.containers.internal:host-gateway` for Redis access
-- **Redis host:** Uses `host.containers.internal` instead of `localhost` for container → host access
+MCP credentials are defined in `src/utils/n8n-credentials.ts`:
+- **STDIO credentials:** Used for workflows designed for local MCP subprocess (stored in workflow JSON)
+- **SSE credentials:** Used at runtime in pods (automatically injected with correct endpoints)
+
+The `mcpCredentialMappings` from `startMcpPod()` handles the STDIO→SSE rewriting during workflow import.
+
+### Container Networking
+
+Podman pods share a localhost network, so:
+- n8n connects to MCP servers via `localhost:8000`, `localhost:8001`, etc.
+- External services (Redis, Qdrant) use `host.containers.internal` for container → host access
 
 ### Debugging MCP Issues
 ```bash
-# Check if MCP credential is being injected
-grep -i "discord" logs/test-run.log
+# Check pod status
+npm run n8n:pod:status
 
-# Look for credential setup success
-# "Successfully set up 5/5 essential credentials"
+# View MCP container logs
+podman logs discord-mcp-container
 
-# Check for MCP spawn errors
-grep -i "spawn\|ENOENT\|mcp" logs/test-run.log
+# Look for credential setup in test output
+grep -i "credential" logs/test-run.log
 ```

@@ -9,11 +9,13 @@ import { exportWorkflows, type Workflow, type N8nApiConfig } from './n8n-api';
 /**
  * Convert Execute Workflow node references to use workflow IDs
  * Updates references to match current n8n database IDs
+ * Optionally rewrites MCP credentials from STDIO to SSE transport
  */
 export async function convertWorkflowReferencesToNames(
   workflow: Workflow,
   allWorkflows?: Workflow[],
-  config?: N8nApiConfig
+  config?: N8nApiConfig,
+  mcpCredentialMappings?: McpSseCredentialMapping[]
 ): Promise<Workflow> {
   if (!workflow.nodes || !Array.isArray(workflow.nodes)) {
     return workflow;
@@ -25,6 +27,10 @@ export async function convertWorkflowReferencesToNames(
   // haven't been imported yet (critical for fixing old IDs after VCS upgrade)
   let workflows = allWorkflows;
   if (!workflows || workflows.length === 0) {
+    if (!config) {
+      logger.warn('No workflows provided and no config to fetch them, skipping reference conversion');
+      return workflow;
+    }
     try {
       workflows = await exportWorkflows(config);
       logger.debug(`Fetched ${workflows.length} workflows from n8n for reference resolution`);
@@ -135,7 +141,12 @@ export async function convertWorkflowReferencesToNames(
   });
 
   // Also rewrite fetchWorkflowId values in Code node jsCode
-  const nodesWithJsCodeFixed = rewriteFetchWorkflowIdsInJsCode(updatedNodes, workflows || []);
+  let nodesWithJsCodeFixed = rewriteFetchWorkflowIdsInJsCode(updatedNodes, workflows || []);
+
+  // Apply MCP credential rewriting if mappings are provided
+  if (mcpCredentialMappings && mcpCredentialMappings.length > 0) {
+    nodesWithJsCodeFixed = rewriteMcpCredentialsToSse(nodesWithJsCodeFixed, mcpCredentialMappings);
+  }
 
   return {
     ...workflow,

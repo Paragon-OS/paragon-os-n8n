@@ -5,14 +5,27 @@ Workflow management and automation tools for n8n.
 ## 🚀 Quick Start
 
 ```bash
-# Sync workflows
+# 1. Start n8n pod
+npm run n8n:pod:start
+
+# 2. Sync workflows
 npm run n8n:workflows:downsync  # Export from n8n
 npm run n8n:workflows:upsync    # Import to n8n
+
+# 3. Stop pod when done
+npm run n8n:pod:stop
 ```
 
 ---
 
 ## 📋 Commands
+
+### Pod Management
+```bash
+npm run n8n:pod:start           # Start n8n + MCP servers
+npm run n8n:pod:stop            # Stop and cleanup pods
+npm run n8n:pod:status          # Show running pods
+```
 
 ### Workflow Management
 ```bash
@@ -20,6 +33,7 @@ npm run n8n:workflows:downsync  # Export workflows from n8n
 npm run n8n:workflows:upsync    # Import workflows to n8n
 npm run n8n:workflows:tree      # Show workflow tree
 npm run n8n:verify              # Verify workflows
+npm run n8n:delete-all          # Delete all workflows
 ```
 
 ### Testing
@@ -80,15 +94,17 @@ n8n-agent/
 
 ## ⚙️ Configuration
 
-### Basic Configuration
+### Pod Management
+
+n8n runs in podman pods for isolation and reproducibility:
 
 ```bash
-# Environment variables
-export N8N_URL="http://localhost:5678"
-export N8N_API_KEY="your-api-key"
+npm run n8n:pod:start   # Start n8n + MCP servers
+npm run n8n:pod:status  # Show running pods
+npm run n8n:pod:stop    # Stop and cleanup
 ```
 
-Database: `~/.n8n/database.sqlite`
+CLI commands automatically detect running pods - no configuration needed.
 
 ### Credential Configuration (for Testing)
 

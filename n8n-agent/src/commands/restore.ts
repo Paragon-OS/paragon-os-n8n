@@ -5,10 +5,12 @@ import { collectJsonFilesRecursive } from "../utils/file";
 import { normalizeWorkflowForCompare } from "../utils/workflow";
 import { deepEqual, exportCurrentWorkflowsForCompare } from "../utils/compare";
 import { logger } from "../utils/logger";
-import { importWorkflow, exportWorkflows, checkN8nConnection } from "../utils/n8n-api";
+import { importWorkflow, exportWorkflows, checkN8nConnection, type N8nApiConfig } from "../utils/n8n-api";
 import { syncWorkflowReferences } from "../utils/workflow-id-sync";
+import { getRunningPodConnection, buildApiConfigFromPod } from "../utils/pod-connection";
 import type { BackupWorkflowForRestore, WorkflowObject } from "../types/index";
 import type { Workflow } from "../utils/n8n-api";
+import type { McpSseCredentialMapping } from "../utils/workflow-reference-converter";
 
 interface RestoreOptions {
   input?: string;
@@ -31,13 +33,31 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
     return;
   }
 
+  // Connect to running pod
+  logger.info("Connecting to n8n pod...");
+  let apiConfig: N8nApiConfig;
+  let mcpCredentialMappings: McpSseCredentialMapping[];
+  try {
+    const podConnection = await getRunningPodConnection();
+    apiConfig = buildApiConfigFromPod(podConnection);
+    mcpCredentialMappings = podConnection.mcpCredentialMappings;
+    logger.info(`Connected to pod: ${podConnection.podName}`);
+  } catch (err) {
+    logger.error("Failed to connect to n8n pod", err);
+    if (isTestMode) {
+      throw err;
+    }
+    process.exitCode = 1;
+    return;
+  }
+
   // Quick connection check first to fail fast if n8n is not running
   logger.info("Checking n8n connection...");
   try {
-    const isConnected = await checkN8nConnection();
+    const isConnected = await checkN8nConnection(apiConfig);
     if (!isConnected) {
-      logger.error("Cannot connect to n8n. Please ensure n8n is running at the configured URL.");
-      logger.error("Check your N8N_BASE_URL environment variable or ensure n8n is started.");
+      logger.error("Cannot connect to n8n. Please ensure the pod is running.");
+      logger.error("Start with: npm run n8n:pod:start");
       if (isTestMode) {
         throw new Error("Cannot connect to n8n");
       }
@@ -56,7 +76,7 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
   let currentWorkflows: Map<string, WorkflowObject>;
 
   try {
-    currentWorkflows = await exportCurrentWorkflowsForCompare();
+    currentWorkflows = await exportCurrentWorkflowsForCompare(apiConfig);
   } catch (err) {
     logger.error("Failed to export current workflows for comparison", err);
     if (isTestMode) {
@@ -181,7 +201,7 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
   let currentWorkflowsForNameCheck: Workflow[] = [];
 
   try {
-    currentWorkflowsForNameCheck = await exportWorkflows();
+    currentWorkflowsForNameCheck = await exportWorkflows(apiConfig);
     logger.debug(`Fetched ${currentWorkflowsForNameCheck.length} existing workflows for name-based duplicate prevention`);
   } catch (err) {
     logger.warn("Failed to fetch existing workflows for duplicate check, proceeding anyway", err);
@@ -264,10 +284,11 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
       // Pass the existing workflow ID if we found one to ensure we update the correct workflow
       importedWorkflow = await importWorkflow(
         workflowForImport as any,
-        undefined,
+        apiConfig,
         shouldForceCreate, // Only force create if truly new (no existing workflow by name)
         existingWorkflowId, // Pass the ID we found to avoid duplicate lookup issues
-        allBackupWorkflows // Pass all backup workflows for reference resolution
+        allBackupWorkflows, // Pass all backup workflows for reference resolution
+        mcpCredentialMappings // Pass MCP credential mappings for STDIO->SSE rewriting
       );
 
       logger.info(`✓ Successfully imported "${backup.name}"${importedWorkflow.id ? ` (ID: ${importedWorkflow.id})` : ""}`);
@@ -298,7 +319,7 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
 
     try {
       // Fetch all workflows from n8n to get their actual IDs (after import)
-      const actualWorkflows = await exportWorkflows();
+      const actualWorkflows = await exportWorkflows(apiConfig);
       logger.debug(`Fetched ${actualWorkflows.length} workflows from n8n for reference fixing`);
 
       // Import the reference converter
@@ -309,8 +330,7 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
       for (const workflow of actualWorkflows) {
         try {
           // Convert references using actual n8n workflows (with correct IDs)
-          // Use undefined config to use default client (which should have N8N_BASE_URL set)
-          const fixedWorkflow = await convertWorkflowReferencesToNames(workflow, actualWorkflows, undefined);
+          const fixedWorkflow = await convertWorkflowReferencesToNames(workflow, actualWorkflows, apiConfig, mcpCredentialMappings);
 
           // Check if any references were changed by comparing JSON
           const originalJson = JSON.stringify(workflow);
@@ -318,7 +338,7 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
 
           if (originalJson !== fixedJson) {
             // References were updated, save the workflow back to n8n
-            await importWorkflow(fixedWorkflow, undefined, false, workflow.id);
+            await importWorkflow(fixedWorkflow, apiConfig, false, workflow.id);
             fixedCount++;
             logger.debug(`✓ Fixed references in "${workflow.name}"`);
           }

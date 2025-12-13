@@ -63,43 +63,38 @@ export interface N8nExecutionResponse {
   [key: string]: unknown;
 }
 
-/**
- * Get n8n base URL from environment or use default
- */
-export function getN8nBaseUrl(): string {
-  return process.env.N8N_URL || process.env.N8N_BASE_URL || 'http://localhost:5678';
-}
+// NOTE: Environment variable fallbacks have been removed.
+// All n8n connections now require explicit config from pod-connection.ts.
+// This ensures we always connect to the running pod, not a stale local instance.
 
 /**
- * Get n8n API key from environment
+ * Create axios instance with n8n API configuration.
+ *
+ * IMPORTANT: Config is required. Use getRunningPodConnection() from pod-connection.ts
+ * to get config for a running pod.
+ *
+ * @throws Error if config is not provided or baseURL is missing
  */
-function getN8nApiKey(): string | undefined {
-  return process.env.N8N_API_KEY || process.env.N8N_API_TOKEN;
-}
-
-/**
- * Get n8n session cookie from environment (for web UI login)
- */
-function getN8nSessionCookie(): string | undefined {
-  return process.env.N8N_SESSION_COOKIE || process.env.N8N_COOKIE;
-}
-
-/**
- * Create axios instance with n8n API configuration
- */
-export function createApiClient(config?: N8nApiConfig): AxiosInstance {
-  const baseURL = config?.baseURL || getN8nBaseUrl();
-  
-  if (!baseURL) {
-    throw new Error('baseURL is not defined - provide baseURL in config or set N8N_BASE_URL/N8N_URL environment variable');
+export function createApiClient(config: N8nApiConfig): AxiosInstance {
+  if (!config) {
+    throw new Error(
+      'n8n API config is required.\n' +
+      'Use getRunningPodConnection() from pod-connection.ts to get config for a running pod.'
+    );
   }
-  
-  // When config is provided, use only config values (don't fall back to environment)
-  // This ensures test instances with session cookies don't get overridden by env vars
-  // Only fall back to environment when no config is provided
-  const apiKey = config ? (config.apiKey ?? undefined) : getN8nApiKey();
-  const sessionCookie = config ? (config.sessionCookie ?? undefined) : getN8nSessionCookie();
-  const timeout = config?.timeout || 120000; // 2 minutes default
+
+  const baseURL = config.baseURL;
+
+  if (!baseURL) {
+    throw new Error(
+      'baseURL is required in n8n API config.\n' +
+      'Use getRunningPodConnection() from pod-connection.ts to get config for a running pod.'
+    );
+  }
+
+  const apiKey = config.apiKey;
+  const sessionCookie = config.sessionCookie;
+  const timeout = config.timeout || 120000; // 2 minutes default
 
   // CRITICAL: Use /rest endpoints when only session cookie is available
   // /api/v1 requires API keys and rejects session cookies with "'X-N8N-API-KEY' header required"
@@ -155,10 +150,19 @@ export function createApiClient(config?: N8nApiConfig): AxiosInstance {
 /**
  * Quick connection check to verify n8n is running
  * Uses a shorter timeout (5 seconds) for faster failure detection
+ *
+ * @throws Error if config is not provided
  */
-export async function checkN8nConnection(config?: N8nApiConfig): Promise<boolean> {
-  const quickClient = createApiClient({ 
-    ...config, 
+export async function checkN8nConnection(config: N8nApiConfig): Promise<boolean> {
+  if (!config || !config.baseURL) {
+    throw new Error(
+      'n8n API config with baseURL is required.\n' +
+      'Use getRunningPodConnection() from pod-connection.ts to get config for a running pod.'
+    );
+  }
+
+  const quickClient = createApiClient({
+    ...config,
     timeout: 5000 // 5 second timeout for quick check
   });
   
@@ -184,39 +188,26 @@ export async function checkN8nConnection(config?: N8nApiConfig): Promise<boolean
   }
 }
 
-let defaultClient: AxiosInstance | null = null;
-let lastBaseUrl: string | null = null;
-let lastApiKey: string | undefined = undefined;
-
-/**
- * Get or create default API client instance
- * Resets the client if the base URL or API key environment variables have changed
- * This ensures tests with different instances/credentials don't share stale clients
- */
-function getDefaultClient(): AxiosInstance {
-  const currentBaseUrl = getN8nBaseUrl();
-  const currentApiKey = getN8nApiKey();
-  
-  // Reset cache if EITHER base URL OR API key changed
-  // This is critical for test isolation where each test may use different n8n instances
-  if (!defaultClient || 
-      lastBaseUrl !== currentBaseUrl || 
-      lastApiKey !== currentApiKey) {
-    defaultClient = createApiClient();
-    lastBaseUrl = currentBaseUrl;
-    lastApiKey = currentApiKey;
-  }
-  return defaultClient;
-}
+// NOTE: getDefaultClient() has been removed.
+// All API calls now require explicit config from pod-connection.ts.
 
 /**
  * Export all workflows from n8n (handles pagination)
+ *
+ * @throws Error if config is not provided
  */
-export async function exportWorkflows(config?: N8nApiConfig): Promise<Workflow[]> {
-  const apiKey = config ? (config.apiKey ?? undefined) : getN8nApiKey();
-  const sessionCookie = config ? (config.sessionCookie ?? undefined) : getN8nSessionCookie();
+export async function exportWorkflows(config: N8nApiConfig): Promise<Workflow[]> {
+  if (!config || !config.baseURL) {
+    throw new Error(
+      'n8n API config with baseURL is required.\n' +
+      'Use getRunningPodConnection() from pod-connection.ts to get config for a running pod.'
+    );
+  }
+
+  const apiKey = config.apiKey;
+  const sessionCookie = config.sessionCookie;
   const useRestEndpoint = !apiKey && !!sessionCookie;
-  const baseURL = config?.baseURL || getN8nBaseUrl();
+  const baseURL = config.baseURL;
 
   // CRITICAL: /rest/workflows returns summary data without nodes/connections
   // /api/v1/workflows requires API keys (both GET and POST require API keys)
@@ -278,7 +269,7 @@ export async function exportWorkflows(config?: N8nApiConfig): Promise<Workflow[]
   }
 
   // Use /api/v1 for API key authentication
-  const client = config ? createApiClient(config) : getDefaultClient();
+  const client = createApiClient(config);
 
   try {
 
@@ -292,8 +283,7 @@ export async function exportWorkflows(config?: N8nApiConfig): Promise<Workflow[]
         params.cursor = cursor;
       }
 
-      const apiBaseUrl = config?.baseURL || getN8nBaseUrl();
-      logger.info(`GET /workflows from ${apiBaseUrl}/api/v1/workflows`);
+      logger.info(`GET /workflows from ${baseURL}/api/v1/workflows`);
       const response = await client.get<unknown>('/workflows', { params });
       logger.info(`GET /workflows response: status=${response.status}, data type=${typeof response.data}, isArray=${Array.isArray(response.data)}`);
       
@@ -456,22 +446,30 @@ function cleanWorkflowForApi(workflowData: Workflow, useRestEndpoint: boolean = 
  * Import/update a workflow in n8n
  *
  * @param workflowData - The workflow data to import
- * @param config - API configuration (baseURL, apiKey, sessionCookie)
+ * @param config - API configuration (baseURL, apiKey, sessionCookie) - REQUIRED
  * @param forceCreate - If true, always create new workflow instead of updating existing
  * @param existingWorkflowId - Optional known database ID to update
  * @param allBackupWorkflows - All workflows from backup for reference resolution
  * @param mcpCredentialMappings - Optional MCP credential mappings for container mode
  *                               (rewrites STDIO credentials to SSE transport)
+ * @throws Error if config is not provided
  */
 export async function importWorkflow(
   workflowData: Workflow,
-  config?: N8nApiConfig,
+  config: N8nApiConfig,
   forceCreate: boolean = false,
   existingWorkflowId?: string,
   allBackupWorkflows?: Workflow[],
   mcpCredentialMappings?: McpSseCredentialMapping[]
 ): Promise<Workflow> {
-  const client = config ? createApiClient(config) : getDefaultClient();
+  if (!config || !config.baseURL) {
+    throw new Error(
+      'n8n API config with baseURL is required.\n' +
+      'Use getRunningPodConnection() from pod-connection.ts to get config for a running pod.'
+    );
+  }
+
+  const client = createApiClient(config);
 
   try {
     // Convert Execute Workflow node references to use current n8n IDs
@@ -492,8 +490,8 @@ export async function importWorkflow(
     }
     
     // Determine if we're using /rest endpoints (session cookie only) or /api/v1 (API key)
-    const apiKey = config ? (config.apiKey ?? undefined) : getN8nApiKey();
-    const sessionCookie = config ? (config.sessionCookie ?? undefined) : getN8nSessionCookie();
+    const apiKey = config.apiKey;
+    const sessionCookie = config.sessionCookie;
     const useRestEndpoint = !apiKey && !!sessionCookie;
     
     // Clean workflow data before sending to API
@@ -591,15 +589,14 @@ export async function importWorkflow(
       }
       
       // Try POST to /workflows endpoint
-      const apiBaseUrl = config?.baseURL || getN8nBaseUrl();
       try {
-        logger.debug(`POST /workflows to ${apiBaseUrl}/api/v1/workflows`);
+        logger.debug(`POST /workflows to ${config.baseURL}/api/v1/workflows`);
       response = await client.post<Workflow>('/workflows', cleanedData);
         logger.debug(`POST successful: status=${response.status}, workflow ID: ${response.data?.id || 'none'}`);
       } catch (postError) {
         // If POST fails, log more details
         if (axios.isAxiosError(postError)) {
-          logger.debug(`POST /workflows failed: status=${postError.response?.status}, url=${apiBaseUrl}/api/v1/workflows`);
+          logger.debug(`POST /workflows failed: status=${postError.response?.status}, url=${config.baseURL}/api/v1/workflows`);
           logger.debug(`Request data keys: ${Object.keys(cleanedData).join(', ')}`);
           logger.debug(`Response: ${JSON.stringify(postError.response?.data).substring(0, 500)}`);
           logger.debug(`Response headers: ${JSON.stringify(postError.response?.headers)}`);
@@ -630,8 +627,7 @@ export async function importWorkflow(
         : String(response.data).substring(0, 500);
       
       // Log the full response for debugging
-      const apiBaseUrl = config?.baseURL || getN8nBaseUrl();
-      logger.debug(`Import workflow failed: status=${response.status}, url=${apiBaseUrl}/api/v1/workflows`);
+      logger.debug(`Import workflow failed: status=${response.status}, url=${config.baseURL}/api/v1/workflows`);
       logger.debug(`Response headers:`, response.headers);
       logger.debug(`Response data:`, response.data);
       
@@ -680,9 +676,16 @@ export async function importWorkflow(
  */
 export async function importWorkflowFromFile(
   filePath: string,
-  config?: N8nApiConfig,
+  config: N8nApiConfig,
   mcpCredentialMappings?: McpSseCredentialMapping[]
 ): Promise<Workflow> {
+  if (!config || !config.baseURL) {
+    throw new Error(
+      'n8n API config with baseURL is required.\n' +
+      'Use getRunningPodConnection() from pod-connection.ts to get config for a running pod.'
+    );
+  }
+
   try {
     const content = await fs.promises.readFile(filePath, 'utf-8');
     // Validate JSON before parsing
@@ -710,7 +713,7 @@ export async function importWorkflowFromFile(
  */
 async function resolveWorkflowId(
   identifier: string,
-  config?: N8nApiConfig
+  config: N8nApiConfig
 ): Promise<string> {
   // If it's already a valid database ID (UUID or NanoID), return it directly
   if (isValidDatabaseId(identifier)) {
@@ -767,8 +770,8 @@ async function resolveWorkflowId(
  */
 export async function executeWorkflow(
   workflowId: string,
-  inputData?: unknown,
-  config?: N8nApiConfig
+  inputData: unknown | undefined,
+  config: N8nApiConfig
 ): Promise<N8nExecutionResponse> {
   // THINKING OUTSIDE THE BOX: Use the EXACT same approach as the working CLI test code!
   // The original test.ts uses runN8nCapture directly and it works - let's do the same
@@ -826,7 +829,7 @@ export async function executeWorkflow(
       // Try querying the executions API to get the result!
       logger.info(`No CLI output, trying to get execution from API...`);
       logger.info(`Workflow ID provided: ${workflowId}`);
-      const client = config ? createApiClient(config) : getDefaultClient();
+      const client = createApiClient(config);
       
       try {
         // Get the workflow to find its database ID
@@ -951,12 +954,21 @@ export async function executeWorkflow(
 
 /**
  * Get workflow by ID
+ *
+ * @throws Error if config is not provided
  */
 export async function getWorkflow(
   workflowId: string,
-  config?: N8nApiConfig
+  config: N8nApiConfig
 ): Promise<Workflow> {
-  const client = config ? createApiClient(config) : getDefaultClient();
+  if (!config || !config.baseURL) {
+    throw new Error(
+      'n8n API config with baseURL is required.\n' +
+      'Use getRunningPodConnection() from pod-connection.ts to get config for a running pod.'
+    );
+  }
+
+  const client = createApiClient(config);
 
   try {
     const response = await client.get<Workflow>(`/workflows/${workflowId}`);
@@ -978,12 +990,21 @@ export async function getWorkflow(
  *
  * n8n requires workflows to be archived before deletion.
  * This function automatically archives the workflow first, then deletes it.
+ *
+ * @throws Error if config is not provided
  */
 export async function deleteWorkflow(
   workflowId: string,
-  config?: N8nApiConfig
+  config: N8nApiConfig
 ): Promise<void> {
-  const client = config ? createApiClient(config) : getDefaultClient();
+  if (!config || !config.baseURL) {
+    throw new Error(
+      'n8n API config with baseURL is required.\n' +
+      'Use getRunningPodConnection() from pod-connection.ts to get config for a running pod.'
+    );
+  }
+
+  const client = createApiClient(config);
 
   try {
     logger.debug(`Attempting to delete workflow ${workflowId}`);

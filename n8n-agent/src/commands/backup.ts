@@ -6,6 +6,7 @@ import { collectJsonFilesRecursive, removeEmptyDirectoriesUnder } from "../utils
 import { parseTagFromName, sanitizeWorkflowName } from "../utils/workflow";
 import { logger } from "../utils/logger";
 import { syncWorkflowReferences, removeDuplicateWorkflowFiles } from "../utils/workflow-id-sync";
+import { getRunningPodConnection, buildApiConfigFromPod } from "../utils/pod-connection";
 import type { Workflow } from "../utils/n8n-api";
 
 interface BackupOptions {
@@ -188,11 +189,28 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
 
   logger.info("");
 
+  // Step 0: Connect to running pod
+  let podConnection;
+  try {
+    logger.info("Connecting to n8n pod...");
+    podConnection = await getRunningPodConnection();
+    logger.info(`Connected to pod: ${podConnection.podName}`);
+  } catch (err) {
+    logger.error("Failed to connect to n8n pod", err);
+    if (isTestMode) {
+      throw err;
+    }
+    process.exit(1);
+    return;
+  }
+
+  const apiConfig = buildApiConfigFromPod(podConnection);
+
   // Step 1: Fetch workflows from n8n
   let workflows: Workflow[];
   try {
     logger.info("Fetching workflows from n8n...");
-    workflows = await exportWorkflows();
+    workflows = await exportWorkflows(apiConfig);
     logger.info(`Fetched ${workflows.length} workflow(s) from n8n.`);
   } catch (err) {
     logger.error("Failed to export workflows from n8n API", err);

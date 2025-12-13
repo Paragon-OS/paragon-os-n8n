@@ -376,16 +376,19 @@ export async function verifyWorkflowReferences(
 
   // Check each workflow for references
   for (const workflow of workflows) {
-    for (const node of workflow.nodes || []) {
+    for (const nodeRaw of workflow.nodes || []) {
+      // Cast node to a typed object
+      const node = nodeRaw as { type?: string; name?: string; parameters?: Record<string, unknown> };
+
       // Check toolWorkflow nodes
       if (node.type === '@n8n/n8n-nodes-langchain.toolWorkflow') {
-        const params = node.parameters as any;
-        const workflowId = params?.workflowId;
-        
+        const params = node.parameters as Record<string, unknown> | undefined;
+        const workflowId = params?.workflowId as { value?: string; cachedResultName?: string } | undefined;
+
         if (workflowId) {
           const value = workflowId.value;
           const cachedName = workflowId.cachedResultName;
-          
+
           // Check if reference is valid
           if (value && !validIds.has(value)) {
             // Check if it's a name instead of ID
@@ -403,9 +406,9 @@ export async function verifyWorkflowReferences(
 
       // Check executeWorkflow nodes
       if (node.type === 'n8n-nodes-base.executeWorkflow') {
-        const params = node.parameters as any;
-        const workflowId = params?.workflowId;
-        
+        const params = node.parameters as Record<string, unknown> | undefined;
+        const workflowId = params?.workflowId as string | undefined;
+
         if (workflowId && !validIds.has(workflowId)) {
           broken.push(
             `Workflow "${workflow.name}" → Node "${node.name}" references non-existent workflow ID: ${workflowId}`

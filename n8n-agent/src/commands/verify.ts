@@ -2,9 +2,10 @@ import fs from "fs";
 import path from "path";
 import boxen from "boxen";
 import chalk from "chalk";
-import { getWorkflow, exportWorkflows } from "../utils/n8n-api";
+import { getWorkflow, exportWorkflows, type N8nApiConfig } from "../utils/n8n-api";
 import { collectJsonFilesRecursive } from "../utils/file";
 import { logger } from "../utils/logger";
+import { getRunningPodConnection, buildApiConfigFromPod } from "../utils/pod-connection";
 import type { WorkflowObject } from "../types/index";
 import type { ExecuteWorkflowTriggerNode } from "../types/n8n";
 import { isExecuteWorkflowTriggerNode } from "../types/n8n";
@@ -98,6 +99,7 @@ function compareInputs(
 
 async function verifyWorkflow(
   filePath: string,
+  apiConfig: N8nApiConfig,
   workflowId?: string
 ): Promise<VerificationResult> {
   const workflowName = path.basename(filePath, ".json");
@@ -123,17 +125,17 @@ async function verifyWorkflow(
     // Check if wfId looks like a valid database ID (UUID or NanoID)
     const isValidDatabaseId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(wfId) ||
                                /^[A-Za-z0-9_-]{10,21}$/.test(wfId);
-    
+
     if (isValidDatabaseId) {
       // Try to get workflow by ID first
       try {
-        dbWorkflow = await getWorkflow(wfId);
+        dbWorkflow = await getWorkflow(wfId, apiConfig);
       } catch (getError) {
         // If getWorkflow fails, fall through to name search
         logger.debug(`Failed to get workflow by ID "${wfId}", trying to find by name...`);
-        const allWorkflows = await exportWorkflows();
+        const allWorkflows = await exportWorkflows(apiConfig);
         const found = allWorkflows.find((w) => w.id === wfId);
-        
+
         if (found) {
           dbWorkflow = found;
         } else {
@@ -149,15 +151,15 @@ async function verifyWorkflow(
     } else {
       // Custom ID or name - search by name
       logger.debug(`Looking up workflow by name: "${wfId}" or "${workflowName}"`);
-      const allWorkflows = await exportWorkflows();
+      const allWorkflows = await exportWorkflows(apiConfig);
       const found = allWorkflows.find(
         (w) => w.id === wfId || w.name === wfId || w.name === workflowName
       );
-      
+
       if (!found) {
         throw new Error(`Workflow not found: ${wfId}`);
       }
-      
+
       dbWorkflow = found;
     }
   } catch (err) {
@@ -196,6 +198,18 @@ interface VerifyOptions {
 }
 
 export async function executeVerify(options: VerifyOptions): Promise<void> {
+  // Connect to running pod
+  logger.info("Connecting to n8n pod...");
+  let apiConfig: N8nApiConfig;
+  try {
+    const podConnection = await getRunningPodConnection();
+    apiConfig = buildApiConfigFromPod(podConnection);
+    logger.info(`Connected to pod: ${podConnection.podName}`);
+  } catch (err) {
+    logger.error("Failed to connect to n8n pod", err);
+    process.exit(1);
+  }
+
   const workflowsDir = path.resolve(__dirname, "../../workflows");
   const specificWorkflow = options.workflow;
 
@@ -238,7 +252,7 @@ export async function executeVerify(options: VerifyOptions): Promise<void> {
     const workflow = JSON.parse(
       await fs.promises.readFile(filePath, "utf8")
     ) as WorkflowObject;
-    const result = await verifyWorkflow(filePath, workflow.id);
+    const result = await verifyWorkflow(filePath, apiConfig, workflow.id);
     results.push(result);
   }
 
