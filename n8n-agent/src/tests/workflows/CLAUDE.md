@@ -524,6 +524,53 @@ GOOGLE_GEMINI_API_KEY=your-key
 # Required for cache-enabled workflows
 REDIS_HOST=localhost
 REDIS_PORT=6379
+
+# Required for MCP-based workflows (Discord, Telegram)
+DISCORD_MCP_COMMAND=node
+DISCORD_MCP_ARGS=/path/to/discord-self-mcp/dist/index.js
+DISCORD_MCP_ENV={"DISCORD_TOKEN":"your-discord-token"}
+
+# For local n8n testing (recommended for MCP workflows)
+USE_LOCAL_N8N=true
+N8N_URL=http://localhost:5678
+N8N_API_KEY=your-api-key
+N8N_SESSION_COOKIE=your-session-cookie
 ```
 
 Missing credentials will cause specific workflows to fail. The test framework injects these as n8n credentials during container setup.
+
+## MCP Workflow Testing
+
+Workflows using MCP nodes (Discord Contact Fetch, Telegram Chat Fetch, etc.) require special handling:
+
+### Why MCP Workflows Need Local Testing
+MCP nodes spawn external processes (e.g., `node /path/to/discord-self-mcp/index.js`). When running in a container:
+1. The MCP script path doesn't exist inside the container
+2. Even with volume mounts, the spawned process can't access Discord API easily
+3. Container networking adds complexity
+
+**Solution:** Use local n8n mode (`USE_LOCAL_N8N=true`) for MCP workflow tests.
+
+### MCP Credential Configuration
+MCP credentials are defined in `src/utils/n8n-credentials.ts`. The `discordMcp` credential uses:
+- `DISCORD_MCP_COMMAND` - Command to run (usually `node`)
+- `DISCORD_MCP_ARGS` - Path to MCP script
+- `DISCORD_MCP_ENV` - JSON object with environment variables (e.g., `DISCORD_TOKEN`)
+
+### Container Networking (if using containers)
+If you must use containers, the test infrastructure supports:
+- **Volume mounts:** Auto-mounts MCP directories based on `DISCORD_MCP_ARGS` path
+- **Host networking:** Adds `--add-host=host.containers.internal:host-gateway` for Redis access
+- **Redis host:** Uses `host.containers.internal` instead of `localhost` for container → host access
+
+### Debugging MCP Issues
+```bash
+# Check if MCP credential is being injected
+grep -i "discord" logs/test-run.log
+
+# Look for credential setup success
+# "Successfully set up 5/5 essential credentials"
+
+# Check for MCP spawn errors
+grep -i "spawn\|ENOENT\|mcp" logs/test-run.log
+```

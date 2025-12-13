@@ -378,8 +378,17 @@ export async function executeWorkflowTest(
       logger.debug(`Test Runner imported with ID: ${testRunnerDatabaseId}`);
       
       // Activate the workflow to enable webhook
+      // The /rest endpoint uses PATCH /workflows/{id} with {active: true}
+      // The /api/v1 endpoint uses POST /workflows/{id}/activate
       const client = createApiClient(apiConfig);
-      await client.patch(`/workflows/${testRunnerDatabaseId}`, { active: true });
+      const baseURL = client.defaults.baseURL || '';
+      if (baseURL.includes('/rest')) {
+        // REST API uses PATCH with active: true
+        await client.patch(`/workflows/${testRunnerDatabaseId}`, { active: true });
+      } else {
+        // Public API uses POST /activate
+        await client.post(`/workflows/${testRunnerDatabaseId}/activate`);
+      }
       logger.debug(`Test Runner activated`);
       
       // Wait for webhook to be registered

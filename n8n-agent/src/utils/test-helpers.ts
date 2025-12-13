@@ -440,11 +440,46 @@ export async function setupTestInstance(config?: N8nPodmanConfig): Promise<N8nIn
   // Use custom image with paragon-os nodes by default for workflow tests
   const useCustomImage = config?.image ?? DEFAULT_N8N_CUSTOM_IMAGE;
 
+  // Auto-mount MCP directories based on environment variables
+  const autoVolumes: string[] = [];
+
+  // Mount discord-self-mcp if DISCORD_MCP_ARGS points to a local path
+  const discordMcpArgs = process.env.DISCORD_MCP_ARGS;
+  if (discordMcpArgs && discordMcpArgs.startsWith('/')) {
+    // Extract the directory containing the MCP script
+    const mcpDir = discordMcpArgs.substring(0, discordMcpArgs.lastIndexOf('/'));
+    if (mcpDir) {
+      // Mount the parent directory (e.g., /Users/.../discord-self-mcp) to same path in container
+      const parentDir = mcpDir.substring(0, mcpDir.lastIndexOf('/'));
+      if (parentDir) {
+        autoVolumes.push(`${parentDir}:${parentDir}:ro`);
+        console.log(`📁 Auto-mounting MCP directory: ${parentDir}`);
+      }
+    }
+  }
+
+  // Mount telegram-self-mcp if TELEGRAM_MCP_ARGS points to a local path
+  const telegramMcpArgs = process.env.TELEGRAM_MCP_ARGS;
+  if (telegramMcpArgs && telegramMcpArgs.startsWith('/')) {
+    const mcpDir = telegramMcpArgs.substring(0, telegramMcpArgs.lastIndexOf('/'));
+    if (mcpDir) {
+      const parentDir = mcpDir.substring(0, mcpDir.lastIndexOf('/'));
+      if (parentDir && !autoVolumes.some(v => v.startsWith(parentDir))) {
+        autoVolumes.push(`${parentDir}:${parentDir}:ro`);
+        console.log(`📁 Auto-mounting MCP directory: ${parentDir}`);
+      }
+    }
+  }
+
+  // Merge auto-detected volumes with any user-provided volumes
+  const mergedVolumes = [...autoVolumes, ...(config?.volumes || [])];
+
   console.log(`🚀 Starting shared n8n instance with image: ${useCustomImage}...`);
   const instance = await startN8nInstance({
     timeout: 120000, // 2 minutes for startup
     image: useCustomImage,
     ...config,
+    volumes: mergedVolumes.length > 0 ? mergedVolumes : config?.volumes,
   });
   console.log(`✅ Instance ready: ${instance.baseUrl}`);
   return instance;
@@ -512,5 +547,95 @@ export async function resetTestInstance(instance: N8nInstance | null): Promise<v
 
   await resetN8nState(instance);
   console.log('✅ State reset complete');
+}
+
+/**
+ * Connect to a local n8n instance instead of starting a container.
+ *
+ * Set USE_LOCAL_N8N=true in your environment to use this mode.
+ * The local n8n instance must already be running and accessible.
+ *
+ * Required environment variables:
+ * - USE_LOCAL_N8N=true (to enable this mode)
+ * - N8N_URL or N8N_BASE_URL (default: http://localhost:5678)
+ * - N8N_SESSION_COOKIE (required for authentication)
+ *
+ * @returns N8nInstance pointing to the local n8n
+ *
+ * @example
+ * ```bash
+ * # Start n8n locally first
+ * cd /path/to/n8n && n8n start
+ *
+ * # Then run tests with local n8n
+ * USE_LOCAL_N8N=true N8N_SESSION_COOKIE="n8n-auth=..." npm test
+ * ```
+ */
+export async function connectToLocalN8n(): Promise<N8nInstance> {
+  const baseUrl = process.env.N8N_URL || process.env.N8N_BASE_URL || 'http://localhost:5678';
+  const sessionCookie = process.env.N8N_SESSION_COOKIE;
+  const apiKey = process.env.N8N_API_KEY;
+
+  if (!sessionCookie && !apiKey) {
+    throw new Error(
+      'Local n8n authentication required. Set N8N_SESSION_COOKIE or N8N_API_KEY environment variable.\n' +
+      'To get a session cookie: login to n8n UI and copy the n8n-auth cookie from browser dev tools.'
+    );
+  }
+
+  console.log(`🔌 Connecting to local n8n at ${baseUrl}...`);
+
+  // Verify n8n is accessible
+  const axios = (await import('axios')).default;
+  try {
+    await axios.get(`${baseUrl}/healthz`, { timeout: 5000 });
+  } catch (error) {
+    throw new Error(
+      `Cannot connect to local n8n at ${baseUrl}. Make sure n8n is running.\n` +
+      `Start it with: n8n start`
+    );
+  }
+
+  console.log(`✅ Connected to local n8n at ${baseUrl}`);
+
+  return {
+    baseUrl,
+    containerName: 'local', // Not a container, but field is required
+    dataDir: '', // Not applicable for local instance
+    port: parseInt(new URL(baseUrl).port || '5678', 10),
+    sessionCookie: sessionCookie || '',
+    apiKey,
+  };
+}
+
+/**
+ * Smart setup function that uses local n8n if USE_LOCAL_N8N=true,
+ * otherwise starts a container.
+ *
+ * @param config - Optional podman config (ignored for local mode)
+ * @returns N8nInstance (either local or containerized)
+ */
+export async function setupTestInstanceSmart(config?: N8nPodmanConfig): Promise<N8nInstance> {
+  if (process.env.USE_LOCAL_N8N === 'true') {
+    return connectToLocalN8n();
+  }
+  return setupTestInstance(config);
+}
+
+/**
+ * Smart cleanup function that only cleans up containers, not local n8n.
+ *
+ * @param instance - The n8n instance to cleanup
+ */
+export async function cleanupTestInstanceSmart(instance: N8nInstance | null): Promise<void> {
+  if (!instance) return;
+
+  // Don't cleanup local n8n instances
+  if (instance.containerName === 'local') {
+    console.log('🔌 Disconnecting from local n8n (no cleanup needed)');
+    return;
+  }
+
+  return cleanupTestInstance(instance);
 }
 

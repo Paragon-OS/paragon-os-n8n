@@ -33,6 +33,52 @@ npm run test:backup-restore:log
 
 # Cleanup stale containers
 npm run test:cleanup
+
+# Run single test with custom log directory
+LOG_DIR=./logs LOG_LEVEL=debug npx vitest run src/tests/workflows/discord-context-scout.test.ts -t "contact-fuzzy"
+```
+
+## Local n8n Testing Mode
+
+For MCP-based workflow tests (Discord, Telegram), use local n8n instead of containers. This is **much faster** (~4 seconds vs ~2+ minutes) and avoids container networking issues with MCP processes.
+
+### Why Local Mode?
+- **MCP processes** need to spawn on your machine (can't run inside container)
+- **Container networking** makes it hard to access host services (Redis, MCP)
+- **Volume mounts** add complexity for MCP script paths
+- **Tests run faster** (4s vs 2+ minutes)
+
+### Setup Local Mode
+```bash
+# 1. Start n8n locally
+n8n start
+
+# 2. Configure .env
+USE_LOCAL_N8N=true
+N8N_URL=http://localhost:5678
+N8N_API_KEY=your-api-key           # Create in n8n Settings → API
+N8N_SESSION_COOKIE=your-cookie     # From browser DevTools → Cookies → n8n-auth
+
+# 3. Run tests
+npx vitest run src/tests/workflows/discord-context-scout.test.ts
+```
+
+### Smart Setup Functions
+```typescript
+import {
+  setupTestInstanceSmart,     // Uses local if USE_LOCAL_N8N=true, else container
+  cleanupTestInstanceSmart,   // No-op for local, stops container otherwise
+  connectToLocalN8n,          // Direct local n8n connection
+} from '../../utils/test-helpers';
+
+// In your test:
+beforeAll(async () => {
+  instance = await setupTestInstanceSmart();  // Auto-detects mode
+}, TEST_TIMEOUTS.WORKFLOW);
+
+afterAll(async () => {
+  await cleanupTestInstanceSmart(instance);   // Safe for both modes
+}, TEST_TIMEOUTS.WORKFLOW);
 ```
 
 ## Test Timeouts
@@ -386,3 +432,51 @@ The converter can only rewrite a reference if the target workflow is ALREADY imp
 
 ### Common Pitfall
 **Don't manually call `syncWorkflow()` in test `beforeAll`!** It imports workflows out of order, causing broken references. Let `executeWorkflowTest()` handle all imports.
+
+## n8n API Quirks
+
+### Workflow Activation Endpoint
+
+**IMPORTANT:** n8n has DIFFERENT activation endpoints depending on the API:
+
+```typescript
+// For /api/v1 (Public API with API key):
+await client.post(`/workflows/${workflowId}/activate`);
+
+// For /rest (Internal API with session cookie):
+await client.patch(`/workflows/${workflowId}`, { active: true });
+```
+
+The `workflow-test-runner.ts` automatically detects which endpoint to use:
+```typescript
+const baseURL = client.defaults.baseURL || '';
+if (baseURL.includes('/rest')) {
+  await client.patch(`/workflows/${id}`, { active: true });
+} else {
+  await client.post(`/workflows/${id}/activate`);
+}
+```
+
+### DELETE Not Allowed on /api/v1
+The `/api/v1/workflows/{id}` endpoint doesn't support DELETE. Use the `/rest` endpoint instead:
+
+```typescript
+// WRONG - returns "DELETE method not allowed"
+await axios.delete(`${baseUrl}/api/v1/workflows/${id}`, { headers: { 'X-N8N-API-KEY': key } });
+
+// CORRECT - use /rest endpoint with session cookie
+await axios.delete(`${baseUrl}/rest/workflows/${id}`, { headers: { Cookie: sessionCookie } });
+```
+
+### API Path Selection
+The n8n-api.ts client automatically selects the correct path:
+- `/api/v1` - When API key is available (preferred for most operations)
+- `/rest` - When only session cookie is available (fallback)
+
+### Essential Credentials
+The following credentials are automatically injected in test containers (defined in `n8n-credentials.ts`):
+- `googleGemini` - Google Gemini API
+- `redis` - Redis connection (uses `host.containers.internal` for container → host access)
+- `qdrant` - Qdrant vector database
+- `qdrantHeaderAuth` - Qdrant API key header auth
+- `discordMcp` - Discord MCP client (requires `DISCORD_MCP_*` env vars)

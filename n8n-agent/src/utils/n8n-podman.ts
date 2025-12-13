@@ -27,6 +27,8 @@ export interface N8nPodmanConfig {
   image?: string;
   timeout?: number;
   env?: Record<string, string>;
+  /** Additional volume mounts in format "hostPath:containerPath" */
+  volumes?: string[];
 }
 
 export interface N8nInstance {
@@ -265,6 +267,7 @@ export async function startN8nInstance(
   const imageName = customImage || `n8nio/n8n:${n8nVersion}`;
   const timeout = config?.timeout || DEFAULT_STARTUP_TIMEOUT;
   const envVars = config?.env || {};
+  const additionalVolumes = config?.volumes || [];
   
   // Create data directory
   const dataDir = config?.dataDir || createTempDataDir(containerName);
@@ -365,12 +368,21 @@ export async function startN8nInstance(
 
     // Start container
     logger.info(`Step 4: Starting container with image ${imageName}...`);
+
+    // Build volume arguments
+    const volumeArgs: string[] = ['-v', `${dataDir}:/home/node/.n8n`];
+    for (const vol of additionalVolumes) {
+      volumeArgs.push('-v', vol);
+    }
+
     const containerArgs = [
       'run',
       '-d',
       '--name', containerName,
       '-p', `${actualPort}:5678`,
-      '-v', `${dataDir}:/home/node/.n8n`,
+      // Enable container to reach host services (Redis, etc.) via host.containers.internal
+      '--add-host=host.containers.internal:host-gateway',
+      ...volumeArgs,
       ...envArgs,
       imageName,
     ];

@@ -42,12 +42,13 @@ export const TEST_CREDENTIALS: Record<string, CredentialDefinition> = {
   },
 
   // Redis (used by Global Cache System)
+  // Note: When running in container, use 'host.containers.internal' to reach host's Redis
   redis: {
     id: 'I9K02BUMIbHYp1nQ',
     name: 'Redis account',
     type: 'redis',
     data: {
-      host: process.env.REDIS_HOST || 'localhost',
+      host: process.env.REDIS_HOST || 'host.containers.internal',
       port: parseInt(process.env.REDIS_PORT || '6379', 10),
       database: parseInt(process.env.REDIS_DB || '0', 10),
       password: process.env.REDIS_PASSWORD || '',
@@ -152,6 +153,7 @@ export const ESSENTIAL_CREDENTIALS = [
   'redis',
   'qdrant',
   'qdrantHeaderAuth',
+  'discordMcp',
 ];
 
 /**

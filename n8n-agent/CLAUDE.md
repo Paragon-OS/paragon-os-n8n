@@ -207,19 +207,102 @@ TEST_TIMEOUTS.CREDENTIALS  // 5 min - credential setup
 TEST_TIMEOUTS.WORKFLOW     // 10 min - workflow/integration tests
 ```
 
+### Container vs Local n8n Testing
+
+**Container Testing (Default):**
+- Uses isolated podman containers with fresh n8n instances
+- Credentials are auto-injected from `ESSENTIAL_CREDENTIALS` in `n8n-credentials.ts`
+- MCP directories are auto-mounted based on `DISCORD_MCP_ARGS`/`TELEGRAM_MCP_ARGS` env vars
+- Container uses `host.containers.internal` to reach host services (Redis, etc.)
+- Good for CI/CD and isolation, but MCP workflows may timeout (~2+ minutes)
+
+**Local n8n Testing (Recommended for MCP Workflows):**
+- Uses your running local n8n instance
+- MCP processes spawn directly on your machine (no container issues)
+- All existing credentials work
+- Tests complete in ~4 seconds vs ~2+ minutes
+
+**Local n8n Setup:**
+```bash
+# 1. Start n8n locally
+n8n start
+
+# 2. Get session cookie from browser (DevTools → Application → Cookies → n8n-auth)
+
+# 3. Configure .env
+USE_LOCAL_N8N=true
+N8N_SESSION_COOKIE=n8n-auth=your-jwt-token
+N8N_API_KEY=your-api-key  # Create in n8n Settings → API
+
+# 4. Run tests
+LOG_DIR=./logs LOG_LEVEL=debug npx vitest run src/tests/workflows/discord-context-scout.test.ts -t "contact-fuzzy"
+```
+
+**Smart Setup Functions:**
+```typescript
+import {
+  setupTestInstanceSmart,    // Uses local n8n if USE_LOCAL_N8N=true, else container
+  cleanupTestInstanceSmart,  // No-op for local, stops container otherwise
+  connectToLocalN8n,         // Direct connect to local n8n
+} from '../../utils/test-helpers';
+```
+
+### Credential Injection
+
+Credentials are defined in `src/utils/n8n-credentials.ts`. Only credentials listed in `ESSENTIAL_CREDENTIALS` are auto-injected into test containers:
+
+```typescript
+// Currently injected credentials:
+ESSENTIAL_CREDENTIALS = [
+  'googleGemini',     // Google Gemini API
+  'redis',            // Redis (uses host.containers.internal in container)
+  'qdrant',           // Qdrant Vector DB
+  'qdrantHeaderAuth', // Qdrant API key header
+  'discordMcp',       // Discord MCP Client (STDIO)
+];
+```
+
+**To add a new credential:**
+1. Add credential definition to `TEST_CREDENTIALS` in `n8n-credentials.ts`
+2. Add credential key to `ESSENTIAL_CREDENTIALS` array
+3. Set required env vars in `.env`
+
+### Workflow Activation API
+
+**IMPORTANT:** n8n has different activation endpoints depending on the API:
+
+- **REST API (`/rest`)**: Use `PATCH /workflows/{id}` with `{ active: true }`
+- **Public API (`/api/v1`)**: Use `POST /workflows/{id}/activate`
+
+The `workflow-test-runner.ts` automatically detects which endpoint to use based on the client's baseURL.
+
 ## Configuration
 
 ### Environment Variables (`.env`)
 ```bash
 N8N_URL=http://localhost:5678
 N8N_API_KEY=your-api-key
+N8N_SESSION_COOKIE=n8n-auth=your-jwt-token  # For local n8n testing
 
 # For integration tests
 GOOGLE_GEMINI_API_KEY=your-key
 QDRANT_URL=https://your-instance.cloud.qdrant.io:6333
 QDRANT_API_KEY=your-key
-REDIS_HOST=localhost
+REDIS_HOST=localhost  # Container tests use host.containers.internal automatically
 REDIS_PORT=6379
+
+# MCP Credentials (for Discord/Telegram workflow tests)
+# These paths are auto-mounted into test containers
+DISCORD_MCP_COMMAND=node
+DISCORD_MCP_ARGS=/path/to/discord-self-mcp/dist/index.js
+DISCORD_MCP_ENV={"DISCORD_TOKEN":"your-token"}
+
+TELEGRAM_MCP_COMMAND=node
+TELEGRAM_MCP_ARGS=/path/to/telegram-self-mcp/dist/index.js
+TELEGRAM_MCP_ENV={"TELEGRAM_API_ID":"...","TELEGRAM_API_HASH":"..."}
+
+# Local n8n testing mode (bypasses container startup)
+USE_LOCAL_N8N=true
 ```
 
 ### Vitest Configuration
