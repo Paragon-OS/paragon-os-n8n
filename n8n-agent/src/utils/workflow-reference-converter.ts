@@ -140,28 +140,18 @@ export async function convertWorkflowReferencesToNames(
     return node;
   });
 
-  // Also rewrite fetchWorkflowId values in Code node jsCode
-  let nodesWithJsCodeFixed = rewriteFetchWorkflowIdsInJsCode(updatedNodes, workflows || []);
-
   // Apply MCP credential rewriting if mappings are provided
+  let finalNodes = updatedNodes;
   if (mcpCredentialMappings && mcpCredentialMappings.length > 0) {
-    nodesWithJsCodeFixed = rewriteMcpCredentialsToSse(nodesWithJsCodeFixed, mcpCredentialMappings);
+    finalNodes = rewriteMcpCredentialsToSse(updatedNodes, mcpCredentialMappings);
   }
 
   return {
     ...workflow,
-    nodes: nodesWithJsCodeFixed,
+    nodes: finalNodes,
   };
 }
 
-/**
- * Rewrite fetchWorkflowId values in JavaScript code within Code nodes.
- * This handles the case where workflow IDs are embedded as string literals in
- * JavaScript code (e.g., platform config objects in Discord/Telegram Context Scout).
- *
- * Pattern matched: `fetchWorkflowId: "OLD_ID"` or `fetchWorkflowId: 'OLD_ID'`
- * The comment after the ID (e.g., `// [HELPERS] Workflow Name`) is used to find the new ID.
- */
 /**
  * MCP SSE credential mapping for container mode
  * Maps STDIO credential IDs to SSE credential IDs
@@ -241,76 +231,3 @@ export function rewriteMcpCredentialsToSse(
 
   return result;
 }
-
-function rewriteFetchWorkflowIdsInJsCode(nodes: any[], allWorkflows: Workflow[]): any[] {
-  // Build a name-to-ID mapping from all workflows
-  const nameToIdMap = new Map<string, string>();
-  for (const wf of allWorkflows) {
-    if (wf.name && wf.id) {
-      nameToIdMap.set(wf.name, wf.id);
-    }
-  }
-
-  return nodes.map((node: any) => {
-    // Only process Code nodes
-    if (node?.type !== 'n8n-nodes-base.code') {
-      return node;
-    }
-
-    const jsCode = node.parameters?.jsCode;
-    if (!jsCode || typeof jsCode !== 'string') {
-      return node;
-    }
-
-    // Pattern: fetchWorkflowId: "OLD_ID", // [HELPERS] Workflow Name
-    // or: fetchWorkflowId: "OLD_ID" // [HELPERS] Workflow Name
-    const fetchWorkflowIdPattern = /fetchWorkflowId:\s*["']([^"']+)["']\s*,?\s*\/\/\s*(\[HELPERS\][^\n]+)/g;
-
-    let updatedCode = jsCode;
-    let match: RegExpExecArray | null;
-    const replacements: Array<{ oldId: string; newId: string; workflowName: string }> = [];
-
-    // Reset lastIndex for global regex
-    fetchWorkflowIdPattern.lastIndex = 0;
-
-    while ((match = fetchWorkflowIdPattern.exec(jsCode)) !== null) {
-      const oldId = match[1];
-      const workflowName = match[2].trim();
-
-      // Look up the new ID by workflow name
-      const newId = nameToIdMap.get(workflowName);
-
-      if (newId && newId !== oldId) {
-        replacements.push({ oldId, newId, workflowName });
-      }
-    }
-
-    // Apply all replacements
-    for (const { oldId, newId, workflowName } of replacements) {
-      // Replace exact pattern to avoid accidental replacements
-      const exactPattern = new RegExp(
-        `(fetchWorkflowId:\\s*["'])${oldId}(["']\\s*,?\\s*\\/\\/\\s*${workflowName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,
-        'g'
-      );
-      const before = updatedCode;
-      updatedCode = updatedCode.replace(exactPattern, `$1${newId}$2`);
-
-      if (before !== updatedCode) {
-        logger.info(`🔄 Rewrote fetchWorkflowId in Code node: "${oldId}" → "${newId}" (${workflowName})`);
-      }
-    }
-
-    if (updatedCode !== jsCode) {
-      return {
-        ...node,
-        parameters: {
-          ...node.parameters,
-          jsCode: updatedCode,
-        },
-      };
-    }
-
-    return node;
-  });
-}
-

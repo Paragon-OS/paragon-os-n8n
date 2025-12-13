@@ -1,0 +1,571 @@
+{
+  "name": "[HELPERS] Discord Entity Cache Handler",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "cacheKey"
+            },
+            {
+              "name": "ttl",
+              "type": "number"
+            },
+            {
+              "name": "entity"
+            },
+            {
+              "name": "fetchWorkflowInputs",
+              "type": "object"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [304, 400],
+      "id": "trigger",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "dIk4LoS6s39B0WkV",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/dIk4LoS6s39B0WkV",
+          "cachedResultName": "[HELPERS] Global Cache System"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cacheKey": "={{ $json.cacheKey }}",
+            "trueToWrite": false,
+            "writeTTLms": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "trueToWrite",
+              "displayName": "trueToWrite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean"
+            },
+            {
+              "id": "cacheKey",
+              "displayName": "cacheKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "writeTTLms",
+              "displayName": "writeTTLms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [528, 400],
+      "id": "check-cache",
+      "name": "Check Cache",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1424, 200],
+      "id": "cache-hit",
+      "name": "Cache Hit"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "entity-contact",
+                    "leftValue": "={{ $('When Executed by Another Workflow').item.json.entity }}",
+                    "rightValue": "contact",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "contact"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "entity-guild",
+                    "leftValue": "={{ $('When Executed by Another Workflow').item.json.entity }}",
+                    "rightValue": "guild",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "guild"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "entity-tool",
+                    "leftValue": "={{ $('When Executed by Another Workflow').item.json.entity }}",
+                    "rightValue": "tool",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "tool"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "entity-self",
+                    "leftValue": "={{ $('When Executed by Another Workflow').item.json.entity }}",
+                    "rightValue": "self",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "self"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "none"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [752, 500],
+      "id": "route-entity",
+      "name": "Route by Entity"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "P0l9eHcqbauPFGtK",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/P0l9eHcqbauPFGtK",
+          "cachedResultName": "[HELPERS] Discord Contact Fetch"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": "={{ $('When Executed by Another Workflow').item.json.fetchWorkflowInputs }}",
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [976, 300],
+      "id": "fetch-contact",
+      "name": "Fetch Contact",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "htmtJxVazxAWRBmH",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/htmtJxVazxAWRBmH",
+          "cachedResultName": "[HELPERS] Discord Guild Fetch"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": "={{ $('When Executed by Another Workflow').item.json.fetchWorkflowInputs }}",
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [976, 450],
+      "id": "fetch-guild",
+      "name": "Fetch Guild",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LBwg2P5U3QOiUHBU",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/LBwg2P5U3QOiUHBU",
+          "cachedResultName": "[HELPERS] Discord Tool Fetch"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": "={{ $('When Executed by Another Workflow').item.json.fetchWorkflowInputs }}",
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [976, 600],
+      "id": "fetch-tool",
+      "name": "Fetch Tool",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "owbcAp9TakDIdjTe",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/owbcAp9TakDIdjTe",
+          "cachedResultName": "[HELPERS] Discord Profile Fetch"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": "={{ $('When Executed by Another Workflow').item.json.fetchWorkflowInputs }}",
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [976, 750],
+      "id": "fetch-self",
+      "name": "Fetch Self",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [1200, 500],
+      "id": "merge-fetch-results",
+      "name": "Merge Fetch Results"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "dIk4LoS6s39B0WkV",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/dIk4LoS6s39B0WkV",
+          "cachedResultName": "[HELPERS] Global Cache System"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "writeTTLms": "={{ $('When Executed by Another Workflow').item.json.ttl }}",
+            "cacheKey": "={{ $('When Executed by Another Workflow').item.json.cacheKey }}",
+            "writeValue": "={{ $json }}",
+            "trueToWrite": true
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "trueToWrite",
+              "displayName": "trueToWrite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean"
+            },
+            {
+              "id": "cacheKey",
+              "displayName": "cacheKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "writeValue",
+              "displayName": "writeValue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "writeTTLms",
+              "displayName": "writeTTLms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [1424, 500],
+      "id": "update-cache",
+      "name": "Update Cache",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [1648, 400],
+      "id": "merge-results",
+      "name": "Merge Results"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle errors from either cache hit or fetch path\nconst input = $input.first().json;\n\n// If there's an error, return it in a structured format\nif (input.error) {\n  const errorMsg = typeof input.error === 'string' ? input.error : (input.error.message || JSON.stringify(input.error));\n  return {\n    error: errorMsg\n  };\n}\n\n// Return the data as-is if no error\nreturn input;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1872, 400],
+      "id": "handle-errors",
+      "name": "Handle Errors"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Check Cache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Cache": {
+      "main": [
+        [
+          {
+            "node": "Cache Hit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route by Entity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Entity": {
+      "main": [
+        [
+          {
+            "node": "Fetch Contact",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Guild",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Tool",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Self",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Contact": {
+      "main": [
+        [
+          {
+            "node": "Merge Fetch Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Guild": {
+      "main": [
+        [
+          {
+            "node": "Merge Fetch Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Fetch Tool": {
+      "main": [
+        [
+          {
+            "node": "Merge Fetch Results",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Fetch Self": {
+      "main": [
+        [
+          {
+            "node": "Merge Fetch Results",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Merge Fetch Results": {
+      "main": [
+        [
+          {
+            "node": "Update Cache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Cache": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cache Hit": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Handle Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "tags": []
+}
