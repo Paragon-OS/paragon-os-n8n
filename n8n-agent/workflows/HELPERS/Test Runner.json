@@ -10,7 +10,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "test-runner",
-        "responseMode": "lastNode",
+        "responseMode": "responseNode",
         "options": {}
       },
       "id": "test-runner-trigger",
@@ -289,8 +289,7 @@
     },
     {
       "parameters": {
-        "mode": "combine",
-        "combineBy": "combineAll",
+        "mode": "append",
         "options": {}
       },
       "id": "merge-results",
@@ -301,6 +300,20 @@
         300
       ],
       "typeVersion": 3.1
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        1600,
+        300
+      ],
+      "typeVersion": 1.1
     }
   ],
   "connections": {
@@ -378,6 +391,17 @@
         [
           {
             "node": "Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Results": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
             "type": "main",
             "index": 0
           }

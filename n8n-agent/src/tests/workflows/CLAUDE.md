@@ -40,7 +40,8 @@ Tests that execute actual n8n workflows using the **Test Runner** helper workflo
 5. **Test Runner loads test data** from the `Test Data` helper workflow
 6. **Routes to target workflow** based on workflow name in config
 7. **Target workflow executes** with merged test data
-8. **Response returned** via webhook responseMode: lastNode
+8. **Results merge node collects output** (using `append` mode for single-branch execution)
+9. **Response returned** via explicit "Respond to Webhook" node (uses `responseMode: responseNode`)
 
 ## Test Files
 
@@ -364,10 +365,12 @@ The Test Runner workflow isn't activated. Check:
 Error in handling webhook request POST /webhook/test-runner: No item to return was found
 ```
 
-This means the Test Runner workflow executed, but the "Respond to Webhook" node received no data. Causes:
+This means the Test Runner workflow executed, but no data reached the webhook response. Causes:
 1. **Broken workflow references** - Most common! Check for `⚠️ Could not resolve workflow reference` warnings
 2. **Routing not configured** - The Test Runner switch node doesn't have a route for your workflow
 3. **Sub-workflow returns empty** - The target workflow executed but returned no output
+4. **Webhook responseMode issue** - Using `responseMode: "lastNode"` with complex sub-workflow chains can fail. The Test Runner uses `responseMode: "responseNode"` with an explicit "Respond to Webhook" node to avoid this.
+5. **Merge node mode** - The Results merge node must use `mode: "append"` (not `"combineAll"`) to handle single-branch execution correctly
 
 ### Empty output error
 

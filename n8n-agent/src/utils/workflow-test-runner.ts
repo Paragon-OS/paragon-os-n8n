@@ -524,10 +524,21 @@ export async function executeWorkflowTest(
           logger.debug(`📋 Executions API raw response: ${JSON.stringify(execResponse.data).substring(0, 500)}`);
 
           if (execResponse.status === 200 && execResponse.data) {
-            // n8n REST API returns { data: [...], nextCursor: ... } structure
-            const executions = Array.isArray(execResponse.data)
-              ? execResponse.data
-              : (execResponse.data.data || execResponse.data.executions || execResponse.data.results || []);
+            // n8n REST API returns { data: { results: [...] } } structure
+            // Handle multiple possible response formats
+            let executions: unknown[] = [];
+            if (Array.isArray(execResponse.data)) {
+              executions = execResponse.data;
+            } else if (execResponse.data.data?.results) {
+              // Most common format: { data: { results: [...] } }
+              executions = execResponse.data.data.results;
+            } else if (Array.isArray(execResponse.data.data)) {
+              executions = execResponse.data.data;
+            } else if (execResponse.data.executions) {
+              executions = execResponse.data.executions;
+            } else if (execResponse.data.results) {
+              executions = execResponse.data.results;
+            }
 
             logger.info(`📋 Found ${executions?.length ?? 0} execution(s) in history`);
 

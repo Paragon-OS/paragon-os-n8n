@@ -184,21 +184,30 @@ export function rewriteMcpCredentialsToSse(
       sseId: mapping.sseId,
       sseName: mapping.sseName,
     });
+    logger.debug(`  MCP credential mapping: ${mapping.stdioId} → ${mapping.sseId}`);
   }
 
-  return nodes.map((node: any) => {
+  let mcpNodesFound = 0;
+  let mcpNodesRewritten = 0;
+
+  const result = nodes.map((node: any) => {
     // Check if this is an MCP node with mcpClientApi credential
     if (!node?.credentials?.mcpClientApi) {
       return node;
     }
 
+    mcpNodesFound++;
     const stdioCredential = node.credentials.mcpClientApi;
+    logger.debug(`  Found MCP node "${node.name}" with credential ID: ${stdioCredential.id}`);
+
     const mapping = credentialMap.get(stdioCredential.id);
 
     if (!mapping) {
+      logger.warn(`  ⚠️  No SSE mapping found for credential ID: ${stdioCredential.id}`);
       return node;
     }
 
+    mcpNodesRewritten++;
     logger.info(`🔄 Rewriting MCP credential from STDIO to SSE: "${stdioCredential.name}" → "${mapping.sseName}"`);
 
     // Replace mcpClientApi with mcpClientSseApi
@@ -214,6 +223,12 @@ export function rewriteMcpCredentialsToSse(
       credentials: updatedCredentials,
     };
   });
+
+  if (mcpNodesFound > 0) {
+    logger.info(`  MCP credential rewrite: ${mcpNodesRewritten}/${mcpNodesFound} nodes rewritten`);
+  }
+
+  return result;
 }
 
 function rewriteFetchWorkflowIdsInJsCode(nodes: any[], allWorkflows: Workflow[]): any[] {

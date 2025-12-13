@@ -110,7 +110,7 @@ describe('MyWorkflow', () => {
 - `syncWorkflow(workflowName, workflowsDir?, config?)` - Import single workflow (deprecated for tests - doesn't handle transitive dependencies)
 - `buildApiConfigFromInstance(instance)` - Convert N8nInstance to N8nApiConfig
 
-**Test Runner Workflow:** `workflows/HELPERS/Test Runner.json` - A special workflow that wraps other workflows for testing. It injects test data and captures output.
+**Test Runner Workflow:** `workflows/HELPERS/Test Runner.json` - A special workflow that wraps other workflows for testing. It injects test data, routes to the target workflow, and returns results via an explicit "Respond to Webhook" node (uses `responseMode: "responseNode"` to handle complex sub-workflow chains correctly).
 
 **IMPORTANT - Workflow Reference Resolution:**
 Workflow JSON files contain hardcoded IDs that must be rewritten when imported to a new n8n instance. The `workflow-reference-converter.ts` handles this, but only if dependencies are imported FIRST. See `src/tests/workflows/CLAUDE.md` for details on debugging reference issues.
