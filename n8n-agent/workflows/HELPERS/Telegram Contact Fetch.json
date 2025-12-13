@@ -22,6 +22,8 @@
     },
     {
       "parameters": {
+        "connectionType": "sse",
+        "uriOverride": " http://0.0.0.0:8001/sse",
         "operation": "executeTool",
         "toolName": "=telegram_list_contacts",
         "toolParameters": "={\n  \"limit\": 200\n}"
@@ -35,9 +37,9 @@
       "id": "mcp-call",
       "name": "List Contacts",
       "credentials": {
-        "mcpClientApi": {
-          "id": "aiYCclLDUqob5iQ0",
-          "name": "Telegram MCP Client (STDIO) account"
+        "mcpClientSseApi": {
+          "id": "telegramMcpSseCredential",
+          "name": "Telegram MCP Client (SSE) account"
         }
       }
     },

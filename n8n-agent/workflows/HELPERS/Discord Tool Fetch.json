@@ -21,7 +21,10 @@
       "name": "When Executed by Another Workflow"
     },
     {
-      "parameters": {},
+      "parameters": {
+        "connectionType": "sse",
+        "uriOverride": " http://0.0.0.0:8000/sse"
+      },
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
@@ -31,9 +34,9 @@
       "id": "mcp-call",
       "name": "List MCP Tools",
       "credentials": {
-        "mcpClientApi": {
-          "id": "ZFofx3k2ze1wsifx",
-          "name": "Discord MCP Client (STDIO) account"
+        "mcpClientSseApi": {
+          "id": "discordMcpSseCredential",
+          "name": "Discord MCP Client (SSE) account"
         }
       }
     },

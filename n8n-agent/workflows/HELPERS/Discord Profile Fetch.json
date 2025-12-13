@@ -22,6 +22,8 @@
     },
     {
       "parameters": {
+        "connectionType": "sse",
+        "uriOverride": " http://0.0.0.0:8000/sse",
         "operation": "executeTool",
         "toolName": "=discord_get_user_info",
         "toolParameters": "={}"
@@ -35,9 +37,9 @@
       "id": "mcp-call",
       "name": "Get My Profile",
       "credentials": {
-        "mcpClientApi": {
-          "id": "ZFofx3k2ze1wsifx",
-          "name": "Discord MCP Client (STDIO) account"
+        "mcpClientSseApi": {
+          "id": "discordMcpSseCredential",
+          "name": "Discord MCP Client (SSE) account"
         }
       }
     },

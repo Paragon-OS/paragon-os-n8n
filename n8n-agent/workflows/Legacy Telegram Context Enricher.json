@@ -302,6 +302,8 @@
     },
     {
       "parameters": {
+        "connectionType": "sse",
+        "uriOverride": " http://0.0.0.0:8001/sse",
         "operation": "executeTool",
         "toolName": "=telegram_get_me",
         "toolParameters": "={}"
@@ -315,9 +317,9 @@
       "id": "d3bd90eb-9722-404a-a1ed-d88c5bb483e0",
       "name": "Get My Profile",
       "credentials": {
-        "mcpClientApi": {
-          "id": "aiYCclLDUqob5iQ0",
-          "name": "Telegram MCP Client (STDIO) account"
+        "mcpClientSseApi": {
+          "id": "telegramMcpSseCredential",
+          "name": "Telegram MCP Client (SSE) account"
         }
       }
     },
@@ -827,6 +829,8 @@
     },
     {
       "parameters": {
+        "connectionType": "sse",
+        "uriOverride": " http://0.0.0.0:8001/sse",
         "operation": "executeTool",
         "toolName": "=telegram_list_contacts",
         "toolParameters": "={\n  \"limit\": 30\n}"
@@ -840,14 +844,17 @@
       "id": "e5399d20-ff7b-47cc-87b0-d66f07760aed",
       "name": "List Contacts",
       "credentials": {
-        "mcpClientApi": {
-          "id": "aiYCclLDUqob5iQ0",
-          "name": "Telegram MCP Client (STDIO) account"
+        "mcpClientSseApi": {
+          "id": "telegramMcpSseCredential",
+          "name": "Telegram MCP Client (SSE) account"
         }
       }
     },
     {
-      "parameters": {},
+      "parameters": {
+        "connectionType": "sse",
+        "uriOverride": " http://0.0.0.0:8001/sse"
+      },
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
@@ -857,14 +864,16 @@
       "id": "8651ac0c-e92a-4500-80b0-fb248b0514f4",
       "name": "List MCP Tools",
       "credentials": {
-        "mcpClientApi": {
-          "id": "aiYCclLDUqob5iQ0",
-          "name": "Telegram MCP Client (STDIO) account"
+        "mcpClientSseApi": {
+          "id": "telegramMcpSseCredential",
+          "name": "Telegram MCP Client (SSE) account"
         }
       }
     },
     {
       "parameters": {
+        "connectionType": "sse",
+        "uriOverride": " http://0.0.0.0:8001/sse",
         "operation": "executeTool",
         "toolName": "=telegram_list_chats",
         "toolParameters": "={\n  \"limit\": 40\n}"
@@ -878,9 +887,9 @@
       "id": "eb6e5348-89a4-4c0e-b21d-390fe8f439ba",
       "name": "List Chats",
       "credentials": {
-        "mcpClientApi": {
-          "id": "aiYCclLDUqob5iQ0",
-          "name": "Telegram MCP Client (STDIO) account"
+        "mcpClientSseApi": {
+          "id": "telegramMcpSseCredential",
+          "name": "Telegram MCP Client (SSE) account"
         }
       }
     },
@@ -901,6 +910,8 @@
     },
     {
       "parameters": {
+        "connectionType": "sse",
+        "uriOverride": " http://0.0.0.0:8001/sse",
         "descriptionType": "manual",
         "toolDescription": "Call this tool to search for telegram contact names to find their userID, when your current knowledge doesn't know",
         "operation": "executeTool",
@@ -916,9 +927,9 @@
       "id": "477af021-a4bc-4be0-8206-225733a50e85",
       "name": "Search for Telegram Contacts",
       "credentials": {
-        "mcpClientApi": {
-          "id": "aiYCclLDUqob5iQ0",
-          "name": "Telegram MCP Client (STDIO) account"
+        "mcpClientSseApi": {
+          "id": "telegramMcpSseCredential",
+          "name": "Telegram MCP Client (SSE) account"
         }
       }
     }

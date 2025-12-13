@@ -236,6 +236,8 @@
     },
     {
       "parameters": {
+        "connectionType": "sse",
+        "uriOverride": " http://0.0.0.0:8000/sse",
         "operation": "executeTool",
         "toolName": "={{ $json.executionSteps.toolName }}",
         "toolParameters": "={{ $json.executionSteps.callParams }}"
@@ -252,14 +254,16 @@
       "alwaysOutputData": true,
       "retryOnFail": false,
       "credentials": {
-        "mcpClientApi": {
-          "id": "ZFofx3k2ze1wsifx",
-          "name": "Discord MCP Client (STDIO) account"
+        "mcpClientSseApi": {
+          "id": "discordMcpSseCredential",
+          "name": "Discord MCP Client (SSE) account"
         }
       }
     },
     {
       "parameters": {
+        "connectionType": "sse",
+        "uriOverride": " http://0.0.0.0:8001/sse",
         "operation": "executeTool",
         "toolName": "={{ $json.executionSteps.toolName }}",
         "toolParameters": "={{ $json.executionSteps.callParams }}"
@@ -276,9 +280,9 @@
       "alwaysOutputData": true,
       "retryOnFail": false,
       "credentials": {
-        "mcpClientApi": {
-          "id": "aiYCclLDUqob5iQ0",
-          "name": "Telegram MCP Client (STDIO) account"
+        "mcpClientSseApi": {
+          "id": "telegramMcpSseCredential",
+          "name": "Telegram MCP Client (SSE) account"
         }
       },
       "onError": "continueErrorOutput"

@@ -21,7 +21,10 @@
       "name": "When Executed by Another Workflow"
     },
     {
-      "parameters": {},
+      "parameters": {
+        "connectionType": "sse",
+        "uriOverride": " http://0.0.0.0:8001/sse"
+      },
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
       "position": [
@@ -31,9 +34,9 @@
       "id": "mcp-call",
       "name": "List MCP Tools",
       "credentials": {
-        "mcpClientApi": {
-          "id": "aiYCclLDUqob5iQ0",
-          "name": "Telegram MCP Client (STDIO) account"
+        "mcpClientSseApi": {
+          "id": "telegramMcpSseCredential",
+          "name": "Telegram MCP Client (SSE) account"
         }
       }
     },
