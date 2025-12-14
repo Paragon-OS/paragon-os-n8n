@@ -118,12 +118,18 @@ describe('MyWorkflow', () => {
 **IMPORTANT - Workflow Reference Resolution:**
 Workflow JSON files contain hardcoded IDs that must be rewritten when imported to a new n8n instance. The `workflow-reference-converter.ts` handles this, but only if dependencies are imported FIRST. See `src/tests/workflows/CLAUDE.md` for details on debugging reference issues.
 
-**IMPORTANT - Workflow IDs in JavaScript Code:**
-Some workflows (Discord/Telegram Context Scout) embed workflow IDs as string literals in Code node JavaScript. These use the pattern:
-```javascript
-fetchWorkflowId: "JateTZIxaU5RpWd1", // [HELPERS] Discord Contact Fetch
+**IMPORTANT - Workflow Reference Placeholders:**
+Execute Workflow nodes use placeholder IDs that are resolved during import based on `cachedResultName`. Example:
+```json
+"workflowId": {
+  "__rl": true,
+  "value": "universal-entity-fetcher-placeholder",
+  "mode": "list",
+  "cachedResultUrl": "/workflow/universal-entity-fetcher-placeholder",
+  "cachedResultName": "[HELPERS] Universal Entity Fetcher"
+}
 ```
-The comment `// [HELPERS] Workflow Name` is **required** - it tells `workflow-reference-converter.ts` how to rewrite the ID during import. Without this comment, the workflow will fail with "workflow not found" errors.
+The `cachedResultName` field is **required** - `workflow-reference-converter.ts` uses it to find the target workflow by name and rewrite the ID. Without this, the placeholder won't resolve.
 
 ### Integration Tests (`src/tests/integration/`)
 
@@ -392,6 +398,54 @@ TELEGRAM_SESSION_STRING=your-session-string
 - Tests run sequentially (no parallelism) to prevent n8n/LLM conflicts
 - Uses `forks` pool for process isolation
 - 5-minute default timeout for hooks and tests
+
+## Helper Workflow Architecture
+
+The helper workflows in `workflows/HELPERS/` follow a layered architecture:
+
+```
+Context Scout Workflows (Discord/Telegram Context Scout)
+    ↓ calls
+Generic Context Scout Core
+    ↓ calls (routes by platform)
+Discord/Telegram Entity Cache Handler
+    ↓ calls
+Universal Entity Fetcher (handles all entity types for both platforms)
+    ↓ calls
+MCP nodes (Discord port 8000, Telegram port 8001)
+```
+
+### Key Helper Workflows
+
+| Workflow | Purpose |
+|----------|---------|
+| `Universal Entity Fetcher` | Single workflow that fetches ALL entity types (contact, guild, chat, tool, self, message) for BOTH platforms. Replaces 9 platform-specific fetch workflows. |
+| `Discord Entity Cache Handler` | Cache layer for Discord entities. Calls Universal Entity Fetcher on cache miss. |
+| `Telegram Entity Cache Handler` | Cache layer for Telegram entities. Calls Universal Entity Fetcher on cache miss. |
+| `Generic Context Scout Core` | Unified search logic (fuzzy/RAG/none). Routes to platform-specific cache handlers. |
+| `Global Cache System` | Redis-based caching with TTL support. |
+| `Dynamic RAG` | Qdrant vector operations (search, insert, delete, collection management). |
+
+### Workflow Import Dependency Order
+
+Workflows must be imported in dependency order (dependencies first):
+
+```typescript
+const dependencyOrder = [
+  'Global Cache System',           // No dependencies
+  'MCP Data Normalizer',           // No dependencies
+  'Test Data',                     // No dependencies
+  'Dynamic RAG',                   // No dependencies
+  'Discord & Telegram Step Executor', // No dependencies
+  'Universal Entity Fetcher',      // Depends on MCP credentials
+  'Discord Entity Cache Handler',  // Depends on Global Cache System, Universal Entity Fetcher
+  'Telegram Entity Cache Handler', // Depends on Global Cache System, Universal Entity Fetcher
+  'Generic Context Scout Core',    // Depends on cache handlers, Dynamic RAG
+  'Test Runner',                   // Must be last
+];
+```
+
+This order is used by both `scripts/start-n8n-pod.ts` and `src/utils/workflow-test-runner.ts`.
 
 ## Key Files
 - `workflows/` - JSON workflow definitions organized by tags

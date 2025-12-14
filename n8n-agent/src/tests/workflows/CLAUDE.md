@@ -295,49 +295,36 @@ Error: No item to return was found
 🔄 Rewriting workflow reference: "BVI8WfWulWFCFvwk" → "a4AQxibvAESCiaDe"
 ```
 
-### Workflow IDs in JavaScript Code (fetchWorkflowId)
+### Workflow Reference Placeholders
 
-Some workflows embed workflow IDs directly in JavaScript code within Code nodes (e.g., Discord Context Scout, Telegram Context Scout). These IDs are stored as string literals and can't be detected by n8n's native reference resolution.
+Execute Workflow nodes use placeholder IDs that are resolved during import. The converter matches workflows by `cachedResultName`:
 
-**Example problem pattern in Code node:**
-```javascript
-// This ID is hardcoded and won't be rewritten automatically!
-const DISCORD_CONFIG = {
-  entities: {
-    "contact": {
-      fetchWorkflowId: "JateTZIxaU5RpWd1",  // OLD ID - breaks in new container
-      // ...
-    }
-  }
-};
+```json
+"workflowId": {
+  "__rl": true,
+  "value": "universal-entity-fetcher-placeholder",
+  "mode": "list",
+  "cachedResultUrl": "/workflow/universal-entity-fetcher-placeholder",
+  "cachedResultName": "[HELPERS] Universal Entity Fetcher"
+}
 ```
 
-**Solution:** Add a comment with the workflow name after the ID:
-```javascript
-const DISCORD_CONFIG = {
-  entities: {
-    "contact": {
-      fetchWorkflowId: "JateTZIxaU5RpWd1", // [HELPERS] Discord Contact Fetch
-      // ...
-    }
-  }
-};
+**How resolution works:**
+1. `workflow-reference-converter.ts` reads the `cachedResultName` field
+2. Looks up the target workflow by that exact name
+3. Rewrites the `value` and `cachedResultUrl` to the actual database ID
+
+**To verify references are being rewritten, look for:**
+```
+🔄 Rewriting workflow reference: "universal-entity-fetcher-placeholder" → "YnlDm59gNQS0hp7k"
 ```
 
-The `workflow-reference-converter.ts` has a `rewriteFetchWorkflowIdsInJsCode()` function that:
-1. Scans Code nodes for the pattern: `fetchWorkflowId: "ID", // [HELPERS] Workflow Name`
-2. Looks up the new ID by workflow name
-3. Rewrites the old ID to the new ID
-
-**To verify these are being rewritten, look for:**
+**If a placeholder doesn't resolve:**
 ```
-🔄 Rewrote fetchWorkflowId in Code node: "JateTZIxaU5RpWd1" → "YnlDm59gNQS0hp7k" ([HELPERS] Discord Contact Fetch)
+⚠️ Could not resolve workflow reference "universal-entity-fetcher-placeholder" to an ID, keeping as-is
 ```
 
-**If you add new workflows that are called dynamically from Code nodes:**
-1. Use `fetchWorkflowId` as the key name
-2. Add a comment with `// [HELPERS] Exact Workflow Name` immediately after the ID
-3. Ensure the comment matches the workflow's exact `name` field in the JSON
+This means the target workflow wasn't imported yet. Check the dependency order in `workflow-test-runner.ts`.
 
 ### Test fails with webhook error
 
@@ -530,7 +517,7 @@ Missing credentials will cause specific workflows to fail. The test framework in
 
 ## MCP Workflow Testing
 
-Workflows using MCP nodes (Discord Contact Fetch, Telegram Chat Fetch, etc.) require special handling because they spawn external processes.
+Workflows using MCP nodes (Universal Entity Fetcher, Discord & Telegram Step Executor, etc.) require special handling because they connect to MCP servers.
 
 ### Testing Approach: Pod-Based SSE Mode
 

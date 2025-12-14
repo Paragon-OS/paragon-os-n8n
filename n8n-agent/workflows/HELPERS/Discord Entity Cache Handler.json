@@ -100,9 +100,9 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "UNIVERSAL_ENTITY_FETCHER_ID",
+          "value": "universal-entity-fetcher-placeholder",
           "mode": "list",
-          "cachedResultUrl": "/workflow/UNIVERSAL_ENTITY_FETCHER_ID",
+          "cachedResultUrl": "/workflow/universal-entity-fetcher-placeholder",
           "cachedResultName": "[HELPERS] Universal Entity Fetcher"
         },
         "workflowInputs": {
