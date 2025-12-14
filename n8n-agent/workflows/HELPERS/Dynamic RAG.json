@@ -143,7 +143,7 @@
     {
       "parameters": {
         "method": "PUT",
-        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/{{ $json.collectionId }}/points",
+        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io/collections/{{ $json.collectionId }}/points",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "qdrantApi",
         "sendHeaders": true,
@@ -178,7 +178,7 @@
     {
       "parameters": {
         "method": "PUT",
-        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/{{ $json.collectionId }}",
+        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io/collections/{{ $json.collectionId }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -324,7 +324,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/{{ $json.collectionId }}/points/delete",
+        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io/collections/{{ $json.collectionId }}/points/delete",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "qdrantApi",
         "sendHeaders": true,
@@ -733,7 +733,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/{{ $json.collectionId }}/points/delete",
+        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io/collections/{{ $json.collectionId }}/points/delete",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "qdrantApi",
         "sendHeaders": true,
@@ -814,7 +814,7 @@
     {
       "parameters": {
         "method": "DELETE",
-        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/{{ $json.collectionId }}",
+        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io/collections/{{ $json.collectionId }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "qdrantApi",
         "sendHeaders": true,
@@ -893,7 +893,7 @@
     },
     {
       "parameters": {
-        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333/collections/{{ $json.collectionId }}",
+        "url": "=https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io/collections/{{ $json.collectionId }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "qdrantApi",
         "sendHeaders": true,

@@ -69,7 +69,7 @@ export const TEST_CREDENTIALS: Record<string, CredentialDefinition> = {
     name: 'QdrantApi account',
     type: 'qdrantApi',
     data: {
-      url: process.env.QDRANT_URL || 'https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io:6333',
+      qdrantUrl: process.env.QDRANT_URL || 'https://fc88ca3b-0d52-4861-8aea-4ddad3adb373.us-east4-0.gcp.cloud.qdrant.io',
       apiKey: process.env.QDRANT_API_KEY || '',
     },
   },
