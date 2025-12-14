@@ -1,8 +1,9 @@
 {
-  "updatedAt": "2025-12-09T01:35:05.608Z",
-  "createdAt": "2025-12-09T01:23:32.355Z",
-  "id": "YpgZ8zoMWyp2SqAi",
+  "updatedAt": "2025-12-14T01:12:39.209Z",
+  "createdAt": "2025-12-14T01:12:39.209Z",
+  "id": "40Qu5iuZbZwxBiZr",
   "name": "Telegram Smart Agent",
+  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -139,10 +140,10 @@
         "description": "Unified Telegram Context Scout search tool for contacts, chats, tools, self profile, and persistent knowledge base.",
         "workflowId": {
           "__rl": true,
-          "value": "dTqTW6CcHL7gxqQf",
+          "value": "bcAiGY0neLAyBHnj",
           "mode": "list",
           "cachedResultName": "Telegram Context Scout",
-          "cachedResultUrl": "/workflow/dTqTW6CcHL7gxqQf"
+          "cachedResultUrl": "/workflow/bcAiGY0neLAyBHnj"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -193,9 +194,9 @@
         "description": "Call this tool with a valid executionSteps array to execute a sequence of MCP calls and get results from Telegram or Discord.",
         "workflowId": {
           "__rl": true,
-          "value": "WxIotoTldppUMYHf",
+          "value": "POvqJD5cNuEYXTUy",
           "mode": "list",
-          "cachedResultUrl": "/workflow/WxIotoTldppUMYHf",
+          "cachedResultUrl": "/workflow/POvqJD5cNuEYXTUy",
           "cachedResultName": "[HELPERS] Discord & Telegram Step Executor"
         },
         "workflowInputs": {
@@ -344,18 +345,69 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "eece8fd6-2ffa-4d01-b74f-7fa296571b87",
+  "versionId": "cc4c1557-ad48-4680-8f74-598fea312ff8",
   "activeVersionId": null,
+  "versionCounter": 1,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-09T01:23:32.358Z",
-      "createdAt": "2025-12-09T01:23:32.358Z",
+      "updatedAt": "2025-12-14T01:12:39.211Z",
+      "createdAt": "2025-12-14T01:12:39.211Z",
       "role": "workflow:owner",
-      "workflowId": "YpgZ8zoMWyp2SqAi",
-      "projectId": "GEUEn6ArNROzJ5FY"
+      "workflowId": "40Qu5iuZbZwxBiZr",
+      "projectId": "DXB9XSLhWPNygtLw",
+      "project": {
+        "updatedAt": "2025-12-14T01:06:18.959Z",
+        "createdAt": "2025-12-14T01:06:14.796Z",
+        "id": "DXB9XSLhWPNygtLw",
+        "name": "Test User <test@n8n.test>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-14T01:06:14.796Z",
+            "createdAt": "2025-12-14T01:06:14.796Z",
+            "userId": "e3d25c3c-0243-4285-80de-404d84472c78",
+            "projectId": "DXB9XSLhWPNygtLw",
+            "user": {
+              "updatedAt": "2025-12-14T01:07:34.000Z",
+              "createdAt": "2025-12-14T01:06:14.564Z",
+              "id": "e3d25c3c-0243-4285-80de-404d84472c78",
+              "email": "test@n8n.test",
+              "firstName": "Test",
+              "lastName": "User",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-14T01:07:09.175Z",
+                "personalization_survey_n8n_version": "1.123.5"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "uogzAWtDp9AMT7VJ",
+                "userActivatedAt": 1765674449908
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2025-12-13",
+              "isPending": false
+            }
+          }
+        ]
+      }
     }
   ],
+  "tags": [],
+  "parentFolder": null,
   "activeVersion": null,
-  "tags": []
+  "scopes": [
+    "workflow:create",
+    "workflow:delete",
+    "workflow:execute",
+    "workflow:list",
+    "workflow:move",
+    "workflow:read",
+    "workflow:share",
+    "workflow:update"
+  ]
 }

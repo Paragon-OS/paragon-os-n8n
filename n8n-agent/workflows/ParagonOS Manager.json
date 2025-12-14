@@ -1,8 +1,9 @@
 {
-  "updatedAt": "2025-12-09T01:35:05.345Z",
-  "createdAt": "2025-12-09T01:23:32.214Z",
-  "id": "OumZjYgEWItJHJRa",
+  "updatedAt": "2025-12-14T01:12:38.791Z",
+  "createdAt": "2025-12-14T01:12:38.791Z",
+  "id": "3LhNE8iR4dK0jhfD",
   "name": "ParagonOS Manager",
+  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -95,9 +96,9 @@
         "description": "High-level Telegram Smart Agent that uses Telegram Context Scout and a shared Step Executor to plan and execute Telegram operations.\n\n# How It Works:\n\n1. **Context Lookup via Telegram Context Scout**: Searches and normalizes Telegram contacts, chats (DMs/groups/channels), available MCP tools, and your own profile using caching and fuzzy search.\n\n2. **AI Planning**: Given a natural language Telegram request, the agent decides which chats/contacts/tools are relevant and constructs a fully-resolved sequence of Telegram MCP tool calls (`executionSteps`) with concrete ids and parameters.\n\n3. **Sequential Execution**: Executes the planned steps using the shared Step Executor with `targetMcp = \"TELEGRAM\"`, passing data between steps automatically.\n\n4. **Provenance & Answering**: Returns a final markdown answer together with metadata about which chats, contacts, and tools were actually used to satisfy the request.",
         "workflowId": {
           "__rl": true,
-          "value": "YpgZ8zoMWyp2SqAi",
+          "value": "40Qu5iuZbZwxBiZr",
           "mode": "list",
-          "cachedResultUrl": "/workflow/YpgZ8zoMWyp2SqAi",
+          "cachedResultUrl": "/workflow/40Qu5iuZbZwxBiZr",
           "cachedResultName": "Telegram Smart Agent"
         },
         "workflowInputs": {
@@ -157,7 +158,7 @@
             {
               "id": "a60f9067-0716-491c-9a57-1ebb8b8cfdb9",
               "name": "body.metadata",
-              "value": "={{ $json.body.metadata ?? {\n  \"sessionId\": \"sample-session-id-1\",\n  \"messageId\": \"sample-message-id-1\",\n  \"streamUrl\": \"http://localhost:3000/api/stream/update\"\n} }}",
+              "value": "={{ $json.body.metadata ?? {\n  \"sessionId\": \"sample-session-id-1\",\n  \"messageId\": \"sample-message-id-1\",\n  \"streamUrl\": \"http://0.0.0.0:3000/api/stream/update\"\n} }}",
               "type": "object"
             }
           ]
@@ -194,9 +195,9 @@
         "description": "={{ `\nIntelligently plans and executes Discord operations using cached context and AI-powered sequencing.\\n\\n# How It Works:\\n\\n1. **Context Enrichment**: Automatically retrieves and caches Discord contacts, guilds/servers, channels, available MCP tools, and your profile. Uses a 6-hour cache to minimize API calls.\\n\\n2. **AI Planning**: Analyzes your request against a Discord playbook of common workflows (DMing contacts, catching up on channels, replying messages, searching topics, editing/deleting messages, downloading attachments, triaging guild channels). Recommends relevant tools and generates either:\\n   - A direct answer (if no API calls needed)\\n   - A sequential execution plan with specific MCP tool calls\\n\\n3. **Sequential Execution**: Executes planned steps in order, passing data between steps automatically.\\n\\n4. **Validation & Retry**: Validates execution results against your original request. Automatically retries with refined approach if needed.\\n\\n# Capabilities:\\n\\nRead messages (channels/DMs with pagination, date filtering), search messages, send/edit/delete messages with attachments, download attachments, list guilds/servers/channels/contacts/members, search contacts, manage whitelist/blacklist filters. Supports both server channels and direct messages.\n`}}",
         "workflowId": {
           "__rl": true,
-          "value": "ajM4KAu39T7xBDog",
+          "value": "UAZQcHv861kxnhLh",
           "mode": "list",
-          "cachedResultUrl": "/workflow/ajM4KAu39T7xBDog",
+          "cachedResultUrl": "/workflow/UAZQcHv861kxnhLh",
           "cachedResultName": "Discord Smart Agent"
         },
         "workflowInputs": {
@@ -369,18 +370,69 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "2f92adc9-7e0e-4b8e-be15-1833da067812",
+  "versionId": "a590b844-b101-4168-8ebe-85c61c6a6b0d",
   "activeVersionId": null,
+  "versionCounter": 1,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-09T01:23:32.215Z",
-      "createdAt": "2025-12-09T01:23:32.215Z",
+      "updatedAt": "2025-12-14T01:12:38.794Z",
+      "createdAt": "2025-12-14T01:12:38.794Z",
       "role": "workflow:owner",
-      "workflowId": "OumZjYgEWItJHJRa",
-      "projectId": "GEUEn6ArNROzJ5FY"
+      "workflowId": "3LhNE8iR4dK0jhfD",
+      "projectId": "DXB9XSLhWPNygtLw",
+      "project": {
+        "updatedAt": "2025-12-14T01:06:18.959Z",
+        "createdAt": "2025-12-14T01:06:14.796Z",
+        "id": "DXB9XSLhWPNygtLw",
+        "name": "Test User <test@n8n.test>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-14T01:06:14.796Z",
+            "createdAt": "2025-12-14T01:06:14.796Z",
+            "userId": "e3d25c3c-0243-4285-80de-404d84472c78",
+            "projectId": "DXB9XSLhWPNygtLw",
+            "user": {
+              "updatedAt": "2025-12-14T01:07:34.000Z",
+              "createdAt": "2025-12-14T01:06:14.564Z",
+              "id": "e3d25c3c-0243-4285-80de-404d84472c78",
+              "email": "test@n8n.test",
+              "firstName": "Test",
+              "lastName": "User",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-14T01:07:09.175Z",
+                "personalization_survey_n8n_version": "1.123.5"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "uogzAWtDp9AMT7VJ",
+                "userActivatedAt": 1765674449908
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2025-12-13",
+              "isPending": false
+            }
+          }
+        ]
+      }
     }
   ],
+  "tags": [],
+  "parentFolder": null,
   "activeVersion": null,
-  "tags": []
+  "scopes": [
+    "workflow:create",
+    "workflow:delete",
+    "workflow:execute",
+    "workflow:list",
+    "workflow:move",
+    "workflow:read",
+    "workflow:share",
+    "workflow:update"
+  ]
 }

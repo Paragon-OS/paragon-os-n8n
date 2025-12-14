@@ -1,8 +1,9 @@
 {
-  "updatedAt": "2025-12-09T01:35:05.646Z",
-  "createdAt": "2025-12-09T01:23:33.227Z",
-  "id": "Z4qG8RRqjCifiQQj",
+  "updatedAt": "2025-12-14T01:12:40.162Z",
+  "createdAt": "2025-12-14T01:12:40.162Z",
+  "id": "hJJ54Zzhz0K8ifhv",
   "name": "[HELPERS] Generic Context Scout Core",
+  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -171,7 +172,10 @@
       },
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
-      "position": [1200, 352],
+      "position": [
+        1200,
+        352
+      ],
       "id": "route-platform",
       "name": "Route by Platform"
     },
@@ -238,7 +242,10 @@
       },
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
-      "position": [1424, 252],
+      "position": [
+        1424,
+        252
+      ],
       "id": "get-discord-data",
       "name": "Get Discord Data",
       "onError": "continueErrorOutput"
@@ -306,7 +313,10 @@
       },
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
-      "position": [1424, 452],
+      "position": [
+        1424,
+        452
+      ],
       "id": "get-telegram-data",
       "name": "Get Telegram Data",
       "onError": "continueErrorOutput"
@@ -315,7 +325,10 @@
       "parameters": {},
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
-      "position": [1648, 352],
+      "position": [
+        1648,
+        352
+      ],
       "id": "merge-platform-data",
       "name": "Merge Platform Data"
     },
@@ -842,18 +855,69 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "ecd8a4cf-3361-4280-b25e-bd6a9a307ded",
+  "versionId": "4ce53377-4235-4b96-9ac5-d8c7cae7b09c",
   "activeVersionId": null,
+  "versionCounter": 1,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-09T01:23:33.228Z",
-      "createdAt": "2025-12-09T01:23:33.228Z",
+      "updatedAt": "2025-12-14T01:12:40.165Z",
+      "createdAt": "2025-12-14T01:12:40.165Z",
       "role": "workflow:owner",
-      "workflowId": "Z4qG8RRqjCifiQQj",
-      "projectId": "GEUEn6ArNROzJ5FY"
+      "workflowId": "hJJ54Zzhz0K8ifhv",
+      "projectId": "DXB9XSLhWPNygtLw",
+      "project": {
+        "updatedAt": "2025-12-14T01:06:18.959Z",
+        "createdAt": "2025-12-14T01:06:14.796Z",
+        "id": "DXB9XSLhWPNygtLw",
+        "name": "Test User <test@n8n.test>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-14T01:06:14.796Z",
+            "createdAt": "2025-12-14T01:06:14.796Z",
+            "userId": "e3d25c3c-0243-4285-80de-404d84472c78",
+            "projectId": "DXB9XSLhWPNygtLw",
+            "user": {
+              "updatedAt": "2025-12-14T01:07:34.000Z",
+              "createdAt": "2025-12-14T01:06:14.564Z",
+              "id": "e3d25c3c-0243-4285-80de-404d84472c78",
+              "email": "test@n8n.test",
+              "firstName": "Test",
+              "lastName": "User",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-14T01:07:09.175Z",
+                "personalization_survey_n8n_version": "1.123.5"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "uogzAWtDp9AMT7VJ",
+                "userActivatedAt": 1765674449908
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2025-12-13",
+              "isPending": false
+            }
+          }
+        ]
+      }
     }
   ],
+  "tags": [],
+  "parentFolder": null,
   "activeVersion": null,
-  "tags": []
+  "scopes": [
+    "workflow:create",
+    "workflow:delete",
+    "workflow:execute",
+    "workflow:list",
+    "workflow:move",
+    "workflow:read",
+    "workflow:share",
+    "workflow:update"
+  ]
 }

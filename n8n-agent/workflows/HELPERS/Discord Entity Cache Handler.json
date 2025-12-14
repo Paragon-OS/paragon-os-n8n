@@ -1,5 +1,9 @@
 {
+  "updatedAt": "2025-12-14T01:12:39.670Z",
+  "createdAt": "2025-12-14T01:12:39.670Z",
+  "id": "mLlWcKMM3V4pBJl8",
   "name": "[HELPERS] Discord Entity Cache Handler",
+  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -26,7 +30,10 @@
       },
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
-      "position": [304, 400],
+      "position": [
+        304,
+        400
+      ],
       "id": "trigger",
       "name": "When Executed by Another Workflow"
     },
@@ -83,7 +90,10 @@
       },
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
-      "position": [528, 400],
+      "position": [
+        528,
+        400
+      ],
       "id": "check-cache",
       "name": "Check Cache",
       "onError": "continueErrorOutput"
@@ -92,7 +102,10 @@
       "parameters": {},
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [976, 300],
+      "position": [
+        976,
+        300
+      ],
       "id": "cache-hit",
       "name": "Cache Hit"
     },
@@ -149,7 +162,10 @@
       },
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
-      "position": [752, 500],
+      "position": [
+        752,
+        500
+      ],
       "id": "fetch-entity",
       "name": "Fetch Entity",
       "onError": "continueErrorOutput"
@@ -216,7 +232,10 @@
       },
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
-      "position": [976, 500],
+      "position": [
+        976,
+        500
+      ],
       "id": "update-cache",
       "name": "Update Cache",
       "onError": "continueErrorOutput"
@@ -225,7 +244,10 @@
       "parameters": {},
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
-      "position": [1200, 400],
+      "position": [
+        1200,
+        400
+      ],
       "id": "merge-results",
       "name": "Merge Results"
     },
@@ -235,7 +257,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1424, 400],
+      "position": [
+        1424,
+        400
+      ],
       "id": "handle-errors",
       "name": "Handle Errors"
     }
@@ -323,5 +348,69 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "tags": []
+  "versionId": "1601ea3b-ca8c-4ac3-b12c-f6ecc2e94d3f",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-14T01:12:39.673Z",
+      "createdAt": "2025-12-14T01:12:39.673Z",
+      "role": "workflow:owner",
+      "workflowId": "mLlWcKMM3V4pBJl8",
+      "projectId": "DXB9XSLhWPNygtLw",
+      "project": {
+        "updatedAt": "2025-12-14T01:06:18.959Z",
+        "createdAt": "2025-12-14T01:06:14.796Z",
+        "id": "DXB9XSLhWPNygtLw",
+        "name": "Test User <test@n8n.test>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-14T01:06:14.796Z",
+            "createdAt": "2025-12-14T01:06:14.796Z",
+            "userId": "e3d25c3c-0243-4285-80de-404d84472c78",
+            "projectId": "DXB9XSLhWPNygtLw",
+            "user": {
+              "updatedAt": "2025-12-14T01:07:34.000Z",
+              "createdAt": "2025-12-14T01:06:14.564Z",
+              "id": "e3d25c3c-0243-4285-80de-404d84472c78",
+              "email": "test@n8n.test",
+              "firstName": "Test",
+              "lastName": "User",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-14T01:07:09.175Z",
+                "personalization_survey_n8n_version": "1.123.5"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "uogzAWtDp9AMT7VJ",
+                "userActivatedAt": 1765674449908
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2025-12-13",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "parentFolder": null,
+  "activeVersion": null,
+  "scopes": [
+    "workflow:create",
+    "workflow:delete",
+    "workflow:execute",
+    "workflow:list",
+    "workflow:move",
+    "workflow:read",
+    "workflow:share",
+    "workflow:update"
+  ]
 }

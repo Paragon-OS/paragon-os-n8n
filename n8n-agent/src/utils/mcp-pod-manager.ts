@@ -156,6 +156,7 @@ async function buildTelegramMcpImage(): Promise<string> {
   logger.info('Building Telegram MCP SSE container image...');
 
   // Create SSE entrypoint script - reads MCP_PORT from environment
+  // Configures transport security to allow all hosts for container networking
   const ssePythonScript = `#!/usr/bin/env python3
 """SSE mode entrypoint for Telegram MCP server."""
 import asyncio
@@ -180,9 +181,51 @@ async def main():
         mcp.settings.host = host
         mcp.settings.port = port
 
-        await mcp.run_sse_async()
+        # Configure transport security to allow all common hosts used in pod networking
+        # This is needed because n8n may send different Host headers
+        from mcp.server.transport_security import TransportSecuritySettings
+        security_settings = TransportSecuritySettings(
+            enable_dns_rebinding_protection=False  # Disable for container networking
+        )
+
+        # Pass security settings if supported
+        if hasattr(mcp, '_sse_transport_security_settings'):
+            mcp._sse_transport_security_settings = security_settings
+
+        # Run SSE server - use the low-level method that accepts settings
+        from mcp.server.sse import SseServerTransport
+        from starlette.applications import Starlette
+        from starlette.routing import Mount, Route
+        from starlette.responses import Response
+        import uvicorn
+
+        # Create SSE transport with disabled DNS rebinding protection
+        sse_transport = SseServerTransport("/messages/", security_settings=security_settings)
+
+        async def handle_sse(request):
+            async with sse_transport.connect_sse(
+                request.scope, request.receive, request._send
+            ) as streams:
+                await mcp._mcp_server.run(
+                    streams[0], streams[1], mcp._mcp_server.create_initialization_options()
+                )
+            return Response()
+
+        routes = [
+            Route("/sse", endpoint=handle_sse, methods=["GET"]),
+            Mount("/messages/", app=sse_transport.handle_post_message),
+        ]
+
+        starlette_app = Starlette(routes=routes)
+
+        config = uvicorn.Config(starlette_app, host=host, port=port, log_level="info")
+        server = uvicorn.Server(config)
+        await server.serve()
+
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr, flush=True)
+        import traceback
+        traceback.print_exc()
         raise
     finally:
         await cleanup()

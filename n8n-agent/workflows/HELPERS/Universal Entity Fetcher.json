@@ -1,5 +1,9 @@
 {
+  "updatedAt": "2025-12-14T01:12:42.029Z",
+  "createdAt": "2025-12-14T01:12:42.029Z",
+  "id": "zSUGEr0rD00q6yt8",
   "name": "[HELPERS] Universal Entity Fetcher",
+  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -22,7 +26,10 @@
       },
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
-      "position": [200, 400],
+      "position": [
+        200,
+        400
+      ],
       "id": "trigger",
       "name": "When Executed by Another Workflow"
     },
@@ -32,7 +39,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [424, 400],
+      "position": [
+        424,
+        400
+      ],
       "id": "build-config",
       "name": "Build Config"
     },
@@ -50,7 +60,74 @@
                 },
                 "conditions": [
                   {
-                    "id": "platform-discord",
+                    "id": "op-execute",
+                    "leftValue": "={{ $json.config.operation }}",
+                    "rightValue": "executeTool",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "executeTool"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "op-list",
+                    "leftValue": "={{ $json.config.operation }}",
+                    "rightValue": "listTools",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "listTools"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "none"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        648,
+        400
+      ],
+      "id": "route-operation",
+      "name": "Route by Operation"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "platform-discord-exec",
                     "leftValue": "={{ $json.platform }}",
                     "rightValue": "DISCORD",
                     "operator": {
@@ -74,7 +151,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "platform-telegram",
+                    "id": "platform-telegram-exec",
                     "leftValue": "={{ $json.platform }}",
                     "rightValue": "TELEGRAM",
                     "operator": {
@@ -96,23 +173,96 @@
       },
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
-      "position": [648, 400],
-      "id": "route-platform",
-      "name": "Route by Platform"
+      "position": [
+        872,
+        300
+      ],
+      "id": "route-platform-exec",
+      "name": "Route Platform (Execute)"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "platform-discord-list",
+                    "leftValue": "={{ $json.platform }}",
+                    "rightValue": "DISCORD",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "discord"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "platform-telegram-list",
+                    "leftValue": "={{ $json.platform }}",
+                    "rightValue": "TELEGRAM",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "telegram"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "none"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        872,
+        500
+      ],
+      "id": "route-platform-list",
+      "name": "Route Platform (List)"
     },
     {
       "parameters": {
         "connectionType": "sse",
         "uriOverride": " http://0.0.0.0:8000/sse",
-        "operation": "={{ $json.config.operation }}",
-        "toolName": "={{ $json.config.toolName || '' }}",
+        "operation": "executeTool",
+        "toolName": "={{ $json.config.toolName }}",
         "toolParameters": "={{ JSON.stringify($json.config.toolParams || {}) }}"
       },
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
-      "position": [872, 300],
-      "id": "discord-mcp",
-      "name": "Discord MCP",
+      "position": [
+        1096,
+        200
+      ],
+      "id": "discord-mcp-exec",
+      "name": "Discord MCP (Execute)",
       "credentials": {
         "mcpClientSseApi": {
           "id": "discordMcpSseCredential",
@@ -124,15 +274,18 @@
       "parameters": {
         "connectionType": "sse",
         "uriOverride": " http://0.0.0.0:8001/sse",
-        "operation": "={{ $json.config.operation }}",
-        "toolName": "={{ $json.config.toolName || '' }}",
+        "operation": "executeTool",
+        "toolName": "={{ $json.config.toolName }}",
         "toolParameters": "={{ JSON.stringify($json.config.toolParams || {}) }}"
       },
       "type": "n8n-nodes-mcp.mcpClient",
       "typeVersion": 1,
-      "position": [872, 500],
-      "id": "telegram-mcp",
-      "name": "Telegram MCP",
+      "position": [
+        1096,
+        400
+      ],
+      "id": "telegram-mcp-exec",
+      "name": "Telegram MCP (Execute)",
       "credentials": {
         "mcpClientSseApi": {
           "id": "telegramMcpSseCredential",
@@ -141,10 +294,57 @@
       }
     },
     {
-      "parameters": {},
+      "parameters": {
+        "connectionType": "sse",
+        "uriOverride": " http://0.0.0.0:8000/sse",
+        "operation": "listTools"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        1096,
+        600
+      ],
+      "id": "discord-mcp-list",
+      "name": "Discord MCP (List)",
+      "credentials": {
+        "mcpClientSseApi": {
+          "id": "discordMcpSseCredential",
+          "name": "Discord MCP Client (SSE) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "connectionType": "sse",
+        "uriOverride": " http://0.0.0.0:8001/sse",
+        "operation": "listTools"
+      },
+      "type": "n8n-nodes-mcp.mcpClient",
+      "typeVersion": 1,
+      "position": [
+        1096,
+        800
+      ],
+      "id": "telegram-mcp-list",
+      "name": "Telegram MCP (List)",
+      "credentials": {
+        "mcpClientSseApi": {
+          "id": "telegramMcpSseCredential",
+          "name": "Telegram MCP Client (SSE) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
-      "position": [1096, 400],
+      "position": [
+        1320,
+        400
+      ],
       "id": "merge-mcp-results",
       "name": "Merge MCP Results"
     },
@@ -154,7 +354,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1320, 400],
+      "position": [
+        1544,
+        400
+      ],
       "id": "normalize",
       "name": "Normalize Data"
     }
@@ -175,32 +378,68 @@
       "main": [
         [
           {
-            "node": "Route by Platform",
+            "node": "Route by Operation",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Route by Platform": {
+    "Route by Operation": {
       "main": [
         [
           {
-            "node": "Discord MCP",
+            "node": "Route Platform (Execute)",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Telegram MCP",
+            "node": "Route Platform (List)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Discord MCP": {
+    "Route Platform (Execute)": {
+      "main": [
+        [
+          {
+            "node": "Discord MCP (Execute)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram MCP (Execute)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Platform (List)": {
+      "main": [
+        [
+          {
+            "node": "Discord MCP (List)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram MCP (List)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord MCP (Execute)": {
       "main": [
         [
           {
@@ -211,13 +450,35 @@
         ]
       ]
     },
-    "Telegram MCP": {
+    "Telegram MCP (Execute)": {
       "main": [
         [
           {
             "node": "Merge MCP Results",
             "type": "main",
             "index": 1
+          }
+        ]
+      ]
+    },
+    "Discord MCP (List)": {
+      "main": [
+        [
+          {
+            "node": "Merge MCP Results",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Telegram MCP (List)": {
+      "main": [
+        [
+          {
+            "node": "Merge MCP Results",
+            "type": "main",
+            "index": 3
           }
         ]
       ]
@@ -242,5 +503,69 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "tags": []
+  "versionId": "e5d9d45e-5269-4efe-b164-7ba93edf0a64",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-14T01:12:42.032Z",
+      "createdAt": "2025-12-14T01:12:42.032Z",
+      "role": "workflow:owner",
+      "workflowId": "zSUGEr0rD00q6yt8",
+      "projectId": "DXB9XSLhWPNygtLw",
+      "project": {
+        "updatedAt": "2025-12-14T01:06:18.959Z",
+        "createdAt": "2025-12-14T01:06:14.796Z",
+        "id": "DXB9XSLhWPNygtLw",
+        "name": "Test User <test@n8n.test>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-14T01:06:14.796Z",
+            "createdAt": "2025-12-14T01:06:14.796Z",
+            "userId": "e3d25c3c-0243-4285-80de-404d84472c78",
+            "projectId": "DXB9XSLhWPNygtLw",
+            "user": {
+              "updatedAt": "2025-12-14T01:07:34.000Z",
+              "createdAt": "2025-12-14T01:06:14.564Z",
+              "id": "e3d25c3c-0243-4285-80de-404d84472c78",
+              "email": "test@n8n.test",
+              "firstName": "Test",
+              "lastName": "User",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-14T01:07:09.175Z",
+                "personalization_survey_n8n_version": "1.123.5"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "uogzAWtDp9AMT7VJ",
+                "userActivatedAt": 1765674449908
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2025-12-13",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "parentFolder": null,
+  "activeVersion": null,
+  "scopes": [
+    "workflow:create",
+    "workflow:delete",
+    "workflow:execute",
+    "workflow:list",
+    "workflow:move",
+    "workflow:read",
+    "workflow:share",
+    "workflow:update"
+  ]
 }

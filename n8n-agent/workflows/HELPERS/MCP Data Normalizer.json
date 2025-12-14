@@ -1,8 +1,9 @@
 {
-  "updatedAt": "2025-12-09T01:35:03.666Z",
-  "createdAt": "2025-12-09T01:23:33.441Z",
-  "id": "6BCTh6yGP6H1F3ps",
+  "updatedAt": "2025-12-14T01:12:40.734Z",
+  "createdAt": "2025-12-14T01:12:40.734Z",
+  "id": "t1WjKI414TlZi50x",
   "name": "[HELPERS] MCP Data Normalizer",
+  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -74,18 +75,69 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "cf221acc-943e-4bb7-a735-023161f104fe",
+  "versionId": "51868b34-a336-48b3-bac9-088f74ff68fd",
   "activeVersionId": null,
+  "versionCounter": 1,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-09T01:23:33.443Z",
-      "createdAt": "2025-12-09T01:23:33.443Z",
+      "updatedAt": "2025-12-14T01:12:40.737Z",
+      "createdAt": "2025-12-14T01:12:40.737Z",
       "role": "workflow:owner",
-      "workflowId": "6BCTh6yGP6H1F3ps",
-      "projectId": "GEUEn6ArNROzJ5FY"
+      "workflowId": "t1WjKI414TlZi50x",
+      "projectId": "DXB9XSLhWPNygtLw",
+      "project": {
+        "updatedAt": "2025-12-14T01:06:18.959Z",
+        "createdAt": "2025-12-14T01:06:14.796Z",
+        "id": "DXB9XSLhWPNygtLw",
+        "name": "Test User <test@n8n.test>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-14T01:06:14.796Z",
+            "createdAt": "2025-12-14T01:06:14.796Z",
+            "userId": "e3d25c3c-0243-4285-80de-404d84472c78",
+            "projectId": "DXB9XSLhWPNygtLw",
+            "user": {
+              "updatedAt": "2025-12-14T01:07:34.000Z",
+              "createdAt": "2025-12-14T01:06:14.564Z",
+              "id": "e3d25c3c-0243-4285-80de-404d84472c78",
+              "email": "test@n8n.test",
+              "firstName": "Test",
+              "lastName": "User",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-14T01:07:09.175Z",
+                "personalization_survey_n8n_version": "1.123.5"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "uogzAWtDp9AMT7VJ",
+                "userActivatedAt": 1765674449908
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2025-12-13",
+              "isPending": false
+            }
+          }
+        ]
+      }
     }
   ],
+  "tags": [],
+  "parentFolder": null,
   "activeVersion": null,
-  "tags": []
+  "scopes": [
+    "workflow:create",
+    "workflow:delete",
+    "workflow:execute",
+    "workflow:list",
+    "workflow:move",
+    "workflow:read",
+    "workflow:share",
+    "workflow:update"
+  ]
 }

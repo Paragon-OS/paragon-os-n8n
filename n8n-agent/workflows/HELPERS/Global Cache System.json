@@ -1,8 +1,9 @@
 {
-  "updatedAt": "2025-12-09T01:35:03.645Z",
-  "createdAt": "2025-12-09T01:23:33.246Z",
-  "id": "dIk4LoS6s39B0WkV",
+  "updatedAt": "2025-12-14T01:12:40.472Z",
+  "createdAt": "2025-12-14T01:12:40.472Z",
+  "id": "tM0fct2C9Xrbn6zD",
   "name": "[HELPERS] Global Cache System",
+  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -365,18 +366,69 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "68f52436-7ef2-4213-be52-d1b48a583c2e",
+  "versionId": "d7925be9-6653-4850-b4cf-25d5bc100231",
   "activeVersionId": null,
+  "versionCounter": 1,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-09T01:23:33.247Z",
-      "createdAt": "2025-12-09T01:23:33.247Z",
+      "updatedAt": "2025-12-14T01:12:40.475Z",
+      "createdAt": "2025-12-14T01:12:40.475Z",
       "role": "workflow:owner",
-      "workflowId": "dIk4LoS6s39B0WkV",
-      "projectId": "GEUEn6ArNROzJ5FY"
+      "workflowId": "tM0fct2C9Xrbn6zD",
+      "projectId": "DXB9XSLhWPNygtLw",
+      "project": {
+        "updatedAt": "2025-12-14T01:06:18.959Z",
+        "createdAt": "2025-12-14T01:06:14.796Z",
+        "id": "DXB9XSLhWPNygtLw",
+        "name": "Test User <test@n8n.test>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-14T01:06:14.796Z",
+            "createdAt": "2025-12-14T01:06:14.796Z",
+            "userId": "e3d25c3c-0243-4285-80de-404d84472c78",
+            "projectId": "DXB9XSLhWPNygtLw",
+            "user": {
+              "updatedAt": "2025-12-14T01:07:34.000Z",
+              "createdAt": "2025-12-14T01:06:14.564Z",
+              "id": "e3d25c3c-0243-4285-80de-404d84472c78",
+              "email": "test@n8n.test",
+              "firstName": "Test",
+              "lastName": "User",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-14T01:07:09.175Z",
+                "personalization_survey_n8n_version": "1.123.5"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "uogzAWtDp9AMT7VJ",
+                "userActivatedAt": 1765674449908
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2025-12-13",
+              "isPending": false
+            }
+          }
+        ]
+      }
     }
   ],
+  "tags": [],
+  "parentFolder": null,
   "activeVersion": null,
-  "tags": []
+  "scopes": [
+    "workflow:create",
+    "workflow:delete",
+    "workflow:execute",
+    "workflow:list",
+    "workflow:move",
+    "workflow:read",
+    "workflow:share",
+    "workflow:update"
+  ]
 }

@@ -1,8 +1,9 @@
 {
-  "updatedAt": "2025-12-09T01:35:05.188Z",
-  "createdAt": "2025-12-09T01:23:31.466Z",
-  "id": "FvXGq1CLqsmjzL8n",
+  "updatedAt": "2025-12-14T01:12:38.213Z",
+  "createdAt": "2025-12-14T01:12:38.213Z",
+  "id": "btgwFIeCx5IM7cOg",
   "name": "Discord Context Scout",
+  "description": null,
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -136,18 +137,69 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "e0ad2c84-ef56-4ebf-9abf-34f37278db41",
+  "versionId": "6837ec3c-b8b6-441a-b232-314635d86d50",
   "activeVersionId": null,
+  "versionCounter": 1,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-09T01:23:31.468Z",
-      "createdAt": "2025-12-09T01:23:31.468Z",
+      "updatedAt": "2025-12-14T01:12:38.217Z",
+      "createdAt": "2025-12-14T01:12:38.217Z",
       "role": "workflow:owner",
-      "workflowId": "FvXGq1CLqsmjzL8n",
-      "projectId": "GEUEn6ArNROzJ5FY"
+      "workflowId": "btgwFIeCx5IM7cOg",
+      "projectId": "DXB9XSLhWPNygtLw",
+      "project": {
+        "updatedAt": "2025-12-14T01:06:18.959Z",
+        "createdAt": "2025-12-14T01:06:14.796Z",
+        "id": "DXB9XSLhWPNygtLw",
+        "name": "Test User <test@n8n.test>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-14T01:06:14.796Z",
+            "createdAt": "2025-12-14T01:06:14.796Z",
+            "userId": "e3d25c3c-0243-4285-80de-404d84472c78",
+            "projectId": "DXB9XSLhWPNygtLw",
+            "user": {
+              "updatedAt": "2025-12-14T01:07:34.000Z",
+              "createdAt": "2025-12-14T01:06:14.564Z",
+              "id": "e3d25c3c-0243-4285-80de-404d84472c78",
+              "email": "test@n8n.test",
+              "firstName": "Test",
+              "lastName": "User",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-14T01:07:09.175Z",
+                "personalization_survey_n8n_version": "1.123.5"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "uogzAWtDp9AMT7VJ",
+                "userActivatedAt": 1765674449908
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2025-12-13",
+              "isPending": false
+            }
+          }
+        ]
+      }
     }
   ],
+  "tags": [],
+  "parentFolder": null,
   "activeVersion": null,
-  "tags": []
+  "scopes": [
+    "workflow:create",
+    "workflow:delete",
+    "workflow:execute",
+    "workflow:list",
+    "workflow:move",
+    "workflow:read",
+    "workflow:share",
+    "workflow:update"
+  ]
 }
