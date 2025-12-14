@@ -275,10 +275,22 @@ export async function executeWorkflowTest(
 
   // Normalize config (convert N8nInstance to N8nApiConfig if needed)
   const apiConfig = normalizeConfig(effectiveConfig);
-  
+
   const context = await initTestContext(workflowsPath);
 
   try {
+    // Fetch existing workflows once to avoid importing duplicates
+    // This is much more efficient than checking each workflow individually
+    const { exportWorkflows } = await import('./n8n-api');
+    let existingWorkflowNames: Set<string> = new Set();
+    try {
+      const existingWorkflows = await exportWorkflows(apiConfig);
+      existingWorkflowNames = new Set(existingWorkflows.map(w => w.name));
+      logger.debug(`Found ${existingWorkflowNames.size} existing workflows in n8n`);
+    } catch (error) {
+      logger.debug('Could not fetch existing workflows, will import all');
+    }
+
     // Auto-import all helper workflows to ensure Test Runner dependencies are met
     // Import order matters due to workflow references between helpers
     const helpersDir = path.join(context.workflowsDir, 'HELPERS');
@@ -312,14 +324,32 @@ export async function executeWorkflowTest(
         return aOrder - bOrder;
       });
 
+      let importedCount = 0;
+      let skippedCount = 0;
       for (const helperFile of sortedHelperFiles) {
         try {
+          // Read the workflow name from the file to check if it already exists
+          const content = fs.readFileSync(helperFile, 'utf-8');
+          const workflowData = JSON.parse(content) as { name?: string };
+          const workflowName = workflowData.name;
+
+          // Skip if workflow already exists
+          // Also skip Test Runner here - it will be imported with test config later
+          if (workflowName && (existingWorkflowNames.has(workflowName) || workflowName.includes('Test Runner'))) {
+            skippedCount++;
+            continue;
+          }
+
           await importWorkflowFromFile(helperFile, apiConfig, mcpCredentialMappings);
+          if (workflowName) {
+            existingWorkflowNames.add(workflowName);
+          }
+          importedCount++;
         } catch (error) {
           logger.warn(`Warning: Failed to auto-sync helper workflow "${path.basename(helperFile)}"`, error);
         }
       }
-      logger.debug(`Synced ${sortedHelperFiles.length} helper workflows in dependency order`);
+      logger.debug(`Helper workflows: ${importedCount} imported, ${skippedCount} skipped (already exist)`);
     }
 
     // Import main workflow dependencies (non-helper workflows that reference each other)
@@ -337,10 +367,17 @@ export async function executeWorkflowTest(
       // Skip if this is the workflow being tested (will be imported later)
       if (depName === workflowName) continue;
 
+      // Skip if already exists in n8n
+      if (existingWorkflowNames.has(depName)) {
+        logger.debug(`Skipping ${depName} (already exists)`);
+        continue;
+      }
+
       const depFile = findWorkflowFile(depName, context.workflowFiles);
       if (depFile) {
         try {
           await importWorkflowFromFile(depFile, apiConfig, mcpCredentialMappings);
+          existingWorkflowNames.add(depName);
           logger.debug(`Imported main workflow dependency: ${depName}`);
         } catch (error) {
           // Ignore errors for dependencies that might already exist
@@ -349,12 +386,25 @@ export async function executeWorkflowTest(
       }
     }
 
-    // Auto-import the workflow being tested
+    // Auto-import the workflow being tested (skip if already exists)
     const workflowFile = findWorkflowFile(workflowName, context.workflowFiles);
 
     if (workflowFile) {
       try {
-        await importWorkflowFromFile(workflowFile, apiConfig, mcpCredentialMappings);
+        // Read the actual workflow name from the file to check if it exists
+        const content = fs.readFileSync(workflowFile, 'utf-8');
+        const workflowData = JSON.parse(content) as { name?: string };
+        const actualWorkflowName = workflowData.name;
+
+        // Skip if already exists in n8n
+        if (actualWorkflowName && existingWorkflowNames.has(actualWorkflowName)) {
+          logger.debug(`Skipping ${actualWorkflowName} (already exists)`);
+        } else {
+          await importWorkflowFromFile(workflowFile, apiConfig, mcpCredentialMappings);
+          if (actualWorkflowName) {
+            existingWorkflowNames.add(actualWorkflowName);
+          }
+        }
       } catch (error) {
         logger.warn(`Warning: Failed to auto-sync workflow "${workflowName}"`, error, { workflow: workflowName });
         // Continue with test anyway
@@ -686,15 +736,10 @@ export async function executeWorkflowTest(
     }
 
   } finally {
-    // Restore original Test Runner configuration by importing the original file
-    try {
-      // Restore from the original test runner file path using API
-      await importWorkflowFromFile(context.testRunnerPath, apiConfig, mcpCredentialMappings);
-    } catch {
-      // Ignore cleanup errors - Test Runner will be restored on next test or can be manually restored
-      logger.debug('Failed to restore Test Runner configuration during cleanup');
-    }
-    
+    // NOTE: We no longer restore the Test Runner after each test.
+    // With shared containers, the next test will update it with its own config.
+    // This avoids creating duplicate workflows.
+
     // Cleanup temp file
     try {
       if (fs.existsSync(context.tempPath)) {
