@@ -1,45 +1,26 @@
-import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { executeWorkflowTest, syncWorkflow } from '../../utils/workflow-test-runner';
-import { 
-  startN8nInstance, 
-  stopN8nInstance, 
-  checkPodmanAvailable,
-  type N8nInstance 
-} from '../../utils/n8n-podman';
+import { describe, test, expect, beforeAll, afterAll } from 'vitest';
+import { executeWorkflowTest } from '../../utils/workflow-test-runner';
+import {
+  setupTestInstance,
+  cleanupTestInstance,
+  TEST_TIMEOUTS,
+  type N8nInstance
+} from '../../utils/test-helpers';
 
 describe('DynamicRAG', () => {
   let instance: N8nInstance | null = null;
-  const testTimeout = 10 * 60 * 1000; // 10 minutes per test
 
   beforeAll(async () => {
-    // Check if podman is available
-    const podmanAvailable = await checkPodmanAvailable();
-    if (!podmanAvailable) {
-      throw new Error('Podman is not available. Please install podman to run integration tests.');
-    }
-  });
+    // Start a single n8n instance for all tests (reuse for performance)
+    instance = await setupTestInstance();
+    // NOTE: Do NOT call syncWorkflow() here!
+    // executeWorkflowTest() auto-imports all helpers in correct dependency order
+  }, TEST_TIMEOUTS.WORKFLOW);
 
-  beforeEach(async () => {
-    // Start a fresh n8n instance for each test
-    instance = await startN8nInstance({
-      timeout: 120000, // 2 minutes for startup
-    });
-    
-    // Sync the workflow to the instance
-    const apiConfig = {
-      baseURL: instance.baseUrl,
-      apiKey: instance.apiKey,
-    };
-    await syncWorkflow('DynamicRAG', undefined, apiConfig);
-  });
-
-  afterEach(async () => {
-    // Clean up instance after each test
-    if (instance) {
-      await stopN8nInstance(instance);
-      instance = null;
-    }
-  });
+  afterAll(async () => {
+    await cleanupTestInstance(instance);
+    instance = null;
+  }, TEST_TIMEOUTS.WORKFLOW);
 
   // Tests are ordered for proper execution (cleanup → create → use → delete)
   test.each([
@@ -131,21 +112,16 @@ describe('DynamicRAG', () => {
       throw new Error('Instance not initialized');
     }
 
-    const apiConfig = {
-      baseURL: instance.baseUrl,
-      apiKey: instance.apiKey,
-    };
+    const result = await executeWorkflowTest('DynamicRAG', testCase, testData, undefined, instance);
 
-    const result = await executeWorkflowTest('DynamicRAG', testCase, testData, undefined, apiConfig);
-    
     if (!result.success) {
       const errorMsg = result.error || 'Test failed with unknown error';
       const details = result.errorDetails ? `\nError details: ${JSON.stringify(result.errorDetails, null, 2)}` : '';
       throw new Error(`${errorMsg}${details}`);
     }
-    
+
     expect(result.success).toBe(true);
     expect(result.output).toBeDefined();
-  }, testTimeout);
+  }, TEST_TIMEOUTS.WORKFLOW);
 });
 

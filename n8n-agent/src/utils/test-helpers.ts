@@ -180,12 +180,25 @@ export function extractWorkflowResults(
 
       // Check for error indicators in raw output
       if (firstItem && typeof firstItem === 'object') {
-        // Check for error fields
-        if ('error' in firstItem || 'errorMessage' in firstItem || 'message' in firstItem) {
+        // Check for explicit success: false indicator
+        if ('success' in firstItem && (firstItem as { success?: boolean }).success === false) {
           const errorMsg =
             (firstItem as { error?: { message?: string }; errorMessage?: string; message?: string }).error?.message ||
             (firstItem as { errorMessage?: string }).errorMessage ||
             (firstItem as { message?: string }).message ||
+            'Unknown error in workflow execution';
+          return {
+            success: false,
+            error: errorMsg,
+            errorDetails: firstItem as N8nExecutionError,
+          };
+        }
+
+        // Check for error fields (but NOT 'message' alone - it's often used for info messages)
+        if ('error' in firstItem || 'errorMessage' in firstItem) {
+          const errorMsg =
+            (firstItem as { error?: { message?: string }; errorMessage?: string }).error?.message ||
+            (firstItem as { errorMessage?: string }).errorMessage ||
             'Unknown error in workflow execution';
           return {
             success: false,
