@@ -189,22 +189,36 @@ export async function executeBackup(options: BackupOptions, remainingArgs: strin
 
   logger.info("");
 
-  // Step 0: Connect to running pod
-  let podConnection;
-  try {
-    logger.info("Connecting to n8n pod...");
-    podConnection = await getRunningPodConnection();
-    logger.info(`Connected to pod: ${podConnection.podName}`);
-  } catch (err) {
-    logger.error("Failed to connect to n8n pod", err);
-    if (isTestMode) {
-      throw err;
-    }
-    process.exit(1);
-    return;
-  }
+  // Step 0: Get n8n connection (from env vars or running pod)
+  let apiConfig: { baseURL: string; sessionCookie: string };
 
-  const apiConfig = buildApiConfigFromPod(podConnection);
+  // Check for environment variables first (used by tests)
+  const envBaseUrl = process.env.N8N_URL || process.env.N8N_BASE_URL;
+  const envSessionCookie = process.env.N8N_SESSION_COOKIE;
+
+  if (envBaseUrl && envSessionCookie) {
+    logger.info(`Using n8n from environment: ${envBaseUrl}`);
+    apiConfig = {
+      baseURL: envBaseUrl,
+      sessionCookie: envSessionCookie,
+    };
+  } else {
+    // Fall back to pod detection
+    let podConnection;
+    try {
+      logger.info("Connecting to n8n pod...");
+      podConnection = await getRunningPodConnection();
+      logger.info(`Connected to pod: ${podConnection.podName}`);
+    } catch (err) {
+      logger.error("Failed to connect to n8n pod", err);
+      if (isTestMode) {
+        throw err;
+      }
+      process.exit(1);
+      return;
+    }
+    apiConfig = buildApiConfigFromPod(podConnection);
+  }
 
   // Step 1: Fetch workflows from n8n
   let workflows: Workflow[];

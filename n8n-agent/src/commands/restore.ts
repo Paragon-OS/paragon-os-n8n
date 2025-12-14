@@ -33,22 +33,36 @@ export async function executeRestore(options: RestoreOptions, remainingArgs: str
     return;
   }
 
-  // Connect to running pod
-  logger.info("Connecting to n8n pod...");
+  // Get n8n connection (from env vars or running pod)
   let apiConfig: N8nApiConfig;
-  let mcpCredentialMappings: McpSseCredentialMapping[];
-  try {
-    const podConnection = await getRunningPodConnection();
-    apiConfig = buildApiConfigFromPod(podConnection);
-    mcpCredentialMappings = podConnection.mcpCredentialMappings;
-    logger.info(`Connected to pod: ${podConnection.podName}`);
-  } catch (err) {
-    logger.error("Failed to connect to n8n pod", err);
-    if (isTestMode) {
-      throw err;
+  let mcpCredentialMappings: McpSseCredentialMapping[] = [];
+
+  // Check for environment variables first (used by tests)
+  const envBaseUrl = process.env.N8N_URL || process.env.N8N_BASE_URL;
+  const envSessionCookie = process.env.N8N_SESSION_COOKIE;
+
+  if (envBaseUrl && envSessionCookie) {
+    logger.info(`Using n8n from environment: ${envBaseUrl}`);
+    apiConfig = {
+      baseURL: envBaseUrl,
+      sessionCookie: envSessionCookie,
+    };
+  } else {
+    // Fall back to pod detection
+    logger.info("Connecting to n8n pod...");
+    try {
+      const podConnection = await getRunningPodConnection();
+      apiConfig = buildApiConfigFromPod(podConnection);
+      mcpCredentialMappings = podConnection.mcpCredentialMappings;
+      logger.info(`Connected to pod: ${podConnection.podName}`);
+    } catch (err) {
+      logger.error("Failed to connect to n8n pod", err);
+      if (isTestMode) {
+        throw err;
+      }
+      process.exitCode = 1;
+      return;
     }
-    process.exitCode = 1;
-    return;
   }
 
   // Quick connection check first to fail fast if n8n is not running
