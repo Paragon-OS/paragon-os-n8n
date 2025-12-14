@@ -115,7 +115,7 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "={{ $('When Executed by Another Workflow').item.json.writeValue }}",
+        "jsonOutput": "={{ $('When Executed by Another Workflow').first().json.writeValue }}",
         "options": {}
       },
       "id": "dd45e52c-4419-4bd2-b051-56f707d718ae",
@@ -206,7 +206,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Get the raw Redis response\nconst input = $input.first().json;\nconst cacheKey = $('When Executed by Another Workflow').item.json.cacheKey;\n\n// Redis returns { keyName: value } or { keyName: null } if not found\n// The key in the response is the actual cache key we queried\nconst rawValue = input[cacheKey] ?? input[Object.keys(input)[0]];\n\nif (!rawValue || rawValue === 'null' || rawValue === null) {\n  // Cache miss - throw error to trigger the error output path\n  throw new Error('No Entry or Expired Cache Item.');\n}\n\n// Parse the cached JSON value and return it\ntry {\n  return JSON.parse(rawValue);\n} catch (e) {\n  // If it's not JSON, return as-is\n  return { value: rawValue };\n}"
+        "jsCode": "// Get the raw Redis response\nconst input = $input.first().json;\nconst cacheKey = $('When Executed by Another Workflow').first().json.cacheKey;\n\n// Redis returns { keyName: value } or { keyName: null } if not found\n// The key in the response is the actual cache key we queried\nconst rawValue = input[cacheKey] ?? input[Object.keys(input)[0]];\n\nif (!rawValue || rawValue === 'null' || rawValue === null) {\n  // Cache miss - throw error to trigger the error output path\n  throw new Error('No Entry or Expired Cache Item.');\n}\n\n// Parse the cached JSON value and return it\ntry {\n  return JSON.parse(rawValue);\n} catch (e) {\n  // If it's not JSON, return as-is\n  return { value: rawValue };\n}"
       },
       "id": "fc38cdf6-32ba-4839-9573-02efa7f46874",
       "name": "Parse Cache Result",

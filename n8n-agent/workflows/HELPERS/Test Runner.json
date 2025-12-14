@@ -113,7 +113,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ $('⚙️ Test Config').item.json.workflow }}",
+                    "leftValue": "={{ $('⚙️ Test Config').first().json.workflow }}",
                     "rightValue": "DynamicRAG",
                     "operator": {
                       "type": "string",
@@ -137,7 +137,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ $('⚙️ Test Config').item.json.workflow }}",
+                    "leftValue": "={{ $('⚙️ Test Config').first().json.workflow }}",
                     "rightValue": "DiscordContextScout",
                     "operator": {
                       "type": "string",
@@ -277,7 +277,7 @@
     },
     {
       "parameters": {
-        "errorMessage": "={{ 'Unknown workflow: ' + $('⚙️ Test Config').item.json.workflow }}"
+        "errorMessage": "={{ 'Unknown workflow: ' + $('⚙️ Test Config').first().json.workflow }}"
       },
       "id": "unknown-workflow-error",
       "name": "Unknown Workflow",

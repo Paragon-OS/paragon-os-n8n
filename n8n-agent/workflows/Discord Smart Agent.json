@@ -119,7 +119,7 @@
             {
               "id": "73f80685-faeb-4d12-9e17-0386b0afb330",
               "name": "userPrompt",
-              "value": "={{ $('When Executed by Another Workflow').item.json.userPrompt }}",
+              "value": "={{ $('When Executed by Another Workflow').first().json.userPrompt }}",
               "type": "string"
             }
           ]

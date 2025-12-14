@@ -264,7 +264,7 @@
       "parameters": {
         "qdrantCollection": {
           "__rl": true,
-          "value": "={{ $('Switch').item.json.collectionId }}",
+          "value": "={{ $('Switch').first().json.collectionId }}",
           "mode": "id"
         },
         "options": {}
@@ -366,7 +366,7 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "={\n  \"answer\": {{ JSON.stringify($('Question and Answer Chain').item.json.response) }},\n  \"results\": {{ JSON.stringify($json.results) }},\n  \"count\": {{ $json.count }}\n}",
+        "jsonOutput": "={\n  \"answer\": {{ JSON.stringify($('Question and Answer Chain').first().json.response) }},\n  \"results\": {{ JSON.stringify($json.results) }},\n  \"count\": {{ $json.count }}\n}",
         "options": {}
       },
       "id": "ee957717-7708-4ec4-82de-6b5e0f59af04",
@@ -398,13 +398,13 @@
             {
               "id": "bdb8250e-e4b6-4e5b-b3b2-4f941c14e307",
               "name": "content",
-              "value": "={{ $('Switch').item.json.input.content }}",
+              "value": "={{ $('Switch').first().json.input.content }}",
               "type": "object"
             },
             {
               "id": "f30308e0-ffa7-4ced-9538-99077a0b7ecb",
               "name": "metadata",
-              "value": "={{ $('Switch').item.json.input.metadata }}",
+              "value": "={{ $('Switch').first().json.input.metadata }}",
               "type": "string"
             }
           ]
@@ -507,7 +507,7 @@
         "mode": "load",
         "qdrantCollection": {
           "__rl": true,
-          "value": "={{ $('Switch').item.json.collectionId }}",
+          "value": "={{ $('Switch').first().json.collectionId }}",
           "mode": "id"
         },
         "prompt": "={{ $json.input }}",
@@ -868,7 +868,7 @@
     },
     {
       "parameters": {
-        "errorMessage": "=Unknown execution mode: {{ $('Edit Fields1').item.json.mode }}"
+        "errorMessage": "=Unknown execution mode: {{ $('Edit Fields1').first().json.mode }}"
       },
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,

@@ -110,12 +110,43 @@ async function main() {
     }
   }
 
-  // Import main workflows
+  // Import main workflows (with dependency ordering)
   console.log('\n📦 Importing main workflows...');
   const mainFiles = fs.readdirSync(workflowsDir)
     .filter(f => f.endsWith('.json'));
 
+  // Main workflow dependency order: Context Scouts and Smart Agents must be imported
+  // before ParagonOS Manager (which references both Smart Agents)
+  const mainDependencyOrder = [
+    'Discord Context Scout',
+    'Telegram Context Scout',
+    'Discord Smart Agent',
+    'Telegram Smart Agent',
+    'ParagonOS Manager',
+  ];
+
+  // Import ordered dependencies first
+  const importedFiles = new Set<string>();
+  for (const name of mainDependencyOrder) {
+    const file = mainFiles.find(f => f.replace('.json', '') === name);
+    if (file) {
+      const filePath = path.join(workflowsDir, file);
+      if (fs.statSync(filePath).isFile()) {
+        try {
+          await importWorkflowFromFile(filePath, apiConfig, pod.mcpCredentialMappings);
+          console.log(`   ✅ ${file.replace('.json', '')}`);
+          importedFiles.add(file);
+        } catch (e: any) {
+          console.log(`   ⚠️  ${file}: ${e.message}`);
+          importedFiles.add(file);
+        }
+      }
+    }
+  }
+
+  // Import remaining main workflows
   for (const file of mainFiles) {
+    if (importedFiles.has(file)) continue;
     const filePath = path.join(workflowsDir, file);
     if (fs.statSync(filePath).isFile()) {
       try {

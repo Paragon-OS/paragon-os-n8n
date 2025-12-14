@@ -322,6 +322,33 @@ export async function executeWorkflowTest(
       logger.debug(`Synced ${sortedHelperFiles.length} helper workflows in dependency order`);
     }
 
+    // Import main workflow dependencies (non-helper workflows that reference each other)
+    // These must be imported before workflows that depend on them
+    const mainDependencyOrder = [
+      'Discord Context Scout',
+      'Telegram Context Scout',
+      'Discord Smart Agent',
+      'Telegram Smart Agent',
+      // ParagonOS Manager depends on the above, so it's not listed here
+      // (will be imported as the target workflow if needed)
+    ];
+
+    for (const depName of mainDependencyOrder) {
+      // Skip if this is the workflow being tested (will be imported later)
+      if (depName === workflowName) continue;
+
+      const depFile = findWorkflowFile(depName, context.workflowFiles);
+      if (depFile) {
+        try {
+          await importWorkflowFromFile(depFile, apiConfig, mcpCredentialMappings);
+          logger.debug(`Imported main workflow dependency: ${depName}`);
+        } catch (error) {
+          // Ignore errors for dependencies that might already exist
+          logger.debug(`Note: Could not import ${depName} (may already exist)`);
+        }
+      }
+    }
+
     // Auto-import the workflow being tested
     const workflowFile = findWorkflowFile(workflowName, context.workflowFiles);
 

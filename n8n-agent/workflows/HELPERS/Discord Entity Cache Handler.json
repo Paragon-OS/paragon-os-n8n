@@ -122,8 +122,8 @@
           "mappingMode": "defineBelow",
           "value": {
             "platform": "DISCORD",
-            "entityType": "={{ $('When Executed by Another Workflow').item.json.entity }}",
-            "params": "={{ $('When Executed by Another Workflow').item.json.fetchWorkflowInputs || {} }}"
+            "entityType": "={{ $('When Executed by Another Workflow').first().json.entity }}",
+            "params": "={{ $('When Executed by Another Workflow').first().json.fetchWorkflowInputs || {} }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -182,8 +182,8 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "writeTTLms": "={{ $('When Executed by Another Workflow').item.json.ttl }}",
-            "cacheKey": "={{ $('When Executed by Another Workflow').item.json.cacheKey }}",
+            "writeTTLms": "={{ $('When Executed by Another Workflow').first().json.ttl }}",
+            "cacheKey": "={{ $('When Executed by Another Workflow').first().json.cacheKey }}",
             "writeValue": "={{ $json }}",
             "trueToWrite": true
           },

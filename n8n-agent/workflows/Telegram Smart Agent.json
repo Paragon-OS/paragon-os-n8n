@@ -108,7 +108,7 @@
             {
               "id": "telegram-smart-userprompt-assignment",
               "name": "userPrompt",
-              "value": "={{ $('When Executed by Another Workflow').item.json.userPrompt }}",
+              "value": "={{ $('When Executed by Another Workflow').first().json.userPrompt }}",
               "type": "string"
             }
           ]
